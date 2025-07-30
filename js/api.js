@@ -1,0 +1,205 @@
+export const apiBase = 'http://127.0.0.1:9631';
+
+export const PLAYER_IND = 0;
+export const BANK_IND = 1;
+export const INSURANCE_IND = 2;
+
+export const PLAYER1_ID = 2;
+export const STOCK_INDEX_ID = 0;
+export const OIL_ID = 6;
+export const GOLD_ID = 7;
+export const SILVER_ID = 8;
+export const WHEAT_ID = 9;
+export const CORN_ID = 10;
+export const PRIME_RATE_ID = 1601;
+export const TBOND_RATE_ID = 1602;
+export const SBOND_RATE_ID = 1603;
+export const GNP_RATE_ID = 1604;
+export const BITCOIN_ID = 1605;
+export const ETHEREUM_ID = 1606;
+
+export async function postNoArg(path) {
+    const url = `${apiBase}${path}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.text();
+}
+
+export async function postIdArg(path, id) {
+    const url = `${apiBase}${path}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    });
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.text();
+}
+
+export async function getJSON(path) {
+    const url = `${apiBase}${path}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.json();
+}
+
+
+
+/* General */
+export function getGameState() { return getJSON('/gamestate'); }
+export async function toggleTicker() { await postNoArg('/toggle_ticker'); }
+export async function loadGame() { await postNoArg('/loadgame'); }
+export async function newGame() { await postNoArg('/newgame'); }
+export async function saveGame() { await postNoArg('/savegame'); }
+export async function checkScoreboard() { await postNoArg('/check_scoreboard'); }
+export async function getQuoteOfTheDay() { return getJSON('/quote'); }
+
+export async function getAssetChart(id) {
+    return getJSON(`/asset_chart?id=${id}`);
+}
+
+/* Trading Center - Stocks */
+export async function buyStock(id) { await postIdArg('/buy_stock', id); }
+export async function sellStock(id) { await postIdArg('/sell_stock', id); }
+export async function shortStock(id) { await postIdArg('/short_stock', id); }
+export async function coverShortStock(id) { await postIdArg('/cover_short_stock', id); }
+
+/* Bonds */
+export async function buyCorporateBond(id) { await postIdArg('/buy_corporate_bond', id); }
+export async function sellCorporateBond(id) { await postIdArg('/sell_corporate_bond', id); }
+export async function buyLongGovtBonds() { await postNoArg('/buy_long_govt_bonds'); }
+export async function sellLongGovtBonds() { await postNoArg('/sell_long_govt_bonds'); }
+export async function buyShortGovtBonds() { await postNoArg('/buy_short_govt_bonds'); }
+export async function sellShortGovtBonds() { await postNoArg('/sell_short_govt_bonds'); }
+
+/* Commodity Futures */
+export async function buyCommodityFutures(id) { await postIdArg('/buy_commodity_futures', id); }
+export async function sellCommodityFutures(id) { await postIdArg('/sell_commodity_futures', id); }
+export async function shortCommodityFutures(id) { await postIdArg('/short_commodity_futures', id); }
+export async function coverShortCommodityFutures(id) { await postIdArg('/cover_short_commodity_futures', id); }
+
+/* Physical Commodities */
+export async function buyPhysicalCommodity(id) { await postIdArg('/buy_physical_commodity', id); }
+export async function sellPhysicalCommodity(id) { await postIdArg('/sell_physical_commodity', id); }
+
+/* Crypto */
+export async function buyPhysicalCrypto(id) { await postIdArg('/buy_physical_crypto', id); }
+export async function sellPhysicalCrypto(id) { await postIdArg('/sell_physical_crypto', id); }
+export async function buyCryptoFutures(id) { await postIdArg('/buy_crypto_futures', id); }
+export async function sellCryptoFutures(id) { await postIdArg('/sell_crypto_futures', id); }
+
+/* Options */
+export async function buyCalls(id) { await postIdArg('/buy_calls', id); }
+export async function sellCalls() { await postNoArg('/sell_calls'); }
+export async function buyPuts(id) { await postIdArg('/buy_puts', id); }
+export async function sellPuts() { await postNoArg('/sell_puts'); }
+export async function sellOptions() { await postNoArg('/sell_options'); }
+export async function advancedOptionsTrading() { await postNoArg('/advanced_options_trading'); }
+export async function exerciseCallOptionsEarly() { await postNoArg('/exercise_call_options_early'); }
+export async function exercisePutOptionsEarly() { await postNoArg('/exercise_put_options_early'); }
+
+/* Management */
+export async function prepayTaxes() { await postNoArg('/prepay_taxes'); }
+export async function electCeo() { await postNoArg('/elect_ceo'); }
+export async function resignAsCeo() { await postNoArg('/resign_as_ceo'); }
+export async function changeManagers() { await postNoArg('/change_managers'); }
+export async function setDividend() { await postNoArg('/set_dividend'); }
+export async function setProductivity() { await postNoArg('/set_productivity'); }
+export async function setGrowthRate() { await postNoArg('/set_growth_rate'); }
+export async function restructure() { await postNoArg('/restructure'); }
+export async function buyCorporateAssets() { await postNoArg('/buy_corporate_assets'); }
+export async function sellCorporateAssets() { await postNoArg('/sell_corporate_assets'); }
+export async function sellSubsidiaryStock() { await postNoArg('/sell_subsidiary_stock'); }
+export async function rebrand() { await postNoArg('/rebrand'); }
+export async function toggleCompanyAutopilot() { await postNoArg('/toggle_company_autopilot'); }
+export async function toggleGlobalAutopilot() { await postNoArg('/toggle_global_autopilot'); }
+export async function becomeEtfAdvisor() { await postNoArg('/become_etf_advisor'); }
+export async function setAdvisoryFee() { await postNoArg('/set_advisory_fee'); }
+
+/* Deals & Funding */
+export async function merger() { await postNoArg('/merger'); }
+export async function greenmail() { await postNoArg('/greenmail'); }
+export async function lbo() { await postNoArg('/lbo'); }
+export async function startup() { await postNoArg('/startup'); }
+export async function capitalContribution() { await postNoArg('/capital_contribution'); }
+export async function publicStockOffering() { await postNoArg('/public_stock_offering'); }
+export async function privateStockOffering() { await postNoArg('/private_stock_offering'); }
+export async function issueNewCorpBonds() { await postNoArg('/issue_new_corp_bonds'); }
+export async function redeemCorpBonds() { await postNoArg('/redeem_corp_bonds'); }
+export async function extraordinaryDividend() { await postNoArg('/extraordinary_dividend'); }
+export async function taxFreeLiquidation() { await postNoArg('/tax_free_liquidation'); }
+export async function taxableLiquidation() { await postNoArg('/taxable_liquidation'); }
+export async function spinOff(id) { await postIdArg('/spin_off', id); }
+export async function splitStock() { await postNoArg('/split_stock'); }
+export async function reverseSplitStock() { await postNoArg('/reverse_split_stock'); }
+
+/* Lender Services */
+export async function borrowMoney() { await postNoArg('/borrow_money'); }
+export async function repayLoan() { await postNoArg('/repay_loan'); }
+export async function advanceFunds() { await postNoArg('/advance_funds'); }
+export async function callInAdvance(id) { await postIdArg('/call_in_advance', id); }
+export async function interestRateSwaps() { await postNoArg('/interest_rate_swaps'); }
+
+/* Bank/Insurance Specific */
+export async function setBankAllocation() { await postNoArg('/set_bank_allocation'); }
+export async function tradeTbills() { await postNoArg('/trade_tbills'); }
+export async function listBankLoans() { await postNoArg('/list_bank_loans'); }
+export async function changeBank() { await postNoArg('/change_bank'); }
+export async function callInLoans() { await postNoArg('/call_in_loans'); }
+export async function buyBankLoans() { await postNoArg('/buy_bank_loans'); }
+export async function sellBankLoans() { await postNoArg('/sell_bank_loans'); }
+export async function buyBusinessLoans() { await postNoArg('/buy_business_loans'); }
+export async function sellBusinessLoans() { await postNoArg('/sell_business_loans'); }
+export async function buyConsumerLoans() { await postNoArg('/buy_consumer_loans'); }
+export async function sellConsumerLoans() { await postNoArg('/sell_consumer_loans'); }
+export async function buyPrimeMortgages() { await postNoArg('/buy_prime_mortgages'); }
+export async function sellPrimeMortgages() { await postNoArg('/sell_prime_mortgages'); }
+export async function buySubprimeMortgages() { await postNoArg('/buy_subprime_mortgages'); }
+export async function sellSubprimeMortgages() { await postNoArg('/sell_subprime_mortgages'); }
+export async function listEtfs() { await postNoArg('/list_etfs'); }
+export async function freezeLoans() { await postNoArg('/freeze_loans'); }
+
+/* Accounting */
+export async function decreaseEarnings() { await postNoArg('/decrease_earnings'); }
+export async function increaseEarnings() { await postNoArg('/increase_earnings'); }
+
+/* Legal */
+export async function changeLawFirm() { await postNoArg('/change_law_firm'); }
+export async function antitrustLawsuit() { await postNoArg('/antitrust_lawsuit'); }
+export async function harrassingLawsuit() { await postNoArg('/harrassing_lawsuit'); }
+export async function spreadRumors() { await postNoArg('/spread_rumors'); }
+
+/* Market Reports */
+export async function viewCurrentInterestRates() { await postNoArg('/view_current_interest_rates'); }
+export async function whosAhead() { await postNoArg('/whos_ahead'); }
+export async function dbResearchTool() { await postNoArg('/db_research_tool'); }
+export async function economicStats() { await postNoArg('/economic_stats'); }
+export async function mostCashReport() { await postNoArg('/most_cash_report'); }
+export async function largestMarketCap() { await postNoArg('/largest_market_cap'); }
+export async function largestTaxLosses() { await postNoArg('/largest_tax_losses'); }
+export async function industrySummary() { await postNoArg('/industry_summary'); }
+export async function industryProjections() { await postNoArg('/industry_projections'); }
+export async function viewCorpAssetsForSale() { await postNoArg('/view_corp_assets_for_sale'); }
+export async function industryGrowthRates() { await postNoArg('/industry_growth_rates'); }
+
+/* Who Owns What */
+export async function whoOwnsCommodities() { await postNoArg('/who_owns_commodities'); }
+export async function whoOwnsInterestRateSwaps() { await postNoArg('/who_owns_interest_rate_swaps'); }
+export async function whoOwnsOptions() { await postNoArg('/who_owns_options'); }
+export async function whoOwnsStocks() { await postNoArg('/who_owns_stocks'); }
+export async function whoAreAdvisors() { await postNoArg('/who_are_advisors'); }
+export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
+
+/* Misc */
+export async function setViewAsset(id) { await postIdArg('/set_view_asset', id); }
+export async function changeActingAs(id) { await postIdArg('/change_acting_as', id); }
+export async function databaseSearch() { await postIdArg('/database_search'); }

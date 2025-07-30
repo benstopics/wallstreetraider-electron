@@ -1,0 +1,365 @@
+html,
+body,
+#app {
+    height: calc(100vh);
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+    background-color: #000;
+    font-family: Helvetica, Arial, sans-serif;
+    /* color: #ffc380; */
+    overflow: hidden;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    height: var(--height, auto);
+    gap: var(--gap, 0px);
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    width: var(--width, auto);
+    gap: var(--gap, 0px);
+}
+
+.panel {
+    background-color: black;
+    border: 1px solid #333333;
+    color: #ffc380;
+    padding: 0;
+    /* remove inner padding so rows are flush with border */
+    box-sizing: border-box;
+    font-size: 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    background: linear-gradient(to bottom, #666666, #333333);
+    color: #fff;
+    font-size: 12px;
+    padding: 4px;
+    font-weight: bold;
+    flex-shrink: 0;
+    flex: 0 0 auto;
+}
+
+.panel-body {
+    flex: 1 1 0%;
+    overflow-y: auto;
+    min-height: 0; /* <--- THIS LINE IS CRITICAL */
+}
+
+/* Global Scrollbar Styling */
+div {
+    scrollbar-width: thin;            /* Firefox */
+    scrollbar-color: #666 #222;        /* thumb track */
+}
+
+/* Chrome, Edge, Safari */
+div::-webkit-scrollbar {
+    width: 12px;
+}
+
+div::-webkit-scrollbar-track {
+    background: #222; /* dark track */
+}
+
+div::-webkit-scrollbar-thumb {
+    background-color: #666;    /* thumb color */
+    border-radius: 2px;
+    border: 2px solid #222;    /* gives inset look */
+}
+
+div::-webkit-scrollbar-thumb:hover {
+    background-color: #888;    /* lighter on hover */
+}
+
+.price-chart {
+    background-color: #333;
+    width: 100%;
+    height: 100%;
+}
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    background-color: black;
+    color: white;
+    padding: 0 10px;
+}
+
+.game-view {
+    height: calc(100% - 40px);
+}
+
+.btn {
+    background: linear-gradient(to bottom, #3d3d3d, #202020);
+    color: white;
+    border: none;
+    padding: 3px 7px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn svg {
+    fill: white;
+}
+
+.btn.main-menu {
+    width: 200px;
+    font-size: large;
+}
+
+.btn:hover {
+    background: linear-gradient(to bottom, #666666, #333333);
+}
+
+.btn:active {
+    background: linear-gradient(to bottom, #222222, #111111);
+}
+
+.btn.disabled {
+    pointer-events: none;
+    background: linear-gradient(to bottom, #555555, #333333);
+    color: #888888;
+    opacity: 0.6;
+}
+
+.btn.green {
+    background: linear-gradient(to bottom, #10821a, #0a5e12);
+}
+
+.btn.green:hover {
+    background: linear-gradient(to bottom, #1aa82e, #0c7e16);
+}
+
+.btn.green:active {
+    background: linear-gradient(to bottom, #0a5e12, #083f0d);
+}
+
+.btn.blue {
+    background: linear-gradient(to bottom, #0d5473, #083f4e);
+}
+
+.btn.blue:hover {
+    background: linear-gradient(to bottom, #0f6a8c, #0a4e66);
+}
+
+.btn.blue:active {
+    background: linear-gradient(to bottom, #083f4e, #062b34);
+}
+
+.btn.red {
+    background: linear-gradient(to bottom, #9d132a, #6b0d1e);
+}
+
+.btn.red:hover {
+    background: linear-gradient(to bottom, #b31a3c, #7d1124);
+}
+
+.btn.red:active {
+    background: linear-gradient(to bottom, #6b0d1e, #4a0914);
+}
+
+.btn.brown {
+    background: linear-gradient(to bottom, #7a4b2c, #5a3621);
+}
+
+.btn.brown:hover {
+    background: linear-gradient(to bottom, #8b5c3d, #6a472a);
+}
+
+.btn.brown:active {
+    background: linear-gradient(to bottom, #5a3621, #3c2517);
+}
+
+.btn.play {
+    background: linear-gradient(to bottom, #d9a800, #b88a00);
+}
+
+.btn.play:hover {
+    background: linear-gradient(to bottom, #e0b800, #c49a00);
+}
+
+.btn.play:active {
+    background: linear-gradient(to bottom, #b88a00, #9a6f00);
+}
+
+.btn.stop {
+    background: linear-gradient(to bottom, #9d132a, #6b0d1e);
+}
+
+.btn.stop:hover {
+    background: linear-gradient(to bottom, #b31a3c, #7d1124);
+}
+
+.btn.stop:active {
+    background: linear-gradient(to bottom, #6b0d1e, #4a0914);
+}
+
+.label {
+    color: #ffc380;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+select.basic {
+    padding: 5px;
+    background-color: #FC9D23;
+    color: black;
+    border: 1px solid #333;
+    font-size: 12px;
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden;    /* Hide overflow */
+    text-overflow: ellipsis; /* Add truncation with ellipsis */
+}
+
+.date-display {
+    color: #ffc380;
+}
+
+.ml10 {
+    margin-left: 10px;
+}
+
+.centered-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.video-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    /* z-index: -1; */
+}
+
+.quote-overlay {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    max-width: 80%;
+    color: #ffc380;
+    z-index: 100;
+}
+
+.quote-overlay blockquote {
+    margin: 0;
+    font-style: italic;
+}
+
+.app-container {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: black;
+}
+
+.fixed-width {
+    font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
+}
+
+.quote-line {
+    display: flex;
+    justify-content: space-between;
+    /* padding: 4px 6px; */
+    cursor: pointer;
+    font-size: 12px;
+    /* smaller text */
+}
+
+.quote-line:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.quote-symbol {
+    flex-shrink: 0;
+    width: 40px;
+    /* Set a fixed width */
+}
+
+.quote-name {
+    color: white;
+    flex: 2;
+    text-align: left;
+    padding-left: 10px;
+}
+
+.quote-price {
+    flex: 1;
+    text-align: right;
+}
+
+.positive {
+    color: #43ee3d;
+}
+
+.negative {
+    color: #ff433d;
+}
+
+.neutral {
+    color: #ffc380;
+}
+
+.command-line {
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    background-color: black;
+    border: 2px solid #0D5473;
+    color: white;
+    font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
+    font-size: 16px;
+}
+
+.tab-button {
+    white-space: nowrap;
+    font-size: 10px;
+    height: 20px;
+    line-height: 20px;
+    padding: 0 15px;
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 100%, 0% 100%);
+    cursor: pointer;
+    background-color: #222;
+    color: #aaa;
+    font-weight: bold;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tab-button:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+.tab-button:active, .tab-button.active {
+    background-color: #666;
+    color: #fff;
+}
