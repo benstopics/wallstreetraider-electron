@@ -149,6 +149,15 @@ const IndustrialView = ({ gameState }) => {
                         </div>
                     <//>
                     <${Tab} label="Earnings">
+
+                    <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
+                        <button class="btn red flex-1 mx-1" onclick=${() => api.decreaseEarnings()}>Decrease Earnings</button>
+                    </div>
+
+                     <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
+                        <button class="btn green flex-1 mx-1" onclick=${() => api.increaseEarnings()}>Increase Earnings</button>
+                    </div>
+
                         <div class="flex justify-center items-center">
                             ${renderLines(gameState.earningsReport, ({ id }) => api.setViewAsset(id))}
                         </div>
