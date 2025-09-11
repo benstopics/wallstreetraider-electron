@@ -52,7 +52,9 @@ export async function getJSON(path) {
     return response.json();
 }
 
-
+export function isPlayerControlled(gameState, entityId) {
+    return (gameState.controlledCompanies || []).some(c => c.id === entityId);
+}
 
 /* General */
 export function getGameState() { return getJSON('/gamestate'); }
@@ -154,11 +156,10 @@ export async function setBankAllocation() { await postNoArg('/set_bank_allocatio
 export async function tradeTbills() { await postNoArg('/trade_tbills'); }
 export async function listBankLoans() { await postNoArg('/list_bank_loans'); }
 export async function changeBank() { await postNoArg('/change_bank'); }
-export async function callInLoans() { await postNoArg('/call_in_loans'); }
+export async function callInLoan(id) { await postIdArg('/call_in_loan', id); }
 export async function buyBankLoans() { await postNoArg('/buy_bank_loans'); }
-export async function sellBankLoans() { await postNoArg('/sell_bank_loans'); }
 export async function buyBusinessLoans() { await postNoArg('/buy_business_loans'); }
-export async function sellBusinessLoans() { await postNoArg('/sell_business_loans'); }
+export async function sellBusinessLoan(id) { await postIdArg('/sell_business_loan', id); }
 export async function buyConsumerLoans() { await postNoArg('/buy_consumer_loans'); }
 export async function sellConsumerLoans() { await postNoArg('/sell_consumer_loans'); }
 export async function buyPrimeMortgages() { await postNoArg('/buy_prime_mortgages'); }
@@ -166,7 +167,8 @@ export async function sellPrimeMortgages() { await postNoArg('/sell_prime_mortga
 export async function buySubprimeMortgages() { await postNoArg('/buy_subprime_mortgages'); }
 export async function sellSubprimeMortgages() { await postNoArg('/sell_subprime_mortgages'); }
 export async function listEtfs() { await postNoArg('/list_etfs'); }
-export async function freezeLoans() { await postNoArg('/freeze_loans'); }
+export async function freezeAllLoans() { await postNoArg('/freeze_all_loans'); }
+export async function freezeLoan(id) { await postIdArg('/freeze_loan', id); }
 
 /* Accounting */
 export async function decreaseEarnings() { await postNoArg('/decrease_earnings'); }

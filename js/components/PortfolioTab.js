@@ -67,22 +67,27 @@ function PortfolioTab({ gameState }) {
                 <div class="flex flex-row flex-[3]">
                     <div class="flex justify-center items-center">
                                     ${renderLines(portfolio,
-        ({ id }) => api.setViewAsset(id),
+        ({ id }) => id && api.setViewAsset(id),
         ({ type, id }) => actingAs ? html`
             <button
             class="btn red flex-1 mx-1"
-            onClick=${() => (type === "S" ? api.coverShortStock : api.sellStock)(id)}>
+            onClick=${() => (type === "S" ? api.coverShortStock
+                    : type === "J" ? api.sellCorporateBond
+                    : type === "GS" ? api.sellShortGovtBonds
+                    : type === "GL" ? api.sellLongGovtBonds
+                    : api.sellStock
+                )(id)}>
                 ${type === "S" ? "Cover" : "Sell"}
             </button>
-            <button
+            ${type === "C" && html`<button
             class="btn blue flex-1 mx-1"
             onClick=${() => api.spinOff(id)}>
                 Spin-Off
-            </button>`
+            </button>`}`
 : html`
             <${Tooltip} text="Must be acting as">
                 <button class="btn disabled w-full">${type === "S" ? "Cover" : "Sell"}</button>
-                <button class="btn disabled w-full">Spin-Off</button>
+                ${type === "C" && html`<button class="btn disabled w-full">Spin-Off</button>`}
             <//>`
     )}
                     </div>

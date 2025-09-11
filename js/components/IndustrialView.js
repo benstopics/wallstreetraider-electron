@@ -12,6 +12,7 @@ import * as api from '../api.js';
 import EPSChart from './EPSChart.js';
 import FinancialsTab from './FinancialsTab.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import LoansTab from './LoansTab.js';
 
 const Tab = Tabs.Tab;
 
@@ -34,7 +35,7 @@ const extractEPSData = lines => {
 
 
 const IndustrialView = ({ gameState }) => {
-    const { actingAsId, actingAsIndustryId, activeEntityNum } = gameState;
+    const { actingAsId, actingAsIndustryId, activeEntityNum, activeIndustryId } = gameState;
 
     const buyStockDisabledMessage = !actingAsId
         ? "Must be acting as"
@@ -176,11 +177,15 @@ const IndustrialView = ({ gameState }) => {
                     <${Tab} label="Financials">
                         <${FinancialsTab} gameState=${gameState} />
                     <//>
-                    <${Tab} label="Cashflow">
+                    ${(activeIndustryId != null && activeIndustryId !== api.BANK_IND) 
+                    ? html`<${Tab} label="Cashflow">
                         <div class="flex justify-center items-center">
                             ${renderLines(gameState.cashflowProjection, ({ id }) => api.setViewAsset(id))}
                         </div>
-                    <//>
+                    <//>` 
+                    : html`<${Tab} label="Loans">
+                        ${html`<${LoansTab} gameState=${gameState} />`}
+                    <//>`}
                     <${Tab} label="Stocks & Bonds">
                         <${PortfolioTab} gameState=${gameState} />
                     <//>

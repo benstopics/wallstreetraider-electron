@@ -3,9 +3,15 @@ import '../lib/tailwind.module.js';
 
 
 const Tabs = ({ children }) => {
-    const tabChildren = Array.isArray(children) ? children : [children];
+    const tabChildren = Array.isArray(children) ? children.filter(child => (child?.props?.label ?? false)) : [children];
     const tabLabels = tabChildren.map(child => child.props.label);
     const [activeTab, setActiveTab] = useState(tabLabels[0]);
+
+    useEffect(() => {
+        if (!tabLabels.includes(activeTab)) {
+            setActiveTab(tabLabels[0]);
+        }
+    }, [children])
 
     return html`
     <div class="flex flex-col h-full min-h-0">

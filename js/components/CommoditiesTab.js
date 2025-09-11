@@ -83,7 +83,7 @@ function IndexPanel({ title, commodityId, gameState }) {
 
 function CommoditiesTab({ gameState }) {
 
-    const { commodityList } = gameState;
+    const { commodityList, actingAs } = gameState;
 
     return html`
         <div class="flex flex-row w-full">
@@ -101,7 +101,22 @@ function CommoditiesTab({ gameState }) {
                     <${IndexPanel} title="Wheat" commodityId=${api.WHEAT_ID} gameState=${gameState} />
                 </div>
                 <div class="flex flex-row justify-center">
-                    ${renderLines(commodityList, ({ id }) => api.setViewAsset(id))}
+                ${renderLines(commodityList,
+                    undefined,
+                    ({ type, id }) => actingAs ? html`
+                    <button
+                        class="btn red flex-1 mx-1"
+                        onClick=${() => (type === "P" ? api.sellPhysicalCommodity
+                                : type === "PC" ? api.sellPhysicalCrypto
+                                : type === "F" ? api.sellCommodityFutures
+                                : type === "CF" ? api.sellCryptoFutures
+                                : () => {}
+                            )(id)}>
+                        Sell
+                    </button>` : html`
+                    <${Tooltip} text="Must be acting as">
+                        <button class="btn disabled w-full">Sell</button>
+                    <//>`)}
                 </div>
             </div>
         </div>
