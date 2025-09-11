@@ -162,6 +162,18 @@ div::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(to bottom, #083f4e, #062b34);
 }
 
+.btn.orange {
+    background: linear-gradient(to bottom, #d97706, #b25c05);
+}
+
+.btn.orange:hover {
+    background: linear-gradient(to bottom, #e4880a, #c06d07);
+}
+
+.btn.orange:active {
+    background: linear-gradient(to bottom, #b25c05, #8a4304);
+}
+
 .btn.red {
     background: linear-gradient(to bottom, #9d132a, #6b0d1e);
 }

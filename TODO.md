@@ -79,12 +79,6 @@ SET_ADVISORY_FEE | Any insurer or securities broker that is an ETF advisor | `Se
 ANTITRUST_LAWSUIT | Any company except banks, insurers, and holding companies | `Antitrust Lawsuit` button at top of company profile page
 
 #### LINE BUTTONS IN REPORTS
-BUY_CONSUMER_LOANS | Banks only | `Buy Consumer Loans` button at end of Consumer Loans line in *Loans* report
-SELL_CONSUMER_LOANS | Banks only | `Sell Consumer Loans` button at end of Consumer Loans line in *Loans* report
-BUY_PRIME_MORTGAGES | Banks only | `Buy Prime Mortgages` button at end of Prime Mortgages line in *Loans* report
-SELL_PRIME_MORTGAGES | Banks only | `Sell Prime Mortgages` button at end of Prime Mortgages line in *Loans* report
-BUY_SUBPRIME_MORTGAGES | Banks only | `Buy Subprime Mortgages` button at end of Subprime Mortgages line in *Loans* report
-SELL_SUBPRIME_MORTGAGES | Banks only | `Sell Subprime Mortgages` button at end of Subprime Mortgages line in *Loans* report
 COVER_SHORT_COMMODITY_FUTURES | Any entity with short commodity futures | `Cover` button at end of short commodity futures line in *Commodities* report
 COVER_SHORT_CRYPTO_FUTURES | Any entity with short crypto futures | `Cover` button at end of short crypto futures line in *Crypto* report
 SELL_SUBSIDIARY_STOCK | Any company that owns stock | `Offer for Sale` button at end of stock line in *Stocks & Bonds* report
@@ -101,6 +95,12 @@ TOGGLE_COMPANY_AUTOPILOT | Any company | `Autopilot` button with red/green dot i
 
 | Action | Permission  | UI Idea |
 |--------|-------------|---------|
+BUY_CONSUMER_LOANS | Banks only | `Buy Consumer Loans` button at end of Consumer Loans line in *Loans* report
+SELL_CONSUMER_LOANS | Banks only | `Sell Consumer Loans` button at end of Consumer Loans line in *Loans* report
+BUY_PRIME_MORTGAGES | Banks only | `Buy Prime Mortgages` button at end of Prime Mortgages line in *Loans* report
+SELL_PRIME_MORTGAGES | Banks only | `Sell Prime Mortgages` button at end of Prime Mortgages line in *Loans* report
+BUY_SUBPRIME_MORTGAGES | Banks only | `Buy Subprime Mortgages` button at end of Subprime Mortgages line in *Loans* report
+SELL_SUBPRIME_MORTGAGES | Banks only | `Sell Subprime Mortgages` button at end of Subprime Mortgages line in *Loans* report
 SELL_BUSINESS_LOAN | Banks only | `Sell Business Loan` button at the end of each loan line with non-zero loan in *Loans* tab
 CALL_IN_LOAN | Banks with loans only | `Call In` button at end of each loan line in *Loans* report
 FREEZE_LOAN | Banks with loans only | `Freeze` button at end of each loan line in *Loans* report (`Unfreeze` if loan is frozen)

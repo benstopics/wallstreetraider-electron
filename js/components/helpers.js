@@ -31,7 +31,7 @@ export function renderMultilineText(text, options = { additionalDelimiters: [], 
 }
 
 export function parseHyperlink(line) {
-    const match = line && line.match(/@([A-Z]+)(\d+)$/);
+    const match = line && line.match(/@([A-Z]+)(\d*)$/);
     if (!match) return null;
     return { type: match[1], id: parseInt(match[2], 10) };
 }
@@ -42,7 +42,7 @@ export function renderLines(lines, onLink, renderExtras) {
     // Step 1: Strip hyperlinks and get clean lines
     const cleanedLines = lines.map(line => {
         const link = parseHyperlink(line);
-        const clean = link ? line.slice(0, -7).trimEnd() : line;
+        const clean = link ? line.slice(0, line.indexOf('@')).trimEnd() : line;
         return { raw: line, text: clean, link };
     });
 
