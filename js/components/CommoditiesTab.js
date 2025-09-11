@@ -41,8 +41,8 @@ function IndexPanel({ title, commodityId, gameState }) {
             <div class="flex flex-col" style="height: 100px">
                 ${html`<${AssetPriceChart} chartTitle=${title} assetId=${commodityId} />`}
             </div>
-            <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
-                ${showBuyButton && (
+            <div class="flex flex-row justify-around mt-2 w-full" style="height:25px">
+                ${showBuyButton ? (
             !buyDisabledMessage
                 ? html`
                             <button class="btn green flex-1 mx-1" onclick=${() => buy(commodityId)}>Buy</button>
@@ -52,7 +52,7 @@ function IndexPanel({ title, commodityId, gameState }) {
                                 <button class="btn disabled w-full">Buy</button>
                             <//>
                         `
-        )}
+        ) : ''}
 
                 ${!buyFuturesDisabledMessage
             ? html`
@@ -71,7 +71,7 @@ function IndexPanel({ title, commodityId, gameState }) {
                 `
             : html`
                     <${Tooltip} text=${shortFuturesDisabledMessage}>
-                        <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
+                        <div class="flex flex-row justify-between w-full">
                             <button class="btn disabled w-full">Short Futures</button>
                         </div>
                     <//>

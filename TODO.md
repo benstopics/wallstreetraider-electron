@@ -66,17 +66,10 @@ Cheat Menu (secret console command)
 ELECT_CEO | All companies | `Become CEO` button at the beginning of each company line in *My Corporations* tab if the player is not already a CEO
 RESIGN_AS_CEO | Players who are CEOs only | `Resign` button at top of *My Corporations* tab
 
-#### CASHFLOW TAB BUTTONS
-BUY_CORPORATE_ASSETS | Industrials and holding companies only | `Buy Assets` button at top of *Cashflow* tab
-SELL_CORPORATE_ASSETS | Companies with assets only | `Sell Assets` button at top of *Cashflow* tab
-SET_DIVIDEND | All companies | `Set Dividend` button at top of the *Cashflow* tab
-SET_PRODUCTIVITY | All companies and holding companies | `Set Productivity` button at top of the *Cashflow* tab
-SET_GROWTH_RATE | All companies and holding companies | `Set Growth Rate` button at top of the *Cashflow* tab
-CHANGE_MANAGERS | All companies | `Change Managers` button at top of *Cashflow* tab
-
 #### TOP OF COMPANY PROFILE PAGE BUTTONS
 SET_ADVISORY_FEE | Any insurer or securities broker that is an ETF advisor | `Set Advisory Fee` button at top of company profile page
 ANTITRUST_LAWSUIT | Any company except banks, insurers, and holding companies | `Antitrust Lawsuit` button at top of company profile page
+HARRASSING_LAWSUIT | Players or companies | `Harrassing Lawsuit` button at top of the window
 
 #### LINE BUTTONS IN REPORTS
 COVER_SHORT_COMMODITY_FUTURES | Any entity with short commodity futures | `Cover` button at end of short commodity futures line in *Commodities* report
@@ -95,6 +88,12 @@ TOGGLE_COMPANY_AUTOPILOT | Any company | `Autopilot` button with red/green dot i
 
 | Action | Permission  | UI Idea |
 |--------|-------------|---------|
+SET_DIVIDEND | All companies | `Set Dividend` button at top of the *Cashflow* tab
+SET_PRODUCTIVITY | All companies and holding companies | `Set Productivity` button at top of the *Cashflow* tab
+SET_GROWTH_RATE | All companies and holding companies | `Set Growth Rate` button at top of the *Cashflow* tab
+CHANGE_MANAGERS | All companies | `Change Managers` button at top of *Cashflow* tab
+BUY_CORPORATE_ASSETS | Industrials and holding companies only | `Buy Assets` button at top of *Cashflow* tab
+SELL_CORPORATE_ASSETS | Companies with assets only | `Sell Assets` button at top of *Cashflow* tab
 BUY_CONSUMER_LOANS | Banks only | `Buy Consumer Loans` button at end of Consumer Loans line in *Loans* report
 SELL_CONSUMER_LOANS | Banks only | `Sell Consumer Loans` button at end of Consumer Loans line in *Loans* report
 BUY_PRIME_MORTGAGES | Banks only | `Buy Prime Mortgages` button at end of Prime Mortgages line in *Loans* report
@@ -148,7 +147,6 @@ CALL_IN_ADVANCE | Players who have advanced funds | `Call In Advance` button at 
 BUY_CORPORATE_BOND | Players, banks, and insurers only | `Buy` button top of *Stocks & Bonds* tab
 DATABASE_SEARCH | Players only | `Database Search` button at top window
 CHANGE_LAW_FIRM | Player | `Change Law Firm` button at top of the window
-HARRASSING_LAWSUIT | Players or companies | `Harrassing Lawsuit` button at top of the window
 SPREAD_RUMORS | Players only | `Spread Rumors` button at top of the window
 ADVANCED_OPTIONS_TRADING | All entities (banks and insurers must own stock i.e. covered) | `Advanced Trading Station` button at top of *Options* tab
 PREPAY_TAXES | Players only | `Prepay Taxes` button at top of player *Financials* tab

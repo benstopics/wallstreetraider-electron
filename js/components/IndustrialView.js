@@ -13,6 +13,7 @@ import EPSChart from './EPSChart.js';
 import FinancialsTab from './FinancialsTab.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import LoansTab from './LoansTab.js';
+import CashflowTab from './CashflowTab.js';
 
 const Tab = Tabs.Tab;
 
@@ -179,9 +180,7 @@ const IndustrialView = ({ gameState }) => {
                     <//>
                     ${(activeIndustryId != null && activeIndustryId !== api.BANK_IND) 
                     ? html`<${Tab} label="Cashflow">
-                        <div class="flex justify-center items-center">
-                            ${renderLines(gameState.cashflowProjection, ({ id }) => api.setViewAsset(id))}
-                        </div>
+                        ${html`<${CashflowTab} gameState=${gameState} />`}
                     <//>` 
                     : html`<${Tab} label="Loans">
                         ${html`<${LoansTab} gameState=${gameState} />`}

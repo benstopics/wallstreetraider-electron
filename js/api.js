@@ -176,8 +176,8 @@ export async function increaseEarnings() { await postNoArg('/increase_earnings')
 
 /* Legal */
 export async function changeLawFirm() { await postNoArg('/change_law_firm'); }
-export async function antitrustLawsuit() { await postNoArg('/antitrust_lawsuit'); }
-export async function harrassingLawsuit() { await postNoArg('/harrassing_lawsuit'); }
+export async function antitrustLawsuit(id) { await postIdArg('/antitrust_lawsuit', id); }
+export async function harrassingLawsuit(id) { await postIdArg('/harrassing_lawsuit', id); }
 export async function spreadRumors() { await postNoArg('/spread_rumors'); }
 
 /* Market Reports */
