@@ -4,6 +4,7 @@ import AssetPriceChart from './AssetPriceChart.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import Tooltip from './Tooltip.js';
+import SparkChart from './SparkChart.js';
 
 
 const Tab = Tabs.Tab;
@@ -81,6 +82,14 @@ function IndexPanel({ title, commodityId, gameState }) {
     `;
 }
 
+const getCellValues = (line) => {
+    return line.split(' ').filter(s => s.trim() !== '');
+}
+
+const isContractShort = (line) => {
+    return getCellValues(line)?.[3].startsWith('-')
+}
+
 function CommoditiesTab({ gameState }) {
 
     const { commodityList, actingAs } = gameState;
@@ -103,16 +112,16 @@ function CommoditiesTab({ gameState }) {
                 <div class="flex flex-row justify-center">
                 ${renderLines(commodityList,
                     undefined,
-                    ({ type, id }) => actingAs ? html`
+                    ({ type, id, text }) => actingAs ? html`
                     <button
                         class="btn red flex-1 mx-1"
                         onClick=${() => (type === "P" ? api.sellPhysicalCommodity
                                 : type === "PC" ? api.sellPhysicalCrypto
-                                : type === "F" ? api.sellCommodityFutures
-                                : type === "CF" ? api.sellCryptoFutures
+                                : type === "F" ? isContractShort(text) ? api.coverShortCommodityFutures : api.sellCommodityFutures
+                                : type === "CF" ? isContractShort(text) ? api.buyCryptoFutures : api.sellCryptoFutures
                                 : () => {}
                             )(id)}>
-                        Sell
+                        ${type.includes('F') && isContractShort(text) ? 'Cover' : 'Sell'}
                     </button>` : html`
                     <${Tooltip} text="Must be acting as">
                         <button class="btn disabled w-full">Sell</button>

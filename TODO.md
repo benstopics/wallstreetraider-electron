@@ -56,15 +56,12 @@ Reports/Research
         [ ] Industry Summary
         [ ] Industry Projections (if not Bank, H/C, or Insurer)
         [ ] Industry growth rates
+[ ] Go through Suggestions/Advice panels and make it to where this updates the Advisory panel depending on which tab you're in
 
 Cheat Menu (secret console command)
 
 | Action | Permission  | UI Idea |
 |--------|-------------|---------|
-
-#### STOCK PROFILE BUTTONS NEXT TO ATTRIBUTES REPORT OR W/E ON SIDEBAR
-ELECT_CEO | All companies | `Become CEO` button at the beginning of each company line in *My Corporations* tab if the player is not already a CEO
-RESIGN_AS_CEO | Players who are CEOs only | `Resign` button at top of *My Corporations* tab
 
 #### TOP OF COMPANY PROFILE PAGE BUTTONS
 SET_ADVISORY_FEE | Any insurer or securities broker that is an ETF advisor | `Set Advisory Fee` button at top of company profile page
@@ -72,8 +69,6 @@ ANTITRUST_LAWSUIT | Any company except banks, insurers, and holding companies | 
 HARRASSING_LAWSUIT | Players or companies | `Harrassing Lawsuit` button at top of the window
 
 #### LINE BUTTONS IN REPORTS
-COVER_SHORT_COMMODITY_FUTURES | Any entity with short commodity futures | `Cover` button at end of short commodity futures line in *Commodities* report
-COVER_SHORT_CRYPTO_FUTURES | Any entity with short crypto futures | `Cover` button at end of short crypto futures line in *Crypto* report
 SELL_SUBSIDIARY_STOCK | Any company that owns stock | `Offer for Sale` button at end of stock line in *Stocks & Bonds* report
 EXERCISE_CALL_OPTIONS_EARLY | Any entity with in-the-money call options | `Exercise` button at end of call line in *Options* report
 EXERCISE_PUT_OPTIONS_EARLY | Any entity with in-the-money put options | `Exercise` button at end of put line in *Options* report
@@ -81,13 +76,16 @@ SELL_CALLS | All entities (banks and insurers must own stock i.e. covered) | `Se
 SELL_PUTS | All entities (banks and insurers must own stock i.e. covered) | `Sell Puts` button at top of *Options* tab and `Sell` button at end of put line in *Options* report
 
 #### MISCELLANEOUS BUTTONS
-TOGGLE_COMPANY_AUTOPILOT | Any company | `Autopilot` button with red/green dot indicator at top of company profile page
+TOGGLE_COMPANY_AUTOPILOT | Any company | `Autopilot` button at end of line of each company in *My Corporations* tab AND at top of IndustrialView
 
 
 ### FINISHED
 
 | Action | Permission  | UI Idea |
 |--------|-------------|---------|
+ELECT_CEO | All companies | `Become CEO` button at the beginning of each company line in *My Corporations* tab if the player is not already a CEO
+RESIGN_AS_CEO | Players who are CEOs only | `Resign` button at top of *My Corporations* tab
+COVER_SHORT_COMMODITY_FUTURES | Any entity with short commodity futures | `Cover` button at end of short commodity futures line in *Commodities* report
 SET_DIVIDEND | All companies | `Set Dividend` button at top of the *Cashflow* tab
 SET_PRODUCTIVITY | All companies and holding companies | `Set Productivity` button at top of the *Cashflow* tab
 SET_GROWTH_RATE | All companies and holding companies | `Set Growth Rate` button at top of the *Cashflow* tab

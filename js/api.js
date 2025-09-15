@@ -56,6 +56,10 @@ export function isPlayerControlled(gameState, entityId) {
     return (gameState.controlledCompanies || []).some(c => c.id === entityId);
 }
 
+export function isPlayerCEO(gameState, entityId) {
+    return gameState.chairedCompanyId === entityId;
+}
+
 /* General */
 export function getGameState() { return getJSON('/gamestate'); }
 export async function toggleTicker() { await postNoArg('/toggle_ticker'); }

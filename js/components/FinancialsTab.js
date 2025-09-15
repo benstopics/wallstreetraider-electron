@@ -8,8 +8,7 @@ function FinancialsTab({ gameState }) {
 
     return html`
             <div class="flex flex-col w-full items-center">
-                <div class="flex flex-row items-center justify-start gap-5">
-                    <div class="items-center flex flex-col justify-center">
+                <div class="flex flex-row items-center gap-5">
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
                             getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
@@ -24,8 +23,6 @@ function FinancialsTab({ gameState }) {
                             label="Repay Loan"
                             color=""
                         />
-                    </div>
-                    <div class="items-center flex flex-col justify-center">
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
                             getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
@@ -47,8 +44,6 @@ function FinancialsTab({ gameState }) {
                             label="Taxable Liquidation"
                             color="green"
                         />
-                    </div>
-                    <div class="items-center flex flex-col justify-center">
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
                             getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
@@ -70,7 +65,6 @@ function FinancialsTab({ gameState }) {
                             label="Interest Rate Swaps"
                             color=""
                         />
-                    </div>
                 </div>
                 <br />
                 <div class="flex flex-col flex-[3] justify-center items-center">

@@ -26,12 +26,12 @@ const PlayerView = ({ gameState }) => html`
                 </div>
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
-                <div class="flex gap-2 items-center" style="height: 30px;">
+                <div class="flex gap-2 items-center" style="height: 35px;">
                     <input class="command-line" type="text" placeholder="Enter command..." />
-                    <div class="mt-2" style="height:25px">
+                    <div class="btn-container">
                         <button class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
                     </div>
-                    <div class="mt-2" style="height:25px">
+                    <div class="btn-container">
                         <button class="btn green mx-1" onclick=${api.startup}>Startup</button>
                     </div>
                 </div>
@@ -82,6 +82,11 @@ const PlayerView = ({ gameState }) => html`
                                             <button class="btn disabled w-full">Recall</button>
                                         <//>`
 )}
+                        </div>
+                    <//>
+                    <${Tab} label="My Corporations">
+                        <div class="flex justify-center items-center">
+                            ${renderLines(gameState.myCorporationsReport, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
                 <//>

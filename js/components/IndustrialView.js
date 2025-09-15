@@ -99,8 +99,22 @@ const IndustrialView = ({ gameState }) => {
                 </div>
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
-                <div class="flex gap-2 justify-start" style="height: 30px;">
+                <div class="flex gap-2 items-center" style="height: 35px;">
                     <input class="command-line" type="text" placeholder="Enter command..." />
+                    ${api.isPlayerControlled(gameState, activeEntityNum)
+                        ? api.isPlayerCEO(gameState, activeEntityNum) ? html`<${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            onClick=${api.resignAsCeo} 
+                            label="Resign as CEO"
+                            color="red"
+                        />` : html`<${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            onClick=${api.electCeo} 
+                            label="Elect as CEO"
+                            color="red"
+                        />` : ''}
                     <${ActingAsRequiredButton} 
                         gameState=${gameState} 
                         getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
@@ -178,13 +192,12 @@ const IndustrialView = ({ gameState }) => {
                     <${Tab} label="Financials">
                         <${FinancialsTab} gameState=${gameState} />
                     <//>
-                    ${(activeIndustryId != null && activeIndustryId !== api.BANK_IND) 
-                    ? html`<${Tab} label="Cashflow">
+                    <${Tab} label="Cashflow">
                         ${html`<${CashflowTab} gameState=${gameState} />`}
-                    <//>` 
-                    : html`<${Tab} label="Loans">
+                    <//>
+                    ${gameState.activeIndustryId === api.BANK_IND ? html`<${Tab} label="Loans">
                         ${html`<${LoansTab} gameState=${gameState} />`}
-                    <//>`}
+                    <//>` : ''}
                     <${Tab} label="Stocks & Bonds">
                         <${PortfolioTab} gameState=${gameState} />
                     <//>
@@ -195,8 +208,8 @@ const IndustrialView = ({ gameState }) => {
                         ${html`<${CommoditiesTab} gameState=${gameState} />`}
                     <//>
                     <${Tab} label="Shareholders">
-                        <div class="flex flex-row items-center justify-start gap-5">
-                            <div class="items-center flex flex-row justify-center">
+                        <div class="flex flex-col w-full items-center">
+                            <div class="flex flex-row items-center gap-5">
                                 <${ActingAsRequiredButton} 
                                     gameState=${gameState} 
                                     getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 

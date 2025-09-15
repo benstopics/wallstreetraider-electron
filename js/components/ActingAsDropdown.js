@@ -26,7 +26,7 @@ function ActingAsDropdown({ gameState }) {
                 <select class="basic flex-grow w-full" value=${gameState.actingAsId} onChange=${onChange}>
                     ${options.map(opt => html`<option value=${opt.id}>${opt.name}</option>`)}
                 </select>
-                <div class="mt-2" style="height:25px">
+                <div class="" style="height:25px">
                     <button class="btn mx-1" onclick=${() => api.setViewAsset(gameState.actingAsId)}>View</button>
                 </div>
             </div>
