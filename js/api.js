@@ -60,6 +60,10 @@ export function isPlayerCEO(gameState, entityId) {
     return gameState.chairedCompanyId === entityId;
 }
 
+export function getCompanyBySymbol(gameState, symbol) {
+    return (gameState.allCompanies || []).find(c => c.symbol === symbol);
+}
+
 /* General */
 export function getGameState() { return getJSON('/gamestate'); }
 export async function toggleTicker() { await postNoArg('/toggle_ticker'); }
@@ -124,9 +128,10 @@ export async function setGrowthRate() { await postNoArg('/set_growth_rate'); }
 export async function restructure() { await postNoArg('/restructure'); }
 export async function buyCorporateAssets() { await postNoArg('/buy_corporate_assets'); }
 export async function sellCorporateAssets() { await postNoArg('/sell_corporate_assets'); }
+export async function offerCorporateAssetsForSale() { await postNoArg('/offer_corporate_assets_for_sale'); }
 export async function sellSubsidiaryStock() { await postNoArg('/sell_subsidiary_stock'); }
 export async function rebrand() { await postNoArg('/rebrand'); }
-export async function toggleCompanyAutopilot() { await postNoArg('/toggle_company_autopilot'); }
+export async function toggleCompanyAutopilot(id) { await postIdArg('/toggle_company_autopilot', id); }
 export async function toggleGlobalAutopilot() { await postNoArg('/toggle_global_autopilot'); }
 export async function becomeEtfAdvisor() { await postNoArg('/become_etf_advisor'); }
 export async function setAdvisoryFee() { await postNoArg('/set_advisory_fee'); }
@@ -209,3 +214,66 @@ export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 export async function setViewAsset(id) { await postIdArg('/set_view_asset', id); }
 export async function changeActingAs(id) { await postIdArg('/change_acting_as', id); }
 export async function databaseSearch() { await postIdArg('/database_search'); }
+
+export const commandMap = {
+    'VIEW': {
+        description: 'View acting-as profile',
+        fn: (_, gameState) => setViewAsset(gameState.actingAsId),
+    },
+    'ACT': {
+        description: 'Act as company/player',
+        fn: changeActingAs,
+    },
+    'BUY': {
+        description: 'Buy stock',
+        fn: buyStock,
+    },
+    'SELL': {
+        description: 'Sell stock',
+        fn: sellStock,
+    },
+    'SHORT': {
+        description: 'Short stock',
+        fn: shortStock,
+    },
+    'COVER': {
+        description: 'Cover short stock',
+        fn: coverShortStock,
+    },
+    'BORROW': {
+        description: 'Borrow money',
+        fn: borrowMoney,
+    },
+    'REPAY': {
+        description: 'Repay loan',
+        fn: repayLoan,
+    },
+    'PREPAY': {
+        description: 'Prepay taxes',
+        fn: prepayTaxes,
+    },
+    'ELECT': {
+        description: 'Elect yourself as CEO',
+        fn: electCeo,
+    },
+    'RESIGN': {
+        description: 'Resign as CEO',
+        fn: resignAsCeo,
+    },
+}
+
+export function executeCommand(gameState, command) {
+    const parts = command.trim().toUpperCase().split(/\s+/);
+    if (parts.length === 0) return;
+
+    let id = getCompanyBySymbol(gameState, parts[0])?.id ?? (parts[0] == 'ME' ? PLAYER1_ID : undefined);
+    if (id ?? false) {
+        setViewAsset(id);
+        return
+    }
+
+    const cmd = commandMap[parts[0]]?.fn;
+    id = getCompanyBySymbol(gameState, parts[1])?.id ?? (parts[1] == 'ME' ? PLAYER1_ID : undefined);
+    if (cmd)
+        cmd(id, gameState);
+}

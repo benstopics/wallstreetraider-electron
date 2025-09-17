@@ -244,6 +244,32 @@ select.basic {
     text-overflow: ellipsis; /* Add truncation with ellipsis */
 }
 
+ul.basic {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 50;
+    display: inline-block;       /* shrink-wrap to content */
+    min-width: max-content;      /* expand to fit longest item */
+    width: auto;                 /* not forced by parent width */
+
+    padding: 5px;
+    background-color: #FC9D23;
+    color: black;
+    border: 1px solid #333;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.basic li {
+    color: white;
+    background-color: #202020;
+}
+
+li.active {
+    background-color: #FC9D23;
+}
+
 .date-display {
     color: #ffc380;
 }

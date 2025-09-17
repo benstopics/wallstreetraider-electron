@@ -16,18 +16,25 @@ function ActingAsDropdown({ gameState }) {
 
     return html`
         <div class="">
-            <div class="label flex flex-row">
-                ${gameState.actingAsId !== gameState.activeEntityNum && options.find(opt => opt.id === gameState.activeEntityNum) && html`
-                    <button class="btn mx-1" onclick=${() => api.changeActingAs(gameState.activeEntityNum)}>Act As ${gameState.activeEntitySymbol}</button>
-                `}
+            <div class="label flex flex-row" style="height: 20px">
                 <small>Acting As:</small>
+                <div class="flex flex-row">
+                    ${gameState.actingAsId !== gameState.activeEntityNum && options.find(opt => opt.id === gameState.activeEntityNum) ? html`
+                        <button class="btn mx-1" onclick=${() => api.changeActingAs(gameState.activeEntityNum)}>Act As ${gameState.activeEntitySymbol}</button>
+                    ` : ''}
+                    ${gameState.activeEntityNum !== api.PLAYER1_ID
+                        ? html`<button class="btn mx-1" onclick=${() => api.setViewAsset(gameState.playerId)}>View Player</button>`
+                        : ''}
+                </div>
             </div>
             <div class="flex flex-row items-center gap-2">
                 <select class="basic flex-grow w-full" value=${gameState.actingAsId} onChange=${onChange}>
                     ${options.map(opt => html`<option value=${opt.id}>${opt.name}</option>`)}
                 </select>
                 <div class="" style="height:25px">
-                    <button class="btn mx-1" onclick=${() => api.setViewAsset(gameState.actingAsId)}>View</button>
+                    ${gameState.actingAsId !== gameState.activeEntityNum
+                        ? html`<button class="btn mx-1" onclick=${() => api.setViewAsset(gameState.actingAsId)}>View ${gameState.actingAsSymbol}</button>`
+                        : ''}
                 </div>
             </div>
         </div>

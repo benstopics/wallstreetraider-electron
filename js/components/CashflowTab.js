@@ -26,6 +26,13 @@ function CashflowTab({ gameState }) {
                             label="Sell Corporate Assets"
                             color="red"
                         />` : ''}
+                        ${hasCorporateAssets ? html`<${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            onClick=${api.offerCorporateAssetsForSale} 
+                            label="Offer Corporate Assets for Sale"
+                            color="red"
+                        />` : ''}
                     ` : ''}
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 

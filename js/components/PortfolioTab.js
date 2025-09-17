@@ -58,6 +58,13 @@ function PortfolioTab({ gameState }) {
                             label="Merge With"
                             color="green"
                         />
+                        <${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false}
+                            onClick=${api.sellSubsidiaryStock} 
+                            label="Offer Stock for Sale"
+                            color="red"
+                        />
                     </div>
                 </div>
                 <div class="flex flex-row flex-[1]">
@@ -65,31 +72,30 @@ function PortfolioTab({ gameState }) {
                     <${IndexPanel} title="Short Bond" bondId=${api.SBOND_RATE_ID} gameState=${gameState} />
                 </div>
                 <div class="flex flex-row flex-[3]">
-                    <div class="flex justify-center items-center">
-                                    ${renderLines(portfolio,
-        ({ id }) => id && api.setViewAsset(id),
-        ({ type, id }) => actingAs ? html`
-            <button
-            class="btn red flex-1 mx-1"
-            onClick=${() => (type === "S" ? api.coverShortStock
-                    : type === "J" ? api.sellCorporateBond
-                    : type === "GS" ? api.sellShortGovtBonds
-                    : type === "GL" ? api.sellLongGovtBonds
-                    : api.sellStock
-                )(id)}>
-                ${type === "S" ? "Cover" : "Sell"}
-            </button>
-            ${type === "C" && html`<button
-            class="btn blue flex-1 mx-1"
-            onClick=${() => api.spinOff(id)}>
-                Spin-Off
-            </button>`}`
-: html`
-            <${Tooltip} text="Must be acting as">
-                <button class="btn disabled w-full">${type === "S" ? "Cover" : "Sell"}</button>
-                ${type === "C" && html`<button class="btn disabled w-full">Spin-Off</button>`}
-            <//>`
-    )}
+                    <div class="flex flex-row justify-center items-center">
+                        ${renderLines(portfolio,
+                            ({ id }) => id && api.setViewAsset(id),
+                            ({ type, id }) => html`<div class="flex flex-row">
+                            <${ActingAsRequiredButton}
+                                gameState=${gameState} 
+                                getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false}  
+                                onClick=${() => (type === "S" ? api.coverShortStock
+                                    : type === "J" ? api.sellCorporateBond
+                                    : type === "GS" ? api.sellShortGovtBonds
+                                    : type === "GL" ? api.sellLongGovtBonds
+                                    : api.sellStock
+                                )(id)}
+                                label="${type === "S" ? "Cover" : "Sell"}"
+                                color="red"
+                            />
+                            <${ActingAsRequiredButton} 
+                                gameState=${gameState} 
+                                getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                                onClick=${() => api.spinOff(id)} 
+                                label="Spin-Off"
+                                color="blue"
+                            />
+                        </div>`)}
                     </div>
                 </div>
             </div>

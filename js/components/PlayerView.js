@@ -8,6 +8,7 @@ import Tooltip from './Tooltip.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
+import CommandPrompt from './CommandPrompt.js';
 
 const Tab = Tabs.Tab;
 
@@ -27,7 +28,7 @@ const PlayerView = ({ gameState }) => html`
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
                 <div class="flex gap-2 items-center" style="height: 35px;">
-                    <input class="command-line" type="text" placeholder="Enter command..." />
+                    <${CommandPrompt} gameState=${gameState} />
                     <div class="btn-container">
                         <button class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
                     </div>
@@ -86,7 +87,20 @@ const PlayerView = ({ gameState }) => html`
                     <//>
                     <${Tab} label="My Corporations">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState.myCorporationsReport, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(gameState.myCorporationsReport,
+                                ({ id }) => api.setViewAsset(id),
+                                ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
+                                    <button
+                                        class="btn red flex-1 mx-1"
+                                        onClick=${() => api.toggleCompanyAutopilot(id)}>
+                                            AutoPilot
+                                    </button>
+                                    <button
+                                        class="btn brown flex-1 mx-1"
+                                        onClick=${() => api.changeActingAs(id)}>
+                                            Act As
+                                    </button>
+                                </div>` : '')}
                         </div>
                     <//>
                 <//>

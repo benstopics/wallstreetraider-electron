@@ -54,6 +54,11 @@ function Toolbar({ gameState }) {
                         Spread Rumors
                     </span>
                 </div>
+                <div class="btn red" onClick=${api.toggleGlobalAutopilot}>
+                    <span style="white-space: nowrap;">
+                        Toggle Global Autopilot
+                    </span>
+                </div>
             </div>
             <div class="date-display ml10 fixed-width">
                 ${gameDate} - ${localTime}

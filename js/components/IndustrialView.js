@@ -14,6 +14,7 @@ import FinancialsTab from './FinancialsTab.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import LoansTab from './LoansTab.js';
 import CashflowTab from './CashflowTab.js';
+import CommandPrompt from './CommandPrompt.js';
 
 const Tab = Tabs.Tab;
 
@@ -100,7 +101,7 @@ const IndustrialView = ({ gameState }) => {
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
                 <div class="flex gap-2 items-center" style="height: 35px;">
-                    <input class="command-line" type="text" placeholder="Enter command..." />
+                    <${CommandPrompt} gameState=${gameState} />
                     ${api.isPlayerControlled(gameState, activeEntityNum)
                         ? api.isPlayerCEO(gameState, activeEntityNum) ? html`<${ActingAsRequiredButton} 
                             gameState=${gameState} 
@@ -122,11 +123,17 @@ const IndustrialView = ({ gameState }) => {
                         label="Rebrand"
                         color="red"
                     />
-                    <${ActingAsRequiredButton} 
+                    <${ActingAsRequiredButton}
                         gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
-                        onClick=${api.antitrustLawsuit} 
-                        label="Antitrust Lawsuit"
+                        getDisabledMessage=${gameState => 
+                            gameState.actingAsId === api.PLAYER1_ID ? "Players cannot file antitrust lawsuits"
+                            : gameState.actingAsIndustryId !== gameState.activeIndustryId ? "Must be same industry"
+                            : api.isPlayerControlled(gameState, activeEntityNum) ? "Cannot be controlled by you"
+                            : gameState.actingAsId === activeEntityNum ? "Company cannot sue itself"
+                            : false
+                        }
+                        onClick=${() => api.antitrustLawsuit(activeEntityNum)} 
+                        label="Antitrust Lawsuit\n${gameState.actingAsSymbol} vs ${gameState.activeEntitySymbol}"
                         color="red"
                     />
                     <${ActingAsRequiredButton} 
