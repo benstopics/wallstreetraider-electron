@@ -35,7 +35,7 @@ const GameUI = ({ gameState }) => {
 
                 <!-- Streaming Quotes -->
                 <div class="flex-[7] min-h-0">
-                ${html`<${StreamingQuotes} quotes=${gameState.streamingQuotesList} />`}
+                ${html`<${StreamingQuotes} gameState=${gameState} />`}
                 </div>
             </div>
             

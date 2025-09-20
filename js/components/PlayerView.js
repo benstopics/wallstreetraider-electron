@@ -4,6 +4,7 @@ import CapitalizationChart from './CapitalizationChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
 import ActingAsDropdown from './ActingAsDropdown.js';
 import CommoditiesTab from './CommoditiesTab.js';
+import OptionsTab from './OptionsTab.js';
 import Tooltip from './Tooltip.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
@@ -51,9 +52,7 @@ const PlayerView = ({ gameState }) => html`
                         <${PortfolioTab} gameState=${gameState} />
                     <//>
                     <${Tab} label="Options">
-                        <div class="flex justify-center items-center">
-                            ${renderLines(gameState.optionsList, ({ id }) => api.setViewAsset(id))}
-                        </div>
+                        ${html`<${OptionsTab} gameState=${gameState} />`}
                     <//>
                     <${Tab} label="Commodities & Crypto">
                         ${html`<${CommoditiesTab} gameState=${gameState} />`}

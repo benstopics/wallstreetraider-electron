@@ -37,7 +37,7 @@ const extractEPSData = lines => {
 
 
 const IndustrialView = ({ gameState }) => {
-    const { actingAsId, actingAsIndustryId, activeEntityNum, activeIndustryId } = gameState;
+    const { actingAs, actingAsId, actingAsIndustryId, activeEntityNum, activeIndustryId } = gameState;
 
     const buyStockDisabledMessage = !actingAsId
         ? "Must be acting as"
@@ -58,9 +58,9 @@ const IndustrialView = ({ gameState }) => {
                 <div style="height: 30px; display: flex; align-items: center;">
                     <${ActingAsDropdown} gameState=${gameState} />
                 </div>
-                <div class="flex flex-col flex-[2] min-h-0">
+                <div class="flex flex-col flex-[3] min-h-0">
                     ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${gameState.activeEntitySymbol} Stock Price" />`}
-                    <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
+                    <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
                         ${!buyStockDisabledMessage
             ? html`
                                 <button class="btn flex-1 mx-1 green" onClick=${() => api.buyStock(activeEntityNum)}>
@@ -91,8 +91,45 @@ const IndustrialView = ({ gameState }) => {
                                     <button class="btn disabled w-full">Buy Bonds</button>
                                 <//>`}
                     </div>
+                    <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
+                        <${ActingAsRequiredButton} 
+                            gameState=${gameState}
+                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                            onClick=${api.advancedOptionsTrading} 
+                            label="Advanced Options"
+                            color="green"
+                        />
+                        <${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                            onClick=${() => api.buyCalls(gameState.activeEntityNum)} 
+                            label="Buy Calls"
+                            color="green"
+                        />
+                        <${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
+                            onClick=${() => api.sellCalls(gameState.activeEntityNum)} 
+                            label="Sell Calls"
+                            color="red"
+                        />
+                        <${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                            onClick=${() => api.buyPuts(gameState.activeEntityNum)} 
+                            label="Buy Puts"
+                            color="green"
+                        />
+                        <${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
+                            onClick=${() => api.sellPuts(gameState.activeEntityNum)} 
+                            label="Sell Puts"
+                            color="red"
+                        />
+                    </div>
                 </div>
-                <div class="flex flex-[2] min-h-0">
+                <div class="flex flex-[1.75] min-h-0">
                     ${html`<${EPSChart} epsData=${extractEPSData(gameState.financialProfile)} />`}
                 </div>
                 <div class="flex flex-[4] min-h-0">
@@ -123,19 +160,33 @@ const IndustrialView = ({ gameState }) => {
                         label="Rebrand"
                         color="red"
                     />
-                    <${ActingAsRequiredButton}
+                    ${gameState.actingAsId !== activeEntityNum // Cannot sue itself
+                        && gameState.actingAsId !== api.PLAYER1_ID // Players cannot file antitrust lawsuits
+                        && gameState.actingAsIndustryId === gameState.activeIndustryId // Must be same industry
+                        && !api.isPlayerControlled(gameState, activeEntityNum) // Cannot be controlled by you
+                        ? html`<${ActingAsRequiredButton}
                         gameState=${gameState} 
-                        getDisabledMessage=${gameState => 
-                            gameState.actingAsId === api.PLAYER1_ID ? "Players cannot file antitrust lawsuits"
-                            : gameState.actingAsIndustryId !== gameState.activeIndustryId ? "Must be same industry"
-                            : api.isPlayerControlled(gameState, activeEntityNum) ? "Cannot be controlled by you"
-                            : gameState.actingAsId === activeEntityNum ? "Company cannot sue itself"
-                            : false
-                        }
+                        getDisabledMessage=${gameState => false}
                         onClick=${() => api.antitrustLawsuit(activeEntityNum)} 
                         label="Antitrust Lawsuit\n${gameState.actingAsSymbol} vs ${gameState.activeEntitySymbol}"
                         color="red"
-                    />
+                    />` : ''}
+                    ${!api.isPlayerControlled(gameState, activeEntityNum) // Cannot be controlled by you
+                        && gameState.actingAsId !== activeEntityNum // Company cannot sue itself
+                        ? html`<${ActingAsRequiredButton}
+                        gameState=${gameState} 
+                        getDisabledMessage=${gameState => false}
+                        onClick=${() => api.harrassingLawsuit(activeEntityNum)} 
+                        label="Harrassing Lawsuit\n${gameState.actingAsSymbol} vs ${gameState.activeEntitySymbol}"
+                        color="red"
+                    />` : ''}
+                    ${activeIndustryId === api.INSURANCE_IND || activeIndustryId === api.SECURITIES_BROKER_IND ? html`<${ActingAsRequiredButton}
+                        gameState=${gameState} 
+                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false}
+                        onClick=${api.setAdvisoryFee} 
+                        label="Set Advisory Fee"
+                        color="blue"
+                    />` : ''}
                     <${ActingAsRequiredButton} 
                         gameState=${gameState} 
                         getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 

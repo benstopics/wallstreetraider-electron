@@ -3,6 +3,7 @@ export const apiBase = 'http://127.0.0.1:9631';
 export const PLAYER_IND = 0;
 export const BANK_IND = 1;
 export const INSURANCE_IND = 2;
+export const SECURITIES_BROKER_IND = 37;
 
 export const PLAYER1_ID = 2;
 export const STOCK_INDEX_ID = 0;
@@ -49,7 +50,11 @@ export async function getJSON(path) {
     if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
     }
-    return response.json();
+
+    const data = await response.json();
+
+    console.log(data)
+    return data;
 }
 
 export function isPlayerControlled(gameState, entityId) {
@@ -109,13 +114,13 @@ export async function sellCryptoFutures(id) { await postIdArg('/sell_crypto_futu
 
 /* Options */
 export async function buyCalls(id) { await postIdArg('/buy_calls', id); }
-export async function sellCalls() { await postNoArg('/sell_calls'); }
+export async function sellCalls(id) { await postIdArg('/sell_calls', id); }
 export async function buyPuts(id) { await postIdArg('/buy_puts', id); }
-export async function sellPuts() { await postNoArg('/sell_puts'); }
+export async function sellPuts(id) { await postIdArg('/sell_puts', id); }
 export async function sellOptions() { await postNoArg('/sell_options'); }
 export async function advancedOptionsTrading() { await postNoArg('/advanced_options_trading'); }
-export async function exerciseCallOptionsEarly() { await postNoArg('/exercise_call_options_early'); }
-export async function exercisePutOptionsEarly() { await postNoArg('/exercise_put_options_early'); }
+export async function exerciseCallOptionsEarly(id) { await postIdArg('/exercise_call_options_early', id); }
+export async function exercisePutOptionsEarly(id) { await postIdArg('/exercise_put_options_early', id); }
 
 /* Management */
 export async function prepayTaxes() { await postNoArg('/prepay_taxes'); }
@@ -214,6 +219,7 @@ export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 export async function setViewAsset(id) { await postIdArg('/set_view_asset', id); }
 export async function changeActingAs(id) { await postIdArg('/change_acting_as', id); }
 export async function databaseSearch() { await postIdArg('/database_search'); }
+export async function toggleStreamingQuote(id) { await postIdArg('/toggle_streaming_quote', id); }
 
 export const commandMap = {
     'VIEW': {
@@ -260,6 +266,22 @@ export const commandMap = {
         description: 'Resign as CEO',
         fn: resignAsCeo,
     },
+    'HARASS': {
+        description: 'File a harassing lawsuit',
+        fn: harrassingLawsuit,
+    },
+    'RUMORS': {
+        description: 'Spread rumors about a company',
+        fn: spreadRumors,
+    },
+    'STARTUP': {
+        description: 'Start a new company',
+        fn: startup,
+    },
+    'FEE': {
+        description: 'Set advisory fee (for insurers and securities brokers)',
+        fn: setAdvisoryFee,
+    },
 }
 
 export function executeCommand(gameState, command) {
@@ -273,7 +295,8 @@ export function executeCommand(gameState, command) {
     }
 
     const cmd = commandMap[parts[0]]?.fn;
-    id = getCompanyBySymbol(gameState, parts[1])?.id ?? (parts[1] == 'ME' ? PLAYER1_ID : undefined);
+    id = getCompanyBySymbol(gameState, parts[1])?.id ?? (parts[1] == 'ME' ? PLAYER1_ID : gameState.activeEntityNum);
+
     if (cmd)
         cmd(id, gameState);
 }

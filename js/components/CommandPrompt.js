@@ -31,8 +31,9 @@ export default function CommandPrompt({ gameState }) {
                 || (q.startsWith(`P`) && c.id <= 5)
             ).slice(0, 8);
         if (suggestions.length > 0)
-
             return suggestions
+
+        return [];
     }, [entities, lastPart]);
 
     const replaceLastPart = (sym) => {
@@ -47,7 +48,7 @@ export default function CommandPrompt({ gameState }) {
     const onInput = (e) => {
         const el = e.currentTarget;
         caretRef.current = el.selectionStart;
-        const next = el.value.toUpperCase();
+        const next = el.value.toUpperCase().replaceAll(/`/g, '');
         setCommand(next);
         setOpen(true);
     };
