@@ -20,11 +20,21 @@ function Toolbar({ gameState }) {
     return html`
         <div class="top-bar items-center justify-between" style="height: 40px; flex-shrink: 0;">
             <div class="flex items-center gap-2">
-                <div style="width: 75px" class="btn ${gameState.isTickerRunning ? 'stop' : 'play'}" onClick=${api.toggleTicker}>
-                    <div class="mr-1" style="width: 7px">
+                <div style="width: 20px; height: 20px" class="btn ${gameState.isTickerRunning ? 'stop' : 'play'}" onClick=${api.toggleTicker}>
+                    <div class="" style="width: 7px">
                         <${gameState.isTickerRunning ? StopIcon : PauseIcon} />
                     </div>
-                    ${gameState.isTickerRunning ? 'STOP' : 'PAUSED'}
+                </div>
+                <div style="width: 30px; height: 20px" class="btn blue" onClick=${() => {
+                    const speed = gameState.tickSpeed;
+                    api.setTickSpeed(speed >= 100 ? 30 : speed >= 75 ? 100 : 75);
+                }}>
+                    <div class="" style="">
+                        ${gameState.tickSpeed > 75 ? '▶▶▶'
+                            : gameState.tickSpeed > 50 ? '▶▶'
+                            : '▶'
+                        }
+                    </div>
                 </div>
                 <div class="btn green" onClick=${api.saveGame}>
                     <!--<div class="mr-1" style="width: 7px">

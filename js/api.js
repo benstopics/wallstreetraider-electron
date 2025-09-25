@@ -72,6 +72,7 @@ export function getCompanyBySymbol(gameState, symbol) {
 /* General */
 export function getGameState() { return getJSON('/gamestate'); }
 export async function toggleTicker() { await postNoArg('/toggle_ticker'); }
+export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed', speed); }
 export async function loadGame() { await postNoArg('/loadgame'); }
 export async function newGame() { await postNoArg('/newgame'); }
 export async function saveGame() { await postNoArg('/savegame'); }

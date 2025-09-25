@@ -7,12 +7,48 @@ import StreamingQuotes from './StreamingQuotes.js';
 import NewsHeadlines from './NewsHeadlines.js';
 import View from './View.js';
 import Toolbar from './Toolbar.js';
-import { NotificationIcon } from '../icons.js';
+import { NewspaperIcon, NotificationIcon } from '../icons.js';
 import Modal from './Modal.js';
+function renderHeadline(headline, gameState, onClick) {
+    const dict = {};
+    gameState.allCompanies.forEach(c => {
+        dict[c.symbol] = c.id;
+    });
 
+    // Escape regex special characters in keys
+    const keys = Object.keys(dict).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const regex = new RegExp(`\\b(${keys.join("|")})\\b`, "g");
+
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(headline)) !== null) {
+        const before = headline.slice(lastIndex, match.index);
+        if (before) parts.push(before);
+
+        const symbol = match[0];
+        parts.push(html`
+      <span 
+        class="text-blue-400 cursor-pointer hover:underline"
+        onClick=${() => onClick(dict[symbol])}
+      >
+        ${symbol}
+      </span>
+    `);
+
+        lastIndex = regex.lastIndex;
+    }
+
+    const after = headline.slice(lastIndex);
+    if (after) parts.push(after);
+
+    return html`${parts}`;
+}
 
 const GameUI = ({ gameState }) => {
 
+    const [showNews, setShowNews] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
 
     return html`
@@ -58,19 +94,50 @@ const GameUI = ({ gameState }) => {
             </div>
         </div>
         <div class="flex flex-row items-center justify-between gap-2 px-2 mx-2" style="height: 30px; border: 1px solid #333333;background-color: black; color: #ffc380;">
-            <div></div>
-            <div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
-                onClick=${() => setShowNotifications(true)}>
-                <${NotificationIcon} />
-                <div class="badge">30</div>
+            <div class="flex items-center gap-2 cursor-pointer" onClick=${() => setShowNews(true)}>
+                ${gameState.newsHeadlines.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
+                    onClick=${() => setShowNews(true)}>
+                    <${NewspaperIcon} />
+                </div>` : '<div></div>'}
+                <div>${gameState.newsHeadlines[0]?.headline ?? ''}</div>
+            </div>
+            <div class="flex items-center gap-2 cursor-pointer" onClick=${() => setShowNotifications(true)}>
+                <div>${gameState.trendingNews[0]?.headline ?? ''}</div>
+                ${gameState.trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
+                    onClick=${() => setShowNotifications(true)}>
+                    <${NotificationIcon} />
+                    <!--<div class="badge">${gameState.trendingNews.length}</div>-->
+                </div>` : '<div></div>'}
             </div>
         </div>
         <${Modal} show=${showNotifications} onClose=${() => setShowNotifications(false)}>
-            <div class="text-lg font-bold mb-4">Notifications</div>
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-lg font-bold h-full">Notifications</div>
+                <button class="btn red" onClick=${() => setShowNotifications(false)}>Close</button>
+            </div>
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
-                ${[...Array(20).keys()].map(i => html`
-                    <div class="p-2 border border-gray-300 rounded bg-gray-100">
-                        Notification ${i + 1}: This is a sample notification message.
+                ${gameState.trendingNews.map(i => html`
+                    <div class="p-2" style="border: 1px solid #333333">
+                        ${renderHeadline(i.headline, gameState, (assetId) => {
+                            api.setViewAsset(assetId);
+                            setShowNotifications(false);
+                        })}
+                    </div>
+                `)}
+            </div>
+        <//>
+        <${Modal} show=${showNews} onClose=${() => setShowNews(false)}>
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-lg font-bold h-full">News</div>
+                <button class="btn red" onClick=${() => setShowNews(false)}>Close</button>
+            </div>
+            <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
+                ${gameState.newsHeadlines.map(i => html`
+                    <div style="border-bottom: 1px solid #333333">
+                        ${renderHeadline(i.headline, gameState, (assetId) => {
+                            api.setViewAsset(assetId);
+                            setShowNews(false);
+                        })}
                     </div>
                 `)}
             </div>
