@@ -67,7 +67,7 @@ function CashflowTab({ gameState }) {
                 <div class="flex flex-col flex-[3] justify-center items-center">
                     <div class="flex justify-center items-center w-full">
                         ${gameState.activeIndustryId !== api.BANK_IND
-                            ? renderLines(gameState.cashflowProjection ?? [], ({ id }) => api.setViewAsset(id))
+                            ? renderLines(gameState, gameState.cashflowProjection ?? [], ({ id }) => api.setViewAsset(id))
                             : 'Cashflow projection unavailable for banks.'}
                     </div>
                 </div>

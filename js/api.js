@@ -1,3 +1,6 @@
+import { html, render, useState, useEffect } from './lib/preact.standalone.module.js';
+
+
 export const apiBase = 'http://127.0.0.1:9631';
 
 export const PLAYER_IND = 0;
@@ -67,6 +70,61 @@ export function isPlayerCEO(gameState, entityId) {
 
 export function getCompanyBySymbol(gameState, symbol) {
     return (gameState.allCompanies || []).find(c => c.symbol === symbol);
+}
+
+export function getIndustry(gameState, industryNum) {
+    return (gameState.allIndustries || []).find(ind => ind.id === industryNum);
+}
+
+export function renderHyperlinks(headline, gameState, onClick) {
+  const lookup = Object.create(null); // key: lowercased token -> {id, type}
+
+  // Companies: match by symbol and name
+  for (const c of gameState.allCompanies || []) {
+    if (c.symbol) lookup[c.symbol] = { id: c.id, type: 'C' };
+    if (c.name)   lookup[c.name]   = { id: c.id, type: 'C' };
+  }
+
+  // Industries: names can be multi-word
+  for (const ind of gameState.allIndustries || []) {
+    if (ind.name) lookup[ind.name] = { id: ind.id, type: 'I' };
+  }
+
+  const escapeRegExp = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Sort longer keys first to prefer full names over substrings
+  const keys = Object.keys(lookup).sort((a, b) => b.length - a.length).map(escapeRegExp);
+
+  if (keys.length === 0) return headline;
+
+  // Case-sensitive, whole-token match
+  const regex = new RegExp(`\\b(?:${keys.join('|')})\\b`, 'g');
+
+  const parts = [];
+  let lastIndex = 0;
+  let m;
+
+  while ((m = regex.exec(headline)) !== null) {
+    const before = headline.slice(lastIndex, m.index);
+    if (before) parts.push(before);
+
+    const raw = m[0];
+    const info = lookup[raw]; // {id, type}
+
+    parts.push(html`
+      <span
+        class="text-blue-400 cursor-pointer hover:underline"
+        onClick=${() => onClick({ id: info.id, type: info.type })}
+      >${raw}</span>
+    `);
+
+    lastIndex = regex.lastIndex;
+  }
+
+  const after = headline.slice(lastIndex);
+  if (after) parts.push(after);
+
+  return html`${parts}`;
 }
 
 /* General */
@@ -217,7 +275,58 @@ export async function whoAreAdvisors() { await postNoArg('/who_are_advisors'); }
 export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 
 /* Misc */
-export async function setViewAsset(id) { await postIdArg('/set_view_asset', id); }
+export const navHistory = [];
+export let navPointerIdx = -1; // -1 means "not pointing", reset after setViewAsset
+
+export async function viewIndustry(id) {
+    await postIdArg('/set_view_industry', id);
+}
+
+export async function setViewAsset(id) {
+
+    await postIdArg('/set_view_asset', id);
+
+    const maxHistory = 30;
+
+    // If we are not at the start, remove all "forward" items
+    if (navPointerIdx > 0) {
+        navHistory.splice(0, navPointerIdx);
+    }
+
+    // Remove if already exists in history
+    const index = navHistory.indexOf(id);
+    if (index !== -1) {
+        navHistory.splice(index, 1);
+    }
+
+    // Insert new id at front
+    navHistory.unshift(id);
+
+    // Trim if too long
+    if (navHistory.length > maxHistory) {
+        navHistory.pop();
+    }
+
+    // Reset pointer to start
+    navPointerIdx = 0;
+}
+
+export async function goBack() {
+    if (navPointerIdx < navHistory.length - 1) {
+        navPointerIdx++;
+        const id = navHistory[navPointerIdx];
+        await postIdArg('/set_view_asset', id);
+    }
+}
+
+export async function goForward() {
+    if (navPointerIdx > 0) {
+        navPointerIdx--;
+        const id = navHistory[navPointerIdx];
+        await postIdArg('/set_view_asset', id);
+    }
+}
+
 export async function changeActingAs(id) { await postIdArg('/change_acting_as', id); }
 export async function databaseSearch() { await postIdArg('/database_search'); }
 export async function toggleStreamingQuote(id) { await postIdArg('/toggle_streaming_quote', id); }

@@ -133,7 +133,7 @@ const IndustrialView = ({ gameState }) => {
                     ${html`<${EPSChart} epsData=${extractEPSData(gameState.financialProfile)} />`}
                 </div>
                 <div class="flex flex-[4] min-h-0">
-                    ${html`<${AdvisorySummary} text=${gameState.advisorySummary} />`}
+                    ${html`<${AdvisorySummary} gameState=${gameState} />`}
                 </div>
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
@@ -219,7 +219,7 @@ const IndustrialView = ({ gameState }) => {
                 <${Tabs}>
                     <${Tab} label="Analysis">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState.researchReport, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(gameState, gameState.researchReport, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
                     <${Tab} label="Earnings">
@@ -244,7 +244,7 @@ const IndustrialView = ({ gameState }) => {
                         />
 
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState.earningsReport, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(gameState, gameState.earningsReport, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
                     <${Tab} label="Financials">
@@ -313,7 +313,7 @@ const IndustrialView = ({ gameState }) => {
                             </div>
                         </div>
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState.shareholdersList, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(gameState, gameState.shareholdersList, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
                 <//>

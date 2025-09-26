@@ -69,7 +69,7 @@ function FinancialsTab({ gameState }) {
                 <br />
                 <div class="flex flex-col flex-[3] justify-center items-center">
                     <div class="flex justify-center items-center w-full">
-                        ${renderLines(gameState.financialProfile, ({ id }) => api.setViewAsset(id))}
+                        ${renderLines(gameState, gameState.financialProfile, ({ id }) => api.setViewAsset(id))}
                     </div>
                 </div>
             </div>

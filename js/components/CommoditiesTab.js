@@ -110,7 +110,7 @@ function CommoditiesTab({ gameState }) {
                     <${IndexPanel} title="Wheat" commodityId=${api.WHEAT_ID} gameState=${gameState} />
                 </div>
                 <div class="flex flex-row justify-center">
-                ${renderLines(commodityList,
+                ${renderLines(gameState, commodityList,
                     undefined,
                     ({ type, id, text }) => actingAs ? html`
                     <button

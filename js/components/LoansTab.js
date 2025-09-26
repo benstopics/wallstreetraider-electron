@@ -148,7 +148,7 @@ function LoansTab({ gameState }) {
 
             <div class="flex flex-col flex-[3] justify-center items-center">
                 <div class="flex justify-center items-center w-full">
-                    ${renderLines(gameState.loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(gameState))}
+                    ${renderLines(gameState, gameState.loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(gameState))}
                 </div>
             </div>
         </div>

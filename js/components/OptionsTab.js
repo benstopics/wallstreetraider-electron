@@ -32,7 +32,7 @@ function OptionsTab({ gameState }) {
                 <br />
                 <div class="flex flex-row flex-[3] justify-center items-center">
                     <div class="flex">
-                        ${renderLines(gameState.optionsList,
+                        ${renderLines(gameState, gameState.optionsList,
         ({ id }) => api.setViewAsset(id),
         ({ id, type, text }) => html`
                             <${ActingAsRequiredButton} 

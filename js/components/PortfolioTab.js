@@ -73,7 +73,7 @@ function PortfolioTab({ gameState }) {
                 </div>
                 <div class="flex flex-row flex-[3]">
                     <div class="flex flex-row justify-center items-center">
-                        ${renderLines(portfolio,
+                        ${renderLines(gameState, portfolio,
                             ({ id }) => id && api.setViewAsset(id),
                             ({ type, id }) => html`<div class="flex flex-row">
                             <${ActingAsRequiredButton}

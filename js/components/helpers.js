@@ -1,5 +1,6 @@
 import { html, render, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
+import * as api from '../api.js';
 
 export const MILLION = 1000000;
 
@@ -11,23 +12,28 @@ export function formatCurrency(number) {
 }
 
 // Function to return Preact string of string replace \n with <br />
+export function getMultilineTextLines(text, additionalDelimiters = []) {
+    // Combine newlines and additional delimiters into a single regex
+    const regex = new RegExp(`(\\n${additionalDelimiters.length > 0 ? '|' : ''}${additionalDelimiters.join('|')})`, 'g');
+
+    // Split the text while preserving delimiters
+    return text.split(regex).filter(Boolean);
+}
+
 export function renderMultilineText(text, options = { additionalDelimiters: [], render: null }) {
     if (!text) return '';
 
     const { additionalDelimiters, render } = options;
 
-    // Combine newlines and additional delimiters into a single regex
-    const regex = new RegExp(`(\\n${(additionalDelimiters ?? []).length > 0 ? '|' : ''}${(additionalDelimiters ?? []).join('|')})`, 'g');
-
-    // Split the text while preserving delimiters and join with <br />
-    const parts = text.split(regex).filter(Boolean);
+    // Get multiline text lines using the helper function
+    const parts = getMultilineTextLines(text, additionalDelimiters);
 
     return parts.map(part => {
         if (render) {
             return render(part);
         }
         return part === '\n' ? html`<br />` : html`<span>${part}</span>`;
-    })
+    });
 }
 
 export function parseHyperlink(line) {
@@ -36,8 +42,10 @@ export function parseHyperlink(line) {
     return { type: match[1], id: parseInt(match[2], 10) };
 }
 
-export function renderLines(lines, onLink, renderExtras) {
+export function renderLines(gameState, lines, onLink, renderExtras) {
     if (!lines) return html``;
+
+    console.log('renderLines', lines);
 
     // Step 1: Strip hyperlinks and get clean lines
     const cleanedLines = lines.map(line => {
@@ -62,7 +70,10 @@ export function renderLines(lines, onLink, renderExtras) {
         // If extras will be rendered, pad line with spaces
         const padded = (renderExtras && link)
             ? text.padEnd(maxLength, ' ')
-            : text;
+            : link?.id > 0 ? text : api.renderHyperlinks(text, gameState, ({ id, type }) => {
+                if (type === 'C')  api.setViewAsset(id);
+                else if (type === 'I') api.viewIndustry(id);
+            });
 
         return html`<div class="flex flex-row">
                 <div class=${classes} onClick=${handler}>

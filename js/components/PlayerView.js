@@ -24,7 +24,7 @@ const PlayerView = ({ gameState }) => html`
                     ${html`<${CapitalizationChart} assetId=${gameState.activeEntityNum} chartTitle="Net Worth" />`}
                 </div>
                 <div class="flex flex-1 min-h-0">
-                    ${html`<${AdvisorySummary} text=${gameState.advisorySummary} />`}
+                    ${html`<${AdvisorySummary} gameState=${gameState} />`}
                 </div>
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
@@ -40,12 +40,12 @@ const PlayerView = ({ gameState }) => html`
                 <${Tabs}>
                     <${Tab} label="Financials">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState.financialProfile, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(gameState, gameState.financialProfile, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
                     <${Tab} label="Cashflow">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState.cashflowProjection, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(gameState, gameState.cashflowProjection, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
                     <${Tab} label="Stocks & Bonds">
@@ -70,7 +70,7 @@ const PlayerView = ({ gameState }) => html`
                                     <button class="btn disabled flex-1 mx-1">Advance Funds</button>
                                 <//>
                             `}
-                            ${renderLines(gameState.advances,
+                            ${renderLines(gameState, gameState.advances,
     ({ id }) => api.setViewAsset(id),
     ({ id }) => gameState.actingAs ? html`<button
                                         class="btn flex-1 mx-1"
@@ -86,7 +86,7 @@ const PlayerView = ({ gameState }) => html`
                     <//>
                     <${Tab} label="My Corporations">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState.myCorporationsReport,
+                            ${renderLines(gameState, gameState.myCorporationsReport,
                                 ({ id }) => api.setViewAsset(id),
                                 ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
                                     <button

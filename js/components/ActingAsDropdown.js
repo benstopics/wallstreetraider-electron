@@ -32,7 +32,7 @@ function ActingAsDropdown({ gameState }) {
                     ${options.map(opt => html`<option value=${opt.id}>${opt.name}</option>`)}
                 </select>
                 <div class="" style="height:25px">
-                    ${gameState.actingAsId !== gameState.activeEntityNum
+                    ${gameState.actingAsId !== gameState.activeEntityNum || gameState.activeIndustryNum >= 0
                         ? html`<button class="btn mx-1" onclick=${() => api.setViewAsset(gameState.actingAsId)}>View ${gameState.actingAsSymbol}</button>`
                         : ''}
                 </div>

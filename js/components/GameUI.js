@@ -9,42 +9,7 @@ import View from './View.js';
 import Toolbar from './Toolbar.js';
 import { NewspaperIcon, NotificationIcon } from '../icons.js';
 import Modal from './Modal.js';
-function renderHeadline(headline, gameState, onClick) {
-    const dict = {};
-    gameState.allCompanies.forEach(c => {
-        dict[c.symbol] = c.id;
-    });
 
-    // Escape regex special characters in keys
-    const keys = Object.keys(dict).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    const regex = new RegExp(`\\b(${keys.join("|")})\\b`, "g");
-
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(headline)) !== null) {
-        const before = headline.slice(lastIndex, match.index);
-        if (before) parts.push(before);
-
-        const symbol = match[0];
-        parts.push(html`
-      <span 
-        class="text-blue-400 cursor-pointer hover:underline"
-        onClick=${() => onClick(dict[symbol])}
-      >
-        ${symbol}
-      </span>
-    `);
-
-        lastIndex = regex.lastIndex;
-    }
-
-    const after = headline.slice(lastIndex);
-    if (after) parts.push(after);
-
-    return html`${parts}`;
-}
 
 const GameUI = ({ gameState }) => {
 
@@ -98,7 +63,7 @@ const GameUI = ({ gameState }) => {
                 ${gameState.newsHeadlines.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
                     onClick=${() => setShowNews(true)}>
                     <${NewspaperIcon} />
-                </div>` : '<div></div>'}
+                </div>` : html`<div></div>`}
                 <div>${gameState.newsHeadlines[0]?.headline ?? ''}</div>
             </div>
             <div class="flex items-center gap-2 cursor-pointer" onClick=${() => setShowNotifications(true)}>
@@ -107,7 +72,7 @@ const GameUI = ({ gameState }) => {
                     onClick=${() => setShowNotifications(true)}>
                     <${NotificationIcon} />
                     <!--<div class="badge">${gameState.trendingNews.length}</div>-->
-                </div>` : '<div></div>'}
+                </div>` : html`<div></div>`}
             </div>
         </div>
         <${Modal} show=${showNotifications} onClose=${() => setShowNotifications(false)}>
@@ -118,8 +83,9 @@ const GameUI = ({ gameState }) => {
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
                 ${gameState.trendingNews.map(i => html`
                     <div class="p-2" style="border: 1px solid #333333">
-                        ${renderHeadline(i.headline, gameState, (assetId) => {
-                            api.setViewAsset(assetId);
+                        ${api.renderHyperlinks(i.headline, gameState, ({ id, type }) => {
+                            if (type === 'C')  api.setViewAsset(id);
+                            else if (type === 'I') api.viewIndustry(id);
                             setShowNotifications(false);
                         })}
                     </div>
@@ -134,8 +100,9 @@ const GameUI = ({ gameState }) => {
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
                 ${gameState.newsHeadlines.map(i => html`
                     <div style="border-bottom: 1px solid #333333">
-                        ${renderHeadline(i.headline, gameState, (assetId) => {
-                            api.setViewAsset(assetId);
+                        ${api.renderHyperlinks(i.headline, gameState, ({ id, type }) => {
+                            if (type === 'C')  api.setViewAsset(id);
+                            else if (type === 'I') api.viewIndustry(id);
                             setShowNews(false);
                         })}
                     </div>

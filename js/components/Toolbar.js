@@ -2,6 +2,7 @@ import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import { PauseIcon, StopIcon, SaveIcon,  } from '../icons.js';
+import NavigationControl from './NavigationControl.js';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -69,6 +70,12 @@ function Toolbar({ gameState }) {
                         Toggle Global Autopilot
                     </span>
                 </div>
+                <div class="btn blue" onClick=${() => api.viewIndustry(0)}>
+                    <span style="white-space: nowrap;">
+                        View Market Reports
+                    </span>
+                </div>
+                <${NavigationControl} gameState=${gameState} />
             </div>
             <div class="date-display ml10 fixed-width">
                 ${gameDate} - ${localTime}
