@@ -1,11 +1,64 @@
 {
-  "name": "wsr-electron",
-  "version": "1.0.0",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron ."
-  },
-  "devDependencies": {
-    "electron": "^26.0.0"
-  }
+    "name": "wsr10",
+    "version": "1.0.0",
+    "main": "main.js",
+    "description": "Wall $treet Raider Electron UI",
+    "author": "Ben Ward",
+    "scripts": {
+        "start": "electron .",
+        "pack": "electron-builder --dir --win"
+    },
+    "devDependencies": {
+        "electron": "^26.0.0",
+        "electron-builder": "^24"
+    },
+    "build": {
+        "appId": "com.wallstreetraider.app",
+        "icon": "assets/wsr.ico",
+        "directories": {
+            "output": "../release"
+        },
+        "files": [
+            "main.js",
+            "index.html"
+        ],
+        "asar": false,
+        "win": {
+            "target": "dir",
+            "icon": "assets/wsr.ico"
+        },
+        "extraFiles": [
+            {
+                "from": "assets",
+                "to": "resources/app/assets"
+            },
+            {
+                "from": "css",
+                "to": "resources/app/css"
+            },
+            {
+                "from": "js",
+                "to": "resources/app/js"
+            },
+            {
+                "from": "../src/main/wsr/SCORES.WSR",
+                "to": "resources/app/SCORES.WSR"
+            },
+            {
+                "from": "../src/main/wsr/.",
+                "to": "resources/app",
+                "filter": [
+                    "**/*.{exe,EXE,dll,DLL,dat,DAT,bmp,BMP,ini,INI,ttf,TTF,ico,ICO,png,PNG,gif,GIF,ori,ORI,prm,PRM,htm,HTM}",
+                    "!**/GAME*.{DAT,dat}"
+                ]
+            },
+            {
+                "from": "../src/main/CLEAN SAVES/.",
+                "to": "resources/app",
+                "filter": [
+                    "**/*.{DAT,dat}"
+                ]
+            }
+        ]
+    }
 }

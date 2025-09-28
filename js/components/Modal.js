@@ -1,8 +1,6 @@
 import { useEffect, useRef, html } from '../lib/preact.standalone.module.js';
 
 export default function Modal({ show, onClose, children }) {
-    console.log(children)
-
     const cardRef = useRef(null);
 
     useEffect(() => {

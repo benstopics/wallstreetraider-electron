@@ -23,7 +23,7 @@ const App = () => {
             ws.onmessage = (evt) => {
                 setLoading(false);
                 // console.log('WebSocket message received:', evt.data);
-                console.log(JSON.parse(evt.data))
+                // console.log(JSON.parse(evt.data))
                 setGameState(JSON.parse(evt.data));
             };
 

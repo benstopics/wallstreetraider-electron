@@ -15,8 +15,6 @@ function parseReportLine(line) {
         value: parseFloat(line.slice(72).trim()) || null
     };
 
-    console.log(data)
-
     return data;
 }
 

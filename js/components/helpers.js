@@ -45,8 +45,6 @@ export function parseHyperlink(line) {
 export function renderLines(gameState, lines, onLink, renderExtras) {
     if (!lines) return html``;
 
-    console.log('renderLines', lines);
-
     // Step 1: Strip hyperlinks and get clean lines
     const cleanedLines = lines.map(line => {
         const link = parseHyperlink(line);
