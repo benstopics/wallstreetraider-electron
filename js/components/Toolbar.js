@@ -9,6 +9,8 @@ const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 function Toolbar({ gameState }) {
     const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString());
 
+    const { showLoading, hideLoading } = api.useLoading();
+
     useEffect(() => {
         const id = setInterval(() => {
             setLocalTime(new Date().toLocaleTimeString());
@@ -37,7 +39,10 @@ function Toolbar({ gameState }) {
                         }
                     </div>
                 </div>
-                <div class="btn green" onClick=${api.saveGame}>
+                <div class="btn green" onClick=${() => {
+                    showLoading();
+                    api.saveGame();
+                }}>
                     <!--<div class="mr-1" style="width: 7px">
                         <${SaveIcon} />
                     </div>-->

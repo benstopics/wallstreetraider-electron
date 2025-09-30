@@ -1,4 +1,4 @@
-import { html, render, useState, useEffect } from './lib/preact.standalone.module.js';
+import { html, render, useState, useEffect, useContext, createContext } from './lib/preact.standalone.module.js';
 
 
 export const apiBase = 'http://127.0.0.1:9631';
@@ -21,6 +21,10 @@ export const SBOND_RATE_ID = 1603;
 export const GNP_RATE_ID = 1604;
 export const BITCOIN_ID = 1605;
 export const ETHEREUM_ID = 1606;
+
+export const LoadingContext = createContext({ loading: false, showLoading: () => { }, hideLoading: () => { } });
+
+export const useLoading = () => useContext(LoadingContext);
 
 export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
@@ -91,33 +95,33 @@ export function getIndustry(gameState, industryNum) {
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 function buildDictRegex(keys) {
-  // prefer longer keys first
-  const esc = keys.map(escapeRe).sort((a,b) => b.length - a.length);
+    // prefer longer keys first
+    const esc = keys.map(escapeRe).sort((a, b) => b.length - a.length);
 
-  const singles = esc.filter(k => /^[A-Za-z]$/.test(k));
-  const others  = esc.filter(k => !singles.includes(k));
+    const singles = esc.filter(k => /^[A-Za-z]$/.test(k));
+    const others = esc.filter(k => !singles.includes(k));
 
-  const parts = [];
-  if (others.length) parts.push(`(?:${others.join("|")})`);
-  if (singles.length) {
-    // do NOT match single-letter keys when followed by ".<word>"
-    // do NOT match when preceded by apostrophe (…'S)
-    parts.push(`(?:${singles.join("|")})(?!\\.(?=\\w))`);
-  }
+    const parts = [];
+    if (others.length) parts.push(`(?:${others.join("|")})`);
+    if (singles.length) {
+        // do NOT match single-letter keys when followed by ".<word>"
+        // do NOT match when preceded by apostrophe (…'S)
+        parts.push(`(?:${singles.join("|")})(?!\\.(?=\\w))`);
+    }
 
-  // token boundaries: not letter/digit on both sides
-  const pattern = `(?<![A-Za-z0-9])(?:${parts.join("|")})(?![A-Za-z0-9])(?!-(?=[A-Za-z0-9]))(?!/(?=[A-Za-z0-9]))`;
-  return new RegExp(pattern, "g");
+    // token boundaries: not letter/digit on both sides
+    const pattern = `(?<![A-Za-z0-9])(?:${parts.join("|")})(?![A-Za-z0-9])(?!-(?=[A-Za-z0-9]))(?!/(?=[A-Za-z0-9]))`;
+    return new RegExp(pattern, "g");
 }
 
 function toTitleCase(str) {
-  const exceptions = ['and', 'to', 'of', 'in', 'on', 'at', 'for', 'with', 'a', 'an', 'the'];
-  return str
-    .toLowerCase()
-    .replaceAll("&", "and")
-    .replace(/\b\w+/g, (w, i) => 
-      exceptions.includes(w) && i !== 0 ? w : w.charAt(0).toUpperCase() + w.slice(1)
-    );
+    const exceptions = ['and', 'to', 'of', 'in', 'on', 'at', 'for', 'with', 'a', 'an', 'the'];
+    return str
+        .toLowerCase()
+        .replaceAll("&", "and")
+        .replace(/\b\w+/g, (w, i) =>
+            exceptions.includes(w) && i !== 0 ? w : w.charAt(0).toUpperCase() + w.slice(1)
+        );
 }
 
 export function renderHyperlinks(headline, gameState, onClick) {
