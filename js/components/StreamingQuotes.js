@@ -16,7 +16,7 @@ const parseStockPrice = (gameState) => {
 
 const StreamingQuotes = ({ gameState }) => {
 
-    const { streamingQuotesList: quotes, activeEntityNum, activeEntityName, activeEntitySymbol } = gameState;
+    const { streamingQuotesList: quotes, activeEntityNum, activeEntityName, activeEntitySymbol, activeIndustryNum } = gameState;
 
     return html`
         <div class="panel">
@@ -25,6 +25,7 @@ const StreamingQuotes = ({ gameState }) => {
                 ${activeEntityNum > 10 && !quotes.find(q => q.id === activeEntityNum) ? html`<div 
                     class="quote-line py-1 mb-2"
                     style="border-bottom: 1px dashed gray; background-color: #333;"
+                    onClick=${() => api.setViewAsset(activeEntityNum)}
                 >
                     <span class="quote-symbol text-gray-400">${activeEntitySymbol}</span>
                     <span class="quote-name">${activeEntityName}</span>

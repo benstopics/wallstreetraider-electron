@@ -59,14 +59,14 @@ const GameUI = ({ gameState }) => {
             </div>
         </div>
         <div class="flex flex-row items-center justify-between gap-2 px-2 mx-2" style="height: 30px; border: 1px solid #333333;background-color: black; color: #ffc380;">
-            <div class="flex items-center gap-2 cursor-pointer" onClick=${() => setShowNews(true)}>
+            <div class="flex flex-[1] items-center gap-2 cursor-pointer" onClick=${() => setShowNews(true)}>
                 ${gameState.newsHeadlines.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
                     onClick=${() => setShowNews(true)}>
                     <${NewspaperIcon} />
                 </div>` : html`<div></div>`}
                 <div>${gameState.newsHeadlines[0]?.headline ?? ''}</div>
             </div>
-            <div class="flex items-center gap-2 cursor-pointer" onClick=${() => setShowNotifications(true)}>
+            <div class="flex flex-[1] items-center gap-2 cursor-pointer" onClick=${() => setShowNotifications(true)}>
                 <div>${gameState.trendingNews[0]?.headline ?? ''}</div>
                 ${gameState.trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
                     onClick=${() => setShowNotifications(true)}>

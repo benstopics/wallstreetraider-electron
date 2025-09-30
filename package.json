@@ -49,7 +49,8 @@
                 "to": "resources/app",
                 "filter": [
                     "**/*.{exe,EXE,dll,DLL,dat,DAT,bmp,BMP,ini,INI,ttf,TTF,ico,ICO,png,PNG,gif,GIF,ori,ORI,prm,PRM,htm,HTM}",
-                    "!**/GAME*.{DAT,dat}"
+                    "!**/GAME*.{DAT,dat}",
+                    "!**/LASTGAME.{DAT,dat}"
                 ]
             },
             {

@@ -47,6 +47,19 @@ export async function postIdArg(path, id) {
     return response.text();
 }
 
+export async function postStringArg(path, str) {
+    const url = `${apiBase}${path}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ str })
+    });
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.text();
+}
+
 export async function getJSON(path) {
     const url = `${apiBase}${path}`;
     const response = await fetch(url);
@@ -75,55 +88,88 @@ export function getIndustry(gameState, industryNum) {
     return (gameState.allIndustries || []).find(ind => ind.id === industryNum);
 }
 
-export function renderHyperlinks(headline, gameState, onClick) {
-  const lookup = Object.create(null); // key: lowercased token -> {id, type}
+function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
-  // Companies: match by symbol and name
-  for (const c of gameState.allCompanies || []) {
-    if (c.symbol) lookup[c.symbol] = { id: c.id, type: 'C' };
-    if (c.name)   lookup[c.name]   = { id: c.id, type: 'C' };
-  }
+function buildDictRegex(keys) {
+  // prefer longer keys first
+  const esc = keys.map(escapeRe).sort((a,b) => b.length - a.length);
 
-  // Industries: names can be multi-word
-  for (const ind of gameState.allIndustries || []) {
-    if (ind.name) lookup[ind.name] = { id: ind.id, type: 'I' };
-  }
-
-  const escapeRegExp = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  // Sort longer keys first to prefer full names over substrings
-  const keys = Object.keys(lookup).sort((a, b) => b.length - a.length).map(escapeRegExp);
-
-  if (keys.length === 0) return headline;
-
-  // Case-sensitive, whole-token match
-  const regex = new RegExp(`\\b(?:${keys.join('|')})\\b`, 'g');
+  const singles = esc.filter(k => /^[A-Za-z]$/.test(k));
+  const others  = esc.filter(k => !singles.includes(k));
 
   const parts = [];
-  let lastIndex = 0;
-  let m;
+  if (others.length) parts.push(`(?:${others.join("|")})`);
+  if (singles.length) {
+    // do NOT match single-letter keys when followed by ".<word>"
+    // do NOT match when preceded by apostrophe (…'S)
+    parts.push(`(?:${singles.join("|")})(?!\\.(?=\\w))`);
+  }
 
-  while ((m = regex.exec(headline)) !== null) {
-    const before = headline.slice(lastIndex, m.index);
-    if (before) parts.push(before);
+  // token boundaries: not letter/digit on both sides
+  const pattern = `(?<![A-Za-z0-9])(?:${parts.join("|")})(?![A-Za-z0-9])(?!-(?=[A-Za-z0-9]))(?!/(?=[A-Za-z0-9]))`;
+  return new RegExp(pattern, "g");
+}
 
-    const raw = m[0];
-    const info = lookup[raw]; // {id, type}
+function toTitleCase(str) {
+  const exceptions = ['and', 'to', 'of', 'in', 'on', 'at', 'for', 'with', 'a', 'an', 'the'];
+  return str
+    .toLowerCase()
+    .replaceAll("&", "and")
+    .replace(/\b\w+/g, (w, i) => 
+      exceptions.includes(w) && i !== 0 ? w : w.charAt(0).toUpperCase() + w.slice(1)
+    );
+}
 
-    parts.push(html`
+export function renderHyperlinks(headline, gameState, onClick) {
+    const lookup = Object.create(null); // key: lowercased token -> {id, type}
+
+    // Companies: match by symbol and name
+    for (const c of gameState.allCompanies || []) {
+        if (c.symbol) lookup[c.symbol] = { id: c.id, type: 'C' };
+        if (c.name) lookup[c.name] = { id: c.id, type: 'C' };
+    }
+
+    // Industries: names can be multi-word
+    for (const ind of gameState.allIndustries || []) {
+        if (ind.name) {
+            lookup[ind.name] = { id: ind.id, type: 'I' };
+            lookup[toTitleCase(ind.name)] = { id: ind.id, type: 'I' }; // also title case
+            lookup[toTitleCase(ind.name).toUpperCase()] = { id: ind.id, type: 'I' }; // also title case
+        }
+    }
+
+    const keys = Object.keys(lookup);
+
+    if (keys.length === 0) return headline;
+
+    // Case-sensitive, whole-token match
+    const regex = buildDictRegex(keys);
+
+    const parts = [];
+    let lastIndex = 0;
+    let m;
+
+    while ((m = regex.exec(headline)) !== null) {
+        const before = headline.slice(lastIndex, m.index);
+        if (before) parts.push(before);
+
+        const raw = m[0];
+        const info = lookup[raw]; // {id, type}
+
+        parts.push(html`
       <span
         class="text-blue-400 cursor-pointer hover:underline"
         onClick=${() => onClick({ id: info.id, type: info.type })}
       >${raw}</span>
     `);
 
-    lastIndex = regex.lastIndex;
-  }
+        lastIndex = regex.lastIndex;
+    }
 
-  const after = headline.slice(lastIndex);
-  if (after) parts.push(after);
+    const after = headline.slice(lastIndex);
+    if (after) parts.push(after);
 
-  return html`${parts}`;
+    return html`${parts}`;
 }
 
 /* General */
@@ -276,6 +322,21 @@ export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 /* Misc */
 export const navHistory = [];
 export let navPointerIdx = -1; // -1 means "not pointing", reset after setViewAsset
+
+/* Modal */
+export async function closeModal(result) { await postNoArg('/close_modal', result); }
+export async function modalResult(result) {
+    const url = `${apiBase}/modal_result`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: typeof result === 'number' ? JSON.stringify({ answer: result }) : JSON.stringify({ str: result })
+    });
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.text();
+}
 
 export async function viewIndustry(id) {
     await postIdArg('/set_view_industry', id);

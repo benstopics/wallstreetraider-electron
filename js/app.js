@@ -3,11 +3,14 @@ import './lib/tailwind.module.js';
 import * as api from './api.js';
 import GameUI from './components/GameUI.js';
 import MainMenu from './components/MainMenu.js';
+import Modal from './components/Modal.js';
+import { renderLines } from './components/helpers.js';
 
 
 const App = () => {
     const [gameState, setGameState] = useState({ gameLoaded: false, isTickerRunning: false });
     const [loading, setLoading] = useState(false);
+    const [inputString, setInputString] = useState('');
 
     useEffect(() => {
         api.getGameState().then(setGameState).catch(console.error);
@@ -66,6 +69,32 @@ const App = () => {
                     <span>Loading...</span>
                 </div>
             `}
+            <${Modal} show=${!loading && gameState.modalType > 0} onClose=${() => api.closeModal()}>
+                ${gameState.modalType === 4 ? html`<div class="flex justify-between items-center mb-4">
+                    <div class="text-lg font-bold h-full">Alert</div>
+                    <button class="btn red" onClick=${() => api.closeModal()}>Close</button>
+                </div>`
+                : html`<div>
+                    <div class="text-lg font-bold h-full">${gameState.modalTitle}</div>
+                    <br/>
+                    <div class="mb-4">${gameState.modalText}</div>
+                    ${gameState.modalType === 3 ? html`<input type="text" class="modal-input" value=${inputString} onInput=${(e) => setInputString(e.target.value)} /><br/>` : ''}
+                </div>`}
+                ${gameState.modalType === 4 ? api.renderHyperlinks(gameState.trendingNews[0].headline, gameState, ({ id, type }) => {
+                    if (type === 'C')  api.setViewAsset(id);
+                    else if (type === 'I') api.viewIndustry(id);
+                }) : ''}
+                <br/>
+                ${gameState.modalType === 1 ? html`<div class="flex justify-between items-center mb-4">
+                    <button class="btn modal green" onClick=${() => { api.modalResult(1); setLoading(true); }}>Yes</button>
+                    <button class="btn modal red" onClick=${() => { api.modalResult(2); setLoading(true); }}>No</button>
+                    <button class="btn modal" onClick=${() => { api.modalResult(3); setLoading(true); }}>Cancel</button>
+                </div>`
+                : gameState.modalType === 3 ? html`<div class="flex justify-between items-center mb-4">
+                    <button class="btn modal green" onClick=${() => { api.modalResult(inputString); setLoading(true); }}>Submit</button>
+                    <button class="btn modal" onClick=${() => api.closeModal()}>Cancel</button>
+                </div>` : ''}
+            <//>
         </div>
     `;
 }

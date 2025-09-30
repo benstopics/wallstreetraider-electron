@@ -7,9 +7,8 @@ let mainWindow;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
         frame: true,
+        show: false,
         autoHideMenuBar: true,
         icon: path.join(__dirname, 'assets', 'icon.ico'),
         webPreferences: {
@@ -25,10 +24,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-    const win = createWindow();
     if (app.isPackaged) {
-        const hwnd = win.getNativeWindowHandle().readUInt32LE(0).toString();
-
         const exePath = path.join(__dirname, 'wsr.exe');
         try {
             execSync('taskkill /IM wsr.exe /F', { stdio: 'ignore' });
@@ -39,14 +35,22 @@ app.whenReady().then(() => {
         wsrProcess = spawn(exePath, [], {
             detached: true,
             stdio: 'ignore',
-            env: { ...process.env, ELECTRON_HWND: hwnd }
+            env: { ...process.env }
         });
         wsrProcess.unref();
 
         wsrProcess.on('exit', () => {
             app.quit();
         });
+
+        // Sleep a bit to ensure wsr.exe has started
+        setTimeout(() => {
+            win.show();
+        }, 1500);
+
     }
+    const win = createWindow();
+    const hwnd = win.getNativeWindowHandle().readUInt32LE(0).toString();
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
