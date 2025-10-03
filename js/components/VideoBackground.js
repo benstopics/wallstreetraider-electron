@@ -9,7 +9,7 @@ const videos = [
     "concept-of-patriotism-great-monument-to-jord-washington-view-of-american-flag-new-y-SBV-335962968-4K.mp4",
     "concept-of-patriotism-perspective-of-american-flag-against-backdrop-of-new-york-sky-SBV-335962199-4K.mp4",
     "downtown-manhattan-times-square-overall-plan-in-motion-tourists-billboards-skyscrap-SBV-315795360-4K.mp4",
-    "four-combines-harvest-sunflower-SBV-304451385-HD.mp4",
+    // "four-combines-harvest-sunflower-SBV-304451385-HD.mp4",
     "lower-manhattan-wall-street-business-center-SBV-347091666-HD.mp4",
     "manhattan-financial-district-at-dusk-aerial-shot-SBV-347583472-HD.mp4",
     "new-york-city-ny-december-29-stock-exchange-exterior-on-wall-street-new-york-city-n-SBV-349052750-4K.mp4",
