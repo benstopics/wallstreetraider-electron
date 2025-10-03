@@ -8,7 +8,7 @@ const SparkChart = ({
   chartTitle = undefined,
   transformValue = undefined,
   theme = {
-    background: '#000',
+    background: 'rgb(0, 0, 0, .9)',
     lineColor: '#ffffff',
     shadedAreaTopColor: '#0D596A',
     shadedAreaBottomColor: '#01042B'

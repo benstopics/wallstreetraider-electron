@@ -22,9 +22,13 @@ export const GNP_RATE_ID = 1604;
 export const BITCOIN_ID = 1605;
 export const ETHEREUM_ID = 1606;
 
-export const LoadingContext = createContext({ loading: false, showLoading: () => { }, hideLoading: () => { } });
+export const WSRContext = createContext({
+    loading: false, showLoading: () => { },
+    hideLoading: () => { },
+    
+});
 
-export const useLoading = () => useContext(LoadingContext);
+export const useWSRContext = () => useContext(WSRContext);
 
 export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
@@ -326,6 +330,7 @@ export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 /* Misc */
 export const navHistory = [];
 export let navPointerIdx = -1; // -1 means "not pointing", reset after setViewAsset
+export async function splashScreenPlayed() { await postNoArg('/splash_screen_played'); }
 
 /* Modal */
 export async function closeModal(result) { await postNoArg('/close_modal', result); }

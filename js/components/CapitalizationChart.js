@@ -1,3 +1,4 @@
+import { DEFAULT_CAPITALIZATION_CHART_THEME } from '../../css/chart-styles.js';
 import { html } from '../lib/preact.standalone.module.js';
 import AssetPriceChart from './AssetPriceChart.js';
 
@@ -30,13 +31,7 @@ function CapitalizationChart({ assetId, chartTitle }) {
         assetId=${assetId}
         chartTitle=${generateChartTitle}
         transformValue=${transformValue}
-        theme=${{
-            background: '#000',
-            lineColor: '#ffffff',
-            // gridColor: '#777',
-            shadedAreaTopColor: '#00FF00', // Bright green
-            shadedAreaBottomColor: '#006400' // Dark green
-        }}
+        theme=${DEFAULT_CAPITALIZATION_CHART_THEME}
     />`;
 }
 

@@ -58,16 +58,16 @@ const GameUI = ({ gameState }) => {
                 </div>-->
             </div>
         </div>
-        <div class="flex flex-row items-center justify-between gap-2 px-2 mx-2" style="height: 30px; border: 1px solid #333333;background-color: black; color: #ffc380;">
-            <div class="flex flex-[1] items-center gap-2 cursor-pointer" onClick=${() => setShowNews(true)}>
+        <div class="flex flex-row border items-center justify-between gap-2 px-2 mx-2" style="height: 30px;">
+            <div class="flex flex-[1] items-center gap-2 cursor-pointer" style="max-width: 45vw;" onClick=${() => setShowNews(true)}>
                 ${gameState.newsHeadlines.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
                     onClick=${() => setShowNews(true)}>
                     <${NewspaperIcon} />
                 </div>` : html`<div></div>`}
                 <div>${gameState.newsHeadlines[0]?.headline ?? ''}</div>
             </div>
-            <div class="flex flex-[1] items-center gap-2 cursor-pointer" onClick=${() => setShowNotifications(true)}>
-                <div>${gameState.trendingNews[0]?.headline ?? ''}</div>
+            <div class="flex flex-[1] items-center gap-2 cursor-pointer justify-between" onClick=${() => setShowNotifications(true)}>
+                <div class="overflow-hidden whitespace-nowrap text-ellipsis" style="max-width: 45vw;">${gameState.trendingNews[0]?.headline ?? ''}</div>
                 ${gameState.trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
                     onClick=${() => setShowNotifications(true)}>
                     <${NotificationIcon} />
@@ -82,7 +82,7 @@ const GameUI = ({ gameState }) => {
             </div>
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
                 ${gameState.trendingNews.map(i => html`
-                    <div class="p-2" style="border: 1px solid #333333">
+                    <div class="p-2 border">
                         ${api.renderHyperlinks(i.headline, gameState, ({ id, type }) => {
                             if (type === 'C')  api.setViewAsset(id);
                             else if (type === 'I') api.viewIndustry(id);
@@ -99,7 +99,7 @@ const GameUI = ({ gameState }) => {
             </div>
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
                 ${gameState.newsHeadlines.map(i => html`
-                    <div style="border-bottom: 1px solid #333333">
+                    <div class="news-headline">
                         ${api.renderHyperlinks(i.headline, gameState, ({ id, type }) => {
                             if (type === 'C')  api.setViewAsset(id);
                             else if (type === 'I') api.viewIndustry(id);

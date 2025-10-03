@@ -1,7 +1,7 @@
 import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
-import { PauseIcon, StopIcon, SaveIcon,  } from '../icons.js';
+import { PauseIcon, StopIcon, SaveIcon, QuestionMarkIcon,  } from '../icons.js';
 import NavigationControl from './NavigationControl.js';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -9,7 +9,7 @@ const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 function Toolbar({ gameState }) {
     const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString());
 
-    const { showLoading, hideLoading } = api.useLoading();
+    const { showLoading, hideLoading } = api.useWSRContext();
 
     useEffect(() => {
         const id = setInterval(() => {
@@ -81,6 +81,16 @@ function Toolbar({ gameState }) {
                     </span>
                 </div>
                 <${NavigationControl} gameState=${gameState} />
+            </div>
+            <div>
+                <div class="btn blue" onClick=${api.openHelp}>
+                    <div class="" style="width: 12px">
+                        <${QuestionMarkIcon} />
+                    </div>
+                    <span style="white-space: nowrap;">
+                        ${' '}Help
+                    </span>
+                </div>
             </div>
             <div class="date-display ml10 fixed-width">
                 ${gameDate} - ${localTime}

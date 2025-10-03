@@ -5,7 +5,7 @@ const EPSChart = ({
     epsData = [], // Array of { year: number, eps: number }
     yAxisTitle = undefined,
     theme = {
-        background: '#000',
+        background: 'rgb(0, 0, 0, .9)',
         barColor: '#ffffff', // not used anymore since bars use gradient
         gridColor: '#777',
         shadedAreaTopColor: '#00FF00',

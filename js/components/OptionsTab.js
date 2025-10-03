@@ -23,7 +23,7 @@ function parseReportLine(line) {
 
 function OptionsTab({ gameState }) {
 
-    const { actingAs } = gameState;
+    const { actingAs, actingAsId } = gameState;
 
     return html`
             <div class="flex flex-col w-full">
@@ -45,7 +45,7 @@ function OptionsTab({ gameState }) {
                                 label=${type.includes('LONG') ? 'Sell' : 'Cover'}
                                 color="red"
                             />
-                            <${ActingAsRequiredButton} 
+                            <${ActingAsRequiredButton}
                                 gameState=${gameState} 
                                 getDisabledMessage=${_ => {
                                     if (!actingAs) return "Must be acting as"

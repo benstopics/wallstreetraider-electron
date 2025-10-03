@@ -23,7 +23,7 @@ function FinancialsTab({ gameState }) {
                             label="Repay Loan"
                             color=""
                         />
-                        <${ActingAsRequiredButton} 
+                        ${gameState.actingAsId >= 10 ? html`<${ActingAsRequiredButton} 
                             gameState=${gameState} 
                             getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
                             onClick=${api.extraordinaryDividend} 
@@ -43,7 +43,7 @@ function FinancialsTab({ gameState }) {
                             onClick=${api.taxableLiquidation} 
                             label="Taxable Liquidation"
                             color="green"
-                        />
+                        />` : ''}
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
                             getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 

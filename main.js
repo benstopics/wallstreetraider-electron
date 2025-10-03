@@ -1,6 +1,12 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
+// const steamworks = require('steamworks.js')
+
+// // const APP_ID = 4080310;
+// const APP_ID = 480;
+// const client = steamworks.init(APP_ID);
+// steamworks.electronEnableSteamOverlay()
 
 let wsrProcess;
 let mainWindow;

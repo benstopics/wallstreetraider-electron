@@ -4,14 +4,18 @@ import * as api from './api.js';
 import GameUI from './components/GameUI.js';
 import MainMenu from './components/MainMenu.js';
 import Modal from './components/Modal.js';
+import SplashSequence from './components/SplashSequence.js';
 
-
+const logos = [
+    { src: "assets/roninsoft_logo.png", backgroundColor: "#ffffff" },
+    { src: "assets/hackjackgames_logo.png", backgroundColor: "#000000" }
+];
 
 const AppInner = () => {
     const [gameState, setGameState] = useState({ gameLoaded: false, isTickerRunning: false });
     const [inputString, setInputString] = useState('');
 
-    const { loading, showLoading, hideLoading } = api.useLoading();
+    const { loading, showLoading, hideLoading } = api.useWSRContext();
 
     useEffect(() => {
         api.getGameState().then(setGameState).catch(console.error);
@@ -70,18 +74,34 @@ const AppInner = () => {
     }, [gameState.modalDefault]);
 
     return html`
+        <${SplashSequence}
+            images=${logos}
+            fadeMs=${900}
+            holdMs=${1500}
+            blackoutMs=${700}
+            exitFadeMs=${700}
+            show=${!gameState.splashScreenPlayed}
+        />
         <div class="app-container">
             ${gameState.gameLoaded ? html`<${GameUI} gameState=${gameState} />`
             : html`<${MainMenu} />`}
             ${loading && html`
                 <div className="loading-overlay">
-                    <span>Loading...</span>
+                    <img src="assets/loading.gif" alt="Loading..." />
                 </div>
             `}
-            <${Modal} show=${!loading && gameState.modalType > 0} onClose=${() => gameState.modalType === 4 && api.closeModal()}>
+            <${Modal} show=${!loading && gameState.modalType > 0} onClose=${() => {
+                if (gameState.modalType === 4) {
+                    api.closeModal();
+                    showLoading();
+                }
+            }}>
                 ${gameState.modalType === 4 ? html`<div class="flex justify-between items-center mb-4">
                     <div class="text-lg font-bold h-full">${gameState.modalTitle}</div>
-                    <button class="btn red" onClick=${() => api.closeModal()}>Close</button>
+                    <button class="btn red" onClick=${() => {
+                        api.closeModal();
+                        showLoading();
+                    }}>Close</button>
                 </div>`
             : html`<div>
                     <div class="text-lg font-bold h-full">${gameState.modalTitle}</div>
@@ -103,7 +123,7 @@ const AppInner = () => {
                 </div>`
             : gameState.modalType === 3 ? html`<div class="flex justify-between items-center mb-4">
                     <button class="btn modal green" onClick=${() => { api.modalResult(inputString); showLoading(); }}>Submit</button>
-                    <button class="btn modal" onClick=${() => api.closeModal()}>Cancel</button>
+                    <button class="btn modal" onClick=${() => { api.closeModal(); showLoading(); }}>Cancel</button>
                 </div>` : ''}
             <//>
         </div>
@@ -115,7 +135,7 @@ const App = () => {
     const showLoading = () => setLoading(true);
     const hideLoading = () => setLoading(false);
 
-    return html`<${api.LoadingContext.Provider} value=${{ loading, showLoading, hideLoading }}>
+    return html`<${api.WSRContext.Provider} value=${{ loading, showLoading, hideLoading }}>
         <${AppInner} />
     <//>`;
 };

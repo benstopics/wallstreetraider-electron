@@ -2,6 +2,7 @@ import { html, useEffect, useRef, useState } from '../lib/preact.standalone.modu
 import useInterval from '../hooks/useInterval.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
+import { DEFAULT_ASSET_PRICE_CHART_THEME } from '../../css/chart-styles.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -24,13 +25,7 @@ const AssetPriceChart = ({
     yAxisTitle,
     chartTitle = undefined,
     transformValue = undefined,
-    theme = {
-        background: '#000',
-        lineColor: '#ffffff',
-        gridColor: '#777',
-        shadedAreaTopColor: '#0D596A',
-        shadedAreaBottomColor: '#01042B'
-    }
+    theme = DEFAULT_ASSET_PRICE_CHART_THEME
 }) => {
     const canvasRef = useRef(null);
     const [chartData, setChartData] = useState(null);

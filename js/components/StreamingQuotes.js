@@ -23,8 +23,7 @@ const StreamingQuotes = ({ gameState }) => {
             <div class="panel-header">Streaming Quotes</div>
             <div class="p-1 panel-body">
                 ${activeEntityNum > 10 && !quotes.find(q => q.id === activeEntityNum) ? html`<div 
-                    class="quote-line py-1 mb-2"
-                    style="border-bottom: 1px dashed gray; background-color: #333;"
+                    class="quote-line py-1 mb-2 candidate"
                     onClick=${() => api.setViewAsset(activeEntityNum)}
                 >
                     <span class="quote-symbol text-gray-400">${activeEntitySymbol}</span>
@@ -41,9 +40,8 @@ const StreamingQuotes = ({ gameState }) => {
                 </div>` : ''}
             ${[...quotes].sort((a, b) => a.symbol.localeCompare(b.symbol)).map(quote => html`
                 <div 
-                    class="quote-line py-1"
+                    class="quote-line py-1 ${quote.id === activeEntityNum ? 'selected' : ''}"
                     onClick=${() => api.setViewAsset(quote.id)}
-                    style=${quote.id === activeEntityNum ? 'background-color: #333;' : ''}
                 >
                     <span class="quote-symbol text-gray-400">${quote.symbol}</span>
                     <span class="quote-name">${quote.name}</span>

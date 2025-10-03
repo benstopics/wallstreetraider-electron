@@ -10,6 +10,7 @@ import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
 import CommandPrompt from './CommandPrompt.js';
+import FinancialsTab from './FinancialsTab.js';
 
 const Tab = Tabs.Tab;
 
@@ -39,9 +40,7 @@ const PlayerView = ({ gameState }) => html`
                 </div>
                 <${Tabs}>
                     <${Tab} label="Financials">
-                        <div class="flex justify-center items-center">
-                            ${renderLines(gameState, gameState.financialProfile, ({ id }) => api.setViewAsset(id))}
-                        </div>
+                        <${FinancialsTab} gameState=${gameState} />
                     <//>
                     <${Tab} label="Cashflow">
                         <div class="flex justify-center items-center">

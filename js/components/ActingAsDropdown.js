@@ -15,7 +15,7 @@ function ActingAsDropdown({ gameState }) {
     };
 
     return html`
-        <div class="">
+        <div class="w-full">
             <div class="label flex flex-row" style="height: 20px">
                 <small>Acting As:</small>
                 <div class="flex flex-row">
