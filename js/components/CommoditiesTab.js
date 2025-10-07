@@ -95,19 +95,21 @@ function CommoditiesTab({ gameState }) {
     const { commodityList, actingAs } = gameState;
 
     return html`
-        <div class="flex flex-row w-full">
-            <div class="flex flex-col flex-[1]">
-                <${IndexPanel} title="Stock Index" commodityId=${api.STOCK_INDEX_ID} gameState=${gameState} />
+        <div class="flex flex-col flex-[1]">
+            <div class="flex flex-row w-full">
                 <${IndexPanel} title="Gold" commodityId=${api.GOLD_ID} gameState=${gameState} />
                 <${IndexPanel} title="Silver" commodityId=${api.SILVER_ID} gameState=${gameState} />
+                <${IndexPanel} title="Oil" commodityId=${api.OIL_ID} gameState=${gameState} />
+                <${IndexPanel} title="Corn" commodityId=${api.CORN_ID} gameState=${gameState} />
+                <${IndexPanel} title="Wheat" commodityId=${api.WHEAT_ID} gameState=${gameState} />
+            </div>
+            <div class="flex flex-row w-full">
+                <${IndexPanel} title="Stock Index" commodityId=${api.STOCK_INDEX_ID} gameState=${gameState} />
                 <${IndexPanel} title="Bitcoin (BTC)" commodityId=${api.BITCOIN_ID} gameState=${gameState} />
                 <${IndexPanel} title="Ethereum (ETH)" commodityId=${api.ETHEREUM_ID} gameState=${gameState} />
             </div>
             <div class="flex flex-col flex-[3]">
                 <div class="flex flex-row w-full">
-                    <${IndexPanel} title="Oil" commodityId=${api.OIL_ID} gameState=${gameState} />
-                    <${IndexPanel} title="Corn" commodityId=${api.CORN_ID} gameState=${gameState} />
-                    <${IndexPanel} title="Wheat" commodityId=${api.WHEAT_ID} gameState=${gameState} />
                 </div>
                 <div class="flex flex-row justify-center">
                 ${renderLines(gameState, commodityList,

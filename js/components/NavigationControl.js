@@ -15,15 +15,24 @@ function NavigationControl({ gameState }) {
     };
 
     return api.navHistory.length === 0 ? '' : html`
-        <div class="">
+        <div class="w-full">
+            <div class="label flex flex-row justify-center items-center" style="height: 20px">
+                <small>Navigation History:</small>
+            </div>
             <div class="flex flex-row items-center gap-2">
-                <div class="flex items-center gap-2" style="height:25px">
-                    <button class="btn ${api.navPointerIdx >= api.navHistory.length - 1 ? 'invisible' : ''}" onclick=${() => api.goBack()}><b>←</b></button>
-                    <button class="btn ${api.navPointerIdx <= 0 ? 'invisible' : ''}" onclick=${() => api.goForward()}><b>→</b></button>
+                <div class="">
+                    <div class="flex flex-row items-center gap-2">
+                        <div class="flex items-center gap-2" style="height:25px">
+                            <button class="btn ${api.navPointerIdx >= api.navHistory.length - 1 ? 'invisible' : ''}" onclick=${() => api.goBack()}><b>←</b></button>
+                        </div>
+                        <select class="basic flex-grow w-full text-center" value=${gameState.activeEntityNum} onChange=${onChange}>
+                            ${options.map(opt => html`<option value=${opt.id}>${opt.name}</option>`)}
+                        </select>
+                        <div class="flex items-center gap-2" style="height:25px">
+                            <button class="btn ${api.navPointerIdx <= 0 ? 'invisible' : ''}" onclick=${() => api.goForward()}><b>→</b></button>
+                        </div>
+                    </div>
                 </div>
-                <select class="basic flex-grow w-full" value=${gameState.activeEntityNum} onChange=${onChange}>
-                    ${options.map(opt => html`<option value=${opt.id}>${opt.name}</option>`)}
-                </select>
             </div>
         </div>
     `;

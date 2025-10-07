@@ -16,8 +16,8 @@ function ActingAsDropdown({ gameState }) {
 
     return html`
         <div class="w-full">
-            <div class="label flex flex-row" style="height: 20px">
-                <small>Acting As:</small>
+            <div class="label flex flex-row justify-between" style="height: 20px">
+                <small>Acting As</small>
                 <div class="flex flex-row">
                     ${gameState.actingAsId !== gameState.activeEntityNum && options.find(opt => opt.id === gameState.activeEntityNum) ? html`
                         <button class="btn mx-1" onclick=${() => api.changeActingAs(gameState.activeEntityNum)}>Act As ${gameState.activeEntitySymbol}</button>
@@ -28,7 +28,7 @@ function ActingAsDropdown({ gameState }) {
                 </div>
             </div>
             <div class="flex flex-row items-center gap-2">
-                <select class="basic flex-grow w-full" value=${gameState.actingAsId} onChange=${onChange}>
+                <select class="basic flex-grow text-center w-full" value=${gameState.actingAsId} onChange=${onChange}>
                     ${options.map(opt => html`<option value=${opt.id}>${opt.name}</option>`)}
                 </select>
                 <div class="" style="height:25px">

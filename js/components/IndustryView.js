@@ -23,9 +23,6 @@ const IndustryView = ({ gameState }) => {
     <div class="flex flex-col h-full">
         <div class="flex flex-row gap-2 flex-1 min-h-0">
             <div class="flex flex-col w-1/4 gap-2">
-                <!--<div style="height: 30px; display: flex; align-items: center;">
-                    <${ActingAsDropdown} gameState=${gameState} />
-                </div>-->
                 <div class="">
                     ${html`<${AssetPriceChart} assetId=${api.STOCK_INDEX_ID} chartTitle="Stock Market Index" />`}
                 </div>
@@ -35,7 +32,6 @@ const IndustryView = ({ gameState }) => {
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
                 <div class="flex gap-2 items-center" style="height: 35px;">
-                    <${CommandPrompt} gameState=${gameState} />
                     <!--<div class="btn-container">
                         <button class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
                     </div>

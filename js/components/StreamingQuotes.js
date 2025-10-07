@@ -2,6 +2,7 @@ import { html, render, useState, useEffect } from '../lib/preact.standalone.modu
 import '../lib/tailwind.module.js';
 import { formatCurrency } from './helpers.js';
 import * as api from '../api.js';
+import { StarIcon, TrashIcon } from '../icons.js';
 
 
 const parseStockPrice = (gameState) => {
@@ -22,21 +23,18 @@ const StreamingQuotes = ({ gameState }) => {
         <div class="panel">
             <div class="panel-header">Streaming Quotes</div>
             <div class="p-1 panel-body">
-                ${activeEntityNum > 10 && !quotes.find(q => q.id === activeEntityNum) ? html`<div 
-                    class="quote-line py-1 mb-2 candidate"
-                    onClick=${() => api.setViewAsset(activeEntityNum)}
-                >
-                    <span class="quote-symbol text-gray-400">${activeEntitySymbol}</span>
-                    <span class="quote-name">${activeEntityName}</span>
-                    <span class=${`fixed-width quote-price neutral`}>
-                        $${formatCurrency(parseStockPrice(gameState))}
-                    </span>
-                    <span class="mx-2">
-                        <button class="btn blue" onClick=${(e) => {
+                ${activeEntityNum > 10 && !quotes.find(q => q.id === activeEntityNum) ? html`
+                <div 
+                    class="flex items-center py-1 mb-2 candidate"
+                    onClick=${(e) => {
                             e.stopPropagation();
                             api.toggleStreamingQuote(activeEntityNum);
-                        }}>+</button>
+                        }}
+                >
+                    <span class="mx-2">
+                        <button class="btn yellow" style="width: 30px"><${StarIcon} /></button>
                     </span>
+                    <span class="align-left">Add ${activeEntityName}</span>
                 </div>` : ''}
             ${[...quotes].sort((a, b) => a.symbol.localeCompare(b.symbol)).map(quote => html`
                 <div 
@@ -48,11 +46,11 @@ const StreamingQuotes = ({ gameState }) => {
                     <span class=${`fixed-width quote-price ${quote.priceChange > 0 ? 'positive' : quote.priceChange < 0 ? 'negative' : 'neutral'}`}>
                         $${formatCurrency(quote.price)}
                     </span>
-                    <span class="px-2">
-                        <button class="btn red w-full" onClick=${(e) => {
+                    <span class="ml-2">
+                        <button class="btn red w-full" style="width: 30px" onClick=${(e) => {
                             e.stopPropagation();
                             api.toggleStreamingQuote(quote.id);
-                        }}>-</button>
+                        }}><${TrashIcon} /></button>
                     </span>
                 </div>
             `)}

@@ -12,30 +12,42 @@ const DISCORD_URL = 'https://discord.gg/fuBtyj8B';
 const REDDIT_WIDGET = 'assets/reddit-widget.png';
 const DISCORD_WIDGET = 'assets/discord-widget.png';
 
-// Static copy you can update each release
-const ANNOUNCEMENTS = [
-    { date: '2025-10-01', text: 'Playtest build refreshed. Options UI fixes and faster load.' },
-    { date: '2025-09-28', text: 'New video backgrounds and smoother transitions.' },
-];
-
 const CHANGELOG = [
-  {
-    ver: "v10.0.1",
-    items: [
-      "Dialogs now appear in front by replacing legacy Win32 dialogs with Electron dialogs.",
-      "Investigated CALC button issue; could not reproduce. May have been a symptom of Error 9.",
-      "Options list now correctly displays 'You have no options' when empty (intended behavior).",
-      "Navigation clarified: use the Financials tab to switch from Options view. To view Player or Company financials, select the entity under 'Acting As:' and then press the appropriate View button.",
-      "Migrated QuikMesg to Electron.",
-      "Replaced UpdateUI logic in Ui.cpp to resolve 'resource deadlock would occur' error with a deadlock-safe broadcast_state_change().",
-      "Fixed issue where ActiveEntity changes sometimes failed to apply (infinite loop).",
-      "Deadlock fixes in broadcast_state_change() resolved freezing and unresponsive states, ticker start/stop failures, and hyperlink issues. Likely also fixed game-stopping behavior on July 1.",
-      "Fixed Error 9 caused by GameEvent stack memory leak. Tested on actions like Exercise Early and Buy Calls.",
-      "Migrated all MSGBOX and QuikMesg calls to Electron modals.",
-      "Added branded loading GIF icon.",
-      "Expanded and improved main menu video background with additional clips."
-    ]
-  }
+    {
+        ver: "v10.0.3",
+        items: [
+            "Speed up ticker as much as I can",
+            "Add Prime Rate and GDP graphs",
+            "“Complex options strategies on low-priced stocks” has lots of whitespace for some reason",
+            "Spacebar as pause/unpause",
+            "Simplify info popup to have green OK button instead of red Close button at top right",
+            "Fix acting as dropdown and view player buttons not showing when viewing market reports"
+        ],
+    },
+    {
+        ver: "v10.0.2",
+        items: [
+            "Fixed capital contribute button",
+            "Fixed lagging game speed due to too many text report updates"
+        ],
+    },
+    {
+        ver: "v10.0.1",
+        items: [
+            "Dialogs now appear in front by replacing legacy Win32 dialogs with Electron dialogs.",
+            "Investigated CALC button issue; could not reproduce. May have been a symptom of Error 9.",
+            "Options list now correctly displays 'You have no options' when empty (intended behavior).",
+            "Navigation clarified: use the Financials tab to switch from Options view. To view Player or Company financials, select the entity under 'Acting As:' and then press the appropriate View button.",
+            "Migrated QuikMesg to Electron.",
+            "Replaced UpdateUI logic in Ui.cpp to resolve 'resource deadlock would occur' error with a deadlock-safe broadcast_state_change().",
+            "Fixed issue where ActiveEntity changes sometimes failed to apply (infinite loop).",
+            "Deadlock fixes in broadcast_state_change() resolved freezing and unresponsive states, ticker start/stop failures, and hyperlink issues. Likely also fixed game-stopping behavior on July 1.",
+            "Fixed Error 9 caused by GameEvent stack memory leak. Tested on actions like Exercise Early and Buy Calls.",
+            "Migrated all MSGBOX and QuikMesg calls to Electron modals.",
+            "Added branded loading GIF icon.",
+            "Expanded and improved main menu video background with additional clips."
+        ]
+    }
 ];
 
 

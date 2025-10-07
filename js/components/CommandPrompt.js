@@ -51,6 +51,8 @@ export default function CommandPrompt({ gameState }) {
         const next = el.value.toUpperCase().replaceAll(/`/g, '');
         setCommand(next);
         setOpen(true);
+        e.preventDefault();
+        e.stopPropagation();
     };
 
     useLayoutEffect(() => {
@@ -61,6 +63,7 @@ export default function CommandPrompt({ gameState }) {
     }, [command]);
 
     const onKeyDown = (e) => {
+        console.log('KeyDown', { key: e.key });
         if (e.key === 'Enter' && command.trim()) {
             if (open && suggestions.length) {
                 e.preventDefault();
@@ -73,6 +76,16 @@ export default function CommandPrompt({ gameState }) {
             setOpen(false);
             return;
         }
+        if (e.key === ' ') {
+            e.stopPropagation();
+            return;
+        }
+        if (e.key === 'Escape') {
+            if (open)
+                setOpen(false);
+            else
+                inputRef.current?.blur();
+        }
         if (!open || !suggestions.length) return;
         if (e.key === 'ArrowDown') {
             e.preventDefault();
@@ -80,8 +93,6 @@ export default function CommandPrompt({ gameState }) {
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             setActiveIdx((activeIdx - 1 + suggestions.length) % suggestions.length);
-        } else if (e.key === 'Escape') {
-            setOpen(false);
         } else if (e.key === 'Tab') {
             e.preventDefault();
             const suggestion = suggestions[activeIdx];
@@ -94,12 +105,12 @@ export default function CommandPrompt({ gameState }) {
 
     useEffect(() => {
         if (inputRef.current) {
-            inputRef.current.focus();
+            // inputRef.current.focus();
         }
     }, []);
 
     return html`
-    <div style="position:relative">
+    <div style="position:relative; width:100%;">
       <input
         ref=${inputRef}
         class="command-line"

@@ -16,7 +16,7 @@ const Tabs = ({ children }) => {
     return html`
     <div class="flex flex-col w-full h-full min-h-0">
         <!-- Tab Header Row -->
-        <div class="flex flex-row items-center" style="gap: 5px;">
+        <div class="flex flex-row flex-wrap items-center" style="gap: 5px;">
             ${tabLabels.map(label => html`
                 <div
                     class=${`tab-button ${label === activeTab ? 'active' : ''}`}

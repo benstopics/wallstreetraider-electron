@@ -1,6 +1,6 @@
 import { useEffect, useRef, html } from '../lib/preact.standalone.module.js';
 
-export default function Modal({ show, onClose, children }) {
+export default function Modal({ show, onClose, children, class: cls = '' }) {
     const cardRef = useRef(null);
 
     useEffect(() => {
@@ -25,7 +25,7 @@ export default function Modal({ show, onClose, children }) {
     >
         <div
             ref=${cardRef}
-            class="modal-card"
+            class=${cls?.length > 0 ? cls : 'modal-card'}
             onClick=${e => e.stopPropagation()}
         >
             ${children}

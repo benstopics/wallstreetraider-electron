@@ -54,91 +54,8 @@ const IndustrialView = ({ gameState }) => {
     return html`
     <div class="flex flex-col h-full">
         <div class="flex flex-row gap-2 flex-1 min-h-0">
-            <div class="flex flex-col w-1/4 gap-2">
-                <div style="height: 30px; display: flex; align-items: center;">
-                    <${ActingAsDropdown} gameState=${gameState} />
-                </div>
-                <div class="flex flex-col flex-[3] min-h-0">
-                    ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${gameState.activeEntitySymbol} Stock Price" />`}
-                    <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
-                        ${!buyStockDisabledMessage
-            ? html`
-                                <button class="btn flex-1 mx-1 green" onClick=${() => api.buyStock(activeEntityNum)}>
-                                    Buy Stock
-                                </button>`
-            : html`
-                                <${Tooltip} text=${buyStockDisabledMessage}>
-                                    <button class="btn disabled w-full">Buy Stock</button>
-                                <//>`}
-
-                        ${!shortStockDisabledMessage
-            ? html`
-                                <button class="btn flex-1 mx-1 green" onClick=${() => api.shortStock(activeEntityNum)}>
-                                    Short Stock
-                                </button>`
-            : html`
-                                <${Tooltip} text=${shortStockDisabledMessage}>
-                                    <button class="btn disabled w-full">Short Stock</button>
-                                <//>`}
-
-                        ${!buyBondDisabledMessage
-            ? html`
-                                <button class="btn flex-1 mx-1 green" onClick=${() => api.buyCorporateBond(activeEntityNum)}>
-                                    Buy Bonds
-                                </button>`
-            : html`
-                                <${Tooltip} text=${buyBondDisabledMessage}>
-                                    <button class="btn disabled w-full">Buy Bonds</button>
-                                <//>`}
-                    </div>
-                    <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
-                        <${ActingAsRequiredButton} 
-                            gameState=${gameState}
-                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
-                            onClick=${api.advancedOptionsTrading} 
-                            label="Advanced Options"
-                            color="green"
-                        />
-                        <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
-                            onClick=${() => api.buyCalls(gameState.activeEntityNum)} 
-                            label="Buy Calls"
-                            color="green"
-                        />
-                        <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
-                            onClick=${() => api.sellCalls(gameState.activeEntityNum)} 
-                            label="Sell Calls"
-                            color="red"
-                        />
-                        <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
-                            onClick=${() => api.buyPuts(gameState.activeEntityNum)} 
-                            label="Buy Puts"
-                            color="green"
-                        />
-                        <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
-                            onClick=${() => api.sellPuts(gameState.activeEntityNum)} 
-                            label="Sell Puts"
-                            color="red"
-                        />
-                    </div>
-                </div>
-                <div class="flex flex-[1.75] min-h-0">
-                    ${html`<${EPSChart} epsData=${extractEPSData(gameState.financialProfile)} />`}
-                </div>
-                <div class="flex flex-[4] min-h-0">
-                    ${html`<${AdvisorySummary} gameState=${gameState} />`}
-                </div>
-            </div>
-            <div class="flex flex-col w-3/4 gap-2 h-full">
+            <div class="flex flex-col w-full gap-2 h-full">
                 <div class="flex gap-2 items-center" style="height: 35px;">
-                    <${CommandPrompt} gameState=${gameState} />
                     ${api.isPlayerControlled(gameState, activeEntityNum)
                         ? api.isPlayerCEO(gameState, activeEntityNum) ? html`<${ActingAsRequiredButton} 
                             gameState=${gameState} 
@@ -196,7 +113,7 @@ const IndustrialView = ({ gameState }) => {
                     />
                     <${ActingAsRequiredButton} 
                         gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                        getDisabledMessage=${gameState => gameState.actingAs ? "You cannot capital contribute to yourself!" : false} 
                         onClick=${api.capitalContribution} 
                         label="Contribute Capital"
                         color="green"
@@ -217,9 +134,96 @@ const IndustrialView = ({ gameState }) => {
                     />
                 </div>
                 <${Tabs}>
-                    <${Tab} label="Analysis">
-                        <div class="flex justify-center items-center">
-                            ${renderLines(gameState, gameState.researchReport, ({ id }) => api.setViewAsset(id))}
+                    <${Tab} label="General">
+                        <div class="flex flex-row w-full h-full gap-2 min-h-0">
+                            <div class="flex w-1/4 flex-col gap-2 h-full min-h-0">
+                                <div class="flex flex-col flex-[4] min-h-0">
+                                    <div class="flex-[4] min-h-0">
+                                        ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${gameState.activeEntitySymbol} Stock Price" />`}
+                                    </div>
+                                    <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
+                                        ${!buyStockDisabledMessage
+                            ? html`
+                                                <button class="btn flex-1 mx-1 green" onClick=${() => api.buyStock(activeEntityNum)}>
+                                                    Buy Stock
+                                                </button>`
+                            : html`
+                                                <${Tooltip} text=${buyStockDisabledMessage}>
+                                                    <button class="btn disabled w-full">Buy Stock</button>
+                                                <//>`}
+
+                                        ${!shortStockDisabledMessage
+                            ? html`
+                                                <button class="btn flex-1 mx-1 green" onClick=${() => api.shortStock(activeEntityNum)}>
+                                                    Short Stock
+                                                </button>`
+                            : html`
+                                                <${Tooltip} text=${shortStockDisabledMessage}>
+                                                    <button class="btn disabled w-full">Short Stock</button>
+                                                <//>`}
+
+                                        ${!buyBondDisabledMessage
+                            ? html`
+                                                <button class="btn flex-1 mx-1 green" onClick=${() => api.buyCorporateBond(activeEntityNum)}>
+                                                    Buy Bonds
+                                                </button>`
+                            : html`
+                                                <${Tooltip} text=${buyBondDisabledMessage}>
+                                                    <button class="btn disabled w-full">Buy Bonds</button>
+                                                <//>`}
+                                    </div>
+                                    <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
+                                        <${ActingAsRequiredButton} 
+                                            gameState=${gameState} 
+                                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                                            onClick=${() => api.buyCalls(gameState.activeEntityNum)} 
+                                            label="Buy Calls"
+                                            color="green"
+                                        />
+                                        <${ActingAsRequiredButton} 
+                                            gameState=${gameState} 
+                                            getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
+                                            onClick=${() => api.sellCalls(gameState.activeEntityNum)} 
+                                            label="Sell Calls"
+                                            color="red"
+                                        />
+                                        <${ActingAsRequiredButton} 
+                                            gameState=${gameState} 
+                                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                                            onClick=${() => api.buyPuts(gameState.activeEntityNum)} 
+                                            label="Buy Puts"
+                                            color="green"
+                                        />
+                                        <${ActingAsRequiredButton} 
+                                            gameState=${gameState} 
+                                            getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
+                                            onClick=${() => api.sellPuts(gameState.activeEntityNum)} 
+                                            label="Sell Puts"
+                                            color="red"
+                                        />
+                                    </div>
+                                    <div class="flex flex-row justify-between mt-2 w-full" style="height:20px">
+                                        <${ActingAsRequiredButton} 
+                                            gameState=${gameState}
+                                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                                            onClick=${api.advancedOptionsTrading} 
+                                            label="Advanced Options"
+                                            color="green"
+                                            containerClass="w-full"
+                                            buttonClass="w-full"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="flex flex-[1.75] min-h-0">
+                                    ${html`<${EPSChart} epsData=${extractEPSData(gameState.financialProfile)} />`}
+                                </div>
+                                <div class="flex flex-[4] min-h-0">
+                                    ${html`<${AdvisorySummary} gameState=${gameState} />`}
+                                </div>
+                            </div>
+                            <div class="flex w-3/4 flex-col justify-center items-center">
+                                ${renderLines(gameState, gameState.researchReport, ({ id }) => api.setViewAsset(id))}
+                            </div>
                         </div>
                     <//>
                     <${Tab} label="Earnings">

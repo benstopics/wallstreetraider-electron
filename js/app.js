@@ -5,6 +5,10 @@ import GameUI from './components/GameUI.js';
 import MainMenu from './components/MainMenu.js';
 import Modal from './components/Modal.js';
 import SplashSequence from './components/SplashSequence.js';
+import HelpModal from './components/HelpModal.js';
+import InputStringModal from './components/InputStringModal.js';
+import ConfirmModal from './components/ConfirmModal.js';
+import InfoModal from './components/InfoModal.js';
 
 const logos = [
     { src: "assets/roninsoft_logo.png", backgroundColor: "#ffffff" },
@@ -15,7 +19,7 @@ const AppInner = () => {
     const [gameState, setGameState] = useState({ gameLoaded: false, isTickerRunning: false });
     const [inputString, setInputString] = useState('');
 
-    const { loading, showLoading, hideLoading } = api.useWSRContext();
+    const { loading, showLoading, hideLoading, helpShown, showHelp, hideHelp, toggleTicker } = api.useWSRContext();
 
     useEffect(() => {
         api.getGameState().then(setGameState).catch(console.error);
@@ -57,11 +61,12 @@ const AppInner = () => {
 
     useEffect(() => {
         const handleKey = (e) => {
-            if (e.key === '`') {
-                api.toggleTicker()
+            if (e.key === ' ') {
+                toggleTicker();
             } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
                 showLoading();
                 api.saveGame()
+                e.stopPropagation();
             }
         };
 
@@ -72,6 +77,11 @@ const AppInner = () => {
     useEffect(() => {
         setInputString(gameState.modalDefault || '');
     }, [gameState.modalDefault]);
+
+    const hideModal = () => {
+        api.closeModal();
+        showLoading();
+    }
 
     return html`
         <${SplashSequence}
@@ -90,52 +100,34 @@ const AppInner = () => {
                     <img src="assets/loading.gif" alt="Loading..." />
                 </div>
             `}
-            <${Modal} show=${!loading && gameState.modalType > 0} onClose=${() => {
-                if (gameState.modalType === 4) {
-                    api.closeModal();
-                    showLoading();
-                }
-            }}>
-                ${gameState.modalType === 4 ? html`<div class="flex justify-between items-center mb-4">
-                    <div class="text-lg font-bold h-full">${gameState.modalTitle}</div>
-                    <button class="btn red" onClick=${() => {
-                        api.closeModal();
-                        showLoading();
-                    }}>Close</button>
-                </div>`
-            : html`<div>
-                    <div class="text-lg font-bold h-full">${gameState.modalTitle}</div>
-                    <br/>
-                    <div class="mb-4">${gameState.modalText}</div>
-                    ${gameState.modalType === 3 ? html`<input type="text" class="modal-input" value=${inputString} onInput=${(e) => setInputString(e.target.value)} /><br/>` : ''}
-                </div>`}
-                ${gameState.modalType === 4 ? gameState.modalText.split(/\r\r|\r|\n/).map((line, index) => html`
-                    <div key=${index}>
-                        ${line}
-                        <br/><br/>
-                    </div>
-                `) : ''}
-                <br/>
-                ${gameState.modalType === 1 ? html`<div class="flex justify-between items-center mb-4">
-                    <button class="btn modal green" onClick=${() => { api.modalResult(1); showLoading(); }}>Yes</button>
-                    <button class="btn modal red" onClick=${() => { api.modalResult(2); showLoading(); }}>No</button>
-                    <button class="btn modal" onClick=${() => { api.modalResult(3); showLoading(); }}>Cancel</button>
-                </div>`
-            : gameState.modalType === 3 ? html`<div class="flex justify-between items-center mb-4">
-                    <button class="btn modal green" onClick=${() => { api.modalResult(inputString); showLoading(); }}>Submit</button>
-                    <button class="btn modal" onClick=${() => { api.closeModal(); showLoading(); }}>Cancel</button>
-                </div>` : ''}
-            <//>
+            <${ConfirmModal}
+                show=${!loading && gameState.modalType === 1}
+                title=${gameState.modalTitle}
+                text=${gameState.modalText}
+                onYes=${() => { api.modalResult(1); showLoading(); }}
+                onNo=${() => { api.modalResult(2); showLoading(); }}
+                onCancel=${() => { api.modalResult(3); showLoading(); }}
+            />
+            <${InputStringModal}
+                show=${!loading && gameState.modalType === 3}
+                title=${gameState.modalTitle}
+                text=${gameState.modalText}
+                defaultValue=${inputString}
+                onSubmit=${(value) => { api.modalResult(value); showLoading(); }}
+                onCancel=${hideModal}
+            />
+            <${InfoModal}
+                show=${!loading && gameState.modalType === 4}
+                text=${gameState.modalText}
+                onClose=${hideModal}
+            />
+            <${HelpModal} show=${helpShown} onClose=${hideHelp} />
         </div>
     `;
 }
 
 const App = () => {
-    const [loading, setLoading] = useState(false);
-    const showLoading = () => setLoading(true);
-    const hideLoading = () => setLoading(false);
-
-    return html`<${api.WSRContext.Provider} value=${{ loading, showLoading, hideLoading }}>
+    return html`<${api.WSRProvider}>
         <${AppInner} />
     <//>`;
 };

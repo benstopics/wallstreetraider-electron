@@ -45,6 +45,13 @@ app.whenReady().then(() => {
         });
         wsrProcess.unref();
 
+        try {
+            // Set the spawned process to high priority
+            process.setPriority(wsrProcess.pid, 'high');
+        } catch (error) {
+            console.error('Failed to set process priority:', error.message);
+        }
+
         wsrProcess.on('exit', () => {
             app.quit();
         });

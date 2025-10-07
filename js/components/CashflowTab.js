@@ -37,6 +37,13 @@ function CashflowTab({ gameState }) {
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
                             getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            onClick=${api.viewForSaleItems} 
+                            label="Browse For Sale Items"
+                            color="green"
+                        />
+                        <${ActingAsRequiredButton} 
+                            gameState=${gameState} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
                             onClick=${api.setDividend} 
                             label="Set Dividend"
                             color="green"

@@ -1,48 +1,32 @@
-import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
+import { html, useState, useEffect, useRef, useCallback } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
-import { PauseIcon, StopIcon, SaveIcon, QuestionMarkIcon,  } from '../icons.js';
+import { PauseIcon, StopIcon, SaveIcon, QuestionMarkIcon, } from '../icons.js';
 import NavigationControl from './NavigationControl.js';
-
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+import ActingAsDropdown from './ActingAsDropdown.js';
 
 function Toolbar({ gameState }) {
-    const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString());
-
-    const { showLoading, hideLoading } = api.useWSRContext();
-
-    useEffect(() => {
-        const id = setInterval(() => {
-            setLocalTime(new Date().toLocaleTimeString());
-        }, 1000);
-        return () => clearInterval(id);
-    }, []);
-
-    const gameDate = `${months[gameState.currentMonth - 1]} ${gameState.currentDay}, ${gameState.currentYear} (Q${gameState.currentQuarter})`;
+    const { showLoading, showHelp, gameStateBelief, setGameStateBelief, lastSyncRef, saveGame, toggleSpeed, toggleTicker } = api.useWSRContext();
 
     return html`
         <div class="top-bar items-center justify-between" style="height: 40px; flex-shrink: 0;">
             <div class="flex items-center gap-2">
-                <div style="width: 20px; height: 20px" class="btn ${gameState.isTickerRunning ? 'stop' : 'play'}" onClick=${api.toggleTicker}>
+                <div style="width: 20px; height: 20px"
+                class="btn ${gameStateBelief.isTickerRunning ? 'stop' : 'play'}"
+                onClick=${toggleTicker}>
                     <div class="" style="width: 7px">
-                        <${gameState.isTickerRunning ? StopIcon : PauseIcon} />
+                        <${gameStateBelief.isTickerRunning ? StopIcon : PauseIcon} />
                     </div>
                 </div>
-                <div style="width: 30px; height: 20px" class="btn blue" onClick=${() => {
-                    const speed = gameState.tickSpeed;
-                    api.setTickSpeed(speed >= 100 ? 30 : speed >= 75 ? 100 : 75);
-                }}>
+                <div style="width: 60px; height: 20px" class="btn blue" onClick=${toggleSpeed}>
                     <div class="" style="">
-                        ${gameState.tickSpeed > 75 ? '▶▶▶'
-                            : gameState.tickSpeed > 50 ? '▶▶'
-                            : '▶'
-                        }
+                        ${gameStateBelief.tickSpeed > 75 ? '▶▶▶'
+            : gameStateBelief.tickSpeed > 50 ? '▶▶'
+                : '▶'
+        }
                     </div>
                 </div>
-                <div class="btn green" onClick=${() => {
-                    showLoading();
-                    api.saveGame();
-                }}>
+                <div class="btn green" onClick=${saveGame}>
                     <!--<div class="mr-1" style="width: 7px">
                         <${SaveIcon} />
                     </div>-->
@@ -80,10 +64,7 @@ function Toolbar({ gameState }) {
                         View Market Reports
                     </span>
                 </div>
-                <${NavigationControl} gameState=${gameState} />
-            </div>
-            <div>
-                <div class="btn blue" onClick=${api.openHelp}>
+                <div class="btn blue" onClick=${showHelp}>
                     <div class="" style="width: 12px">
                         <${QuestionMarkIcon} />
                     </div>
@@ -91,10 +72,11 @@ function Toolbar({ gameState }) {
                         ${' '}Help
                     </span>
                 </div>
+                <div class="w-60">
+                    <${NavigationControl} gameState=${gameState} />
+                </div>
             </div>
-            <div class="date-display ml10 fixed-width">
-                ${gameDate} - ${localTime}
-            </div>
+            <${ActingAsDropdown} gameState=${gameState} />
         </div>
     `;
 }

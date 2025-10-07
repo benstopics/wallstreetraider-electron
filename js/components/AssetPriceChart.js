@@ -58,14 +58,15 @@ const AssetPriceChart = ({
             const { prices: originalPrices, baseMonth, baseYear } = chartData;
             const { background, lineColor, gridColor, shadedAreaTopColor, shadedAreaBottomColor } = theme;
 
-            const finalYAxisTitle = typeof yAxisTitle === 'function' ? yAxisTitle(chartData) : yAxisTitle;
-            const finalChartTitle = typeof chartTitle === 'function' ? chartTitle(chartData) : chartTitle;
-
             let prices = [...originalPrices];
             if (transformValue !== undefined) {
                 prices = prices.map(value => transformValue(value));
             }
 
+            const finalYAxisTitle = typeof yAxisTitle === 'function' ? yAxisTitle(chartData) : yAxisTitle;
+            const finalChartTitle = (typeof chartTitle === 'function' ? chartTitle(chartData) : chartTitle)
+                // Append current price to title if not already present
+                + (chartTitle && !chartTitle.toString().includes('$') ? ` (${prices[prices.length - 1].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})` : '');
             const w = canvas.width;
             const h = canvas.height;
             const padL = 20;
