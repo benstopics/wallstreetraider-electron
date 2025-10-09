@@ -14,21 +14,21 @@ function CashflowTab({ gameState }) {
                     ${gameState.activeIndustryId !== api.BANK_IND ? html`
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.buyCorporateAssets} 
                             label="Buy Corporate Assets"
                             color="green"
                         />
                         ${hasCorporateAssets ? html`<${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.sellCorporateAssets} 
                             label="Sell Corporate Assets"
                             color="red"
                         />` : ''}
                         ${hasCorporateAssets ? html`<${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.offerCorporateAssetsForSale} 
                             label="Offer Corporate Assets for Sale"
                             color="red"
@@ -36,35 +36,35 @@ function CashflowTab({ gameState }) {
                     ` : ''}
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.viewForSaleItems} 
                             label="Browse For Sale Items"
                             color="green"
                         />
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.setDividend} 
                             label="Set Dividend"
                             color="green"
                         />
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.setProductivity} 
                             label="Set Productivity"
                             color="brown"
                         />
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.setGrowthRate} 
                             label="Set Growth Rate"
                             color="orange"
                         />
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.changeManagers} 
                             label="Change Managers"
                             color="blue"

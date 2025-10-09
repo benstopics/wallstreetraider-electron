@@ -18,13 +18,13 @@ function IndexPanel({ title, commodityId, gameState }) {
     const shortFutures = [api.BITCOIN_ID, api.ETHEREUM_ID].includes(commodityId) ? api.sellCryptoFutures : api.shortCommodityFutures;
 
     const showBuyButton = commodityId !== api.STOCK_INDEX_ID
-    const buyDisabledMessage = !actingAs ? "Must be acting as"
+    const buyDisabledMessage = !actingAs ? "Must be acting as this company"
         : actingAsIndustryId === api.BANK_IND
             ? "Banks cannot trade commodities, indexes or crypto."
             : false;
 
     const buyFuturesDisabledMessage = !actingAs
-        ? "Must be acting as"
+        ? "Must be acting as this company"
         : actingAsIndustryId === api.BANK_IND
             ? "Banks cannot trade futures."
             : actingAsIndustryId === api.INSURANCE_IND && commodityId !== api.STOCK_INDEX_ID
@@ -32,7 +32,7 @@ function IndexPanel({ title, commodityId, gameState }) {
                 : false;
 
     const shortFuturesDisabledMessage = !actingAs
-        ? "Must be acting as"
+        ? "Must be acting as this company"
         : [api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)
             ? "Banks and insurance companies cannot short futures."
             : false;
@@ -125,7 +125,7 @@ function CommoditiesTab({ gameState }) {
                             )(id)}>
                         ${type.includes('F') && isContractShort(text) ? 'Cover' : 'Sell'}
                     </button>` : html`
-                    <${Tooltip} text="Must be acting as">
+                    <${Tooltip} text="Must be acting as this company">
                         <button class="btn disabled w-full">Sell</button>
                     <//>`)}
                 </div>

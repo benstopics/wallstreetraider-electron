@@ -16,7 +16,7 @@ function IndexPanel({ title, bondId, gameState }) {
     const buy = bondId === api.TBOND_RATE_ID ? api.buyLongGovtBonds : api.buyShortGovtBonds;
 
     const disabledMessage = !actingAs
-        ? "Must be acting as"
+        ? "Must be acting as this company"
         : ![api.PLAYER_IND, api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId) ? "Only players, banks, and insurance companies can trade government bonds."
         : false;
 
@@ -52,7 +52,7 @@ function PortfolioTab({ gameState }) {
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
                             getDisabledMessage=${gameState => gameState.actingAs ? "Cannot merge with yourself"
-                                : gameState.actingAsIndustryId === api.PLAYER_IND ? "Must be acting as a company"
+                                : gameState.actingAsIndustryId === api.PLAYER_IND ? "Must be acting as this company a company"
                                 : false} 
                             onClick=${api.merger} 
                             label="Merge With"
@@ -60,7 +60,7 @@ function PortfolioTab({ gameState }) {
                         />
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false}
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false}
                             onClick=${api.sellSubsidiaryStock} 
                             label="Offer Stock for Sale"
                             color="red"
@@ -78,7 +78,7 @@ function PortfolioTab({ gameState }) {
                             ({ type, id }) => html`<div class="flex flex-row">
                             <${ActingAsRequiredButton}
                                 gameState=${gameState} 
-                                getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false}  
+                                getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false}  
                                 onClick=${() => (type === "S" ? api.coverShortStock
                                     : type === "J" ? api.sellCorporateBond
                                     : type === "GS" ? api.sellShortGovtBonds
@@ -90,7 +90,7 @@ function PortfolioTab({ gameState }) {
                             />
                             <${ActingAsRequiredButton} 
                                 gameState=${gameState} 
-                                getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                                getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                                 onClick=${() => api.spinOff(id)} 
                                 label="Spin-Off"
                                 color="blue"

@@ -22,77 +22,6 @@ export const GNP_RATE_ID = 1604;
 export const BITCOIN_ID = 1605;
 export const ETHEREUM_ID = 1606;
 
-export const WSRContext = createContext();
-
-export function WSRProvider({ children }) {
-    const [loading, setLoading] = useState(false);
-    const showLoading = () => setLoading(true);
-    const hideLoading = () => setLoading(false);
-    const [helpShown, setHelpShown] = useState(false);
-    const showHelp = () => setHelpShown(true);
-    const hideHelp = () => setHelpShown(false);
-    const [gameState, setGameState] = useState({});
-    const [gameStateBelief, setGameStateBelief] = useState(gameState);
-    const gameStateRef = useRef(gameState);
-    const lastSyncRef = useRef(Date.now());
-
-    // Sync gameState prop to gameStateBelief state
-    useEffect(() => {
-        gameStateRef.current = gameState;
-    }, [gameState]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const now = Date.now();
-            if (now - lastSyncRef.current > 5000) { // Sync every 5 seconds if no user interaction
-                setGameStateBelief(gameStateRef.current);
-                lastSyncRef.current = now;
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    const saveGame = () => {
-        showLoading();
-        api.saveGame();
-    }
-
-    const toggleSpeed = () => {
-        const speed = gameStateBelief.tickSpeed;
-        const newSpeed = speed >= 90 ? 30 : speed >= 75 ? 100 : 75;
-        setGameStateBelief(prev => ({ ...prev, tickSpeed: newSpeed }));
-        lastSyncRef.current = Date.now();
-        api.setTickSpeed(newSpeed);
-    }
-
-    const toggleTicker = () => {
-        setGameStateBelief(prev => ({ ...prev, isTickerRunning: !prev.isTickerRunning }));
-        lastSyncRef.current = Date.now();
-        api.toggleTicker();
-    }
-
-    return html`<${WSRContext.Provider} value=${{
-        gameState,
-        setGameState,
-        gameStateBelief,
-        setGameStateBelief,
-        loading,
-        showLoading,
-        hideLoading,
-        helpShown,
-        showHelp,
-        hideHelp,
-        saveGame,
-        toggleSpeed,
-        toggleTicker,
-    }}>
-        ${children}
-    <//>`;
-}
-
-export const useWSRContext = () => useContext(WSRContext);
-
 export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
     const response = await fetch(url, {
@@ -543,3 +472,31 @@ export function executeCommand(gameState, command) {
     if (cmd)
         cmd(id, gameState);
 }
+
+
+export const WSRContext = createContext();
+
+export function WSRProvider({ children }) {
+    const [loading, setLoading] = useState(false);
+    const showLoading = () => setLoading(true);
+    const hideLoading = () => setLoading(false);
+    const [helpShown, setHelpShown] = useState(false);
+    const showHelp = () => setHelpShown(true);
+    const hideHelp = () => setHelpShown(false);
+    const [gameState, setGameState] = useState({});
+
+    return html`<${WSRContext.Provider} value=${{
+        gameState,
+        setGameState,
+        loading,
+        showLoading,
+        hideLoading,
+        helpShown,
+        showHelp,
+        hideHelp
+    }}>
+        ${children}
+    <//>`;
+}
+
+export const useWSRContext = () => useContext(WSRContext);

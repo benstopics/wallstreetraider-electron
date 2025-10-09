@@ -24,11 +24,11 @@ const renderExtras = (gameState) => ({ type, id, text }) => {
                     : () => { };
         
         if (!actingAs) {
-            nodes.push(html`<${Tooltip} text="Must be acting as" containerClass="w-12 mx-1">
+            nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
                 <button class="btn disabled w-full">Sell</button>
             <//>`);
 
-            nodes.push(html`<${Tooltip} text="Must be acting as" containerClass="w-12 mx-1">
+            nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
                 <button class="btn disabled w-full">Buy</button>
             <//>`);
         } else {
@@ -57,7 +57,7 @@ const renderExtras = (gameState) => ({ type, id, text }) => {
     }
 
     if (!actingAs) {
-        return html`<${Tooltip} text="Must be acting as">
+        return html`<${Tooltip} text="Must be acting as this company">
             <div class="flex justify-center items-center">
                 <button class="btn disabled mx-1 w-12">Sell</button>
                 <button class="btn disabled mx-1 w-12">Freeze</button>
@@ -118,7 +118,7 @@ function LoansTab({ gameState }) {
         <div class="flex flex-col w-full items-center">
             <${ActingAsRequiredButton} 
                 gameState=${gameState} 
-                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as" : false} 
+                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as this company" : false} 
                 onClick=${api.buyBusinessLoans} 
                 label="Buy Business Loans"
                 color="green"
@@ -127,7 +127,7 @@ function LoansTab({ gameState }) {
             />
             <${ActingAsRequiredButton} 
                 gameState=${gameState} 
-                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as" : false} 
+                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as this company" : false} 
                 onClick=${api.freezeAllLoans} 
                 label="${frozenAllLoans ? "Unfreeze" : "Freeze"} All Loans"
                 color="blue"
@@ -136,7 +136,7 @@ function LoansTab({ gameState }) {
             />
             <${ActingAsRequiredButton} 
                 gameState=${gameState} 
-                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as" : false} 
+                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as this company" : false} 
                 onClick=${api.setBankAllocation} 
                 label="Set Allocation"
                 color="brown"

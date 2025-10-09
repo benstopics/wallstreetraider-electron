@@ -35,7 +35,7 @@ function OptionsTab({ gameState }) {
         ({ id, type, text }) => html`
                             <${ActingAsRequiredButton} 
                                 gameState=${gameState} 
-                                getDisabledMessage=${_ => !actingAs ? "Must be acting as" : false} 
+                                getDisabledMessage=${_ => !actingAs ? "Must be acting as this company" : false} 
                                 onClick=${() => (type === 'LONGCALL' ? api.sellCalls
                 : type === 'LONGPUT' ? api.sellPuts
                     : type === 'SHORTCALL' ? api.buyCalls
@@ -48,7 +48,7 @@ function OptionsTab({ gameState }) {
                             <${ActingAsRequiredButton}
                                 gameState=${gameState} 
                                 getDisabledMessage=${_ => {
-                                    if (!actingAs) return "Must be acting as"
+                                    if (!actingAs) return "Must be acting as this company"
 
                                     const contract = parseReportLine(text)
                                     if ((type.includes('LONGCALL') && contract.stockPrice < contract.strikePrice)

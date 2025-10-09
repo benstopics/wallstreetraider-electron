@@ -45,19 +45,17 @@
                 "to": "resources/app/SCORES.WSR"
             },
             {
+                "from": "../src/main/wsr/CFIG.WSR",
+                "to": "resources/app/CFIG.WSR"
+            },
+            {
                 "from": "../src/main/wsr/.",
                 "to": "resources/app",
                 "filter": [
                     "**/*.{exe,EXE,dll,DLL,dat,DAT,bmp,BMP,ini,INI,ttf,TTF,ico,ICO,png,PNG,gif,GIF,ori,ORI,prm,PRM,htm,HTM}",
                     "!**/GAME*.{DAT,dat}",
-                    "!**/LASTGAME.{DAT,dat}"
-                ]
-            },
-            {
-                "from": "../src/main/CLEAN SAVES/.",
-                "to": "resources/app",
-                "filter": [
-                    "**/*.{DAT,dat}"
+                    "!**/LASTGAME.{DAT,dat}",
+                    "!**/CURRENCY.EXE"
                 ]
             }
         ]

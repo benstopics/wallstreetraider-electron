@@ -40,7 +40,7 @@ const IndustrialView = ({ gameState }) => {
     const { actingAs, actingAsId, actingAsIndustryId, activeEntityNum, activeIndustryId } = gameState;
 
     const buyStockDisabledMessage = !actingAsId
-        ? "Must be acting as"
+        ? "Must be acting as this company"
         : false;
 
     const shortStockDisabledMessage = actingAsId !== api.PLAYER1_ID
@@ -59,20 +59,20 @@ const IndustrialView = ({ gameState }) => {
                     ${api.isPlayerControlled(gameState, activeEntityNum)
                         ? api.isPlayerCEO(gameState, activeEntityNum) ? html`<${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.resignAsCeo} 
                             label="Resign as CEO"
                             color="red"
                         />` : html`<${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.electCeo} 
                             label="Elect as CEO"
                             color="red"
                         />` : ''}
                     <${ActingAsRequiredButton} 
                         gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                         onClick=${api.rebrand} 
                         label="Rebrand"
                         color="red"
@@ -99,14 +99,14 @@ const IndustrialView = ({ gameState }) => {
                     />` : ''}
                     ${activeIndustryId === api.INSURANCE_IND || activeIndustryId === api.SECURITIES_BROKER_IND ? html`<${ActingAsRequiredButton}
                         gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false}
+                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false}
                         onClick=${api.setAdvisoryFee} 
                         label="Set Advisory Fee"
                         color="blue"
                     />` : ''}
                     <${ActingAsRequiredButton} 
                         gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                         onClick=${api.startup} 
                         label="Startup"
                         color="green"
@@ -120,14 +120,14 @@ const IndustrialView = ({ gameState }) => {
                     />
                     <${ActingAsRequiredButton} 
                         gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                         onClick=${api.issueNewCorpBonds} 
                         label="Issue Corp Bonds"
                         color="brown"
                     />
                     <${ActingAsRequiredButton} 
                         gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                         onClick=${api.redeemCorpBonds} 
                         label="Redeem Corp Bonds"
                         color="brown"
@@ -230,7 +230,7 @@ const IndustrialView = ({ gameState }) => {
 
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.decreaseEarnings} 
                             label="Decrease Earnings"
                             color="red"
@@ -239,7 +239,7 @@ const IndustrialView = ({ gameState }) => {
                         />
                         <${ActingAsRequiredButton} 
                             gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.increaseEarnings} 
                             label="Increase Earnings"
                             color="green"
@@ -274,42 +274,42 @@ const IndustrialView = ({ gameState }) => {
                             <div class="flex flex-row items-center gap-5">
                                 <${ActingAsRequiredButton} 
                                     gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.publicStockOffering} 
                                     label="Public Offering"
                                     color="green"
                                 />
                                 <${ActingAsRequiredButton} 
                                     gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.privateStockOffering} 
                                     label="Private Offering"
                                     color="brown"
                                 />
                                 <${ActingAsRequiredButton} 
                                     gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.greenmail} 
                                     label="Greenmail"
                                     color="green"
                                 />
                                 <${ActingAsRequiredButton} 
                                     gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.lbo} 
                                     label="Leveraged Buyout"
                                     color="green"
                                 />
                                 <${ActingAsRequiredButton} 
                                     gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.splitStock} 
                                     label="Split Stock"
                                     color="green"
                                 />
                                 <${ActingAsRequiredButton} 
                                     gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as" : false} 
+                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.reverseSplitStock} 
                                     label="Reverse Split"
                                     color="red"

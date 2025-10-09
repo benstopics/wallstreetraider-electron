@@ -19,23 +19,27 @@ const AppInner = () => {
     const [gameState, setGameState] = useState({ gameLoaded: false, isTickerRunning: false });
     const [inputString, setInputString] = useState('');
 
-    const { loading, showLoading, hideLoading, helpShown, showHelp, hideHelp, toggleTicker } = api.useWSRContext();
+    const { showLoading, hideLoading, helpShown, hideHelp, loading } = api.useWSRContext();
 
     useEffect(() => {
-        api.getGameState().then(setGameState).catch(console.error);
-
         const connectWebSocket = (retryCount = 0) => {
             const ws = new WebSocket('ws://127.0.0.1:9632');
 
             ws.onopen = () => {
                 console.log('WebSocket connection established');
                 retryCount = 0; // Reset retry count on successful connection
+                        
+                api.getGameState().then((newGameState) => {
+                    setGameState(newGameState);
+                    hideLoading();
+                }).catch(console.error);
+
             };
 
             ws.onmessage = (evt) => {
                 hideLoading();
                 // console.log('WebSocket message received:', evt.data);
-                // console.log(JSON.parse(evt.data))
+                console.log(JSON.parse(evt.data))
                 setGameState(JSON.parse(evt.data));
             };
 
@@ -56,13 +60,9 @@ const AppInner = () => {
     }, []);
 
     useEffect(() => {
-        hideLoading();
-    }, [gameState]);
-
-    useEffect(() => {
         const handleKey = (e) => {
             if (e.key === ' ') {
-                toggleTicker();
+                api.toggleTicker();
             } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
                 showLoading();
                 api.saveGame()
@@ -83,6 +83,8 @@ const AppInner = () => {
         showLoading();
     }
 
+    console.log(gameState)
+
     return html`
         <${SplashSequence}
             images=${logos}
@@ -95,29 +97,29 @@ const AppInner = () => {
         <div class="app-container">
             ${gameState.gameLoaded ? html`<${GameUI} gameState=${gameState} />`
             : html`<${MainMenu} />`}
-            ${loading && html`
+            ${(gameState.events?.length > 0 || loading) && !gameState.modalType ? html`
                 <div className="loading-overlay">
                     <img src="assets/loading.gif" alt="Loading..." />
                 </div>
-            `}
+            ` : ''}
             <${ConfirmModal}
-                show=${!loading && gameState.modalType === 1}
+                show=${gameState.modalType === 1}
                 title=${gameState.modalTitle}
                 text=${gameState.modalText}
-                onYes=${() => { api.modalResult(1); showLoading(); }}
-                onNo=${() => { api.modalResult(2); showLoading(); }}
-                onCancel=${() => { api.modalResult(3); showLoading(); }}
+                onYes=${() => { showLoading(); setTimeout(() => api.modalResult(1), 500); }}
+                onNo=${() => { showLoading(); setTimeout(() => api.modalResult(2), 500); }}
+                onCancel=${() => { showLoading(); setTimeout(() => api.modalResult(3), 500); }}
             />
             <${InputStringModal}
-                show=${!loading && gameState.modalType === 3}
+                show=${gameState.modalType === 3}
                 title=${gameState.modalTitle}
                 text=${gameState.modalText}
                 defaultValue=${inputString}
-                onSubmit=${(value) => { api.modalResult(value); showLoading(); }}
+                onSubmit=${(value) => { showLoading(); setTimeout(() => api.modalResult(value), 500); }}
                 onCancel=${hideModal}
             />
             <${InfoModal}
-                show=${!loading && gameState.modalType === 4}
+                show=${gameState.modalType === 4}
                 text=${gameState.modalText}
                 onClose=${hideModal}
             />

@@ -17,15 +17,7 @@ const Tab = Tabs.Tab;
 const PlayerView = ({ gameState }) => html`
     <div class="flex flex-col h-full">
         <div class="flex flex-row gap-2 flex-1 min-h-0">
-            <div class="flex flex-col w-1/4 gap-2">
-                <div class="">
-                    ${html`<${CapitalizationChart} assetId=${gameState.activeEntityNum} chartTitle="Net Worth" />`}
-                </div>
-                <div class="flex flex-1 min-h-0">
-                    ${html`<${AdvisorySummary} gameState=${gameState} />`}
-                </div>
-            </div>
-            <div class="flex flex-col w-3/4 gap-2 h-full">
+            <div class="flex flex-col w-full gap-2 h-full">
                 <div class="flex gap-2 items-center" style="height: 35px;">
                     <div class="btn-container">
                         <button class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
@@ -61,7 +53,7 @@ const PlayerView = ({ gameState }) => html`
                                         Advance Funds
                                 </button>
                             ` : html`
-                                <${Tooltip} text="Must be acting as">
+                                <${Tooltip} text="Must be acting as this company">
                                     <button class="btn disabled flex-1 mx-1">Advance Funds</button>
                                 <//>
                             `}
@@ -73,7 +65,7 @@ const PlayerView = ({ gameState }) => html`
                                             Recall
                                     </button>`
         : html`
-                                        <${Tooltip} text="Must be acting as">
+                                        <${Tooltip} text="Must be acting as this company">
                                             <button class="btn disabled w-full">Recall</button>
                                         <//>`
 )}

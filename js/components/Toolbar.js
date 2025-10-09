@@ -6,27 +6,41 @@ import NavigationControl from './NavigationControl.js';
 import ActingAsDropdown from './ActingAsDropdown.js';
 
 function Toolbar({ gameState }) {
-    const { showLoading, showHelp, gameStateBelief, setGameStateBelief, lastSyncRef, saveGame, toggleSpeed, toggleTicker } = api.useWSRContext();
+    const { showHelp, showLoading } = api.useWSRContext();
+
+    const toggleSpeed = () => {
+        const speed = gameState.tickSpeed;
+        const newSpeed = speed >= 90 ? 30 : speed >= 75 ? 100 : 75;
+        api.setTickSpeed(newSpeed);
+    }
+
+    const toggleTicker = () => {
+        api.toggleTicker();
+    }
+
 
     return html`
         <div class="top-bar items-center justify-between" style="height: 40px; flex-shrink: 0;">
             <div class="flex items-center gap-2">
                 <div style="width: 20px; height: 20px"
-                class="btn ${gameStateBelief.isTickerRunning ? 'stop' : 'play'}"
+                class="btn ${gameState.isTickerRunning ? 'stop' : 'play'}"
                 onClick=${toggleTicker}>
                     <div class="" style="width: 7px">
-                        <${gameStateBelief.isTickerRunning ? StopIcon : PauseIcon} />
+                        <${gameState.isTickerRunning ? StopIcon : PauseIcon} />
                     </div>
                 </div>
                 <div style="width: 60px; height: 20px" class="btn blue" onClick=${toggleSpeed}>
                     <div class="" style="">
-                        ${gameStateBelief.tickSpeed > 75 ? '▶▶▶'
-            : gameStateBelief.tickSpeed > 50 ? '▶▶'
+                        ${gameState.tickSpeed > 75 ? '▶▶▶'
+            : gameState.tickSpeed > 50 ? '▶▶'
                 : '▶'
         }
                     </div>
                 </div>
-                <div class="btn green" onClick=${saveGame}>
+                <div class="btn green" onClick=${() => {
+                    showLoading()
+                    setTimeout(() => api.saveGame(), 500);
+                }}>
                     <!--<div class="mr-1" style="width: 7px">
                         <${SaveIcon} />
                     </div>-->

@@ -14,6 +14,37 @@ const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
     {
+        ver: "v10.0.5",
+        items: [
+            "Resolved scrolling issues in the Financials tab.",
+            "Replaced 'Prepay Taxes' and 'Startup' buttons in the Player View for improved clarity.",
+            "Enhanced responsiveness of the Play/Pause button by toggling tick mode outside the update loop.",
+            "Fixed an issue where the loading screen occasionally remained visible after the program resumed.",
+            "Removed outdated UI navigation instructions when posting offers.",
+            "Corrected functionality of the 'Interest Rate Swaps' button for companies.",
+            "Updated error message to 'Must be acting as this company' to avoid truncation.",
+            "Fixed missing 'CFIG.WSR' causing default computer player names to break.",
+            "Revised old sample text referencing outdated UI at the start of a new game.",
+            "Implemented decryption for save files.",
+            "Changed save game location to '%LOCALAPPDATA%\\Wall Street Raider\\Saves'.",
+            "Optimized market report tab updates by staggering them."
+        ],
+    },
+    {
+        ver: "v10.0.4",
+        items: [
+            "Improve responsiveness of play, pause, and speed control buttons.",
+            "Ensure margin account report does not display negative numbers; cap values at zero.",
+            "Resolve excessive whitespace caused by multiple newlines in information popups.",
+            "Migrate '# of computers' and currency configuration popups to Electron dialogs.",
+            "Fix 'must control company' error when attempting to create a startup.",
+            "Resolve issues with the Set Dividend button functionality.",
+            "Fix disappearing Stock and Options buttons in the company profile when zooming in.",
+            "Simplify Streaming Quotes interface by adding Star and Trashcan icons with descriptions, removing the active entity from the top of the quotes list to reduce confusion, and adding a dedicated button to manage quotes.",
+            "Introduce a 'View Items for Sale' button."
+        ],
+    },
+    {
         ver: "v10.0.3",
         items: [
             "Speed up ticker as much as I can",

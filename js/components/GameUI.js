@@ -87,7 +87,6 @@ const GameUI = ({ gameState }) => {
                                     ${api.renderHyperlinks(i.headline, gameState, ({ id, type }) => {
                                         if (type === 'C')  api.setViewAsset(id);
                                         else if (type === 'I') api.viewIndustry(id);
-                                        setShowNews(false);
                                     })}
                                 </div>
                             `)}
@@ -104,7 +103,7 @@ const GameUI = ({ gameState }) => {
         <div class="flex flex-row border items-center justify-between gap-2 px-2 mx-2" style="height: 30px;">
             <div></div>
             <div class="flex flex-[1] items-center gap-2 cursor-pointer justify-between" onClick=${() => setShowNotifications(true)}>
-                <div class="overflow-hidden whitespace-nowrap text-ellipsis" style="max-width: 45vw;">${gameState.trendingNews[0]?.headline ?? ''}</div>
+                <div></div>
                 ${gameState.trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
                     onClick=${() => setShowNotifications(true)}>
                     <${NotificationIcon} />
