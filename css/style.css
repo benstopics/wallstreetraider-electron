@@ -337,7 +337,7 @@ div::-webkit-scrollbar-thumb:hover {
     box-sizing: border-box;
 }
 
-select.basic {
+.basic {
     padding: 5px;
     background-color: var(--selected-bg-color);
     color: black;

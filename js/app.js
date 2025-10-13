@@ -9,6 +9,7 @@ import HelpModal from './components/HelpModal.js';
 import InputStringModal from './components/InputStringModal.js';
 import ConfirmModal from './components/ConfirmModal.js';
 import InfoModal from './components/InfoModal.js';
+import NewGameSetupModal from './components/NewGameSetupModal.js';
 
 const logos = [
     { src: "assets/roninsoft_logo.png", backgroundColor: "#ffffff" },
@@ -19,7 +20,7 @@ const AppInner = () => {
     const [gameState, setGameState] = useState({ gameLoaded: false, isTickerRunning: false });
     const [inputString, setInputString] = useState('');
 
-    const { showLoading, hideLoading, helpShown, hideHelp, loading } = api.useWSRContext();
+    const { helpShown, hideHelp, loading } = api.useWSRContext();
 
     useEffect(() => {
         const connectWebSocket = (retryCount = 0) => {
@@ -31,13 +32,11 @@ const AppInner = () => {
                         
                 api.getGameState().then((newGameState) => {
                     setGameState(newGameState);
-                    hideLoading();
                 }).catch(console.error);
 
             };
 
             ws.onmessage = (evt) => {
-                hideLoading();
                 // console.log('WebSocket message received:', evt.data);
                 console.log(JSON.parse(evt.data))
                 setGameState(JSON.parse(evt.data));
@@ -64,7 +63,6 @@ const AppInner = () => {
             if (e.key === ' ') {
                 api.toggleTicker();
             } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
-                showLoading();
                 api.saveGame()
                 e.stopPropagation();
             }
@@ -80,10 +78,9 @@ const AppInner = () => {
 
     const hideModal = () => {
         api.closeModal();
-        showLoading();
     }
 
-    console.log(gameState)
+    console.log('Rendering app, gameState:', gameState, 'loading:', loading, gameState.isLoading);
 
     return html`
         <${SplashSequence}
@@ -97,31 +94,40 @@ const AppInner = () => {
         <div class="app-container">
             ${gameState.gameLoaded ? html`<${GameUI} gameState=${gameState} />`
             : html`<${MainMenu} />`}
-            ${(gameState.events?.length > 0 || loading) && !gameState.modalType ? html`
+            ${(gameState.isLoading || loading) && !gameState.modalType ? html`
                 <div className="loading-overlay">
                     <img src="assets/loading.gif" alt="Loading..." />
                 </div>
             ` : ''}
             <${ConfirmModal}
-                show=${gameState.modalType === 1}
+                show=${gameState.modalType === 1 || gameState.modalType === 2}
                 title=${gameState.modalTitle}
                 text=${gameState.modalText}
-                onYes=${() => { showLoading(); setTimeout(() => api.modalResult(1), 500); }}
-                onNo=${() => { showLoading(); setTimeout(() => api.modalResult(2), 500); }}
-                onCancel=${() => { showLoading(); setTimeout(() => api.modalResult(3), 500); }}
+                onYes=${() => { setTimeout(() => api.modalResult(1), 500); }}
+                onNo=${() => { setTimeout(() => api.modalResult(2), 500); }}
+                onCancel=${gameState.modalType === 2 ? () => { setTimeout(() => api.modalResult(3), 500); } : undefined}
             />
             <${InputStringModal}
                 show=${gameState.modalType === 3}
                 title=${gameState.modalTitle}
                 text=${gameState.modalText}
                 defaultValue=${inputString}
-                onSubmit=${(value) => { showLoading(); setTimeout(() => api.modalResult(value), 500); }}
+                onSubmit=${(value) => { setTimeout(() => api.modalResult(value), 500); }}
                 onCancel=${hideModal}
             />
             <${InfoModal}
                 show=${gameState.modalType === 4}
                 text=${gameState.modalText}
                 onClose=${hideModal}
+            />
+            <${NewGameSetupModal}
+                show=${gameState.modalType === 5}
+                gameState=${gameState}
+                onSubmit=${(newSettings) => {
+                    const strInput = Object.entries(newSettings).map(([key, value]) => `${key}=${value}`).join('|');
+                    setTimeout(() => api.modalResult(strInput), 500);
+                }}
+                onCancel=${hideModal}
             />
             <${HelpModal} show=${helpShown} onClose=${hideHelp} />
         </div>

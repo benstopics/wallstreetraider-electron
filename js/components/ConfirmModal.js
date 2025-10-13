@@ -13,7 +13,7 @@ export default function ConfirmModal({ show, title, text, onYes, onNo, onCancel 
         <div class="flex justify-between items-center mb-4">
             <button class="btn modal green" onClick=${onYes}>Yes</button>
             <button class="btn modal red" onClick=${onNo}>No</button>
-            <button class="btn modal" onClick=${onCancel}>Cancel</button>
+            ${onCancel ? html`<button class="btn modal" onClick=${onCancel}>Cancel</button>` : ''}
         </div>
     <//>`;
 }

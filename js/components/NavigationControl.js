@@ -6,7 +6,11 @@ import * as api from '../api.js';
 function NavigationControl({ gameState }) {
 
     const options = api.navHistory.map(id => ({
-        id, name: gameState.allCompanies.find(c => c.id === id)?.name
+        id,
+        name: gameState
+            .allCompanies
+            .concat([{ id: gameState.playerId, name: gameState.playerName }])
+            .find(c => c.id === id)?.name
     })).filter(c => c.name)
 
     const onChange = (e) => {

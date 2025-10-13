@@ -31,7 +31,7 @@ function CashflowTab({ gameState }) {
                             getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.offerCorporateAssetsForSale} 
                             label="Offer Corporate Assets for Sale"
-                            color="red"
+                            color="blue"
                         />` : ''}
                     ` : ''}
                         <${ActingAsRequiredButton} 
@@ -66,8 +66,8 @@ function CashflowTab({ gameState }) {
                             gameState=${gameState} 
                             getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.changeManagers} 
-                            label="Change Managers"
-                            color="blue"
+                            label="Fire Managers"
+                            color="red"
                         />
                 </div>
                 <br />

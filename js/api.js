@@ -9,6 +9,10 @@ export const INSURANCE_IND = 2;
 export const SECURITIES_BROKER_IND = 37;
 
 export const PLAYER1_ID = 2;
+export const PLAYER2_ID = 1;
+export const PLAYER3_ID = 3;
+export const PLAYER4_ID = 4;
+export const PLAYER5ID = 5;
 export const STOCK_INDEX_ID = 0;
 export const OIL_ID = 6;
 export const GOLD_ID = 7;
@@ -477,9 +481,6 @@ export function executeCommand(gameState, command) {
 export const WSRContext = createContext();
 
 export function WSRProvider({ children }) {
-    const [loading, setLoading] = useState(false);
-    const showLoading = () => setLoading(true);
-    const hideLoading = () => setLoading(false);
     const [helpShown, setHelpShown] = useState(false);
     const showHelp = () => setHelpShown(true);
     const hideHelp = () => setHelpShown(false);
@@ -488,9 +489,6 @@ export function WSRProvider({ children }) {
     return html`<${WSRContext.Provider} value=${{
         gameState,
         setGameState,
-        loading,
-        showLoading,
-        hideLoading,
         helpShown,
         showHelp,
         hideHelp

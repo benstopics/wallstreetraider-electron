@@ -1,7 +1,6 @@
 import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
-import QuoteOfTheDay from './QuoteOfTheDay.js';
 import VideoBackground from './VideoBackground.js';
 import { renderMultilineText } from './helpers.js';
 
@@ -13,6 +12,32 @@ const REDDIT_WIDGET = 'assets/reddit-widget.png';
 const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
+    {
+        ver: "v10.0.7",
+        items: [
+            "Resolved sporadic loading animation behavior by optimizing in-progress simulation processes to prevent it from getting stuck.",
+            "Addressed crashes caused by British pounds and Japanese yen currency handling.",
+            "Increased the size of 'Acting As' buttons for improved accessibility.",
+            "Fixed navigation issues with forward, backward, and 'View Player' buttons.",
+            "Resolved a modalResult dereferencing issue related to strParam1.",
+            "Removed the Cancel button from dialogs originally designed for Yes/No responses to prevent backend logic conflicts.",
+            "Replaced legacy Win32 popups with modern dialogs for creating new games.",
+            "Fixed a bug causing a two-year game limit regardless of startup choices for game length.",
+            "Resolved Error 9 and incorrect value sharing between C++ and PowerBasic by ensuring proper memory handling for user input events.",
+            "Addressed a UI update issue that occasionally caused crashes.",
+            "Improved market report throttling to ensure reasonable refresh rates during ticker activity.",
+            "Optimized advisory updates by implementing throttling.",
+            "Adjusted the initial ticker speed to be more gradual."
+        ]
+    },
+    {
+        ver: "v10.0.6",
+        items: [
+            "Resolved an issue causing an endless loop of humorous 'Game Over' text.",
+            "Removed the Steam overlay from the Electron build to address launch-related issues.",
+            "Fixed sporadic behavior of the loading animation and ensured it no longer gets stuck."
+        ],
+    },
     {
         ver: "v10.0.5",
         items: [
