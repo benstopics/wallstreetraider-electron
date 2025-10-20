@@ -1,5 +1,4 @@
 import { html } from '../lib/preact.standalone.module.js';
-import Tooltip from './Tooltip.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
@@ -28,20 +27,22 @@ function OptionsTab({ gameState }) {
     return html`
             <div class="flex flex-col w-full">
                 <br />
-                <div class="flex flex-row flex-[3] justify-center items-center">
-                    <div class="flex">
-                        ${renderLines(gameState, gameState.optionsList,
-        ({ id }) => api.setViewAsset(id),
-        ({ id, type, text }) => html`
+                <div class="flex flex-col flex-[3] items-center">
+                    ${renderLines(
+                        gameState,
+                        gameState.optionsList,
+                        ({ id }) => api.setViewAsset(parseInt(id.split('|').pop())),
+                        ({ id, type, text }) => html`
                             <${ActingAsRequiredButton} 
                                 gameState=${gameState} 
                                 getDisabledMessage=${_ => !actingAs ? "Must be acting as this company" : false} 
-                                onClick=${() => (type === 'LONGCALL' ? api.sellCalls
-                : type === 'LONGPUT' ? api.sellPuts
-                    : type === 'SHORTCALL' ? api.buyCalls
-                        : type === 'SHORTPUT' ? api.buyPuts
-                            : () => { }
-            )(id)} 
+                                onClick=${() => (
+                                    type === 'LONGCALL' ? api.sellCalls
+                                    : type === 'LONGPUT' ? api.sellPuts
+                                    : type === 'SHORTCALL' ? api.buyCalls
+                                    : type === 'SHORTPUT' ? api.buyPuts
+                                    : () => { }
+                                )(parseInt(id.split('|')[0]))} 
                                 label=${type.includes('LONG') ? 'Sell' : 'Cover'}
                                 color="red"
                             />
@@ -58,18 +59,18 @@ function OptionsTab({ gameState }) {
 
                                     return false
                                 }} 
-                                onClick=${() => (type.includes('CALL') ? api.exerciseCallOptionsEarly
-            : type.includes('PUT') ? api.exercisePutOptionsEarly
-                : () => { }
-        )(id)} 
+                                onClick=${() => (
+                                    type.includes('CALL') ? api.exerciseCallOptionsEarly
+                                    : type.includes('PUT') ? api.exercisePutOptionsEarly
+                                    : () => { }
+                                )(parseInt(id.split('|')[0]))} 
                                 label="Exercise Early"
                                 color="blue"
                             />
-                        `)
-}
-                    </div >
-                </div >
-            </div >
+                        `
+                    )}
+                </div>
+            </div>
     `;
 }
 

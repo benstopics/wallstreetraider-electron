@@ -37,9 +37,10 @@ export function renderMultilineText(text, options = { additionalDelimiters: [], 
 }
 
 export function parseHyperlink(line) {
-    const match = line && line.match(/@([A-Z]+)(\d*)$/);
+    const match = line && line.match(/@([A-Z]+)(\d*(\|\d+)*)$/);
     if (!match) return null;
-    return { type: match[1], id: parseInt(match[2], 10) };
+    const value = match[2];
+    return { type: match[1], id: value.includes('|') ? value : parseInt(value, 10) };
 }
 
 export function renderLines(gameState, lines, onLink, renderExtras) {
@@ -59,17 +60,19 @@ export function renderLines(gameState, lines, onLink, renderExtras) {
         ${cleanedLines.map(({ raw, text, link }) => {
         if (text === '') return ' ';
 
-        const classes = link?.id > 0 && onLink
+        const idFound = link?.id > 0 || (link?.id && link?.id.includes('|'));
+
+        const classes = idFound && onLink
             ? 'fixed-width cursor-pointer hover:bg-blue-900 text-blue-400'
             : 'fixed-width';
 
-        const handler = link?.id > 0 ? () => onLink && onLink(link) : null;
+        const handler = idFound ? () => onLink && onLink(link) : null;
 
         // If extras will be rendered, pad line with spaces
         const padded = (renderExtras && link)
             ? text.padEnd(maxLength, ' ')
-            : link?.id > 0 ? text : api.renderHyperlinks(text, gameState, ({ id, type }) => {
-                if (type === 'C')  api.setViewAsset(id);
+            : idFound ? text : api.renderHyperlinks(text, gameState, ({ id, type }) => {
+                if (type === 'C') api.setViewAsset(id);
                 else if (type === 'I') api.viewIndustry(id);
             });
 

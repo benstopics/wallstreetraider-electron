@@ -6,7 +6,7 @@ import NavigationControl from './NavigationControl.js';
 import ActingAsDropdown from './ActingAsDropdown.js';
 
 function Toolbar({ gameState }) {
-    const { showHelp } = api.useWSRContext();
+    const { showHelp, setGameState } = api.useWSRContext();
 
     const toggleSpeed = () => {
         const speed = gameState.tickSpeed;
@@ -15,7 +15,11 @@ function Toolbar({ gameState }) {
     }
 
     const toggleTicker = () => {
-        api.toggleTicker();
+        if (gameState.isTickerRunning) {
+            api.stopTicker();
+        } else {
+            api.startTicker();
+        }
     }
 
 
@@ -38,7 +42,8 @@ function Toolbar({ gameState }) {
                     </div>
                 </div>
                 <div class="btn green" onClick=${() => {
-                    setTimeout(() => api.saveGame(), 500);
+                    setGameState({ ...gameState, isLoading: true });
+                    api.saveGame()
                 }}>
                     <!--<div class="mr-1" style="width: 7px">
                         <${SaveIcon} />

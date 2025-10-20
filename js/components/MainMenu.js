@@ -13,6 +13,28 @@ const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
     {
+        ver: "v10.0.8",
+        items: [
+            "Fix scrolling issues on multiple tabs to to incorrect flex and centering styles.",
+            "Fix cancel button on string input modal which fixes multiple issues e.g. cancel set growth rate.",
+            "Fix new game character name mixup",
+            "Fix change symbol input error due to null terminator handling.",
+            "Fix save game loading animation",
+            "Fix options contract company hyperlink and sell/cover/exercise buttons",
+            "Fix market reports load industry tabs loading animation",
+            "Fix market reports update lag",
+            "Clicking on industry in market reports now automatically changes to industry tab",
+            "Add 'Browse For Sale Items' button to Cashflow tab in Player View",
+            "Fix ETF and Holding Co. industry summaries and hide projections for banking, insurance, holding co., and etf industries",
+            "Add company symbol to Acting As and Navigation Control dropdowns",
+            "Fix Spin-Off button showing next to bonds contracts",
+            "Fix crashing on Startup Choices popup",
+            "Fix advance ticker once when user interacts with the UI",
+            "Fix start/stop ticker lag",
+            "Attempt to improve user interaction responsiveness when ticker is running by optimizing ticker advance logic",
+        ]
+    },
+    {
         ver: "v10.0.7",
         items: [
             "Resolved sporadic loading animation behavior by optimizing in-progress simulation processes to prevent it from getting stuck.",

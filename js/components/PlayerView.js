@@ -11,6 +11,7 @@ import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
 import CommandPrompt from './CommandPrompt.js';
 import FinancialsTab from './FinancialsTab.js';
+import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 
 const Tab = Tabs.Tab;
 
@@ -31,7 +32,14 @@ const PlayerView = ({ gameState }) => html`
                         <${FinancialsTab} gameState=${gameState} />
                     <//>
                     <${Tab} label="Cashflow">
-                        <div class="flex justify-center items-center">
+                        <div class="flex flex-col items-center">
+                            <${ActingAsRequiredButton} 
+                                gameState=${gameState} 
+                                getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as yourself" : false} 
+                                onClick=${api.viewForSaleItems} 
+                                label="Browse For Sale Items"
+                                color="green"
+                            />
                             ${renderLines(gameState, gameState.cashflowProjection, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
@@ -45,7 +53,7 @@ const PlayerView = ({ gameState }) => html`
                         ${html`<${CommoditiesTab} gameState=${gameState} />`}
                     <//>
                     <${Tab} label="Advances">
-                        <div class="flex flex-col justify-center items-center">
+                        <div class="flex flex-col items-center">
                             ${gameState.actingAs ? html`
                                 <button
                                     class="btn flex-1 mx-1 green"
@@ -72,7 +80,7 @@ const PlayerView = ({ gameState }) => html`
                         </div>
                     <//>
                     <${Tab} label="My Corporations">
-                        <div class="flex justify-center items-center">
+                        <div class="flex flex-col items-center">
                             ${renderLines(gameState, gameState.myCorporationsReport,
                                 ({ id }) => api.setViewAsset(id),
                                 ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">

@@ -2,16 +2,27 @@ import { html, render, useState, useEffect } from '../lib/preact.standalone.modu
 import '../lib/tailwind.module.js';
 
 
-const Tabs = ({ children }) => {
+const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
     const tabChildren = Array.isArray(children) ? children.filter(child => (child?.props?.label ?? false)) : [children];
     const tabLabels = tabChildren.map(child => child.props.label);
-    const [activeTab, setActiveTab] = useState(tabLabels[0]);
+    const [activeTab, setActiveTab] = useState(externalActiveTab || tabLabels[0]);
+
+    const changeTab = (newTab) => {
+        setActiveTab(newTab);
+        onTabChange?.(newTab);
+    }
 
     useEffect(() => {
         if (!tabLabels.includes(activeTab)) {
-            setActiveTab(tabLabels[0]);
+            changeTab(tabLabels[0]);
         }
     }, [children])
+
+    useEffect(() => {
+        if (externalActiveTab !== activeTab && tabLabels.includes(externalActiveTab)) {
+            changeTab(externalActiveTab);
+        }
+    }, [externalActiveTab]);
 
     return html`
     <div class="flex flex-col w-full h-full min-h-0">
@@ -20,7 +31,7 @@ const Tabs = ({ children }) => {
             ${tabLabels.map(label => html`
                 <div
                     class=${`tab-button ${label === activeTab ? 'active' : ''}`}
-                    onClick=${() => setActiveTab(label)}
+                    onClick=${() => changeTab(label)}
                 >
                     ${label}
                 </div>

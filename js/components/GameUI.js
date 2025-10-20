@@ -56,7 +56,7 @@ const GameUI = ({ gameState }) => {
 
                 <!-- Asset Price Chart -->
                 <div class="flex-[2.75] min-h-0">
-                    ${html`<${CapitalizationChart} assetId=${api.PLAYER1_ID} chartTitle="Net Worth" />`}
+                    ${html`<${CapitalizationChart} assetId=${api.HUMAN1_ID} chartTitle="Net Worth" />`}
                 </div>
 
                 <div class="flex flex-row flex-[2] min-h-0 gap-2">

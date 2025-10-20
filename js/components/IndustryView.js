@@ -1,4 +1,4 @@
-import { html } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useState } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import CapitalizationChart from './CapitalizationChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
@@ -17,7 +17,17 @@ const Tab = Tabs.Tab;
 
 const IndustryView = ({ gameState }) => {
 
+    const [activeTab, setActiveTab] = useState('Industry Growth Rates');
+
     const activeIndustryName = api.getIndustry(gameState, gameState.activeIndustryNum)?.name
+
+    const { setGameState } = api.useWSRContext();
+
+    useEffect(() => {
+        if (activeIndustryName && activeIndustryName !== activeTab) {
+            setActiveTab(activeIndustryName);
+        }
+    }, [activeIndustryName]);
 
     return html`
     <div class="flex flex-col h-full">
@@ -39,7 +49,7 @@ const IndustryView = ({ gameState }) => {
                         <button class="btn green mx-1" onclick=${api.startup}>Startup</button>
                     </div>-->
                 </div>
-                <${Tabs}>
+                <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
                     ${activeIndustryName ? html`<${Tab} label="${activeIndustryName}">
                         <div class="flex justify-center items-center w-full h-full">
                             <${Tabs}>
@@ -48,27 +58,39 @@ const IndustryView = ({ gameState }) => {
                                         ${renderLines(gameState, gameState.industrySummaryReport, ({ id }) => api.setViewAsset(id))}
                                     </div>
                                 <//>
-                                <${Tab} label="Projection">
+                                ${![1, 2, 70, 71].includes(gameState.activeIndustryNum) ? html`<${Tab} label="Projection">
                                     <div class="flex justify-center items-center">
-                                        ${renderLines(gameState, gameState.industryProjectionReport, ({ id }) => api.setViewAsset(id))}
+                                        ${gameState.industryProjectionReport.some(l => l.trim() !== '')
+                                            ? renderLines(gameState, gameState.industryProjectionReport, ({ id }) => api.setViewAsset(id))
+                                            : html`No projections available for the currently selected industry group:<br/><br/>${activeIndustryName}`
+                                        }
                                     </div>
-                                <//>
+                                <//>` : ''}
                             <//>
                         </div>
                     <//>` : ''}
                     <${Tab} label="Industry Growth Rates">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState, gameState.industryGrowthRatesReport, ({ id }) => api.viewIndustry(id))}
+                            ${renderLines(gameState, gameState.industryGrowthRatesReport, ({ id }) => {
+                                setGameState({ ...gameState, isLoading: true });
+                                api.viewIndustry(id)
+                            })}
                         </div>
                     <//>
                     <${Tab} label="Economic Data">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState, gameState.economicDataReport, ({ id }) => api.viewIndustry(id))}
+                            ${renderLines(gameState, gameState.economicDataReport, ({ id }) => {
+                                setGameState({ ...gameState, isLoading: true });
+                                api.viewIndustry(id)
+                            })}
                         </div>
                     <//>
                     <${Tab} label="Interest Rates">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState, gameState.interestRatesReport, ({ id }) => api.viewIndustry(id))}
+                            ${renderLines(gameState, gameState.interestRatesReport, ({ id }) => {
+                                setGameState({ ...gameState, isLoading: true });
+                                api.viewIndustry(id)
+                            })}
                         </div>
                     <//>
                     <${Tab} label="Companies With Most...">
@@ -135,7 +157,10 @@ const IndustryView = ({ gameState }) => {
                     <//>
                     <${Tab} label="Who's Ahead?">
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState, gameState.whosAheadReport, ({ id }) => api.viewIndustry(id))}
+                            ${renderLines(gameState, gameState.whosAheadReport, ({ id }) => {
+                                setGameState({ ...gameState, isLoading: true });
+                                api.viewIndustry(id)
+                            })}
                         </div>
                     <//>
                 <//>

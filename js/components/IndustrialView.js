@@ -43,7 +43,7 @@ const IndustrialView = ({ gameState }) => {
         ? "Must be acting as this company"
         : false;
 
-    const shortStockDisabledMessage = actingAsId !== api.PLAYER1_ID
+    const shortStockDisabledMessage = actingAsId !== api.HUMAN1_ID
         ? "Only players can short stocks."
         : false;
 
@@ -78,7 +78,7 @@ const IndustrialView = ({ gameState }) => {
                         color="red"
                     />
                     ${gameState.actingAsId !== activeEntityNum // Cannot sue itself
-                        && gameState.actingAsId !== api.PLAYER1_ID // Players cannot file antitrust lawsuits
+                        && gameState.actingAsId !== api.HUMAN1_ID // Players cannot file antitrust lawsuits
                         && gameState.actingAsIndustryId === gameState.activeIndustryId // Must be same industry
                         && !api.isPlayerControlled(gameState, activeEntityNum) // Cannot be controlled by you
                         ? html`<${ActingAsRequiredButton}
@@ -221,7 +221,7 @@ const IndustrialView = ({ gameState }) => {
                                     ${html`<${AdvisorySummary} gameState=${gameState} />`}
                                 </div>
                             </div>
-                            <div class="flex w-3/4 flex-col justify-center items-center">
+                            <div class="flex w-3/4 flex-col items-center">
                                 ${renderLines(gameState, gameState.researchReport, ({ id }) => api.setViewAsset(id))}
                             </div>
                         </div>
@@ -247,7 +247,7 @@ const IndustrialView = ({ gameState }) => {
                             buttonClass="btn flex-1 mx-1"
                         />
 
-                        <div class="flex justify-center items-center">
+                        <div class="flex flex-col justify-center items-center">
                             ${renderLines(gameState, gameState.earningsReport, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>

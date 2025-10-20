@@ -24,7 +24,7 @@ export default function CommandPrompt({ gameState }) {
             symbol: key,
             name: description
         })).sort((a, b) => a.symbol.localeCompare(b.symbol))
-            .concat({ id: api.PLAYER1_ID, symbol: 'ME', name: 'Player (You)' })
+            .concat({ id: api.HUMAN1_ID, symbol: 'ME', name: 'Player (You)' })
             .concat(entities.sort((a, b) => a.symbol.localeCompare(b.symbol)))
             .filter(c => c.symbol?.toUpperCase().startsWith(q)
                 || c.name?.toUpperCase().includes(q)

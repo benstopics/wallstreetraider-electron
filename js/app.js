@@ -17,10 +17,9 @@ const logos = [
 ];
 
 const AppInner = () => {
-    const [gameState, setGameState] = useState({ gameLoaded: false, isTickerRunning: false });
     const [inputString, setInputString] = useState('');
 
-    const { helpShown, hideHelp, loading } = api.useWSRContext();
+    const { helpShown, hideHelp, loading, gameState, setGameState } = api.useWSRContext();
 
     useEffect(() => {
         const connectWebSocket = (retryCount = 0) => {
@@ -61,7 +60,11 @@ const AppInner = () => {
     useEffect(() => {
         const handleKey = (e) => {
             if (e.key === ' ') {
-                api.toggleTicker();
+                if (gameState.isTickerRunning) {
+                    api.stopTicker();
+                } else {
+                    api.startTicker();
+                }
             } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
                 api.saveGame()
                 e.stopPropagation();
@@ -70,7 +73,7 @@ const AppInner = () => {
 
         document.addEventListener('keydown', handleKey);
         return () => document.removeEventListener('keydown', handleKey);
-    }, []);
+    }, [gameState]);
 
     useEffect(() => {
         setInputString(gameState.modalDefault || '');
@@ -79,8 +82,6 @@ const AppInner = () => {
     const hideModal = () => {
         api.closeModal();
     }
-
-    console.log('Rendering app, gameState:', gameState, 'loading:', loading, gameState.isLoading);
 
     return html`
         <${SplashSequence}

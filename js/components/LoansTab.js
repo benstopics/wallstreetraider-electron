@@ -33,7 +33,7 @@ const renderExtras = (gameState) => ({ type, id, text }) => {
             <//>`);
         } else {
             if (!sellable) {
-                nodes.push(html`<${Tooltip} text="No loans to sell" containerClass="w-12 mx-1">
+                nodes.push(html`<${Tooltip} text="No securities to sell" containerClass="w-12 mx-1">
                     <button class="btn disabled w-full">Sell</button>
                 <//>`);
             } else {
@@ -147,7 +147,7 @@ function LoansTab({ gameState }) {
             <br />
 
             <div class="flex flex-col flex-[3] justify-center items-center">
-                <div class="flex justify-center items-center w-full">
+                <div class="flex flex-col items-center w-full">
                     ${renderLines(gameState, gameState.loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(gameState))}
                 </div>
             </div>

@@ -8,11 +8,11 @@ export const BANK_IND = 1;
 export const INSURANCE_IND = 2;
 export const SECURITIES_BROKER_IND = 37;
 
-export const PLAYER1_ID = 2;
-export const PLAYER2_ID = 1;
-export const PLAYER3_ID = 3;
-export const PLAYER4_ID = 4;
-export const PLAYER5ID = 5;
+export const HUMAN1_ID = 2;
+export const COMPUTER1_ID = 1;
+export const COMPUTER2_ID = 3;
+export const COMPUTER3_ID = 4;
+export const COMPUTER4_ID = 5;
 export const STOCK_INDEX_ID = 0;
 export const OIL_ID = 6;
 export const GOLD_ID = 7;
@@ -178,7 +178,8 @@ export function renderHyperlinks(headline, gameState, onClick) {
 
 /* General */
 export function getGameState() { return getJSON('/gamestate'); }
-export async function toggleTicker() { await postNoArg('/toggle_ticker'); }
+export async function startTicker() { await postNoArg('/start_ticker'); }
+export async function stopTicker() { await postNoArg('/stop_ticker'); }
 export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed', speed); }
 export async function loadGame() { await postNoArg('/loadgame'); }
 export async function newGame() { await postNoArg('/newgame'); }
@@ -464,14 +465,14 @@ export function executeCommand(gameState, command) {
     const parts = command.trim().toUpperCase().split(/\s+/);
     if (parts.length === 0) return;
 
-    let id = getCompanyBySymbol(gameState, parts[0])?.id ?? (parts[0] == 'ME' ? PLAYER1_ID : undefined);
+    let id = getCompanyBySymbol(gameState, parts[0])?.id ?? (parts[0] == 'ME' ? HUMAN1_ID : undefined);
     if (id ?? false) {
         setViewAsset(id);
         return
     }
 
     const cmd = commandMap[parts[0]]?.fn;
-    id = getCompanyBySymbol(gameState, parts[1])?.id ?? (parts[1] == 'ME' ? PLAYER1_ID : gameState.activeEntityNum);
+    id = getCompanyBySymbol(gameState, parts[1])?.id ?? (parts[1] == 'ME' ? HUMAN1_ID : gameState.activeEntityNum);
 
     if (cmd)
         cmd(id, gameState);
@@ -484,6 +485,7 @@ export function WSRProvider({ children }) {
     const [helpShown, setHelpShown] = useState(false);
     const showHelp = () => setHelpShown(true);
     const hideHelp = () => setHelpShown(false);
+
     const [gameState, setGameState] = useState({});
 
     return html`<${WSRContext.Provider} value=${{
@@ -491,7 +493,7 @@ export function WSRProvider({ children }) {
         setGameState,
         helpShown,
         showHelp,
-        hideHelp
+        hideHelp,
     }}>
         ${children}
     <//>`;

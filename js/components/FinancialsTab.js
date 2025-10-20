@@ -4,7 +4,53 @@ import * as api from '../api.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import CapitalizationChart from './CapitalizationChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
+import Tooltip from './Tooltip.js';
 
+
+// For insurance companies
+const renderExtras = (gameState) => ({ type, id, text }) => {
+    const { actingAs } = gameState;
+
+    const nodes = [];
+
+    if (type === 'SUBPRIME') {
+        const sellable = !text?.includes('   0.0');
+
+        if (!actingAs) {
+            nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
+                <button class="btn disabled w-full">Sell</button>
+            <//>`);
+
+            nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
+                <button class="btn disabled w-full">Buy</button>
+            <//>`);
+        } else {
+            if (!sellable) {
+                nodes.push(html`<${Tooltip} text="No securities to sell" containerClass="w-12 mx-1">
+                    <button class="btn disabled w-full">Sell</button>
+                <//>`);
+            } else {
+                nodes.push(html`<button
+                    class="btn red flex-1 mx-1 w-12"
+                    onClick=${() => api.sellSubprimeMortgages(id)}>
+                    Sell
+                </button>`);
+            }
+
+            nodes.push(html`<button
+                class="btn green flex-1 mx-1 w-12"
+                onClick=${() => api.buySubprimeMortgages(id)}>
+                Buy
+            </button>`);
+        }
+
+        return html`<div class="flex justify-center items-center">
+            ${nodes}
+        </div>`;
+    }
+
+    return html`<div class="flex justify-center items-center">${nodes}</div>`;
+};
 
 function FinancialsTab({ gameState }) {
 
@@ -79,8 +125,8 @@ function FinancialsTab({ gameState }) {
                             </div>
                         </div>` : ''}
                     <div class="flex ${gameState.activeEntityNum < 10 ? 'w-3/4' : 'w-full'}">
-                        <div class="flex justify-center overflow-y-auto w-full max-h-full">
-                            ${renderLines(gameState, gameState.financialProfile, ({ id }) => api.setViewAsset(id))}
+                        <div class="flex flex-col items-center overflow-y-auto w-full max-h-full">
+                            ${renderLines(gameState, gameState.financialProfile, ({ id }) => api.setViewAsset(id), renderExtras(gameState))}
                         </div>
                     </div>
                 </div>

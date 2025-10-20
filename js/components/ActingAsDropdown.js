@@ -22,14 +22,14 @@ function ActingAsDropdown({ gameState }) {
                     ${gameState.actingAsId !== gameState.activeEntityNum && options.find(opt => opt.id === gameState.activeEntityNum) ? html`
                         <button class="btn mx-1 p-2" onclick=${() => api.changeActingAs(gameState.activeEntityNum)}>Act As ${gameState.activeEntitySymbol}</button>
                     ` : ''}
-                    ${gameState.activeEntityNum !== api.PLAYER1_ID
-                        ? html`<button class="btn mx-1 p-2" onclick=${() => api.setViewAsset(api.PLAYER1_ID)}>View Player</button>`
+                    ${gameState.activeEntityNum !== api.HUMAN1_ID
+                        ? html`<button class="btn mx-1 p-2" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>View Player</button>`
                         : ''}
                 </div>
             </div>
             <div class="flex flex-row items-center gap-2">
                 <select class="basic flex-grow text-center w-full" value=${gameState.actingAsId} onChange=${onChange}>
-                    ${options.map(opt => html`<option value=${opt.id}>${opt.name}</option>`)}
+                    ${options.map(opt => html`<option value=${opt.id}>${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)}
                 </select>
                 <div class="" style="height:25px">
                     ${gameState.actingAsId !== gameState.activeEntityNum || gameState.activeIndustryNum >= 0

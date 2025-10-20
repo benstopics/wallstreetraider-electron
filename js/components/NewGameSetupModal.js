@@ -5,8 +5,8 @@ import DifficultyLevelInput from './DifficultyLevelInput.js';
 
 
 export default function NewGameSetupModal({ show, onSubmit, onCancel, gameState }) {
-    const playerIdsOrdered = [api.PLAYER2_ID, api.PLAYER1_ID, api.PLAYER3_ID, api.PLAYER4_ID, api.PLAYER5_ID];
-    const defaultPlayerNames = playerIdsOrdered.map(id => gameState.allPlayers?.find(p => p.id === id)?.name) || ["", "", "", "", ""];
+    const playerIdsOrdered = [api.HUMAN1_ID, api.COMPUTER1_ID, api.COMPUTER2_ID, api.COMPUTER3_ID, api.COMPUTER4_ID];
+    const defaultPlayerNames = playerIdsOrdered.map(id => gameState.allPlayers?.find(p => p.id === id)?.name || "");
 
     const [playerNames, setPlayerNames] = useState(defaultPlayerNames);
     const [money, setMoney] = useState(() => gameState.startingMoney?.toString() || "1000");
@@ -19,24 +19,26 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel, gameState 
         setGameLength(gameState.gameLength?.toString() || "35");
         setDifficultyLevel(gameState.difficultyLevel?.toString() || "2");
     }, [show]);
+
     const submit = () => {
 
         const sanitizeNames = playerNames.map((name) => name?.replaceAll(/[|"]/g, " ") || "");
 
-        onSubmit({
-            player1Name: sanitizeNames[0],
-            player2Name: sanitizeNames[1],
-            player3Name: sanitizeNames[2],
-            player4Name: sanitizeNames[3],
-            player5Name: sanitizeNames[4],
+        const body = {
             startingMoney: money,
             gameLength,
             difficultyLevel: difficultyLevel
+        };
+        sanitizeNames.forEach((name, index) => {
+            const playerNum = playerIdsOrdered[index];
+            body[`player${playerNum}Name`] = name;
         });
+
+        onSubmit(body);
     }
 
     // Cut off from end of list to match number of players
-    playerIdsOrdered.length = gameState.numPlayers || 2;
+    const numPlayers = gameState.numPlayers || 2;
 
     return html`<${Modal} show=${show}>
         <div>
@@ -49,8 +51,8 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel, gameState 
                         <div class="flex-1 p-2">Enter Player Names:</div>
                         <div class="flex-1 p-2">(20 characters max)</div>
                     </div>
-                    ${playerIdsOrdered.map((playerId, index) => html`<div class="flex">
-                        <div class="flex-1 p-2 text-right">${playerId === api.PLAYER2_ID ? "You:" : "Computer:"}</div>
+                    ${playerIdsOrdered.slice(0, numPlayers).map((playerId, index) => html`<div class="flex">
+                        <div class="flex-1 p-2 text-right">${playerId === api.HUMAN1_ID ? "You:" : "Computer:"}</div>
                         <div class="flex-1 p-2">
                             <input type="text" maxlength="20" class="modal-input" value=${playerNames[index]} onInput=${(e) => {
                                 const newNames = [...playerNames];
