@@ -112,7 +112,7 @@ const AppInner = () => {
                 show=${gameState.modalType === 3}
                 title=${gameState.modalTitle}
                 text=${gameState.modalText}
-                defaultValue=${inputString}
+                defaultValue=${gameState.modalDefault}
                 onSubmit=${(value) => { setTimeout(() => api.modalResult(value), 500); }}
                 onCancel=${hideModal}
             />

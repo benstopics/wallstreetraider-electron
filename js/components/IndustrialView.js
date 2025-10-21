@@ -176,28 +176,28 @@ const IndustrialView = ({ gameState }) => {
                                         <${ActingAsRequiredButton} 
                                             gameState=${gameState} 
                                             getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
-                                            onClick=${() => api.buyCalls(gameState.activeEntityNum)} 
+                                            onClick=${() => api.buyCalls(0)} 
                                             label="Buy Calls"
                                             color="green"
                                         />
                                         <${ActingAsRequiredButton} 
                                             gameState=${gameState} 
                                             getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
-                                            onClick=${() => api.sellCalls(gameState.activeEntityNum)} 
+                                            onClick=${() => api.sellCalls(0)} 
                                             label="Sell Calls"
                                             color="red"
                                         />
                                         <${ActingAsRequiredButton} 
                                             gameState=${gameState} 
                                             getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
-                                            onClick=${() => api.buyPuts(gameState.activeEntityNum)} 
+                                            onClick=${() => api.buyPuts(0)} 
                                             label="Buy Puts"
                                             color="green"
                                         />
                                         <${ActingAsRequiredButton} 
                                             gameState=${gameState} 
                                             getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
-                                            onClick=${() => api.sellPuts(gameState.activeEntityNum)} 
+                                            onClick=${() => api.sellPuts(0)} 
                                             label="Sell Puts"
                                             color="red"
                                         />

@@ -13,6 +13,17 @@ const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
     {
+        ver: "v10.0.9",
+        items: [
+            "Add Exit Game button",
+            "Fix create new game with non-USD currency causing crash",
+            "Fix change company name/symbol/country causing crash",
+            "Complete rewrite of options handling to fix numerous bugs including sell/cover/exercise buttons, company hyperlinks, and incorrect option pricing",
+            "Add back in tax basis column to Stocks & Bonds portfolio tab",
+            "Clean up unintended hyperlink matches in text reports"
+        ]
+    },
+    {
         ver: "v10.0.8",
         items: [
             "Fix scrolling issues on multiple tabs to to incorrect flex and centering styles.",
@@ -175,61 +186,22 @@ const MainMenu = () => {
             <div class="wsr-block">
                 <div class="wsr-ann-welcome">
               <div class="h-full overflow-y-auto" style="max-height:40vh;">
-              <h3 class="wsr-block-title">Welcome to the Playtest!</h3>
-  <p>Thanks for joining the Wall Street Raider Playtest. Read this, then dive in.</p>
+              <h3 class="wsr-block-title">Win32 to Electron Conversion Roadmap</h3>
+  <p>As part of our commitment to future-proofing Wall Street Raider and ensuring cross-platform compatibility, we are actively working to replace all legacy Win32 code with modern Electron implementations. This transition is critical for the game's long-term sustainability and feature expansion.</p>
 
-  <h4>Basics</h4>
+  <h4>Next Steps in the Conversion</h4>
   <ul>
-    <li>Start with <strong>New Game</strong> for a clean save. Use <strong>Load Game</strong> to resume.</li>
-    <li>Explore the menus. Most features are enabled, but some are still work-in-progress.</li>
-    <li>If something looks wrong, try to reproduce it once before reporting.</li>
+    <li>- Swaps</li>
+    <li>- Advanced Options</li>
+    <li>- Picklist</li>
+    <li>- Database Search</li>
+    <li>- Settings/Cheats Menu</li>
+    <li>- Change Law Firm</li>
+    <li>- Spread Rumors</li>
+    <li>- Harassing Lawsuit</li>
   </ul>
 
-  <h4>Join the Community</h4>
-  <p>
-    Hop into our Discord and request the <strong>@Playtester</strong> role to access the testing channels: <a href="${DISCORD_URL}" target="_blank" rel="noopener">Join the Discord</a>.
-    <br/>
-    Also visit the subreddit: <a href="${REDDIT_URL}" target="_blank" rel="noopener">r/WallStreetRaider</a>.
-  </p>
-
-  <h4>How to Report a Bug</h4>
-  <ol>
-    <li><strong>One issue per report</strong> with a clear title.</li>
-    <li><strong>Steps to reproduce</strong> from a fresh launch or save.</li>
-    <li><strong>Expected vs. actual</strong> result in one sentence each.</li>
-    <li><strong>Evidence</strong>: screenshot or short video; attach a relevant save if possible.</li>
-    <li><strong>System info</strong>: OS version, CPU/GPU, RAM, display resolution.</li>
-  </ol>
-
-  <details>
-    <summary>Copy-paste Bug Report Template</summary>
-    <pre>
-Title:
-Build/Version: v0.9.x (date)
-
-Summary:
-Concise description of the problem.
-
-Steps to Reproduce:
-1)
-2)
-3)
-
-Expected Result:
-What you thought would happen.
-
-Actual Result:
-What happened instead (include any error text).
-
-Attachments:
-Screenshot/video link; save file if relevant.
-
-System Info:
-OS, CPU/GPU, RAM, Resolution.
-    </pre>
-  </details>
-
-  <p>Thanks for testing. Your reports directly shape the next build.</p>
+  <p>We appreciate your patience and support as we undertake this significant upgrade. Stay tuned for updates as we complete each milestone!</p>
 </div>
                 </div>
             </div>

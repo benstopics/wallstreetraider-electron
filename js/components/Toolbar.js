@@ -52,6 +52,14 @@ function Toolbar({ gameState }) {
                         Save Game
                     </span>
                 </div>
+                <div class="btn" onClick=${() => {
+                    setGameState({ ...gameState, isLoading: true });
+                    setTimeout(() => api.exitGame(), 1000)
+                }}>
+                    <span style="white-space: nowrap;">
+                        Exit Game
+                    </span>
+                </div>
                 <div class="btn" onClick=${api.databaseSearch}>
                     <span style="white-space: nowrap;">
                         Database Search

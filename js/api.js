@@ -1,3 +1,4 @@
+import { insertCurrencySymbols } from './components/helpers.js';
 import { html, render, useRef, useState, useEffect, useContext, createContext } from './lib/preact.standalone.module.js';
 
 
@@ -95,23 +96,28 @@ export function getIndustry(gameState, industryNum) {
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 function buildDictRegex(keys) {
-    // prefer longer keys first
-    const esc = keys.map(escapeRe).sort((a, b) => b.length - a.length);
+  const esc = keys.map(escapeRe).sort((a, b) => b.length - a.length);
 
-    const singles = esc.filter(k => /^[A-Za-z]$/.test(k));
-    const others = esc.filter(k => !singles.includes(k));
+  const singles = esc.filter(k => /^[A-Za-z]$/.test(k));
+  const others  = esc.filter(k => !singles.includes(k));
 
-    const parts = [];
-    if (others.length) parts.push(`(?:${others.join("|")})`);
-    if (singles.length) {
-        // do NOT match single-letter keys when followed by ".<word>"
-        // do NOT match when preceded by apostrophe (…'S)
-        parts.push(`(?:${singles.join("|")})(?!\\.(?=\\w))`);
-    }
+  const parts = [];
+  if (others.length) parts.push(`(?:${others.join("|")})`);
+  if (singles.length) parts.push(`(?:${singles.join("|")})(?!\\.(?=\\w))`);
+  const core = `(?:${parts.join("|")})`;
 
-    // token boundaries: not letter/digit on both sides
-    const pattern = `(?<![A-Za-z0-9])(?:${parts.join("|")})(?![A-Za-z0-9])(?!-(?=[A-Za-z0-9]))(?!/(?=[A-Za-z0-9]))`;
-    return new RegExp(pattern, "g");
+  const parenWrapped   = `(?<=\\()${core}(?=\\))`;
+  const dblQuoted      = `(?<=")${core}(?=")`;
+  const sglQuotedBoth  = `(?<=')${core}(?=')`;
+  const bareEndSglOnly = `(?<!')(?<![A-Za-z0-9("'(])${core}(?=')`;
+  const bareNoWrap     = `(?<![A-Za-z0-9("'(])${core}(?![A-Za-z0-9)"'])`;
+
+  const allowed = `(?:${parenWrapped}|${dblQuoted}|${sglQuotedBoth}|${bareEndSglOnly}|${bareNoWrap})`;
+
+  const pattern =
+    `(?<![./_])${allowed}(?![/$_])(?!-(?=[A-Za-z0-9]))(?!/(?=[A-Za-z0-9]))`;
+
+  return new RegExp(pattern, "g");
 }
 
 function toTitleCase(str) {
@@ -125,6 +131,8 @@ function toTitleCase(str) {
 }
 
 export function renderHyperlinks(headline, gameState, onClick) {
+    headline = insertCurrencySymbols(headline);
+
     const lookup = Object.create(null); // key: lowercased token -> {id, type}
 
     // Companies: match by symbol and name
@@ -144,7 +152,19 @@ export function renderHyperlinks(headline, gameState, onClick) {
 
     const keys = Object.keys(lookup);
 
-    if (keys.length === 0) return headline;
+    if (keys.length === 0 || [
+        "Operating Earnings",
+        "LONG AND SHORT",
+        "LONG POSITION",
+        "SHORT POSITION",
+        "Credit Rating",
+        "SUBPRIME MORT.",
+        "LONG BOND",
+        "SHORT BOND",
+        'AS "ACTIVE ENTITY"',
+        "LONG PARTY",
+        "NAME OF ENTITY WITH LONG",
+    ].some(s => headline.includes(s))) return headline;
 
     // Case-sensitive, whole-token match
     const regex = buildDictRegex(keys);
@@ -184,6 +204,7 @@ export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed',
 export async function loadGame() { await postNoArg('/loadgame'); }
 export async function newGame() { await postNoArg('/newgame'); }
 export async function saveGame() { await postNoArg('/savegame'); }
+export async function exitGame() { await postNoArg('/exit_game'); }
 export async function checkScoreboard() { await postNoArg('/check_scoreboard'); }
 export async function getQuoteOfTheDay() { return getJSON('/quote'); }
 

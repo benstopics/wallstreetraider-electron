@@ -43,13 +43,34 @@ export function parseHyperlink(line) {
     return { type: match[1], id: value.includes('|') ? value : parseInt(value, 10) };
 }
 
+const CURRENCY_SYMBOLS = {
+    "@UK": "£",
+    "@EUR": "€",
+    "@JAP": "¥",
+    "@KOR": "₩",
+    "@IND": "₹",
+    "@CNY": "¥",
+    "@ISR": "₪",
+    "@EGY": "E£"
+};
+
+export const insertCurrencySymbols = (text) => {
+    let result = text || '';
+    Object.entries(CURRENCY_SYMBOLS).forEach(([key, symbol]) => {
+        result = result.replaceAll(key, symbol);
+    });
+    return result;
+};
+
 export function renderLines(gameState, lines, onLink, renderExtras) {
     if (!lines) return html``;
 
     // Step 1: Strip hyperlinks and get clean lines
     const cleanedLines = lines.map(line => {
         const link = parseHyperlink(line);
-        const clean = link ? line.slice(0, line.indexOf('@')).trimEnd() : line;
+        let clean = line;
+        clean = insertCurrencySymbols(clean);
+        clean = link ? clean.slice(0, clean.indexOf('@')).trimEnd() : clean;
         return { raw: line, text: clean, link };
     });
 
