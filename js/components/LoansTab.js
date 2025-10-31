@@ -4,8 +4,7 @@ import * as api from '../api.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import Tooltip from './Tooltip.js';
 
-const renderExtras = (gameState) => ({ type, id, text }) => {
-    const { actingAs } = gameState;
+const renderExtras = () => ({ type, id, text }) => {
 
     const nodes = [];
 
@@ -110,15 +109,18 @@ const renderExtras = (gameState) => ({ type, id, text }) => {
     return html`<div class="flex justify-center items-center">${nodes}</div>`;
 };
 
-function LoansTab({ gameState }) {
+function LoansTab() {
 
-    const { frozenAllLoans } = gameState;
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
+    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
+    const frozenAllLoans = api.useGameStore(s => s.gameState.frozenAllLoans);
+    const loansReport = api.useGameStore(s => s.gameState.loansReport);
+    const actingAs = api.useGameStore(s => s.gameState.actingAs);
 
     return html`
         <div class="flex flex-col w-full items-center">
             <${ActingAsRequiredButton} 
-                gameState=${gameState} 
-                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as this company" : false} 
+                disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                 onClick=${api.buyBusinessLoans} 
                 label="Buy Business Loans"
                 color="green"
@@ -126,18 +128,16 @@ function LoansTab({ gameState }) {
                 buttonClass="btn flex-1 mx-1"
             />
             <${ActingAsRequiredButton} 
-                gameState=${gameState} 
-                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as this company" : false} 
+                disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                 onClick=${api.freezeAllLoans} 
                 label="${frozenAllLoans ? "Unfreeze" : "Freeze"} All Loans"
                 color="blue"
                 containerClass="flex flex-row justify-between mt-2 w-full"
                 buttonClass="btn flex-1 mx-1"
             />
-            <${ActingAsRequiredButton} 
-                gameState=${gameState} 
-                getDisabledMessage=${gs => !gs.actingAs ? "Must be acting as this company" : false} 
-                onClick=${api.setBankAllocation} 
+            <${ActingAsRequiredButton}
+                disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                onClick=${api.setBankAllocation}
                 label="Set Allocation"
                 color="brown"
                 containerClass="flex flex-row justify-between mt-2 w-full"
@@ -148,7 +148,7 @@ function LoansTab({ gameState }) {
 
             <div class="flex flex-col flex-[3] justify-center items-center">
                 <div class="flex flex-col items-center w-full">
-                    ${renderLines(gameState, gameState.loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(gameState))}
+                    ${renderLines(allCompanies, allIndustries, loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(actingAs))}
                 </div>
             </div>
         </div>

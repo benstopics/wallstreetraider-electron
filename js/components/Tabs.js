@@ -1,5 +1,6 @@
 import { html, render, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
+import * as api from '../api.js';
 
 
 const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
@@ -24,6 +25,14 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
         }
     }, [externalActiveTab]);
 
+    useEffect(() => {
+        const tab = tabChildren.find(child => child.props.label === activeTab);
+        if (tab?.props.id !== undefined) {
+            console.log(tab)
+            api.setActiveUIReport(tab.props.id);
+        }
+    }, [activeTab]);
+
     return html`
     <div class="flex flex-col w-full h-full min-h-0">
         <!-- Tab Header Row -->
@@ -41,7 +50,7 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
         <!-- Active Tab Content -->
         <div class="flex-1 overflow-auto h-full panel p-2 min-h-0">
             ${tabChildren.map(child =>
-        child.props.label === activeTab ? html`<div class="h-full">${child.props.children}</div>` : null
+        child.props.label === activeTab ? html`<div class="h-full">${child.props.children}</div>` : ''
     )}
         </div>
     </div>

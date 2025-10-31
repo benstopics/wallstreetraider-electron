@@ -13,7 +13,8 @@ function createWindow() {
         icon: path.join(__dirname, 'assets', 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: false
         }
     });
 
@@ -24,33 +25,30 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-    if (app.isPackaged) {
-        const exePath = path.join(__dirname, 'wsr.exe');
-        try {
-            execSync('taskkill /IM wsr.exe /F', { stdio: 'ignore' });
-        } catch (error) {
-            console.error('Failed to kill existing wsr.exe processes:', error.message);
-        }
+    const exePath = app.isPackaged
+        ? path.join(__dirname, 'wsr.exe')
+        : path.join(__dirname, '..', 'src', 'main', 'wsr', 'wsr.exe');
 
-        wsrProcess = spawn(exePath, [], {
-            detached: true,
-            stdio: 'ignore',
-            env: { ...process.env }
-        });
-        wsrProcess.unref();
+    killWSR();
 
-        wsrProcess.on('exit', () => {
-            app.quit();
-        });
+    wsrProcess = spawn(exePath, [], {
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env, ENVIRONMENT: app.isPackaged ? 'production' : 'development' },
+    });
 
-        // Sleep a bit to ensure wsr.exe has started
-        setTimeout(() => {
-            win.show();
-        }, 1500);
+    wsrProcess.unref();
 
-    }
+    wsrProcess.on('exit', () => {
+        app.quit();
+    });
+
+    // Sleep a bit to ensure wsr.exe has started
+    setTimeout(() => {
+        win.show();
+    }, 1500);
+
     const win = createWindow();
-    const hwnd = win.getNativeWindowHandle().readUInt32LE(0).toString();
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();

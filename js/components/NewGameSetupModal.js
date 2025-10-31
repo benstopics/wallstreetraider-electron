@@ -4,20 +4,27 @@ import * as api from '../api.js';
 import DifficultyLevelInput from './DifficultyLevelInput.js';
 
 
-export default function NewGameSetupModal({ show, onSubmit, onCancel, gameState }) {
+export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
+
+    const allPlayers = api.useGameStore(s => s.gameState.allPlayers);
+    const defaultStartingMoney = api.useGameStore(s => s.gameState.startingMoney);
+    const defaultGameLength = api.useGameStore(s => s.gameState.gameLength);
+    const defaultDifficultyLevel = api.useGameStore(s => s.gameState.difficultyLevel);
+    const numPlayers = api.useGameStore(s => s.gameState.numPlayers) || 2;
+
     const playerIdsOrdered = [api.HUMAN1_ID, api.COMPUTER1_ID, api.COMPUTER2_ID, api.COMPUTER3_ID, api.COMPUTER4_ID];
-    const defaultPlayerNames = playerIdsOrdered.map(id => gameState.allPlayers?.find(p => p.id === id)?.name || "");
+    const defaultPlayerNames = playerIdsOrdered.map(id => allPlayers?.find(p => p.id === id)?.name || "");
 
     const [playerNames, setPlayerNames] = useState(defaultPlayerNames);
-    const [money, setMoney] = useState(() => gameState.startingMoney?.toString() || "1000");
-    const [gameLength, setGameLength] = useState(() => gameState.gameLength?.toString() || "35");
-    const [difficultyLevel, setDifficultyLevel] = useState(() => gameState.difficultyLevel?.toString() || "2");
+    const [money, setMoney] = useState(() => defaultStartingMoney?.toString() || "1000");
+    const [gameLength, setGameLength] = useState(() => defaultGameLength?.toString() || "35");
+    const [difficultyLevel, setDifficultyLevel] = useState(() => defaultDifficultyLevel?.toString() || "2");
 
     useEffect(() => {
         setPlayerNames(defaultPlayerNames || ["", "", "", "", ""]);
-        setMoney(gameState.startingMoney?.toString() || "1000");
-        setGameLength(gameState.gameLength?.toString() || "35");
-        setDifficultyLevel(gameState.difficultyLevel?.toString() || "2");
+        setMoney(defaultStartingMoney?.toString() || "1000");
+        setGameLength(defaultGameLength?.toString() || "35");
+        setDifficultyLevel(defaultDifficultyLevel?.toString() || "2");
     }, [show]);
 
     const submit = () => {
@@ -36,9 +43,6 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel, gameState 
 
         onSubmit(body);
     }
-
-    // Cut off from end of list to match number of players
-    const numPlayers = gameState.numPlayers || 2;
 
     return html`<${Modal} show=${show}>
         <div>

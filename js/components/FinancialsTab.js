@@ -8,8 +8,7 @@ import Tooltip from './Tooltip.js';
 
 
 // For insurance companies
-const renderExtras = (gameState) => ({ type, id, text }) => {
-    const { actingAs } = gameState;
+const renderExtras = (actingAs) => ({ type, id, text }) => {
 
     const nodes = [];
 
@@ -52,81 +51,80 @@ const renderExtras = (gameState) => ({ type, id, text }) => {
     return html`<div class="flex justify-center items-center">${nodes}</div>`;
 };
 
-function FinancialsTab({ gameState }) {
+function FinancialsTab() {
+
+    const actingAs = api.useGameStore(s => s.gameState.actingAs);
+    const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
+    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
 
     return html`
             <div class="flex flex-col w-full h-full min-h-0 items-center">
                 <div class="flex flex-row items-center gap-5 mb-2" style="height: 35px;">
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.borrowMoney} 
                             label="Borrow Money"
                             color="green"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.repayLoan} 
                             label="Repay Loan"
                             color=""
                         />
-                        ${gameState.actingAsId >= 10 ? html`<${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                        ${actingAsId >= 10 ? html`<${ActingAsRequiredButton} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.extraordinaryDividend} 
                             label="Extraordinary Dividend"
                             color="green"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.taxFreeLiquidation} 
                             label="Tax-Free Liquidation"
                             color="green"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.taxableLiquidation} 
                             label="Taxable Liquidation"
                             color="green"
                         />` : ''}
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.changeBank} 
                             label="Change Bank"
                             color="blue"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.tradeTbills} 
                             label="Trade T-Bills"
                             color="brown"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.interestRateSwaps} 
                             label="Interest Rate Swaps"
                             color=""
                         />
                 </div>
                 <div class="flex flex-row w-full h-full gap-2 min-h-0">
-                    ${gameState.activeEntityNum < 10 ? html`
+                    ${activeEntityNum < 10 ? html`
                         <div class="flex flex-col w-1/4 gap-2 h-full min-h-0">
                             <div class="">
-                                ${html`<${CapitalizationChart} assetId=${gameState.activeEntityNum} chartTitle="Net Worth" />`}
+                                ${html`<${CapitalizationChart} assetId=${activeEntityNum} chartTitle="Net Worth" />`}
                             </div>
                             <div class="flex flex-1 min-h-0">
-                                ${html`<${AdvisorySummary} gameState=${gameState} />`}
+                                ${html`<${AdvisorySummary} />`}
                             </div>
                         </div>` : ''}
-                    <div class="flex ${gameState.activeEntityNum < 10 ? 'w-3/4' : 'w-full'}">
+                    <div class="flex ${activeEntityNum < 10 ? 'w-3/4' : 'w-full'}">
                         <div class="flex flex-col items-center overflow-y-auto w-full max-h-full">
-                            ${renderLines(gameState, gameState.financialProfile, ({ id }) => api.setViewAsset(id), renderExtras(gameState))}
+                            ${renderLines(allCompanies, allIndustries, financialProfile, ({ id }) => api.setViewAsset(id), renderExtras(actingAs))}
                         </div>
                     </div>
                 </div>

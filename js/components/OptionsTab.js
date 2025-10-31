@@ -20,22 +20,24 @@ function parseReportLine(line) {
 // -------------------- -------- -------- ------- ---- ------- ---------- ----------
 
 
-function OptionsTab({ gameState }) {
+function OptionsTab() {
 
-    const { actingAs, actingAsId } = gameState;
+    const actingAs = api.useGameStore(s => s.gameState.actingAs);
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
+    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
+    const optionsList = api.useGameStore(s => s.gameState.optionsList);
 
     return html`
             <div class="flex flex-col w-full">
                 <br />
                 <div class="flex flex-col flex-[3] items-center">
                     ${renderLines(
-                        gameState,
-                        gameState.optionsList,
+                        allCompanies, allIndustries,
+                        optionsList,
                         ({ id }) => api.setViewAsset(parseInt(id.split('|').pop())),
                         ({ id, type, text }) => html`
                             <${ActingAsRequiredButton} 
-                                gameState=${gameState} 
-                                getDisabledMessage=${_ => !actingAs ? "Must be acting as this company" : false} 
+                                disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                                 onClick=${() => (
                                     type === 'LONGCALL' ? api.sellCalls
                                     : type === 'LONGPUT' ? api.sellPuts
@@ -47,8 +49,7 @@ function OptionsTab({ gameState }) {
                                 color="red"
                             />
                             <${ActingAsRequiredButton}
-                                gameState=${gameState} 
-                                getDisabledMessage=${_ => {
+                                disabledMessage=${(() => {
                                     if (!actingAs) return "Must be acting as this company"
 
                                     const contract = parseReportLine(text)
@@ -58,7 +59,7 @@ function OptionsTab({ gameState }) {
                                     }
 
                                     return false
-                                }} 
+                                })()} 
                                 onClick=${() => (
                                     type.includes('CALL') ? api.exerciseCallOptionsEarly
                                     : type.includes('PUT') ? api.exercisePutOptionsEarly

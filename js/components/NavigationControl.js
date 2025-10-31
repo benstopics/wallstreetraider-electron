@@ -3,11 +3,16 @@ import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 
 
-function NavigationControl({ gameState }) {
+function NavigationControl() {
+
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
+    const playerId = api.useGameStore(s => s.gameState.playerId);
+    const playerName = api.useGameStore(s => s.gameState.playerName);
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
 
     const companyMap = new Map(
-        gameState.allCompanies
-            .concat([{ id: gameState.playerId, name: gameState.playerName, symbol: '' }])
+        (allCompanies ?? [])
+            .concat([{ id: playerId, name: playerName, symbol: '' }])
             .map(c => [c.id, { name: c.name, symbol: c.symbol }])
     );
 
@@ -31,7 +36,7 @@ function NavigationControl({ gameState }) {
                         <div class="flex items-center gap-2" style="height:25px">
                             <button class="btn ${api.navPointerIdx >= api.navHistory.length - 1 ? 'invisible' : ''}" onclick=${() => api.goBack()}><b>←</b></button>
                         </div>
-                        <select class="basic flex-grow w-full text-center" value=${gameState.activeEntityNum} onChange=${onChange}>
+                        <select class="basic flex-grow w-full text-center" value=${activeEntityNum} onChange=${onChange}>
                             ${options.map(opt => html`<option value=${opt.id}>${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)}
                         </select>
                         <div class="flex items-center gap-2" style="height:25px">

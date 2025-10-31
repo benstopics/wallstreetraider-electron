@@ -7,11 +7,29 @@ import { renderMultilineText } from './helpers.js';
 // TODO: set your actual asset paths/links
 const LOGO_SRC = 'assets/wallstreetraider_logo.png';
 const REDDIT_URL = 'https://www.reddit.com/r/WallStreetRaider/';
-const DISCORD_URL = 'https://discord.gg/fuBtyj8B';
+const DISCORD_URL = 'https://discord.com/invite/5ujV5Cp9Ej';
 const REDDIT_WIDGET = 'assets/reddit-widget.png';
 const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
+    {
+        ver: "v10.0.10",
+        items: [
+            "Fix logger",
+            "Ask to save game when clicking Exit Game", // TODO
+            "Implement Interprocess Communication to improve performance and reliability between Electron and the game engine",
+            "Fix cashflow warning 'Would you like to view PoorCo cashflow projection now?' now opens cashflow projection of PoorCo", // TODO
+            /*
+            Important Financial Alert
+
+FINANCIAL ALERT RE NIKE, INC.! NIKE, INC. officials say the company is projecting a significant cash flow deficit in the next three months and may soon be making forced sales of assets due to severe liquidity problems. DO YOU WANT TO VIEW A CASH FLOW PROJECTION FOR NKE NOW?
+            */
+            "Remove CPU priority boosting for frontend and backend now that IPC is implemented",
+            "Only refresh reports that are visible to improve performance",
+            "Migrate financial news update popup to Electron dialog",
+            "In-game time is actual time of day in game based on market open hours"
+        ]
+    },
     {
         ver: "v10.0.9",
         items: [
@@ -117,7 +135,7 @@ const CHANGELOG = [
         ver: "v10.0.2",
         items: [
             "Fixed capital contribute button",
-            "Fixed lagging game speed due to too many text report updates"
+            "Fixed lagging game speed due to too many text report updates",
         ],
     },
     {
@@ -147,6 +165,7 @@ const MainMenu = () => {
         (async () => {
             try {
                 const data = await api.getQuoteOfTheDay();
+                console.log(data);
                 if (data && data.quote) {
                     setQuote(data.quote);
                 }
@@ -199,6 +218,7 @@ const MainMenu = () => {
     <li>- Change Law Firm</li>
     <li>- Spread Rumors</li>
     <li>- Harassing Lawsuit</li>
+    <li>- Capital Contributions</li>
   </ul>
 
   <p>We appreciate your patience and support as we undertake this significant upgrade. Stay tuned for updates as we complete each milestone!</p>

@@ -1,7 +1,9 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
 
-export default function CommandPrompt({ gameState }) {
+export default function CommandPrompt() {
+    const gameState = api.useGameStore(state => state);
+
     const [command, setCommand] = useState('');
     const inputRef = useRef(null);
     const caretRef = useRef(null);
@@ -12,7 +14,7 @@ export default function CommandPrompt({ gameState }) {
     const lastPart = useMemo(() => (tokens.length ? tokens[tokens.length - 1] : ''), [tokens]);
 
     const entities = [
-        ...gameState.allCompanies,
+        ...(gameState.allCompanies ?? []),
         // ...gameState.allPlayers.map(p => ({...p, symbol: `P${p.id}`})),
     ];
 

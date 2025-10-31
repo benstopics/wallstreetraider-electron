@@ -5,17 +5,20 @@ import { PauseIcon, StopIcon, SaveIcon, QuestionMarkIcon, } from '../icons.js';
 import NavigationControl from './NavigationControl.js';
 import ActingAsDropdown from './ActingAsDropdown.js';
 
-function Toolbar({ gameState }) {
-    const { showHelp, setGameState } = api.useWSRContext();
+function Toolbar() {
+    const { showHelp, patchGameState } = api.useWSRContext();
+
+    const tickSpeed = api.useGameStore(s => s.gameState.tickSpeed);
+    const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
 
     const toggleSpeed = () => {
-        const speed = gameState.tickSpeed;
+        const speed = tickSpeed;
         const newSpeed = speed >= 90 ? 30 : speed >= 75 ? 100 : 75;
         api.setTickSpeed(newSpeed);
     }
 
     const toggleTicker = () => {
-        if (gameState.isTickerRunning) {
+        if (isTickerRunning) {
             api.stopTicker();
         } else {
             api.startTicker();
@@ -27,22 +30,22 @@ function Toolbar({ gameState }) {
         <div class="top-bar items-center justify-between" style="height: 40px; flex-shrink: 0;">
             <div class="flex items-center gap-2">
                 <div style="width: 20px; height: 20px"
-                class="btn ${gameState.isTickerRunning ? 'stop' : 'play'}"
+                class="btn ${isTickerRunning ? 'stop' : 'play'}"
                 onClick=${toggleTicker}>
                     <div class="" style="width: 7px">
-                        <${gameState.isTickerRunning ? StopIcon : PauseIcon} />
+                        <${isTickerRunning ? StopIcon : PauseIcon} />
                     </div>
                 </div>
                 <div style="width: 60px; height: 20px" class="btn blue" onClick=${toggleSpeed}>
                     <div class="" style="">
-                        ${gameState.tickSpeed > 75 ? '▶▶▶'
-            : gameState.tickSpeed > 50 ? '▶▶'
+                        ${tickSpeed > 75 ? '▶▶▶'
+            : tickSpeed > 50 ? '▶▶'
                 : '▶'
         }
                     </div>
                 </div>
                 <div class="btn green" onClick=${() => {
-                    setGameState({ ...gameState, isLoading: true });
+                    patchGameState({ isLoading: true });
                     api.saveGame()
                 }}>
                     <!--<div class="mr-1" style="width: 7px">
@@ -53,7 +56,7 @@ function Toolbar({ gameState }) {
                     </span>
                 </div>
                 <div class="btn" onClick=${() => {
-                    setGameState({ ...gameState, isLoading: true });
+                    patchGameState({ isLoading: true });
                     setTimeout(() => api.exitGame(), 1000)
                 }}>
                     <span style="white-space: nowrap;">
@@ -85,7 +88,10 @@ function Toolbar({ gameState }) {
                         Toggle Global Autopilot
                     </span>
                 </div>
-                <div class="btn blue" onClick=${() => api.viewIndustry(0)}>
+                <div class="btn blue" onClick=${() => {
+                    patchGameState({ isLoading: true });
+                    api.viewIndustry(0)
+                }}>
                     <span style="white-space: nowrap;">
                         View Market Reports
                     </span>
@@ -99,10 +105,10 @@ function Toolbar({ gameState }) {
                     </span>
                 </div>
                 <div class="w-60">
-                    <${NavigationControl} gameState=${gameState} />
+                    <${NavigationControl} />
                 </div>
             </div>
-            <${ActingAsDropdown} gameState=${gameState} />
+            <${ActingAsDropdown} />
         </div>
     `;
 }

@@ -36,8 +36,22 @@ const extractEPSData = lines => {
 };
 
 
-const IndustrialView = ({ gameState }) => {
-    const { actingAs, actingAsId, actingAsIndustryId, activeEntityNum, activeIndustryId } = gameState;
+const IndustrialView = () => {
+    const actingAs = api.useGameStore(s => s.gameState.actingAs);
+    const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
+    const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
+    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
+    const chairedCompanyId = api.useGameStore(s => s.gameState.chairedCompanyId);
+    const actingAsSymbol = api.useGameStore(s => s.gameState.actingAsSymbol);
+    const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
+    const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
+    const researchReport = api.useGameStore(s => s.gameState.researchReport);
+    const earningsReport = api.useGameStore(s => s.gameState.earningsReport);
+    const shareholdersList = api.useGameStore(s => s.gameState.shareholdersList);
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
+    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
 
     const buyStockDisabledMessage = !actingAsId
         ? "Must be acting as this company"
@@ -56,90 +70,78 @@ const IndustrialView = ({ gameState }) => {
         <div class="flex flex-row gap-2 flex-1 min-h-0">
             <div class="flex flex-col w-full gap-2 h-full">
                 <div class="flex gap-2 items-center" style="height: 35px;">
-                    ${api.isPlayerControlled(gameState, activeEntityNum)
-                        ? api.isPlayerCEO(gameState, activeEntityNum) ? html`<${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                    ${api.isPlayerControlled(controlledCompanies, activeEntityNum)
+                        ? api.isPlayerCEO(chairedCompanyId, activeEntityNum) ? html`<${ActingAsRequiredButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                             onClick=${api.resignAsCeo} 
                             label="Resign as CEO"
                             color="red"
                         />` : html`<${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.electCeo} 
                             label="Elect as CEO"
                             color="red"
                         />` : ''}
                     <${ActingAsRequiredButton} 
-                        gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                        disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                         onClick=${api.rebrand} 
                         label="Rebrand"
                         color="red"
                     />
-                    ${gameState.actingAsId !== activeEntityNum // Cannot sue itself
-                        && gameState.actingAsId !== api.HUMAN1_ID // Players cannot file antitrust lawsuits
-                        && gameState.actingAsIndustryId === gameState.activeIndustryId // Must be same industry
-                        && !api.isPlayerControlled(gameState, activeEntityNum) // Cannot be controlled by you
+                    ${actingAsId !== activeEntityNum // Cannot sue itself
+                        && actingAsId !== api.HUMAN1_ID // Players cannot file antitrust lawsuits
+                        && actingAsIndustryId === activeIndustryId // Must be same industry
+                        && !api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
                         ? html`<${ActingAsRequiredButton}
-                        gameState=${gameState} 
-                        getDisabledMessage=${gameState => false}
                         onClick=${() => api.antitrustLawsuit(activeEntityNum)} 
-                        label="Antitrust Lawsuit\n${gameState.actingAsSymbol} vs ${gameState.activeEntitySymbol}"
+                        label="Antitrust Lawsuit\n${actingAsSymbol} vs ${activeEntitySymbol}"
                         color="red"
                     />` : ''}
-                    ${!api.isPlayerControlled(gameState, activeEntityNum) // Cannot be controlled by you
-                        && gameState.actingAsId !== activeEntityNum // Company cannot sue itself
+                    ${!api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
+                        && actingAsId !== activeEntityNum // Company cannot sue itself
                         ? html`<${ActingAsRequiredButton}
-                        gameState=${gameState} 
-                        getDisabledMessage=${gameState => false}
                         onClick=${() => api.harrassingLawsuit(activeEntityNum)} 
-                        label="Harrassing Lawsuit\n${gameState.actingAsSymbol} vs ${gameState.activeEntitySymbol}"
+                        label="Harrassing Lawsuit\n${actingAsSymbol} vs ${activeEntitySymbol}"
                         color="red"
                     />` : ''}
                     ${activeIndustryId === api.INSURANCE_IND || activeIndustryId === api.SECURITIES_BROKER_IND ? html`<${ActingAsRequiredButton}
-                        gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false}
+                        disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                         onClick=${api.setAdvisoryFee} 
                         label="Set Advisory Fee"
                         color="blue"
                     />` : ''}
-                    <${ActingAsRequiredButton} 
-                        gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                    <${ActingAsRequiredButton}
+                        disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                         onClick=${api.startup} 
                         label="Startup"
                         color="green"
                     />
-                    <${ActingAsRequiredButton} 
-                        gameState=${gameState} 
-                        getDisabledMessage=${gameState => gameState.actingAs ? "You cannot capital contribute to yourself!" : false} 
+                    <${ActingAsRequiredButton}
+                        disabledMessage=${actingAs ? "You cannot capital contribute to yourself!" : false} 
                         onClick=${api.capitalContribution} 
                         label="Contribute Capital"
                         color="green"
                     />
                     <${ActingAsRequiredButton} 
-                        gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                        disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                         onClick=${api.issueNewCorpBonds} 
                         label="Issue Corp Bonds"
                         color="brown"
                     />
                     <${ActingAsRequiredButton} 
-                        gameState=${gameState} 
-                        getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                        disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                         onClick=${api.redeemCorpBonds} 
                         label="Redeem Corp Bonds"
                         color="brown"
                     />
                 </div>
                 <${Tabs}>
-                    <${Tab} label="General">
+                    <${Tab} label="General" id=${api.UI_CORP_RESEARCH_REPORT}>
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0">
                                 <div class="flex flex-col flex-[4] min-h-0">
                                     <div class="flex-[4] min-h-0">
-                                        ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${gameState.activeEntitySymbol} Stock Price" />`}
+                                        ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" />`}
                                     </div>
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
                                         ${!buyStockDisabledMessage
@@ -173,30 +175,26 @@ const IndustrialView = ({ gameState }) => {
                                                 <//>`}
                                     </div>
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
-                                        <${ActingAsRequiredButton} 
-                                            gameState=${gameState} 
-                                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                                        <${ActingAsRequiredButton}
+                                            disabledMessage=${actingAs ? "Entity cannot buy options on itself" : false} 
                                             onClick=${() => api.buyCalls(0)} 
                                             label="Buy Calls"
                                             color="green"
                                         />
                                         <${ActingAsRequiredButton} 
-                                            gameState=${gameState} 
-                                            getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
+                                            disabledMessage=${actingAs ? "Entity cannot sell options on itself" : false} 
                                             onClick=${() => api.sellCalls(0)} 
                                             label="Sell Calls"
                                             color="red"
                                         />
                                         <${ActingAsRequiredButton} 
-                                            gameState=${gameState} 
-                                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                                            disabledMessage=${actingAs ? "Entity cannot buy options on itself" : false} 
                                             onClick=${() => api.buyPuts(0)} 
                                             label="Buy Puts"
                                             color="green"
                                         />
                                         <${ActingAsRequiredButton} 
-                                            gameState=${gameState} 
-                                            getDisabledMessage=${_ => actingAs ? "Entity cannot sell options on itself" : false} 
+                                            disabledMessage=${actingAs ? "Entity cannot sell options on itself" : false} 
                                             onClick=${() => api.sellPuts(0)} 
                                             label="Sell Puts"
                                             color="red"
@@ -204,8 +202,7 @@ const IndustrialView = ({ gameState }) => {
                                     </div>
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:20px">
                                         <${ActingAsRequiredButton} 
-                                            gameState=${gameState}
-                                            getDisabledMessage=${_ => actingAs ? "Entity cannot buy options on itself" : false} 
+                                            disabledMessage=${actingAs ? "Entity cannot buy options on itself" : false} 
                                             onClick=${api.advancedOptionsTrading} 
                                             label="Advanced Options"
                                             color="green"
@@ -215,22 +212,21 @@ const IndustrialView = ({ gameState }) => {
                                     </div>
                                 </div>
                                 <div class="flex flex-[1.75] min-h-0">
-                                    ${html`<${EPSChart} epsData=${extractEPSData(gameState.financialProfile)} />`}
+                                    ${html`<${EPSChart} epsData=${extractEPSData(financialProfile)} />`}
                                 </div>
                                 <div class="flex flex-[4] min-h-0">
-                                    ${html`<${AdvisorySummary} gameState=${gameState} />`}
+                                    ${html`<${AdvisorySummary} />`}
                                 </div>
                             </div>
                             <div class="flex w-3/4 flex-col items-center">
-                                ${renderLines(gameState, gameState.researchReport, ({ id }) => api.setViewAsset(id))}
+                                ${renderLines(allCompanies, allIndustries, researchReport, ({ id }) => api.setViewAsset(id))}
                             </div>
                         </div>
                     <//>
-                    <${Tab} label="Earnings">
+                    <${Tab} label="Earnings" id=${api.UI_CORP_EARNINGS_REPORT}>
 
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.decreaseEarnings} 
                             label="Decrease Earnings"
                             color="red"
@@ -238,8 +234,7 @@ const IndustrialView = ({ gameState }) => {
                             buttonClass="btn flex-1 mx-1"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.increaseEarnings} 
                             label="Increase Earnings"
                             color="green"
@@ -248,68 +243,62 @@ const IndustrialView = ({ gameState }) => {
                         />
 
                         <div class="flex flex-col justify-center items-center">
-                            ${renderLines(gameState, gameState.earningsReport, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(allCompanies, allIndustries, earningsReport, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
-                    <${Tab} label="Financials">
-                        <${FinancialsTab} gameState=${gameState} />
+                    <${Tab} label="Financials" id=${api.UI_CORP_FINANCIAL_PROFILE}>
+                        <${FinancialsTab} />
                     <//>
-                    <${Tab} label="Cashflow">
-                        ${html`<${CashflowTab} gameState=${gameState} />`}
+                    <${Tab} label="Cashflow" id=${api.UI_CORP_CASH_FLOW_PROJECTION}>
+                        ${html`<${CashflowTab} />`}
                     <//>
-                    ${gameState.activeIndustryId === api.BANK_IND ? html`<${Tab} label="Loans">
-                        ${html`<${LoansTab} gameState=${gameState} />`}
+                    ${activeIndustryId === api.BANK_IND ? html`<${Tab} label="Loans" id=${api.UI_BANK_LOANS_LIST}>
+                        ${html`<${LoansTab} />`}
                     <//>` : ''}
-                    <${Tab} label="Stocks & Bonds">
-                        <${PortfolioTab} gameState=${gameState} />
+                    <${Tab} label="Stocks & Bonds" id=${api.UI_CORP_STOCKS_BONDS_PORTFOLIO}>
+                        <${PortfolioTab} />
                     <//>
-                    <${Tab} label="Options">
-                        <${OptionsTab} gameState=${gameState} />
+                    <${Tab} label="Options" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
+                        <${OptionsTab} />
                     <//>
-                    <${Tab} label="Commodities & Crypto">
-                        ${html`<${CommoditiesTab} gameState=${gameState} />`}
+                    <${Tab} label="Commodities & Crypto" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
+                        ${html`<${CommoditiesTab} />`}
                     <//>
-                    <${Tab} label="Shareholders">
+                    <${Tab} label="Shareholders" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
                         <div class="flex flex-col w-full items-center">
                             <div class="flex flex-row items-center gap-5">
                                 <${ActingAsRequiredButton} 
-                                    gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.publicStockOffering} 
                                     label="Public Offering"
                                     color="green"
                                 />
                                 <${ActingAsRequiredButton} 
-                                    gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.privateStockOffering} 
                                     label="Private Offering"
                                     color="brown"
                                 />
                                 <${ActingAsRequiredButton} 
-                                    gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.greenmail} 
                                     label="Greenmail"
                                     color="green"
                                 />
                                 <${ActingAsRequiredButton} 
-                                    gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.lbo} 
                                     label="Leveraged Buyout"
                                     color="green"
                                 />
                                 <${ActingAsRequiredButton} 
-                                    gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.splitStock} 
                                     label="Split Stock"
                                     color="green"
                                 />
                                 <${ActingAsRequiredButton} 
-                                    gameState=${gameState} 
-                                    getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                                     onClick=${api.reverseSplitStock} 
                                     label="Reverse Split"
                                     color="red"
@@ -317,7 +306,7 @@ const IndustrialView = ({ gameState }) => {
                             </div>
                         </div>
                         <div class="flex justify-center items-center">
-                            ${renderLines(gameState, gameState.shareholdersList, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(allCompanies, allIndustries, shareholdersList, ({ id }) => api.setViewAsset(id))}
                         </div>
                     <//>
                 <//>

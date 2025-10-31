@@ -1,14 +1,17 @@
 import { insertCurrencySymbols } from './components/helpers.js';
 import { html, render, useRef, useState, useEffect, useContext, createContext } from './lib/preact.standalone.module.js';
-
+import zustand from './lib/zustand.module.js';
+const { createStore } = zustand;
 
 export const apiBase = 'http://127.0.0.1:9631';
 
+// Industry IDs
 export const PLAYER_IND = 0;
 export const BANK_IND = 1;
 export const INSURANCE_IND = 2;
 export const SECURITIES_BROKER_IND = 37;
 
+// Entity IDs
 export const HUMAN1_ID = 2;
 export const COMPUTER1_ID = 1;
 export const COMPUTER2_ID = 3;
@@ -26,6 +29,41 @@ export const SBOND_RATE_ID = 1603;
 export const GNP_RATE_ID = 1604;
 export const BITCOIN_ID = 1605;
 export const ETHEREUM_ID = 1606;
+
+// UI IDs
+export const UI_ADVISORY_REPORT = 1;
+export const UI_MARKET_REPORTS_COMMOD_FUTURES_REPORT = 1;
+export const UI_MARKET_REPORTS_COMMOD_PHYSICAL_REPORT = 2;
+export const UI_MARKET_REPORTS_OPTIONS_REPORT = 3;
+export const UI_MARKET_REPORTS_INTEREST_RATE_SWAPS_REPORT = 4;
+export const UI_MARKET_REPORTS_STOCKS_REPORT = 5;
+export const UI_MARKET_REPORTS_INVESTMENT_CONTRACTS_REPORT = 6;
+export const UI_MARKET_REPORTS_INDUSTRY_GROWTH_RATES_REPORT = 7;
+export const UI_MARKET_REPORTS_LARGEST_MARKET_SHARE_REPORT = 8;
+export const UI_MARKET_REPORTS_LARGEST_TAX_LOSSES_REPORT = 9;
+export const UI_MARKET_REPORTS_MOST_CASH_REPORT = 10;
+export const UI_MARKET_REPORTS_MOST_MARKET_CAP_REPORT = 11;
+export const UI_MARKET_REPORTS_ECON_STATS_REPORT = 12;
+export const UI_MARKET_REPORTS_INTEREST_RATES_REPORT = 13;
+export const UI_MARKET_REPORTS_WHO_AHEAD_REPORT = 14;
+export const UI_INDUSTRY_SUMMARY_REPORT = 15;
+export const UI_INDUSTRY_PROJECTIONS_REPORT = 16;
+export const UI_CORP_FINANCIAL_PROFILE = 17;
+export const UI_BANK_LOANS_LIST = 18;
+export const UI_CORP_CASH_FLOW_PROJECTION = 19;
+export const UI_CORP_RESEARCH_REPORT = 20;
+export const UI_CORP_STOCKS_BONDS_PORTFOLIO = 21;
+export const UI_CORP_OPTIONS_PORTFOLIO = 22;
+export const UI_CORP_SHAREHOLDERS_LIST = 23;
+export const UI_CORP_COMMODITY_CONTRACTS_LIST = 24;
+export const UI_CORP_EARNINGS_REPORT = 25;
+export const UI_PLAYER_FINANCIAL_PROFILE = 26;
+export const UI_PLAYER_CASH_FLOW_PROJECTION = 27;
+export const UI_PLAYER_STOCKS_BONDS_PORTFOLIO = 28;
+export const UI_PLAYER_OPTIONS_PORTFOLIO = 29;
+export const UI_PLAYER_CORPORATIONS_LIST = 30;
+export const UI_PLAYER_COMMODITY_CONTRACTS_LIST = 31;
+export const UI_PLAYER_ADVANCES_LIST = 32;
 
 export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
@@ -46,10 +84,11 @@ export async function postIdArg(path, id) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
     });
+
     if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
     }
-    return response.text();
+    return response.json();
 }
 
 export async function postStringArg(path, str) {
@@ -77,47 +116,47 @@ export async function getJSON(path) {
     return data;
 }
 
-export function isPlayerControlled(gameState, entityId) {
-    return (gameState.controlledCompanies || []).some(c => c.id === entityId);
+export function isPlayerControlled(controlledCompanies, entityId) {
+    return (controlledCompanies || []).some(c => c.id === entityId);
 }
 
-export function isPlayerCEO(gameState, entityId) {
-    return gameState.chairedCompanyId === entityId;
+export function isPlayerCEO(chairedCompanyId, entityId) {
+    return chairedCompanyId === entityId;
 }
 
-export function getCompanyBySymbol(gameState, symbol) {
-    return (gameState.allCompanies || []).find(c => c.symbol === symbol);
+export function getCompanyBySymbol(allCompanies, symbol) {
+    return (allCompanies || []).find(c => c.symbol === symbol);
 }
 
-export function getIndustry(gameState, industryNum) {
-    return (gameState.allIndustries || []).find(ind => ind.id === industryNum);
+export function getIndustry(allIndustries, industryNum) {
+    return (allIndustries || []).find(ind => ind.id === industryNum);
 }
 
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 function buildDictRegex(keys) {
-  const esc = keys.map(escapeRe).sort((a, b) => b.length - a.length);
+    const esc = keys.map(escapeRe).sort((a, b) => b.length - a.length);
 
-  const singles = esc.filter(k => /^[A-Za-z]$/.test(k));
-  const others  = esc.filter(k => !singles.includes(k));
+    const singles = esc.filter(k => /^[A-Za-z]$/.test(k));
+    const others = esc.filter(k => !singles.includes(k));
 
-  const parts = [];
-  if (others.length) parts.push(`(?:${others.join("|")})`);
-  if (singles.length) parts.push(`(?:${singles.join("|")})(?!\\.(?=\\w))`);
-  const core = `(?:${parts.join("|")})`;
+    const parts = [];
+    if (others.length) parts.push(`(?:${others.join("|")})`);
+    if (singles.length) parts.push(`(?:${singles.join("|")})(?!\\.(?=\\w))`);
+    const core = `(?:${parts.join("|")})`;
 
-  const parenWrapped   = `(?<=\\()${core}(?=\\))`;
-  const dblQuoted      = `(?<=")${core}(?=")`;
-  const sglQuotedBoth  = `(?<=')${core}(?=')`;
-  const bareEndSglOnly = `(?<!')(?<![A-Za-z0-9("'(])${core}(?=')`;
-  const bareNoWrap     = `(?<![A-Za-z0-9("'(])${core}(?![A-Za-z0-9)"'])`;
+    const parenWrapped = `(?<=\\()${core}(?=\\))`;
+    const dblQuoted = `(?<=")${core}(?=")`;
+    const sglQuotedBoth = `(?<=')${core}(?=')`;
+    const bareEndSglOnly = `(?<!')(?<![A-Za-z0-9("'(])${core}(?=')`;
+    const bareNoWrap = `(?<![A-Za-z0-9("'(])${core}(?![A-Za-z0-9)"'])`;
 
-  const allowed = `(?:${parenWrapped}|${dblQuoted}|${sglQuotedBoth}|${bareEndSglOnly}|${bareNoWrap})`;
+    const allowed = `(?:${parenWrapped}|${dblQuoted}|${sglQuotedBoth}|${bareEndSglOnly}|${bareNoWrap})`;
 
-  const pattern =
-    `(?<![./_])${allowed}(?![/$_])(?!-(?=[A-Za-z0-9]))(?!/(?=[A-Za-z0-9]))`;
+    const pattern =
+        `(?<![./_])${allowed}(?![/$_])(?!-(?=[A-Za-z0-9]))(?!/(?=[A-Za-z0-9]))`;
 
-  return new RegExp(pattern, "g");
+    return new RegExp(pattern, "g");
 }
 
 function toTitleCase(str) {
@@ -130,19 +169,19 @@ function toTitleCase(str) {
         );
 }
 
-export function renderHyperlinks(headline, gameState, onClick) {
+export function renderHyperlinks(headline, allCompanies, allIndustries, onClick) {
     headline = insertCurrencySymbols(headline);
 
     const lookup = Object.create(null); // key: lowercased token -> {id, type}
 
     // Companies: match by symbol and name
-    for (const c of gameState.allCompanies || []) {
+    for (const c of allCompanies || []) {
         if (c.symbol) lookup[c.symbol] = { id: c.id, type: 'C' };
         if (c.name) lookup[c.name] = { id: c.id, type: 'C' };
     }
 
     // Industries: names can be multi-word
-    for (const ind of gameState.allIndustries || []) {
+    for (const ind of allIndustries || []) {
         if (ind.name) {
             lookup[ind.name] = { id: ind.id, type: 'I' };
             lookup[toTitleCase(ind.name)] = { id: ind.id, type: 'I' }; // also title case
@@ -207,9 +246,10 @@ export async function saveGame() { await postNoArg('/savegame'); }
 export async function exitGame() { await postNoArg('/exit_game'); }
 export async function checkScoreboard() { await postNoArg('/check_scoreboard'); }
 export async function getQuoteOfTheDay() { return getJSON('/quote'); }
+export async function setActiveUIReport(uiId) { await postIdArg('/set_active_ui_report', uiId); }
 
 export async function getAssetChart(id) {
-    return getJSON(`/asset_chart?id=${id}`);
+    return postIdArg('/asset_chart', id);
 }
 
 /* Trading Center - Stocks */
@@ -486,14 +526,14 @@ export function executeCommand(gameState, command) {
     const parts = command.trim().toUpperCase().split(/\s+/);
     if (parts.length === 0) return;
 
-    let id = getCompanyBySymbol(gameState, parts[0])?.id ?? (parts[0] == 'ME' ? HUMAN1_ID : undefined);
+    let id = getCompanyBySymbol(gameState.allCompanies, parts[0])?.id ?? (parts[0] == 'ME' ? HUMAN1_ID : undefined);
     if (id ?? false) {
         setViewAsset(id);
         return
     }
 
     const cmd = commandMap[parts[0]]?.fn;
-    id = getCompanyBySymbol(gameState, parts[1])?.id ?? (parts[1] == 'ME' ? HUMAN1_ID : gameState.activeEntityNum);
+    id = getCompanyBySymbol(gameState.allCompanies, parts[1])?.id ?? (parts[1] == 'ME' ? HUMAN1_ID : gameState.activeEntityNum);
 
     if (cmd)
         cmd(id, gameState);
@@ -502,16 +542,63 @@ export function executeCommand(gameState, command) {
 
 export const WSRContext = createContext();
 
+export const gameStore = createStore((set, get) => ({
+    gameState: {},
+    // stable actions:
+    setGameState: (next) => set({ gameState: next }),
+    patchGameState: (partial) => set(s => ({ gameState: { ...s.gameState, ...partial } })),
+}));
+
+const shallow = (a, b) => {
+    if (Object.is(a, b)) return true;
+    if (a && b && typeof a === 'object' && typeof b === 'object') {
+        const ka = Object.keys(a), kb = Object.keys(b);
+        if (ka.length !== kb.length) return false;
+        for (let i = 0; i < ka.length; i++) {
+            const k = ka[i];
+            if (!Object.prototype.hasOwnProperty.call(b, k) || !Object.is(a[k], b[k])) return false;
+        }
+        return true;
+    }
+    return false;
+};
+
+export function useGameStore(selector = s => s, isEqual = Object.is) {
+    const selRef = useRef(selector);
+    selRef.current = selector;
+
+    const [val, setVal] = useState(() => selRef.current(gameStore.getState()));
+    const valRef = useRef(val);
+    valRef.current = val;
+
+    useEffect(() => {
+        // sync immediately in case selector changed
+        const immediate = selRef.current(gameStore.getState());
+        if (!isEqual(immediate, valRef.current)) setVal(immediate);
+
+        const unsub = gameStore.subscribe((state) => {
+            const next = selRef.current(state);
+            if (!isEqual(next, valRef.current)) setVal(next);
+        });
+        return unsub;
+    }, [selector, isEqual]);
+
+    return val;
+}
+
 export function WSRProvider({ children }) {
     const [helpShown, setHelpShown] = useState(false);
     const showHelp = () => setHelpShown(true);
     const hideHelp = () => setHelpShown(false);
-
-    const [gameState, setGameState] = useState({});
+    const { gameState, setGameState, patchGameState } = useGameStore(
+        s => ({ gameState: s.gameState, setGameState: s.setGameState, patchGameState: s.patchGameState }),
+        shallow
+    );
 
     return html`<${WSRContext.Provider} value=${{
         gameState,
         setGameState,
+        patchGameState,
         helpShown,
         showHelp,
         hideHelp,
