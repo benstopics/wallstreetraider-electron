@@ -34,7 +34,6 @@ const AssetPriceChart = ({
     const refreshData = useCallback(() => {
         let active = true;
         api.getAssetChart(assetId).then(data => {
-            console.log(data)
             if (active) setChartData(data);
         }).catch(console.error);
         return () => { active = false; };
@@ -57,7 +56,6 @@ const AssetPriceChart = ({
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
             const { prices: originalPrices, baseMonth, baseYear } = chartData;
-            console.log(chartData)
             const { background, lineColor, gridColor, shadedAreaTopColor, shadedAreaBottomColor } = theme;
 
             let prices = [...originalPrices];

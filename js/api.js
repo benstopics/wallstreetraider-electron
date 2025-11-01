@@ -205,6 +205,7 @@ export function renderHyperlinks(headline, onClick, regex) {
         'AS "ACTIVE ENTITY"',
         "LONG PARTY",
         "NAME OF ENTITY WITH LONG",
+        "SAVED AS"
     ].some(s => headline.includes(s))) return headline;
 
     headline = insertCurrencySymbols(headline);
@@ -238,7 +239,9 @@ export function renderHyperlinks(headline, onClick, regex) {
 
 /* General */
 export function getGameState() { return getJSON('/gamestate'); }
+export async function clearEventString() { await postNoArg('/clear_event_string'); }
 export async function startTicker() { await postNoArg('/start_ticker'); }
+export async function runTicker() { await postNoArg('/run_ticker'); }
 export async function stopTicker() { await postNoArg('/stop_ticker'); }
 export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed', speed); }
 export async function loadGame() { await postNoArg('/loadgame'); }

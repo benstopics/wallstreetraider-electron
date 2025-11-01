@@ -1,4 +1,4 @@
-import { html } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useState } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
@@ -51,6 +51,23 @@ const IndustrialView = () => {
     const earningsReport = api.useGameStore(s => s.gameState.earningsReport);
     const shareholdersList = api.useGameStore(s => s.gameState.shareholdersList);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+    const eventString = api.useGameStore(s => s.gameState.eventString);
+
+    const [activeTab, setActiveTab] = useState("General");
+
+    useEffect(() => {
+        setActiveTab("General");
+    }, [activeEntityNum]);
+
+    useEffect(() => {
+        if (eventString) {
+            const eventData = JSON.parse(eventString);
+            if (eventData.eventType === "setIndustrialViewActiveTab") {
+                setActiveTab(eventData.tab);
+                api.clearEventString();
+            }
+        }
+    }, [eventString]);
 
     const buyStockDisabledMessage = !actingAsId
         ? "Must be acting as this company"
@@ -134,7 +151,7 @@ const IndustrialView = () => {
                         color="brown"
                     />
                 </div>
-                <${Tabs}>
+                <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
                     <${Tab} label="General" id=${api.UI_CORP_RESEARCH_REPORT}>
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0">

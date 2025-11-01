@@ -17,18 +17,14 @@ const CHANGELOG = [
         items: [
             "Fix logger",
             "Ask to save game when clicking Exit Game",
-            "Fix cashflow warning 'Would you like to view PoorCo cashflow projection now?' now opens cashflow projection of PoorCo", // TODO
-            /*
-            Important Financial Alert
-
-FINANCIAL ALERT RE NIKE, INC.! NIKE, INC. officials say the company is projecting a significant cash flow deficit in the next three months and may soon be making forced sales of assets due to severe liquidity problems. DO YOU WANT TO VIEW A CASH FLOW PROJECTION FOR NKE NOW?
-            */
+            "Fix cashflow warning 'Would you like to view PoorCo cashflow projection now?' now opens cashflow projection of PoorCo",
             "Remove CPU priority boosting for frontend and backend now that IPC is implemented",
             "Only refresh reports that are visible to improve performance",
             "Migrate financial news update popup to Electron dialog",
             "In-game time is actual time of day in game based on market open hours",
             "Implement Zustand for state management to improve performance and reduce complexity",
             "Optimized hyperlink matching by only building regex once",
+            "Allow player to specify exact ticker speed from 1-100",
         ]
     },
     {
@@ -166,7 +162,6 @@ const MainMenu = () => {
         (async () => {
             try {
                 const data = await api.getQuoteOfTheDay();
-                console.log(data);
                 if (data && data.quote) {
                     setQuote(data.quote);
                 }

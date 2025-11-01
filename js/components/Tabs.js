@@ -28,7 +28,6 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
     useEffect(() => {
         const tab = tabChildren.find(child => child.props.label === activeTab);
         if (tab?.props.id !== undefined) {
-            console.log(tab)
             api.setActiveUIReport(tab.props.id);
         }
     }, [activeTab]);

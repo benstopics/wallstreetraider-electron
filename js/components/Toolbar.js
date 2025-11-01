@@ -1,12 +1,15 @@
 import { html, useState, useEffect, useRef, useCallback } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
-import { PauseIcon, StopIcon, SaveIcon, QuestionMarkIcon, } from '../icons.js';
+import { PauseIcon, StopIcon, SaveIcon, QuestionMarkIcon, GaugeIcon, ForwardIcon, } from '../icons.js';
 import NavigationControl from './NavigationControl.js';
 import ActingAsDropdown from './ActingAsDropdown.js';
+import InputStringModal from './InputStringModal.js';
 
 function Toolbar() {
-    const { showHelp, setGameState } = api.useWSRContext();
+    const { showHelp } = api.useWSRContext();
+
+    const [showTickerSpeedModal, setShowTickerSpeedModal] = useState(false);
 
     const tickSpeed = api.useGameStore(s => s.gameState.tickSpeed);
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
@@ -28,20 +31,44 @@ function Toolbar() {
 
     return html`
         <div class="top-bar items-center justify-between" style="height: 40px; flex-shrink: 0;">
+            <${InputStringModal}
+                show=${showTickerSpeedModal}
+                title="Set Ticker Speed"
+                text="Enter the desired ticker speed (1-100):"
+                defaultValue=${tickSpeed.toString()}
+                onSubmit=${(value) => {
+                    api.setTickSpeed(Math.min(100, Math.max(1, parseInt(value))))
+                    setShowTickerSpeedModal(false);
+                }}
+                onCancel=${() => setShowTickerSpeedModal(false)}
+            />
             <div class="flex items-center gap-2">
-                <div style="width: 20px; height: 20px"
+                <div style="width: 25px; height: 20px"
                 class="btn ${isTickerRunning ? 'stop' : 'play'}"
                 onClick=${toggleTicker}>
-                    <div class="" style="width: 7px">
+                    <div class="" style="width: 20px">
                         <${isTickerRunning ? StopIcon : PauseIcon} />
                     </div>
                 </div>
-                <div style="width: 60px; height: 20px" class="btn blue" onClick=${toggleSpeed}>
-                    <div class="" style="">
-                        ${tickSpeed > 75 ? '▶▶▶'
-            : tickSpeed > 50 ? '▶▶'
-                : '▶'
-        }
+                <div style="height: 20px" class="btn blue" onClick=${() => {
+                    setShowTickerSpeedModal(true)
+                }}>
+                    <div class="flex w-full items-center justify-center gap-1" style="">
+                        <div class="" style="width: 20px">
+                            <${GaugeIcon} />
+                        </div>
+                        <div>
+                            ${tickSpeed}
+                        </div>
+                    </div>
+                </div>
+                <div style="height: 20px" class="btn" onClick=${() => {
+                    api.runTicker()
+                }}>
+                    <div class="flex w-full items-center justify-center gap-1" style="">
+                        <div class="" style="width: 20px">
+                            <${ForwardIcon} />
+                        </div>
                     </div>
                 </div>
                 <div class="btn green" onClick=${() => {
