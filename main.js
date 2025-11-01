@@ -34,7 +34,7 @@ app.whenReady().then(() => {
     wsrProcess = spawn(exePath, [], {
         detached: true,
         stdio: 'ignore',
-        env: { ...process.env, ENVIRONMENT: app.isPackaged ? 'production' : 'development' },
+        env: { ...process.env, ENVIRONMENT: app.isPackaged ? 'production' : '09a7sd0(&)(Fd70s(*S&DF)987df0ds987f09&)F97)F&(*D7f9s7d0(S*D&f09d8s7f0s97F)(7d))' },
     });
 
     wsrProcess.unref();

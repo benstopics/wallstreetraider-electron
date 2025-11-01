@@ -44,11 +44,10 @@ function IndexPanel({ title, bondId }) {
 
 function PortfolioTab() {
 
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const portfolio = api.useGameStore(s => s.gameState.portfolio);
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     return html`
             <div class="flex flex-col w-full">
@@ -75,7 +74,7 @@ function PortfolioTab() {
                     <${IndexPanel} title="Short Bond" bondId=${api.SBOND_RATE_ID} />
                 </div>
                 <div class="flex flex-col items-center flex-[3]">
-                    ${renderLines(allCompanies, allIndustries, portfolio,
+                    ${renderLines(portfolio,
                         ({ id }) => id && api.setViewAsset(id),
                         ({ type, id, text }) => html`<div class="flex flex-row">
                         <${ActingAsRequiredButton}
@@ -95,7 +94,7 @@ function PortfolioTab() {
                             label="Spin-Off"
                             color="blue"
                         />` : ''}
-                    </div>`)}
+                    </div>`, hyperlinkRegex)}
                 </div>
             </div>
     `;

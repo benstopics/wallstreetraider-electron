@@ -17,12 +17,11 @@ const Tab = Tabs.Tab;
 
 const PlayerView = () => {
 
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const cashflowProjection = api.useGameStore(s => s.gameState.cashflowProjection);
     const advances = api.useGameStore(s => s.gameState.advances);
     const myCorporationsReport = api.useGameStore(s => s.gameState.myCorporationsReport);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     
     return html`
         <div class="flex flex-col h-full">
@@ -48,7 +47,7 @@ const PlayerView = () => {
                                     label="Browse For Sale Items"
                                     color="green"
                                 />
-                                ${renderLines(allCompanies, allIndustries, cashflowProjection, ({ id }) => api.setViewAsset(id))}
+                                ${renderLines(cashflowProjection, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                             </div>
                         <//>
                         <${Tab} label="Stocks & Bonds" id=${api.UI_PLAYER_STOCKS_BONDS_PORTFOLIO}>
@@ -73,7 +72,7 @@ const PlayerView = () => {
                                         <button class="btn disabled flex-1 mx-1">Advance Funds</button>
                                     <//>
                                 `}
-                                ${renderLines(allCompanies, allIndustries, advances,
+                                ${renderLines(advances,
         ({ id }) => api.setViewAsset(id),
         ({ id }) => actingAs ? html`<button
                                             class="btn flex-1 mx-1"
@@ -84,12 +83,12 @@ const PlayerView = () => {
                                             <${Tooltip} text="Must be acting as this company">
                                                 <button class="btn disabled w-full">Recall</button>
                                             <//>`
-    )}
+    , hyperlinkRegex)}
                             </div>
                         <//>
                         <${Tab} label="My Corporations" id=${api.UI_PLAYER_CORPORATIONS_LIST}>
                             <div class="flex flex-col items-center">
-                                ${renderLines(allCompanies, allIndustries, myCorporationsReport,
+                                ${renderLines(myCorporationsReport,
                                     ({ id }) => api.setViewAsset(id),
                                     ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
                                         <button
@@ -102,7 +101,7 @@ const PlayerView = () => {
                                             onClick=${() => api.changeActingAs(id)}>
                                                 Act As
                                         </button>
-                                    </div>` : '')}
+                                    </div>` : '', hyperlinkRegex)}
                             </div>
                         <//>
                     <//>

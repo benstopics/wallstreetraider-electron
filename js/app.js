@@ -16,7 +16,7 @@ const logos = [
 ];
 
 const AppInner = () => {
-    const { helpShown, hideHelp, patchGameState } = api.useWSRContext();
+    const { helpShown, hideHelp, setGameState } = api.useWSRContext();
 
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
     const splashScreenPlayed = api.useGameStore(s => s.gameState.splashScreenPlayed);
@@ -95,16 +95,18 @@ const AppInner = () => {
         api.closeModal();
     }
 
-    const lastUpdateRef = useRef(Date.now());
-    let lastUpdate = lastUpdateRef.current;
-
     useEffect(() => {
         let timeoutId;
 
         const fetchGameState = () => {
             api.getGameState().then((newGameState) => {
+                const hyperlinkRegex = api.buildDictRegex(
+                    newGameState.allCompanies,
+                    newGameState.allIndustries
+                );
+                newGameState.hyperlinkRegex = hyperlinkRegex;
                 requestAnimationFrame(() => {
-                    patchGameState({...newGameState, allCompanies: []});
+                    setGameState(newGameState);
                 });
 
                 timeoutId = setTimeout(fetchGameState, 50);
@@ -137,16 +139,16 @@ const AppInner = () => {
                 show=${modalType === 1 || modalType === 2}
                 title=${modalTitle}
                 text=${modalText}
-                onYes=${() => { patchGameState({ isLoading: true }); api.modalResult(1); }}
-                onNo=${() => { patchGameState({ isLoading: true }); api.modalResult(2); }}
-                onCancel=${modalType === 2 ? () => { patchGameState({ isLoading: true }); api.modalResult(3); } : undefined}
+                onYes=${() => { api.modalResult(1); }}
+                onNo=${() => { api.modalResult(2); }}
+                onCancel=${modalType === 2 ? () => { api.modalResult(3); } : undefined}
             />
             <${InputStringModal}
                 show=${modalType === 3}
                 title=${modalTitle}
                 text=${modalText}
                 defaultValue=${modalDefault}
-                onSubmit=${(value) => { patchGameState({ isLoading: true }); api.modalResult(value); }}
+                onSubmit=${(value) => { api.modalResult(value); }}
                 onCancel=${hideModal}
             />
             <${InfoModal}
@@ -158,7 +160,6 @@ const AppInner = () => {
                 show=${modalType === 5}
                 onSubmit=${(newSettings) => {
             const strInput = Object.entries(newSettings).map(([key, value]) => `${key}=${value}`).join('|');
-            patchGameState({ isLoading: true });
             api.modalResult(strInput);
         }}
                 onCancel=${hideModal}

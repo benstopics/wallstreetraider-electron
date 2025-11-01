@@ -6,7 +6,7 @@ import NavigationControl from './NavigationControl.js';
 import ActingAsDropdown from './ActingAsDropdown.js';
 
 function Toolbar() {
-    const { showHelp, patchGameState } = api.useWSRContext();
+    const { showHelp, setGameState } = api.useWSRContext();
 
     const tickSpeed = api.useGameStore(s => s.gameState.tickSpeed);
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
@@ -45,7 +45,6 @@ function Toolbar() {
                     </div>
                 </div>
                 <div class="btn green" onClick=${() => {
-                    patchGameState({ isLoading: true });
                     api.saveGame()
                 }}>
                     <!--<div class="mr-1" style="width: 7px">
@@ -56,8 +55,7 @@ function Toolbar() {
                     </span>
                 </div>
                 <div class="btn" onClick=${() => {
-                    patchGameState({ isLoading: true });
-                    setTimeout(() => api.exitGame(), 1000)
+                    api.exitGame()
                 }}>
                     <span style="white-space: nowrap;">
                         Exit Game
@@ -89,7 +87,6 @@ function Toolbar() {
                     </span>
                 </div>
                 <div class="btn blue" onClick=${() => {
-                    patchGameState({ isLoading: true });
                     api.viewIndustry(0)
                 }}>
                     <span style="white-space: nowrap;">

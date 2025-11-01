@@ -19,8 +19,6 @@ const GameUI = () => {
     const [showNotifications, setShowNotifications] = useState(false);
 
     const newsHeadlines = api.useGameStore(s => s.gameState.newsHeadlines);
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const currentYear = api.useGameStore(s => s.gameState.currentYear);
     const currentMonth = api.useGameStore(s => s.gameState.currentMonth);
     const currentDay = api.useGameStore(s => s.gameState.currentDay);
@@ -32,6 +30,7 @@ const GameUI = () => {
     const totalDebt = api.useGameStore(s => s.gameState.totalDebt);
     const netWorth = api.useGameStore(s => s.gameState.netWorth);
     const trendingNews = api.useGameStore(s => s.gameState.trendingNews);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString());
     useEffect(() => {
@@ -104,12 +103,12 @@ const GameUI = () => {
                     <div class="panel-header">Financial News Headlines</div>
                     <div class="p-1 panel-body">
                         <div class="flex flex-col h-full gap-2 overflow-y-auto">
-                            ${newsHeadlines.map(i => html`
+                            ${newsHeadlines.map(h => html`
                                 <div class="news-headline">
-                                    ${api.renderHyperlinks(i.headline, allCompanies, allIndustries, ({ id, type }) => {
+                                    ${api.renderHyperlinks(h, ({ id, type }) => {
                                         if (type === 'C')  api.setViewAsset(id);
                                         else if (type === 'I') api.viewIndustry(id);
-                                    })}
+                                    }, hyperlinkRegex)}
                                 </div>
                             `)}
                         </div>
@@ -139,13 +138,13 @@ const GameUI = () => {
                 <button class="btn red" onClick=${() => setShowNotifications(false)}>Close</button>
             </div>
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
-                ${trendingNews.map(i => html`
+                ${trendingNews.map(h => html`
                     <div class="p-2 border">
-                        ${api.renderHyperlinks(i.headline, allCompanies, allIndustries, ({ id, type }) => {
+                        ${api.renderHyperlinks(h, ({ id, type }) => {
                             if (type === 'C')  api.setViewAsset(id);
                             else if (type === 'I') api.viewIndustry(id);
                             setShowNotifications(false);
-                        })}
+                        }, hyperlinkRegex)}
                     </div>
                 `)}
             </div>

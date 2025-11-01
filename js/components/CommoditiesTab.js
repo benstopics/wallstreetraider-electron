@@ -95,8 +95,7 @@ function CommoditiesTab() {
 
     const commodityList = api.useGameStore(s => s.gameState.commodityList);
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     return html`
         <div class="flex flex-col flex-[1]">
@@ -116,7 +115,7 @@ function CommoditiesTab() {
                 <div class="flex flex-row w-full">
                 </div>
                 <div class="flex flex-row justify-center">
-                ${renderLines(allCompanies, allIndustries, commodityList,
+                ${renderLines(commodityList,
                     undefined,
                     ({ type, id, text }) => actingAs ? html`
                     <button
@@ -131,7 +130,7 @@ function CommoditiesTab() {
                     </button>` : html`
                     <${Tooltip} text="Must be acting as this company">
                         <button class="btn disabled w-full">Sell</button>
-                    <//>`)}
+                    <//>`, hyperlinkRegex)}
                 </div>
             </div>
         </div>

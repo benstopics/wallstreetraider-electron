@@ -6,8 +6,7 @@ import * as api from '../api.js';
 const AdvisorySummary = () => {
 
     const advisorySummary = api.useGameStore(s => s.gameState.advisorySummary);
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     const lines = getMultilineTextLines(advisorySummary);
     if (lines.length === 0)
@@ -17,10 +16,10 @@ const AdvisorySummary = () => {
         <div class="panel h-full w-full">
             <div class="panel-header">Advisory Summary</div>
             <div class="p-1 panel-body fixed-width">
-                ${lines.filter(l => l.trim() !== '').map(line => html`<span>${api.renderHyperlinks(line, allCompanies, allIndustries, ({ id, type }) => {
+                ${lines.filter(l => l.trim() !== '').map(line => html`<span>${api.renderHyperlinks(line, ({ id, type }) => {
                     if (type === 'C')  api.setViewAsset(id);
                     else if (type === 'I') api.viewIndustry(id);
-                })}</span><br/><br/>`)}
+                }, hyperlinkRegex)}</span><br/><br/>`)}
             </div>
         </div>
     `;

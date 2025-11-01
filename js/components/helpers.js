@@ -62,7 +62,7 @@ export const insertCurrencySymbols = (text) => {
     return result;
 };
 
-export function renderLines(allCompanies, allIndustries, lines, onLink, renderExtras) {
+export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
     if (!lines) return html``;
 
     // Step 1: Strip hyperlinks and get clean lines
@@ -92,10 +92,10 @@ export function renderLines(allCompanies, allIndustries, lines, onLink, renderEx
         // If extras will be rendered, pad line with spaces
         const padded = (renderExtras && link)
             ? text.padEnd(maxLength, ' ')
-            : idFound ? text : api.renderHyperlinks(text, allCompanies, allIndustries, ({ id, type }) => {
+            : idFound ? text : api.renderHyperlinks(text, ({ id, type }) => {
                 if (type === 'C') api.setViewAsset(id);
                 else if (type === 'I') api.viewIndustry(id);
-            });
+            }, hyperlinkRegex);
 
         return html`<div class="flex flex-row">
                 <div class=${classes} onClick=${handler}>

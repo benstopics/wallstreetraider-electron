@@ -111,11 +111,10 @@ const renderExtras = () => ({ type, id, text }) => {
 
 function LoansTab() {
 
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const frozenAllLoans = api.useGameStore(s => s.gameState.frozenAllLoans);
     const loansReport = api.useGameStore(s => s.gameState.loansReport);
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     return html`
         <div class="flex flex-col w-full items-center">
@@ -148,7 +147,7 @@ function LoansTab() {
 
             <div class="flex flex-col flex-[3] justify-center items-center">
                 <div class="flex flex-col items-center w-full">
-                    ${renderLines(allCompanies, allIndustries, loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(actingAs))}
+                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(actingAs), hyperlinkRegex)}
                 </div>
             </div>
         </div>

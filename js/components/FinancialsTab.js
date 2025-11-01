@@ -57,8 +57,7 @@ function FinancialsTab() {
     const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     return html`
             <div class="flex flex-col w-full h-full min-h-0 items-center">
@@ -124,7 +123,7 @@ function FinancialsTab() {
                         </div>` : ''}
                     <div class="flex ${activeEntityNum < 10 ? 'w-3/4' : 'w-full'}">
                         <div class="flex flex-col items-center overflow-y-auto w-full max-h-full">
-                            ${renderLines(allCompanies, allIndustries, financialProfile, ({ id }) => api.setViewAsset(id), renderExtras(actingAs))}
+                            ${renderLines(financialProfile, ({ id }) => api.setViewAsset(id), renderExtras(actingAs), hyperlinkRegex)}
                         </div>
                     </div>
                 </div>

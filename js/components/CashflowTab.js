@@ -9,9 +9,8 @@ function CashflowTab() {
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
     const cashflowProjection = api.useGameStore(s => s.gameState.cashflowProjection);
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     const hasCorporateAssets = financialProfile.some(asset => asset.includes('Business Assets/Equipment'));
 
@@ -73,7 +72,7 @@ function CashflowTab() {
                 <div class="flex flex-col flex-[3] justify-center items-center">
                     <div class="flex flex-col items-center w-full">
                         ${activeIndustryId !== api.BANK_IND
-                            ? renderLines(allCompanies, allIndustries, cashflowProjection ?? [], ({ id }) => api.setViewAsset(id))
+                            ? renderLines(cashflowProjection ?? [], ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)
                             : 'Cashflow projection unavailable for banks.'}
                     </div>
                 </div>

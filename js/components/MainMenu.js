@@ -16,8 +16,7 @@ const CHANGELOG = [
         ver: "v10.0.10",
         items: [
             "Fix logger",
-            "Ask to save game when clicking Exit Game", // TODO
-            "Implement Interprocess Communication to improve performance and reliability between Electron and the game engine",
+            "Ask to save game when clicking Exit Game",
             "Fix cashflow warning 'Would you like to view PoorCo cashflow projection now?' now opens cashflow projection of PoorCo", // TODO
             /*
             Important Financial Alert
@@ -27,7 +26,9 @@ FINANCIAL ALERT RE NIKE, INC.! NIKE, INC. officials say the company is projectin
             "Remove CPU priority boosting for frontend and backend now that IPC is implemented",
             "Only refresh reports that are visible to improve performance",
             "Migrate financial news update popup to Electron dialog",
-            "In-game time is actual time of day in game based on market open hours"
+            "In-game time is actual time of day in game based on market open hours",
+            "Implement Zustand for state management to improve performance and reduce complexity",
+            "Optimized hyperlink matching by only building regex once",
         ]
     },
     {

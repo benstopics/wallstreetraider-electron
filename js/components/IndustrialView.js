@@ -50,8 +50,7 @@ const IndustrialView = () => {
     const researchReport = api.useGameStore(s => s.gameState.researchReport);
     const earningsReport = api.useGameStore(s => s.gameState.earningsReport);
     const shareholdersList = api.useGameStore(s => s.gameState.shareholdersList);
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     const buyStockDisabledMessage = !actingAsId
         ? "Must be acting as this company"
@@ -219,7 +218,7 @@ const IndustrialView = () => {
                                 </div>
                             </div>
                             <div class="flex w-3/4 flex-col items-center">
-                                ${renderLines(allCompanies, allIndustries, researchReport, ({ id }) => api.setViewAsset(id))}
+                                ${renderLines(researchReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                             </div>
                         </div>
                     <//>
@@ -243,7 +242,7 @@ const IndustrialView = () => {
                         />
 
                         <div class="flex flex-col justify-center items-center">
-                            ${renderLines(allCompanies, allIndustries, earningsReport, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                         </div>
                     <//>
                     <${Tab} label="Financials" id=${api.UI_CORP_FINANCIAL_PROFILE}>
@@ -306,7 +305,7 @@ const IndustrialView = () => {
                             </div>
                         </div>
                         <div class="flex justify-center items-center">
-                            ${renderLines(allCompanies, allIndustries, shareholdersList, ({ id }) => api.setViewAsset(id))}
+                            ${renderLines(shareholdersList, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                         </div>
                     <//>
                 <//>

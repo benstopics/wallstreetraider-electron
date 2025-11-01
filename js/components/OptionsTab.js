@@ -23,16 +23,14 @@ function parseReportLine(line) {
 function OptionsTab() {
 
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
-    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const optionsList = api.useGameStore(s => s.gameState.optionsList);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     return html`
             <div class="flex flex-col w-full">
                 <br />
                 <div class="flex flex-col flex-[3] items-center">
                     ${renderLines(
-                        allCompanies, allIndustries,
                         optionsList,
                         ({ id }) => api.setViewAsset(parseInt(id.split('|').pop())),
                         ({ id, type, text }) => html`
@@ -69,7 +67,7 @@ function OptionsTab() {
                                 color="blue"
                             />
                         `
-                    )}
+                    , hyperlinkRegex)}
                 </div>
             </div>
     `;

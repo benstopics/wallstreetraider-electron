@@ -134,7 +134,29 @@ export function getIndustry(allIndustries, industryNum) {
 
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
-function buildDictRegex(keys) {
+let lookup = {};
+
+export function buildDictRegex(allCompanies, allIndustries) {
+    
+    lookup = Object.create(null); // key: lowercased token -> {id, type}
+
+    // Companies: match by symbol and name
+    for (const c of allCompanies || []) {
+        if (c.symbol) lookup[c.symbol] = { id: c.id, type: 'C' };
+        if (c.name) lookup[c.name] = { id: c.id, type: 'C' };
+    }
+
+    // Industries: names can be multi-word
+    for (const ind of allIndustries || []) {
+        if (ind.name) {
+            lookup[ind.name] = { id: ind.id, type: 'I' };
+            lookup[toTitleCase(ind.name)] = { id: ind.id, type: 'I' }; // also title case
+            lookup[toTitleCase(ind.name).toUpperCase()] = { id: ind.id, type: 'I' }; // also title case
+        }
+    }
+
+    const keys = Object.keys(lookup);
+
     const esc = keys.map(escapeRe).sort((a, b) => b.length - a.length);
 
     const singles = esc.filter(k => /^[A-Za-z]$/.test(k));
@@ -169,29 +191,9 @@ function toTitleCase(str) {
         );
 }
 
-export function renderHyperlinks(headline, allCompanies, allIndustries, onClick) {
-    headline = insertCurrencySymbols(headline);
-
-    const lookup = Object.create(null); // key: lowercased token -> {id, type}
-
-    // Companies: match by symbol and name
-    for (const c of allCompanies || []) {
-        if (c.symbol) lookup[c.symbol] = { id: c.id, type: 'C' };
-        if (c.name) lookup[c.name] = { id: c.id, type: 'C' };
-    }
-
-    // Industries: names can be multi-word
-    for (const ind of allIndustries || []) {
-        if (ind.name) {
-            lookup[ind.name] = { id: ind.id, type: 'I' };
-            lookup[toTitleCase(ind.name)] = { id: ind.id, type: 'I' }; // also title case
-            lookup[toTitleCase(ind.name).toUpperCase()] = { id: ind.id, type: 'I' }; // also title case
-        }
-    }
-
-    const keys = Object.keys(lookup);
-
-    if (keys.length === 0 || [
+export function renderHyperlinks(headline, onClick, regex) {
+    
+    if ([
         "Operating Earnings",
         "LONG AND SHORT",
         "LONG POSITION",
@@ -205,8 +207,7 @@ export function renderHyperlinks(headline, allCompanies, allIndustries, onClick)
         "NAME OF ENTITY WITH LONG",
     ].some(s => headline.includes(s))) return headline;
 
-    // Case-sensitive, whole-token match
-    const regex = buildDictRegex(keys);
+    headline = insertCurrencySymbols(headline);
 
     const parts = [];
     let lastIndex = 0;
@@ -544,9 +545,7 @@ export const WSRContext = createContext();
 
 export const gameStore = createStore((set, get) => ({
     gameState: {},
-    // stable actions:
     setGameState: (next) => set({ gameState: next }),
-    patchGameState: (partial) => set(s => ({ gameState: { ...s.gameState, ...partial } })),
 }));
 
 const shallow = (a, b) => {
@@ -590,15 +589,14 @@ export function WSRProvider({ children }) {
     const [helpShown, setHelpShown] = useState(false);
     const showHelp = () => setHelpShown(true);
     const hideHelp = () => setHelpShown(false);
-    const { gameState, setGameState, patchGameState } = useGameStore(
-        s => ({ gameState: s.gameState, setGameState: s.setGameState, patchGameState: s.patchGameState }),
+    const { gameState, setGameState } = useGameStore(
+        s => ({ gameState: s.gameState, setGameState: s.setGameState }),
         shallow
     );
 
     return html`<${WSRContext.Provider} value=${{
         gameState,
         setGameState,
-        patchGameState,
         helpShown,
         showHelp,
         hideHelp,
