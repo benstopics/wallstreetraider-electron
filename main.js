@@ -1,12 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
-const steamworks = require('steamworks.js')
-
-const APP_ID = 4080310;
-// const APP_ID = 480;
-const client = steamworks.init(APP_ID);
-steamworks.electronEnableSteamOverlay()
 
 let wsrProcess;
 let mainWindow;
@@ -20,7 +14,8 @@ function createWindow() {
         icon: path.join(__dirname, 'assets', 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: false
         }
     });
 
@@ -31,40 +26,30 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-    if (app.isPackaged) {
-        const exePath = path.join(__dirname, 'wsr.exe');
-        try {
-            execSync('taskkill /IM wsr.exe /F', { stdio: 'ignore' });
-        } catch (error) {
-            console.error('Failed to kill existing wsr.exe processes:', error.message);
-        }
+    const exePath = app.isPackaged
+        ? path.join(__dirname, 'wsr.exe')
+        : path.join(__dirname, '..', 'src', 'main', 'wsr', 'wsr.exe');
 
-        wsrProcess = spawn(exePath, [], {
-            detached: true,
-            stdio: 'ignore',
-            env: { ...process.env }
-        });
-        wsrProcess.unref();
+    killWSR();
 
-        try {
-            // Set the spawned process to high priority
-            process.setPriority(wsrProcess.pid, 'high');
-        } catch (error) {
-            console.error('Failed to set process priority:', error.message);
-        }
+    wsrProcess = spawn(exePath, [], {
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env, ENVIRONMENT: app.isPackaged ? 'production' : '09a7sd0(&)(Fd70s(*S&DF)987df0ds987f09&)F97)F&(*D7f9s7d0(S*D&f09d8s7f0s97F)(7d))' },
+    });
 
-        wsrProcess.on('exit', () => {
-            app.quit();
-        });
+    wsrProcess.unref();
 
-        // Sleep a bit to ensure wsr.exe has started
-        setTimeout(() => {
-            win.show();
-        }, 1500);
+    wsrProcess.on('exit', () => {
+        app.quit();
+    });
 
-    }
+    // Sleep a bit to ensure wsr.exe has started
+    setTimeout(() => {
+        win.show();
+    }, 1500);
+
     const win = createWindow();
-    const hwnd = win.getNativeWindowHandle().readUInt32LE(0).toString();
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();

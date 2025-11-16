@@ -1,18 +1,91 @@
 import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
-import QuoteOfTheDay from './QuoteOfTheDay.js';
 import VideoBackground from './VideoBackground.js';
 import { renderMultilineText } from './helpers.js';
 
 // TODO: set your actual asset paths/links
 const LOGO_SRC = 'assets/wallstreetraider_logo.png';
 const REDDIT_URL = 'https://www.reddit.com/r/WallStreetRaider/';
-const DISCORD_URL = 'https://discord.gg/fuBtyj8B';
+const DISCORD_URL = 'https://discord.com/invite/5ujV5Cp9Ej';
 const REDDIT_WIDGET = 'assets/reddit-widget.png';
 const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
+    {
+        ver: "v10.0.10",
+        items: [
+            "Fix logger",
+            "Ask to save game when clicking Exit Game",
+            "Fix cashflow warning 'Would you like to view PoorCo cashflow projection now?' now opens cashflow projection of PoorCo",
+            "Remove CPU priority boosting for frontend and backend now that IPC is implemented",
+            "Only refresh reports that are visible to improve performance",
+            "Migrate financial news update popup to Electron dialog",
+            "In-game time is actual time of day in game based on market open hours",
+            "Implement Zustand for state management to improve performance and reduce complexity",
+            "Optimized hyperlink matching by only building regex once",
+            "Allow player to specify exact ticker speed from 1-100",
+        ]
+    },
+    {
+        ver: "v10.0.9",
+        items: [
+            "Add Exit Game button",
+            "Fix create new game with non-USD currency causing crash",
+            "Fix change company name/symbol/country causing crash",
+            "Complete rewrite of options handling to fix numerous bugs including sell/cover/exercise buttons, company hyperlinks, and incorrect option pricing",
+            "Add back in tax basis column to Stocks & Bonds portfolio tab",
+            "Clean up unintended hyperlink matches in text reports"
+        ]
+    },
+    {
+        ver: "v10.0.8",
+        items: [
+            "Fix scrolling issues on multiple tabs to to incorrect flex and centering styles.",
+            "Fix cancel button on string input modal which fixes multiple issues e.g. cancel set growth rate.",
+            "Fix new game character name mixup",
+            "Fix change symbol input error due to null terminator handling.",
+            "Fix save game loading animation",
+            "Fix options contract company hyperlink and sell/cover/exercise buttons",
+            "Fix market reports load industry tabs loading animation",
+            "Fix market reports update lag",
+            "Clicking on industry in market reports now automatically changes to industry tab",
+            "Add 'Browse For Sale Items' button to Cashflow tab in Player View",
+            "Fix ETF and Holding Co. industry summaries and hide projections for banking, insurance, holding co., and etf industries",
+            "Add company symbol to Acting As and Navigation Control dropdowns",
+            "Fix Spin-Off button showing next to bonds contracts",
+            "Fix crashing on Startup Choices popup",
+            "Fix advance ticker once when user interacts with the UI",
+            "Fix start/stop ticker lag",
+            "Attempt to improve user interaction responsiveness when ticker is running by optimizing ticker advance logic",
+        ]
+    },
+    {
+        ver: "v10.0.7",
+        items: [
+            "Resolved sporadic loading animation behavior by optimizing in-progress simulation processes to prevent it from getting stuck.",
+            "Addressed crashes caused by British pounds and Japanese yen currency handling.",
+            "Increased the size of 'Acting As' buttons for improved accessibility.",
+            "Fixed navigation issues with forward, backward, and 'View Player' buttons.",
+            "Resolved a modalResult dereferencing issue related to strParam1.",
+            "Removed the Cancel button from dialogs originally designed for Yes/No responses to prevent backend logic conflicts.",
+            "Replaced legacy Win32 popups with modern dialogs for creating new games.",
+            "Fixed a bug causing a two-year game limit regardless of startup choices for game length.",
+            "Resolved Error 9 and incorrect value sharing between C++ and PowerBasic by ensuring proper memory handling for user input events.",
+            "Addressed a UI update issue that occasionally caused crashes.",
+            "Improved market report throttling to ensure reasonable refresh rates during ticker activity.",
+            "Optimized advisory updates by implementing throttling.",
+            "Adjusted the initial ticker speed to be more gradual."
+        ]
+    },
+    {
+        ver: "v10.0.6",
+        items: [
+            "Resolved an issue causing an endless loop of humorous 'Game Over' text.",
+            "Removed the Steam overlay from the Electron build to address launch-related issues.",
+            "Fixed sporadic behavior of the loading animation and ensured it no longer gets stuck."
+        ],
+    },
     {
         ver: "v10.0.5",
         items: [
@@ -59,7 +132,7 @@ const CHANGELOG = [
         ver: "v10.0.2",
         items: [
             "Fixed capital contribute button",
-            "Fixed lagging game speed due to too many text report updates"
+            "Fixed lagging game speed due to too many text report updates",
         ],
     },
     {
@@ -128,61 +201,23 @@ const MainMenu = () => {
             <div class="wsr-block">
                 <div class="wsr-ann-welcome">
               <div class="h-full overflow-y-auto" style="max-height:40vh;">
-              <h3 class="wsr-block-title">Welcome to the Playtest!</h3>
-  <p>Thanks for joining the Wall Street Raider Playtest. Read this, then dive in.</p>
+              <h3 class="wsr-block-title">Win32 to Electron Conversion Roadmap</h3>
+  <p>As part of our commitment to future-proofing Wall Street Raider and ensuring cross-platform compatibility, we are actively working to replace all legacy Win32 code with modern Electron implementations. This transition is critical for the game's long-term sustainability and feature expansion.</p>
 
-  <h4>Basics</h4>
+  <h4>Next Steps in the Conversion</h4>
   <ul>
-    <li>Start with <strong>New Game</strong> for a clean save. Use <strong>Load Game</strong> to resume.</li>
-    <li>Explore the menus. Most features are enabled, but some are still work-in-progress.</li>
-    <li>If something looks wrong, try to reproduce it once before reporting.</li>
+    <li>- Swaps</li>
+    <li>- Advanced Options</li>
+    <li>- Picklist</li>
+    <li>- Database Search</li>
+    <li>- Settings/Cheats Menu</li>
+    <li>- Change Law Firm</li>
+    <li>- Spread Rumors</li>
+    <li>- Harassing Lawsuit</li>
+    <li>- Capital Contributions</li>
   </ul>
 
-  <h4>Join the Community</h4>
-  <p>
-    Hop into our Discord and request the <strong>@Playtester</strong> role to access the testing channels: <a href="${DISCORD_URL}" target="_blank" rel="noopener">Join the Discord</a>.
-    <br/>
-    Also visit the subreddit: <a href="${REDDIT_URL}" target="_blank" rel="noopener">r/WallStreetRaider</a>.
-  </p>
-
-  <h4>How to Report a Bug</h4>
-  <ol>
-    <li><strong>One issue per report</strong> with a clear title.</li>
-    <li><strong>Steps to reproduce</strong> from a fresh launch or save.</li>
-    <li><strong>Expected vs. actual</strong> result in one sentence each.</li>
-    <li><strong>Evidence</strong>: screenshot or short video; attach a relevant save if possible.</li>
-    <li><strong>System info</strong>: OS version, CPU/GPU, RAM, display resolution.</li>
-  </ol>
-
-  <details>
-    <summary>Copy-paste Bug Report Template</summary>
-    <pre>
-Title:
-Build/Version: v0.9.x (date)
-
-Summary:
-Concise description of the problem.
-
-Steps to Reproduce:
-1)
-2)
-3)
-
-Expected Result:
-What you thought would happen.
-
-Actual Result:
-What happened instead (include any error text).
-
-Attachments:
-Screenshot/video link; save file if relevant.
-
-System Info:
-OS, CPU/GPU, RAM, Resolution.
-    </pre>
-  </details>
-
-  <p>Thanks for testing. Your reports directly shape the next build.</p>
+  <p>We appreciate your patience and support as we undertake this significant upgrade. Stay tuned for updates as we complete each milestone!</p>
 </div>
                 </div>
             </div>

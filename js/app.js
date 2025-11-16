@@ -1,14 +1,14 @@
-import { html, render, useState, useEffect } from './lib/preact.standalone.module.js';
+import { html, render, useState, useEffect, useRef } from './lib/preact.standalone.module.js';
 import './lib/tailwind.module.js';
 import * as api from './api.js';
 import GameUI from './components/GameUI.js';
 import MainMenu from './components/MainMenu.js';
-import Modal from './components/Modal.js';
 import SplashSequence from './components/SplashSequence.js';
 import HelpModal from './components/HelpModal.js';
 import InputStringModal from './components/InputStringModal.js';
 import ConfirmModal from './components/ConfirmModal.js';
 import InfoModal from './components/InfoModal.js';
+import NewGameSetupModal from './components/NewGameSetupModal.js';
 
 const logos = [
     { src: "assets/roninsoft_logo.png", backgroundColor: "#ffffff" },
@@ -16,55 +16,72 @@ const logos = [
 ];
 
 const AppInner = () => {
-    const [gameState, setGameState] = useState({ gameLoaded: false, isTickerRunning: false });
-    const [inputString, setInputString] = useState('');
+    const { helpShown, hideHelp, setGameState } = api.useWSRContext();
 
-    const { showLoading, hideLoading, helpShown, hideHelp, loading } = api.useWSRContext();
+    const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
+    const splashScreenPlayed = api.useGameStore(s => s.gameState.splashScreenPlayed);
+    const gameLoaded = api.useGameStore(s => s.gameState.gameLoaded);
+    const isLoading = api.useGameStore(s => s.gameState.isLoading);
+    const modalType = api.useGameStore(s => s.gameState.modalType);
+    const modalTitle = api.useGameStore(s => s.gameState.modalTitle);
+    const modalText = api.useGameStore(s => s.gameState.modalText);
+    const modalDefault = api.useGameStore(s => s.gameState.modalDefault);
 
-    useEffect(() => {
-        const connectWebSocket = (retryCount = 0) => {
-            const ws = new WebSocket('ws://127.0.0.1:9632');
+    // useEffect(() => {
+    //     const connectWebSocket = (retryCount = 0) => {
+    //         const ws = new WebSocket('ws://127.0.0.1:9632');
 
-            ws.onopen = () => {
-                console.log('WebSocket connection established');
-                retryCount = 0; // Reset retry count on successful connection
-                        
-                api.getGameState().then((newGameState) => {
-                    setGameState(newGameState);
-                    hideLoading();
-                }).catch(console.error);
+    //         ws.onopen = () => {
+    //             console.log('WebSocket connection established');
+    //             retryCount = 0; // Reset retry count on successful connection
 
-            };
+    //             api.getGameState().then((newGameState) => {
+    //                 setGameState(newGameState);
+    //             }).catch(console.error);
 
-            ws.onmessage = (evt) => {
-                hideLoading();
-                // console.log('WebSocket message received:', evt.data);
-                console.log(JSON.parse(evt.data))
-                setGameState(JSON.parse(evt.data));
-            };
+    //         };
 
-            ws.onerror = (err) => {
-                console.error('WebSocket error:', err);
-            };
+    //         ws.onmessage = (evt) => {
+    //             const msg = JSON.parse(evt.data);
+    //             if (msg.path === '/game_state_patch') {
+    //                 // console.log('Patch received', msg.payload);
+    //                 setGameState(prev => {
+    //                     const ops = Array.isArray(msg.payload) ? msg.payload : JSON.parse(msg.payload);
+    //                     // non-mutating apply; prev remains untouched
+    //                     const { newDocument } = applyPatch(prev, ops, /* validate */ true, /* mutateDocument */ false);
+    //                     return newDocument;
+    //                 });
+    //             } else if (msg.path === '/game_state') {
+    //                 // console.log('Full patch', msg.payload);
+    //                 setGameState(prev => ({ ...prev, ...msg.payload }));
+    //             }
+    //         };
 
-            ws.onclose = () => {
-                console.warn('WebSocket connection closed, retrying...');
-                const delay = Math.min(1000 * Math.pow(2, retryCount), 30000); // Exponential backoff with max delay of 30 seconds
-                setTimeout(() => connectWebSocket(retryCount + 1), delay);
-            };
-        };
+    //         ws.onerror = (err) => {
+    //             console.error('WebSocket error:', err);
+    //         };
 
-        connectWebSocket();
+    //         ws.onclose = () => {
+    //             console.warn('WebSocket connection closed, retrying...');
+    //             const delay = Math.min(1000 * Math.pow(2, retryCount), 30000); // Exponential backoff with max delay of 30 seconds
+    //             setTimeout(() => connectWebSocket(retryCount + 1), delay);
+    //         };
+    //     };
 
-        return () => ws.close();
-    }, []);
+    //     connectWebSocket();
+
+    //     return () => ws.close();
+    // }, []);
 
     useEffect(() => {
         const handleKey = (e) => {
             if (e.key === ' ') {
-                api.toggleTicker();
+                if (isTickerRunning) {
+                    api.stopTicker();
+                } else {
+                    api.startTicker();
+                }
             } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
-                showLoading();
                 api.saveGame()
                 e.stopPropagation();
             }
@@ -72,18 +89,34 @@ const AppInner = () => {
 
         document.addEventListener('keydown', handleKey);
         return () => document.removeEventListener('keydown', handleKey);
-    }, []);
-
-    useEffect(() => {
-        setInputString(gameState.modalDefault || '');
-    }, [gameState.modalDefault]);
+    }, [isTickerRunning]);
 
     const hideModal = () => {
         api.closeModal();
-        showLoading();
     }
 
-    console.log(gameState)
+    useEffect(() => {
+        let timeoutId;
+
+        const fetchGameState = () => {
+            api.getGameState().then((newGameState) => {
+                const hyperlinkRegex = api.buildDictRegex(
+                    newGameState.allCompanies,
+                    newGameState.allIndustries
+                );
+                newGameState.hyperlinkRegex = hyperlinkRegex;
+                requestAnimationFrame(() => {
+                    setGameState(newGameState);
+                });
+
+                timeoutId = setTimeout(fetchGameState, 50);
+            }).catch(console.error);
+        };
+
+        fetchGameState();
+
+        return () => clearTimeout(timeoutId);
+    }, []);
 
     return html`
         <${SplashSequence}
@@ -92,36 +125,44 @@ const AppInner = () => {
             holdMs=${1500}
             blackoutMs=${700}
             exitFadeMs=${700}
-            show=${!gameState.splashScreenPlayed}
+            show=${!splashScreenPlayed}
         />
         <div class="app-container">
-            ${gameState.gameLoaded ? html`<${GameUI} gameState=${gameState} />`
+            ${gameLoaded ? html`<${GameUI} />`
             : html`<${MainMenu} />`}
-            ${(gameState.events?.length > 0 || loading) && !gameState.modalType ? html`
+            ${isLoading && !modalType ? html`
                 <div className="loading-overlay">
                     <img src="assets/loading.gif" alt="Loading..." />
                 </div>
             ` : ''}
             <${ConfirmModal}
-                show=${gameState.modalType === 1}
-                title=${gameState.modalTitle}
-                text=${gameState.modalText}
-                onYes=${() => { showLoading(); setTimeout(() => api.modalResult(1), 500); }}
-                onNo=${() => { showLoading(); setTimeout(() => api.modalResult(2), 500); }}
-                onCancel=${() => { showLoading(); setTimeout(() => api.modalResult(3), 500); }}
+                show=${modalType === 1 || modalType === 2}
+                title=${modalTitle}
+                text=${modalText}
+                onYes=${() => { api.modalResult(1); }}
+                onNo=${() => { api.modalResult(2); }}
+                onCancel=${modalType === 2 ? () => { api.modalResult(3); } : undefined}
             />
             <${InputStringModal}
-                show=${gameState.modalType === 3}
-                title=${gameState.modalTitle}
-                text=${gameState.modalText}
-                defaultValue=${inputString}
-                onSubmit=${(value) => { showLoading(); setTimeout(() => api.modalResult(value), 500); }}
+                show=${modalType === 3}
+                title=${modalTitle}
+                text=${modalText}
+                defaultValue=${modalDefault}
+                onSubmit=${(value) => { api.modalResult(value); }}
                 onCancel=${hideModal}
             />
             <${InfoModal}
-                show=${gameState.modalType === 4}
-                text=${gameState.modalText}
+                show=${modalType === 4}
+                text=${modalText}
                 onClose=${hideModal}
+            />
+            <${NewGameSetupModal}
+                show=${modalType === 5}
+                onSubmit=${(newSettings) => {
+            const strInput = Object.entries(newSettings).map(([key, value]) => `${key}=${value}`).join('|');
+            api.modalResult(strInput);
+        }}
+                onCancel=${hideModal}
             />
             <${HelpModal} show=${helpShown} onClose=${hideHelp} />
         </div>

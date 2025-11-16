@@ -1,4 +1,4 @@
-import { html, useEffect, useRef, useState } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useRef, useState, useCallback } from '../lib/preact.standalone.module.js';
 import useInterval from '../hooks/useInterval.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
@@ -31,21 +31,21 @@ const AssetPriceChart = ({
     const [chartData, setChartData] = useState(null);
 
     // Function to refresh chart data
-    const refreshData = () => {
+    const refreshData = useCallback(() => {
         let active = true;
         api.getAssetChart(assetId).then(data => {
             if (active) setChartData(data);
         }).catch(console.error);
         return () => { active = false; };
-    };
+    }, [assetId]);
 
     // Initial data fetch when assetId changes
     useEffect(() => {
         refreshData();
     }, [assetId]);
 
-    // Fetch data every 5 seconds
-    useInterval(refreshData, 5000);
+    // Fetch data every 3 seconds
+    useInterval(refreshData, 3000);
 
     // Draw chart whenever data changes or on resize
     useEffect(() => {

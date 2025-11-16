@@ -1,4 +1,5 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
+import { insertCurrencySymbols } from './helpers.js';
 import Modal from './Modal.js';
 
 
@@ -16,9 +17,9 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
 
         return html`<${Modal} show=${show}>
             <div>
-                <div class="text-lg font-bold h-full">${title}</div>
+                <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
                 <br/>
-                <div class="mb-4">${actualText}</div>
+                <div class="mb-4">${insertCurrencySymbols(actualText)}</div>
                 <select class="basic flex-grow w-full" value=${inputValue} onChange=${(e) => setInputValue(e.target.value)}>
                     ${options.map(opt => html`<option value=${opt.value}>${opt.label}</option>`)}
                 </select>
@@ -33,9 +34,9 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
 
     return html`<${Modal} show=${show}>
         <div>
-            <div class="text-lg font-bold h-full">${title}</div>
+            <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
             <br/>
-            <div class="mb-4">${text}</div>
+            <div class="mb-4">${insertCurrencySymbols(text)}</div>
             <input type="text" class="modal-input" value=${inputValue} onInput=${(e) => setInputValue(e.target.value)} /><br/>
         </div>
         <br/>

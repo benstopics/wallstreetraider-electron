@@ -37,18 +37,40 @@ export function renderMultilineText(text, options = { additionalDelimiters: [], 
 }
 
 export function parseHyperlink(line) {
-    const match = line && line.match(/@([A-Z]+)(\d*)$/);
+    const match = line && line.match(/@([A-Z]+)(\d*(\|\d+)*)$/);
     if (!match) return null;
-    return { type: match[1], id: parseInt(match[2], 10) };
+    const value = match[2];
+    return { type: match[1], id: value.includes('|') ? value : parseInt(value, 10) };
 }
 
-export function renderLines(gameState, lines, onLink, renderExtras) {
+const CURRENCY_SYMBOLS = {
+    "@UK": "£",
+    "@EUR": "€",
+    "@JAP": "¥",
+    "@KOR": "₩",
+    "@IND": "₹",
+    "@CNY": "¥",
+    "@ISR": "₪",
+    "@EGY": "E£"
+};
+
+export const insertCurrencySymbols = (text) => {
+    let result = text || '';
+    Object.entries(CURRENCY_SYMBOLS).forEach(([key, symbol]) => {
+        result = result.replaceAll(key, symbol);
+    });
+    return result;
+};
+
+export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
     if (!lines) return html``;
 
     // Step 1: Strip hyperlinks and get clean lines
     const cleanedLines = lines.map(line => {
         const link = parseHyperlink(line);
-        const clean = link ? line.slice(0, line.indexOf('@')).trimEnd() : line;
+        let clean = line;
+        clean = insertCurrencySymbols(clean);
+        clean = link ? clean.slice(0, clean.indexOf('@')).trimEnd() : clean;
         return { raw: line, text: clean, link };
     });
 
@@ -59,19 +81,21 @@ export function renderLines(gameState, lines, onLink, renderExtras) {
         ${cleanedLines.map(({ raw, text, link }) => {
         if (text === '') return ' ';
 
-        const classes = link?.id > 0 && onLink
+        const idFound = link?.id > 0 || (link?.id && link?.id.includes('|'));
+
+        const classes = idFound && onLink
             ? 'fixed-width cursor-pointer hover:bg-blue-900 text-blue-400'
             : 'fixed-width';
 
-        const handler = link?.id > 0 ? () => onLink && onLink(link) : null;
+        const handler = idFound ? () => onLink && onLink(link) : null;
 
         // If extras will be rendered, pad line with spaces
         const padded = (renderExtras && link)
             ? text.padEnd(maxLength, ' ')
-            : link?.id > 0 ? text : api.renderHyperlinks(text, gameState, ({ id, type }) => {
-                if (type === 'C')  api.setViewAsset(id);
+            : idFound ? text : api.renderHyperlinks(text, ({ id, type }) => {
+                if (type === 'C') api.setViewAsset(id);
                 else if (type === 'I') api.viewIndustry(id);
-            });
+            }, hyperlinkRegex);
 
         return html`<div class="flex flex-row">
                 <div class=${classes} onClick=${handler}>

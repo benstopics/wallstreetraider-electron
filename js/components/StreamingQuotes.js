@@ -5,19 +5,11 @@ import * as api from '../api.js';
 import { StarIcon, TrashIcon } from '../icons.js';
 
 
-const parseStockPrice = (gameState) => {
-    const stockPriceLine = gameState.researchReport.find(line => line.includes('STOCK PRICE:'));
-    if (stockPriceLine) {
-        const price = parseFloat(stockPriceLine.split('STOCK PRICE:')[1]);
-        return isNaN(price) ? 0 : price;
-    }
+const StreamingQuotes = () => {
 
-    return 0;
-}
-
-const StreamingQuotes = ({ gameState }) => {
-
-    const { streamingQuotesList: quotes, activeEntityNum, activeEntityName, activeEntitySymbol, activeIndustryNum } = gameState;
+    const quotes = api.useGameStore(s => s.gameState.streamingQuotesList) || [];
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const activeEntityName = api.useGameStore(s => s.gameState.activeEntityName);
 
     return html`
         <div class="panel">

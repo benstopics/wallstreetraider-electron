@@ -4,77 +4,75 @@ import * as api from '../api.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 
 
-function CashflowTab({ gameState }) {
+function CashflowTab() {
 
-    const hasCorporateAssets = gameState.financialProfile.some(asset => asset.includes('Business Assets/Equipment'));
+    const actingAs = api.useGameStore(s => s.gameState.actingAs);
+    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
+    const cashflowProjection = api.useGameStore(s => s.gameState.cashflowProjection);
+    const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+
+    const hasCorporateAssets = financialProfile.some(asset => asset.includes('Business Assets/Equipment'));
 
     return html`
             <div class="flex flex-col w-full items-center">
                 <div class="flex flex-row items-center gap-5">
-                    ${gameState.activeIndustryId !== api.BANK_IND ? html`
+                    ${activeIndustryId !== api.BANK_IND ? html`
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.buyCorporateAssets} 
                             label="Buy Corporate Assets"
                             color="green"
                         />
                         ${hasCorporateAssets ? html`<${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.sellCorporateAssets} 
                             label="Sell Corporate Assets"
                             color="red"
                         />` : ''}
                         ${hasCorporateAssets ? html`<${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.offerCorporateAssetsForSale} 
                             label="Offer Corporate Assets for Sale"
-                            color="red"
+                            color="blue"
                         />` : ''}
                     ` : ''}
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.viewForSaleItems} 
                             label="Browse For Sale Items"
                             color="green"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.setDividend} 
                             label="Set Dividend"
                             color="green"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.setProductivity} 
                             label="Set Productivity"
                             color="brown"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.setGrowthRate} 
                             label="Set Growth Rate"
                             color="orange"
                         />
                         <${ActingAsRequiredButton} 
-                            gameState=${gameState} 
-                            getDisabledMessage=${gameState => !gameState.actingAs ? "Must be acting as this company" : false} 
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${api.changeManagers} 
-                            label="Change Managers"
-                            color="blue"
+                            label="Fire Managers"
+                            color="red"
                         />
                 </div>
                 <br />
                 <div class="flex flex-col flex-[3] justify-center items-center">
-                    <div class="flex justify-center items-center w-full">
-                        ${gameState.activeIndustryId !== api.BANK_IND
-                            ? renderLines(gameState, gameState.cashflowProjection ?? [], ({ id }) => api.setViewAsset(id))
+                    <div class="flex flex-col items-center w-full">
+                        ${activeIndustryId !== api.BANK_IND
+                            ? renderLines(cashflowProjection ?? [], ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)
                             : 'Cashflow projection unavailable for banks.'}
                     </div>
                 </div>

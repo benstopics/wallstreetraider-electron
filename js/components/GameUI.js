@@ -4,7 +4,6 @@ import * as api from '../api.js';
 import BalanceSheet from './BalanceSheet.js';
 import CapitalizationChart from './CapitalizationChart.js';
 import StreamingQuotes from './StreamingQuotes.js';
-import NewsHeadlines from './NewsHeadlines.js';
 import View from './View.js';
 import Toolbar from './Toolbar.js';
 import { NewspaperIcon, NotificationIcon } from '../icons.js';
@@ -15,11 +14,23 @@ import CommandPrompt from './CommandPrompt.js';
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 
-const GameUI = ({ gameState }) => {
+const GameUI = () => {
 
     const [showNotifications, setShowNotifications] = useState(false);
 
-    const newsHeadlines = gameState.newsHeadlines;
+    const newsHeadlines = api.useGameStore(s => s.gameState.newsHeadlines);
+    const currentYear = api.useGameStore(s => s.gameState.currentYear);
+    const currentMonth = api.useGameStore(s => s.gameState.currentMonth);
+    const currentDay = api.useGameStore(s => s.gameState.currentDay);
+    const currentTime = api.useGameStore(s => s.gameState.currentTime);
+    const currentQuarter = api.useGameStore(s => s.gameState.currentQuarter);
+    const cash = api.useGameStore(s => s.gameState.cash);
+    const otherAssets = api.useGameStore(s => s.gameState.otherAssets);
+    const totalAssets = api.useGameStore(s => s.gameState.totalAssets);
+    const totalDebt = api.useGameStore(s => s.gameState.totalDebt);
+    const netWorth = api.useGameStore(s => s.gameState.netWorth);
+    const trendingNews = api.useGameStore(s => s.gameState.trendingNews);
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
     const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString());
     useEffect(() => {
@@ -29,34 +40,44 @@ const GameUI = ({ gameState }) => {
         return () => clearInterval(id);
     }, []);
 
-    const gameDate = `${months[gameState.currentMonth - 1]} ${gameState.currentDay}, ${gameState.currentYear} (Q${gameState.currentQuarter})`;
+    // Market hours are open 9:30am to 4:00pm. I want to divide that by currentTime (which is 0-16 or 17) and map that to the time of day.
+    const marketOpen = 9.5; // 9:30am
+    const marketClose = 16; // 4:00pm
+    const totalMarketHours = marketClose - marketOpen;
+    const timeFrac = totalMarketHours / 17;
+    const timeOfDayHoursFloat = marketOpen + (currentTime * timeFrac);
+    const timeOfDayHours = Math.floor(timeOfDayHoursFloat) % 12 || 12; // Convert to 12-hour format
+    const timeOfDayMinutes = Math.floor((timeOfDayHoursFloat - Math.floor(timeOfDayHoursFloat)) * 60);
+    const formattedTimeOfDay = `${timeOfDayHours}:${timeOfDayMinutes.toString().padStart(2, '0')} ${timeOfDayHours >= 12 ? 'PM' : 'AM'}`;
+
+    const gameDate = `${months[currentMonth - 1]} ${currentDay}, ${currentYear} (Q${currentQuarter}) ${formattedTimeOfDay}`;
 
     return html`
     <div class="flex flex-col h-full">
         <!-- Toolbar -->
-        <${Toolbar} gameState=${gameState} />
+        <${Toolbar} />
         <div class="game-view flex flex-column gap-2 p-2">
             <!-- Left Column -->
             <div class="flex flex-col w-1/6 gap-2">
                 <!-- Date and Time -->
                 <div class="flex fixed-width date-display justify-center items-center w-full" style="height: 35px;">
-                    ${gameDate} ${localTime}
+                    ${gameDate}
                 </div>
                 
                 <!-- Balance Sheet -->
                 <div>
                     ${html`<${BalanceSheet} 
-                        cash=${gameState.cash} 
-                        otherAssets=${gameState.otherAssets} 
-                        totalAssets=${gameState.totalAssets} 
-                        totalDebt=${gameState.totalDebt} 
-                        netWorth=${gameState.netWorth} 
+                        cash=${cash} 
+                        otherAssets=${otherAssets} 
+                        totalAssets=${totalAssets} 
+                        totalDebt=${totalDebt} 
+                        netWorth=${netWorth} 
                     />`}
                 </div>
 
                 <!-- Asset Price Chart -->
                 <div class="flex-[2.75] min-h-0">
-                    ${html`<${CapitalizationChart} assetId=${api.PLAYER1_ID} chartTitle="Net Worth" />`}
+                    ${html`<${CapitalizationChart} assetId=${api.HUMAN1_ID} chartTitle="Net Worth" />`}
                 </div>
 
                 <div class="flex flex-row flex-[2] min-h-0 gap-2">
@@ -70,24 +91,24 @@ const GameUI = ({ gameState }) => {
 
                 <!-- Streaming Quotes -->
                 <div class="flex-[7] min-h-0">
-                ${html`<${StreamingQuotes} gameState=${gameState} />`}
+                    <${StreamingQuotes} />
                 </div>
             </div>
 
             <div class="flex flex-col w-2/6 gap-2 min-h-0">
                 <div class="flex items-center" style="height: 35px;">
-                    <${CommandPrompt} gameState=${gameState} />
+                    <${CommandPrompt} />
                 </div>
                 <div class="panel flex-[4] flex min-h-0 flex-col">
                     <div class="panel-header">Financial News Headlines</div>
                     <div class="p-1 panel-body">
                         <div class="flex flex-col h-full gap-2 overflow-y-auto">
-                            ${newsHeadlines.map(i => html`
+                            ${newsHeadlines.map(h => html`
                                 <div class="news-headline">
-                                    ${api.renderHyperlinks(i.headline, gameState, ({ id, type }) => {
+                                    ${api.renderHyperlinks(h, ({ id, type }) => {
                                         if (type === 'C')  api.setViewAsset(id);
                                         else if (type === 'I') api.viewIndustry(id);
-                                    })}
+                                    }, hyperlinkRegex)}
                                 </div>
                             `)}
                         </div>
@@ -97,17 +118,17 @@ const GameUI = ({ gameState }) => {
             
             <!-- Right Column -->
             <div class="flex flex-col w-4/6 gap-2 h-full">
-                ${html`<${View} gameState=${gameState} />`}
+                ${html`<${View} />`}
             </div>
         </div>
         <div class="flex flex-row border items-center justify-between gap-2 px-2 mx-2" style="height: 30px;">
             <div></div>
             <div class="flex flex-[1] items-center gap-2 cursor-pointer justify-between" onClick=${() => setShowNotifications(true)}>
                 <div></div>
-                ${gameState.trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
+                ${trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
                     onClick=${() => setShowNotifications(true)}>
                     <${NotificationIcon} />
-                    <!--<div class="badge">${gameState.trendingNews.length}</div>-->
+                    <!--<div class="badge">${trendingNews.length}</div>-->
                 </div>` : html`<div></div>`}
             </div>
         </div>
@@ -117,13 +138,13 @@ const GameUI = ({ gameState }) => {
                 <button class="btn red" onClick=${() => setShowNotifications(false)}>Close</button>
             </div>
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
-                ${gameState.trendingNews.map(i => html`
+                ${trendingNews.map(h => html`
                     <div class="p-2 border">
-                        ${api.renderHyperlinks(i.headline, gameState, ({ id, type }) => {
+                        ${api.renderHyperlinks(h, ({ id, type }) => {
                             if (type === 'C')  api.setViewAsset(id);
                             else if (type === 'I') api.viewIndustry(id);
                             setShowNotifications(false);
-                        })}
+                        }, hyperlinkRegex)}
                     </div>
                 `)}
             </div>
