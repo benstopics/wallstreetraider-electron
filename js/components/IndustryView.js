@@ -4,6 +4,8 @@ import AdvisorySummary from './AdvisorySummary.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import AssetPriceChart from './AssetPriceChart.js';
+import MarketHeatMapTab from './MarketHeatMapTab.js';
+import SectorHeatMapTab from './SectorHeatMapTab.js';
 
 const Tab = Tabs.Tab;
 
@@ -29,7 +31,7 @@ const IndustryView = () => {
     const whoOwnsInvestmentContractsReport = api.useGameStore(s => s.gameState.whoOwnsInvestmentContractsReport);
     const whosAheadReport = api.useGameStore(s => s.gameState.whosAheadReport);
 
-    const [activeTab, setActiveTab] = useState('Industry Growth Rates');
+    const [activeTab, setActiveTab] = useState('Heat Map');
 
     const activeIndustryName = api.getIndustry(allIndustries, activeIndustryNum)?.name
 
@@ -78,9 +80,15 @@ const IndustryView = () => {
                                         }
                                     </div>
                                 <//>` : ''}
+                                <${Tab} label="Heat Map" id=${api.UI_INDUSTRY_HEATMAP}>
+                                    <${SectorHeatMapTab} />
+                                <//>
                             <//>
                         </div>
                     <//>` : ''}
+                    <${Tab} label="Heat Maps" id=${api.UI_MARKET_HEATMAP}>
+                        <${MarketHeatMapTab} />
+                    <//>
                     <${Tab} label="Industry Growth Rates" id=${api.UI_MARKET_REPORTS_INDUSTRY_GROWTH_RATES_REPORT}>
                         <div class="flex justify-center items-center">
                             ${renderLines(industryGrowthRatesReport, ({ id }) => {

@@ -9,6 +9,8 @@ import InputStringModal from './components/InputStringModal.js';
 import ConfirmModal from './components/ConfirmModal.js';
 import InfoModal from './components/InfoModal.js';
 import NewGameSetupModal from './components/NewGameSetupModal.js';
+import AdvancedOptionsModal from './components/AdvancedOptionsModal.js';
+import InterestRateSwapsModal from './components/InterestRateSwapsModal.js';
 
 const logos = [
     { src: "assets/roninsoft_logo.png", backgroundColor: "#ffffff" },
@@ -125,7 +127,7 @@ const AppInner = () => {
             holdMs=${1500}
             blackoutMs=${700}
             exitFadeMs=${700}
-            show=${!splashScreenPlayed}
+            show=${false && !splashScreenPlayed}
         />
         <div class="app-container">
             ${gameLoaded ? html`<${GameUI} />`
@@ -159,12 +161,27 @@ const AppInner = () => {
             <${NewGameSetupModal}
                 show=${modalType === 5}
                 onSubmit=${(newSettings) => {
-            const strInput = Object.entries(newSettings).map(([key, value]) => `${key}=${value}`).join('|');
-            api.modalResult(strInput);
+            api.modalResult(api.serialize(newSettings));
         }}
                 onCancel=${hideModal}
             />
+            <${AdvancedOptionsModal}
+                show=${modalType === 6}
+                stateStr=${modalType === 6 ? modalText : ''}
+                title=${modalTitle}
+                onSubmit=${(newState) => {
+                    api.modalResult(api.serialize({...newState, buttonId: "SUBMIT"}));
+                }}
+            />
             <${HelpModal} show=${helpShown} onClose=${hideHelp} />
+            <${InterestRateSwapsModal}
+                show=${modalType === 7}
+                title=${modalTitle}
+                stateStr=${modalType === 7 ? modalText : ''}
+                onSubmit=${(newState) => {
+                    api.modalResult(api.serialize({...newState, buttonId: "OFFER"}));
+                }}
+            />
         </div>
     `;
 }

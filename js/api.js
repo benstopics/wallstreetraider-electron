@@ -64,6 +64,10 @@ export const UI_PLAYER_OPTIONS_PORTFOLIO = 29;
 export const UI_PLAYER_CORPORATIONS_LIST = 30;
 export const UI_PLAYER_COMMODITY_CONTRACTS_LIST = 31;
 export const UI_PLAYER_ADVANCES_LIST = 32;
+export const UI_MARKET_HEATMAP = 33;
+export const UI_INDUSTRY_HEATMAP = 34;
+export const UI_INDUSTRIES_HEATMAP = 35;
+export const UI_COMPANIES_HEATMAP = 36;
 
 export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
@@ -137,7 +141,7 @@ function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 let lookup = {};
 
 export function buildDictRegex(allCompanies, allIndustries) {
-    
+
     lookup = Object.create(null); // key: lowercased token -> {id, type}
 
     // Companies: match by symbol and name
@@ -192,7 +196,7 @@ function toTitleCase(str) {
 }
 
 export function renderHyperlinks(headline, onClick, regex) {
-    
+
     if ([
         "Operating Earnings",
         "LONG AND SHORT",
@@ -410,13 +414,11 @@ export async function modalResult(result) {
     return response.text();
 }
 
-export async function viewIndustry(id) {
-    await postIdArg('/set_view_industry', id);
+export function serialize(obj) {
+    return Object.entries(obj).map(([key, value]) => `${key}=${value}`).join('|');
 }
 
-export async function setViewAsset(id) {
-
-    await postIdArg('/set_view_asset', id);
+function shiftNavHistory(page) {
 
     const maxHistory = 30;
 
@@ -426,13 +428,13 @@ export async function setViewAsset(id) {
     }
 
     // Remove if already exists in history
-    const index = navHistory.indexOf(id);
+    const index = navHistory.findIndex(p => p.id === page.id && p.type === page.type);
     if (index !== -1) {
         navHistory.splice(index, 1);
     }
 
     // Insert new id at front
-    navHistory.unshift(id);
+    navHistory.unshift(page);
 
     // Trim if too long
     if (navHistory.length > maxHistory) {
@@ -443,19 +445,39 @@ export async function setViewAsset(id) {
     navPointerIdx = 0;
 }
 
+export async function viewIndustry(id) {
+    await postIdArg('/set_view_industry', id);
+
+    shiftNavHistory({ id, type: 'industry' });
+}
+
+export async function setViewAsset(id) {
+
+    await postIdArg('/set_view_asset', id);
+
+    shiftNavHistory({ id, type: 'asset' });
+}
+
+export function gotoPage(p) {
+    const page = p ?? navHistory[navPointerIdx];
+    if (page.type === 'industry') {
+        return postIdArg('/set_view_industry', page.id);
+    } else if (page.type === 'asset') {
+        return postIdArg('/set_view_asset', page.id);
+    }
+}
+
 export async function goBack() {
     if (navPointerIdx < navHistory.length - 1) {
         navPointerIdx++;
-        const id = navHistory[navPointerIdx];
-        await postIdArg('/set_view_asset', id);
+        gotoPage();
     }
 }
 
 export async function goForward() {
     if (navPointerIdx > 0) {
         navPointerIdx--;
-        const id = navHistory[navPointerIdx];
-        await postIdArg('/set_view_asset', id);
+        gotoPage();
     }
 }
 
@@ -464,10 +486,6 @@ export async function databaseSearch() { await postIdArg('/database_search'); }
 export async function toggleStreamingQuote(id) { await postIdArg('/toggle_streaming_quote', id); }
 
 export const commandMap = {
-    'VIEW': {
-        description: 'View acting-as profile',
-        fn: (_, gameState) => setViewAsset(gameState.actingAsId),
-    },
     'ACT': {
         description: 'Act as company/player',
         fn: changeActingAs,
@@ -525,24 +543,6 @@ export const commandMap = {
         fn: setAdvisoryFee,
     },
 }
-
-export function executeCommand(gameState, command) {
-    const parts = command.trim().toUpperCase().split(/\s+/);
-    if (parts.length === 0) return;
-
-    let id = getCompanyBySymbol(gameState.allCompanies, parts[0])?.id ?? (parts[0] == 'ME' ? HUMAN1_ID : undefined);
-    if (id ?? false) {
-        setViewAsset(id);
-        return
-    }
-
-    const cmd = commandMap[parts[0]]?.fn;
-    id = getCompanyBySymbol(gameState.allCompanies, parts[1])?.id ?? (parts[1] == 'ME' ? HUMAN1_ID : gameState.activeEntityNum);
-
-    if (cmd)
-        cmd(id, gameState);
-}
-
 
 export const WSRContext = createContext();
 
@@ -609,3 +609,135 @@ export function WSRProvider({ children }) {
 }
 
 export const useWSRContext = () => useContext(WSRContext);
+
+export function debounce(fn, delay) {
+    let timer = null;
+
+    return function (...args) {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+            fn.apply(this, args);
+            timer = null;
+        }, delay);
+    };
+}
+
+export function diffObjects(oldObj, newObj, path = []) {
+    const result = {
+        added: {},
+        removed: {},
+        changed: {}
+    };
+
+    const oldKeys = Object.keys(oldObj || {});
+    const newKeys = Object.keys(newObj || {});
+    const allKeys = new Set([...oldKeys, ...newKeys]);
+
+    for (const key of allKeys) {
+        const oldVal = oldObj?.[key];
+        const newVal = newObj?.[key];
+        const currentPath = path.concat(key).join('.');
+
+        // Added
+        if (!(key in (oldObj || {}))) {
+            result.added[currentPath] = newVal;
+            continue;
+        }
+
+        // Removed
+        if (!(key in (newObj || {}))) {
+            result.removed[currentPath] = oldVal;
+            continue;
+        }
+
+        // Both exist
+        if (isObject(oldVal) && isObject(newVal)) {
+            const child = diffObjects(oldVal, newVal, path.concat(key));
+            Object.assign(result.added, child.added);
+            Object.assign(result.removed, child.removed);
+            Object.assign(result.changed, child.changed);
+            continue;
+        }
+
+        // Changed
+        if (!isEqual(oldVal, newVal)) {
+            result.changed[currentPath] = { from: oldVal, to: newVal };
+        }
+    }
+
+    return result;
+}
+
+function isObject(val) {
+    return val !== null && typeof val === 'object' && !Array.isArray(val);
+}
+
+function isEqual(a, b) {
+    if (a === b) return true;
+    if (typeof a !== typeof b) return false;
+    if (isObject(a) && isObject(b)) {
+        const aKeys = Object.keys(a);
+        const bKeys = Object.keys(b);
+        if (aKeys.length !== bKeys.length) return false;
+        return aKeys.every(k => isEqual(a[k], b[k]));
+    }
+    if (Array.isArray(a) && Array.isArray(b)) {
+        if (a.length !== b.length) return false;
+        return a.every((v, i) => isEqual(v, b[i]));
+    }
+    return false;
+}
+
+export function isDifferent(oldObj, newObj) {
+    const diff = diffObjects(oldObj, newObj);
+    return Object.keys(diff.added).length > 0 ||
+        Object.keys(diff.removed).length > 0 ||
+        Object.keys(diff.changed).length > 0;
+}
+
+export function formatThousandsPreserveCaret(e, formatFn) {
+    function formatFn(value) {
+        // remove commas and spaces
+        const raw = value.replace(/,/g, '').trim();
+
+        // allow empty
+        if (raw === '') return '';
+
+        // reject non-numeric input
+        if (!/^\d+(\.\d*)?$/.test(raw)) return null;
+
+        // Add thousands commas
+        const num = Number(raw);
+        if (isNaN(num)) return null;
+        // Preserve decimals if present
+        const [intPart, decPart] = raw.split('.');
+        let formatted = Number(intPart).toLocaleString();
+        if (decPart !== undefined) {
+            formatted += '.' + decPart;
+        }
+        return formatted;
+    }
+
+    const input = e.target;
+    const prev = input.value;
+    const start = input.selectionStart ?? prev.length;
+
+    // How many digits were to the left of the caret
+    const digitsLeft = (prev.slice(0, start).match(/\d/g) || []).length;
+
+    const formatted = formatFn(prev);
+    if (formatted == null) return;
+
+    // Apply formatted value
+    input.value = formatted;
+
+    // Restore caret after same number of digits
+    let pos = 0;
+    let seenDigits = 0;
+    while (pos < formatted.length && seenDigits < digitsLeft) {
+        if (/\d/.test(formatted[pos])) seenDigits++;
+        pos++;
+    }
+
+    input.setSelectionRange(pos, pos);
+}

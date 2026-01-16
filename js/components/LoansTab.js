@@ -4,7 +4,7 @@ import * as api from '../api.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import Tooltip from './Tooltip.js';
 
-const renderExtras = () => ({ type, id, text }) => {
+const renderExtras = (actingAs) => ({ type, id, text }) => {
 
     const nodes = [];
 

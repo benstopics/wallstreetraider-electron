@@ -12,6 +12,33 @@ const REDDIT_WIDGET = 'assets/reddit-widget.png';
 const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
+    // {
+
+    // },
+    {
+        ver: "v10.0.11",
+        items: [
+            "Settings menu", // Todo
+            "Submit string input modals with Enter key",
+            "Savescumming support (advanced game saving/loading, custom save names, fix exit game)", // TODO - /A–Za–z0–9_-./
+            "Fix loan tab softlocking due to syntax error",
+            "Major command prompt improvements including autocomplete preview and help text",
+            "Market heat maps for companies and sectors",
+            "Include industry and market reports pages in navigation history",
+            "Changed time-of-day to progress bar to eliminate confusion",
+            "Migrate Interest Rate Swaps from Win32 to Electron",
+            "Interest Rate Swaps tab for listing and terminating contracts", // TODO
+            "Migrate Advanced Options from Win32 to Electron",
+            "Migrate Picklist from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Database Search from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Settings/Cheats Menu from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Change Law Firm from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Spread Rumors from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Harassing Lawsuit from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Capital Contributions from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "/customdata API endpoint for mods to store custom game data", // TODO
+        ]
+    },
     {
         ver: "v10.0.10",
         items: [

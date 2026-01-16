@@ -4,6 +4,7 @@ import Modal from './Modal.js';
 
 
 export default function InfoModal({ show, text, onClose }) {
+
     return html`<${Modal} show=${show} onClose=${onClose}>
         ${(text ?? '').split(/\r\r|\r|\n/).map((line, index) => html`
             <div key=${index} className="mb-2">

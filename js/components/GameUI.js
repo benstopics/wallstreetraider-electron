@@ -49,8 +49,9 @@ const GameUI = () => {
     const timeOfDayHours = Math.floor(timeOfDayHoursFloat) % 12 || 12; // Convert to 12-hour format
     const timeOfDayMinutes = Math.floor((timeOfDayHoursFloat - Math.floor(timeOfDayHoursFloat)) * 60);
     const formattedTimeOfDay = `${timeOfDayHours}:${timeOfDayMinutes.toString().padStart(2, '0')} ${timeOfDayHours >= 12 ? 'PM' : 'AM'}`;
+    const timeOfDayPct = currentTime / 17;
 
-    const gameDate = `${months[currentMonth - 1]} ${currentDay}, ${currentYear} (Q${currentQuarter}) ${formattedTimeOfDay}`;
+    const gameDate = `${months[currentMonth - 1]} ${currentDay}, ${currentYear} (Q${currentQuarter})`;
 
     return html`
     <div class="flex flex-col h-full">
@@ -60,8 +61,11 @@ const GameUI = () => {
             <!-- Left Column -->
             <div class="flex flex-col w-1/6 gap-2">
                 <!-- Date and Time -->
-                <div class="flex fixed-width date-display justify-center items-center w-full" style="height: 35px;">
+                <div class="flex flex-col fixed-width date-display justify-center items-center w-full" style="height: 35px;">
                     ${gameDate}
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-1">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style=${`width: ${timeOfDayPct * 100}%;`}></div>
+                    </div>
                 </div>
                 
                 <!-- Balance Sheet -->

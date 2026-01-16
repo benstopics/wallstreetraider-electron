@@ -37,7 +37,17 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
             <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
             <br/>
             <div class="mb-4">${insertCurrencySymbols(text)}</div>
-            <input type="text" class="modal-input" value=${inputValue} onInput=${(e) => setInputValue(e.target.value)} /><br/>
+            <input
+                type="text"
+                class="modal-input"
+                value=${inputValue}
+                onInput=${(e) => setInputValue(e.target.value)}
+                onKeyDown=${(e) => {
+                    if (e.key === 'Enter') {
+                        onSubmit(inputValue);
+                    }
+                }}
+            /><br/>
         </div>
         <br/>
         <div class="flex justify-between items-center mb-4">

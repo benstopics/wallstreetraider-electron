@@ -23,7 +23,7 @@ function ActingAsDropdown() {
     };
 
     return html`
-        <div class="w-full">
+        <div style="width: 300px;" class="flex flex-col gap-1">
             <div class="label flex flex-row justify-between" style="height: 20px">
                 <small>Acting As</small>
                 <div class="flex flex-row">

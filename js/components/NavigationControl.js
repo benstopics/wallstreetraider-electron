@@ -6,9 +6,13 @@ import * as api from '../api.js';
 function NavigationControl() {
 
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
+    const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const playerId = api.useGameStore(s => s.gameState.playerId);
     const playerName = api.useGameStore(s => s.gameState.playerName);
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const activeIndustryNum = api.useGameStore(s => s.gameState.activeIndustryNum);
+
+    const activePage = activeIndustryNum >= 0 ? `industry-${activeIndustryNum}` : `asset-${activeEntityNum}`;
 
     const companyMap = new Map(
         (allCompanies ?? [])
@@ -16,13 +20,20 @@ function NavigationControl() {
             .map(c => [c.id, { name: c.name, symbol: c.symbol }])
     );
 
+    const industryMap = new Map(
+        (allIndustries ?? [])
+            .concat([{ id: 0, name: 'Market Reports' }])
+            .map(ind => [ind.id, { name: ind.name }])
+    );
+
     const options = api.navHistory
-        .map(id => ({ id, ...companyMap.get(id) }))
+        .map(page => page.type === 'industry' ? ({ id: page.id, type: 'industry', ...industryMap.get(page.id) }) : ({ id: page.id, type: 'asset', ...companyMap.get(page.id) }))
         .filter(c => c.name);
 
     const onChange = (e) => {
-        const id = parseInt(e.target.value, 10);
-        api.setViewAsset(id);
+        const [type, idStr] = e.target.value.split('-');
+        const id = parseInt(idStr, 10);
+        api.gotoPage({ id, type });
     };
 
     return api.navHistory.length === 0 ? '' : html`
@@ -36,8 +47,8 @@ function NavigationControl() {
                         <div class="flex items-center gap-2" style="height:25px">
                             <button class="btn ${api.navPointerIdx >= api.navHistory.length - 1 ? 'invisible' : ''}" onclick=${() => api.goBack()}><b>←</b></button>
                         </div>
-                        <select class="basic flex-grow w-full text-center" value=${activeEntityNum} onChange=${onChange}>
-                            ${options.map(opt => html`<option value=${opt.id}>${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)}
+                        <select class="basic flex-grow w-full text-center" value=${activePage} onChange=${onChange}>
+                            ${options.map(opt => html`<option value="${opt.type}-${opt.id}">${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)}
                         </select>
                         <div class="flex items-center gap-2" style="height:25px">
                             <button class="btn ${api.navPointerIdx <= 0 ? 'invisible' : ''}" onclick=${() => api.goForward()}><b>→</b></button>
