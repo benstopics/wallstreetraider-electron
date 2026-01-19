@@ -68,6 +68,8 @@ export const UI_MARKET_HEATMAP = 33;
 export const UI_INDUSTRY_HEATMAP = 34;
 export const UI_INDUSTRIES_HEATMAP = 35;
 export const UI_COMPANIES_HEATMAP = 36;
+export const UI_CORP_SWAPS_PORTFOLIO = 37;
+export const UI_PLAYER_SWAPS_PORTFOLIO = 38;
 
 export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
@@ -343,6 +345,8 @@ export async function repayLoan() { await postNoArg('/repay_loan'); }
 export async function advanceFunds() { await postNoArg('/advance_funds'); }
 export async function callInAdvance(id) { await postIdArg('/call_in_advance', id); }
 export async function interestRateSwaps() { await postNoArg('/interest_rate_swaps'); }
+export async function viewSwapDetails(id) { await postIdArg('/view_swap_details', id); }
+export async function terminateSwap(id) { await postIdArg('/terminate_swap', id); }
 
 /* Bank/Insurance Specific */
 export async function setBankAllocation() { await postNoArg('/set_bank_allocation'); }

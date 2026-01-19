@@ -27,7 +27,7 @@ const CHANGELOG = [
             "Include industry and market reports pages in navigation history",
             "Changed time-of-day to progress bar to eliminate confusion",
             "Migrate Interest Rate Swaps from Win32 to Electron",
-            "Interest Rate Swaps tab for listing and terminating contracts", // TODO
+            "Interest Rate Swaps tab for viewing and managing swaps",
             "Migrate Advanced Options from Win32 to Electron",
             "Migrate Picklist from Win32 to Electron", // TODO: Convert from Win32 to Electron
             "Migrate Database Search from Win32 to Electron", // TODO: Convert from Win32 to Electron
@@ -36,7 +36,9 @@ const CHANGELOG = [
             "Migrate Spread Rumors from Win32 to Electron", // TODO: Convert from Win32 to Electron
             "Migrate Harassing Lawsuit from Win32 to Electron", // TODO: Convert from Win32 to Electron
             "Migrate Capital Contributions from Win32 to Electron", // TODO: Convert from Win32 to Electron
-            "/customdata API endpoint for mods to store custom game data", // TODO
+            "CustomData API endpoint for mods to store custom game data", // TODO
+            "Localization support framework", // TODO - Need to make a menu for it and get first language added
+            "Add Microsoft Visual C++ to Steam Common Redistributables installation list",
         ]
     },
     {

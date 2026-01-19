@@ -104,12 +104,6 @@ function FinancialsTab() {
                             label="Trade T-Bills"
                             color="brown"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.interestRateSwaps} 
-                            label="Interest Rate Swaps"
-                            color=""
-                        />
                 </div>
                 <div class="flex flex-row w-full h-full gap-2 min-h-0">
                     ${activeEntityNum < 10 ? html`

@@ -39,9 +39,9 @@ app.whenReady().then(() => {
 
     wsrProcess.unref();
 
-    wsrProcess.on('exit', () => {
-        app.quit();
-    });
+    // wsrProcess.on('exit', () => {
+    //     app.quit();
+    // });
 
     // Sleep a bit to ensure wsr.exe has started
     setTimeout(() => {

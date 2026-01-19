@@ -15,6 +15,7 @@ import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import LoansTab from './LoansTab.js';
 import CashflowTab from './CashflowTab.js';
 import CommandPrompt from './CommandPrompt.js';
+import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 
 const Tab = Tabs.Tab;
 
@@ -273,6 +274,9 @@ const IndustrialView = () => {
                     <//>` : ''}
                     <${Tab} label="Stocks & Bonds" id=${api.UI_CORP_STOCKS_BONDS_PORTFOLIO}>
                         <${PortfolioTab} />
+                    <//>
+                    <${Tab} label="Swaps" id=${api.UI_CORP_SWAPS_PORTFOLIO}>
+                        <${InterestRateSwapsTab} />
                     <//>
                     <${Tab} label="Options" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
                         <${OptionsTab} />

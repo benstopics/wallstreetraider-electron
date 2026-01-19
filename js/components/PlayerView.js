@@ -12,6 +12,7 @@ import PortfolioTab from './PortfolioTab.js';
 import CommandPrompt from './CommandPrompt.js';
 import FinancialsTab from './FinancialsTab.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 
 const Tab = Tabs.Tab;
 
@@ -52,6 +53,9 @@ const PlayerView = () => {
                         <//>
                         <${Tab} label="Stocks & Bonds" id=${api.UI_PLAYER_STOCKS_BONDS_PORTFOLIO}>
                             <${PortfolioTab} />
+                        <//>
+                        <${Tab} label="Swaps" id=${api.UI_PLAYER_SWAPS_PORTFOLIO}>
+                            <${InterestRateSwapsTab} />
                         <//>
                         <${Tab} label="Options" id=${api.UI_PLAYER_OPTIONS_PORTFOLIO}>
                             ${html`<${OptionsTab} />`}
