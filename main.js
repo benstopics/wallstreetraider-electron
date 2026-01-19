@@ -7,7 +7,8 @@ let mainWindow;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        frame: true,
+        frame: false,
+        transparent: true,
         show: false,
         autoHideMenuBar: true,
         icon: path.join(__dirname, 'assets', 'icon.ico'),
