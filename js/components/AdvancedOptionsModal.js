@@ -434,7 +434,6 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
 
       <div class="mt-3 flex flex-wrap gap-2">
         <div class="flex flex-wrap gap-2">
-          <button class="btn modal" onClick=${onListOptions}>LIST OPTIONS</button>
           <button class="btn modal" onClick=${onCloseAll}>CLOSE ALL OPTIONS</button>
         </div>
       </div>

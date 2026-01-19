@@ -81,33 +81,33 @@ export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
     // Step 2: Determine max clean line length
     const maxLength = Math.max(...cleanedLines.map(({ text }) => text.length));
 
-    return html`<div class="whitespace-pre-wrap">
+    return html`<div class="whitespace-pre-wrap flex flex-col">
         ${cleanedLines.map(({ raw, text, link }) => {
-        if (text === '') return ' ';
+            if (text === '') return ' ';
 
-        const idFound = link?.id > 0 || (link?.id && link?.id.includes('|'));
+            const idFound = link?.id > 0 || (link?.id && link?.id.includes('|'));
 
-        const classes = idFound && onLink
-            ? 'fixed-width cursor-pointer hover:bg-blue-900 text-blue-400'
-            : 'fixed-width';
+            const classes = idFound && onLink
+                ? 'fixed-width cursor-pointer hover:bg-blue-900 text-blue-400'
+                : 'fixed-width';
 
-        const handler = idFound ? () => onLink && onLink(link) : null;
+            const handler = idFound ? () => onLink && onLink(link) : null;
 
-        // If extras will be rendered, pad line with spaces
-        const padded = (renderExtras && link)
-            ? text.padEnd(maxLength, ' ')
-            : idFound ? text : api.renderHyperlinks(text, ({ id, type }) => {
-                if (type === 'C') api.setViewAsset(id);
-                else if (type === 'I') api.viewIndustry(id);
-            }, hyperlinkRegex);
+            // If extras will be rendered, pad line with spaces
+            const padded = (renderExtras && link)
+                ? text.padEnd(maxLength, ' ')
+                : idFound ? text : api.renderHyperlinks(text, ({ id, type }) => {
+                    if (type === 'C') api.setViewAsset(id);
+                    else if (type === 'I') api.viewIndustry(id);
+                }, hyperlinkRegex);
 
-        return html`<div class="flex flex-row">
-                <div class=${classes} onClick=${handler}>
-                    ${padded}
-                </div>
-                ${renderExtras && link && renderExtras({ ...link, text })}
-            </div>`;
-    })}
+            return html`<div class="flex flex-row">
+                    <div class=${classes} onClick=${handler}>
+                        ${padded}
+                    </div>
+                    ${renderExtras && link && renderExtras({ ...link, text })}
+                </div>`;
+        })}
     </div>`;
 }
 

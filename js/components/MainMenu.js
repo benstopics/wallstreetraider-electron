@@ -28,8 +28,9 @@ const CHANGELOG = [
             "Changed time-of-day to progress bar to eliminate confusion",
             "Migrate Interest Rate Swaps from Win32 to Electron",
             "Interest Rate Swaps tab for viewing and managing swaps",
+            "Fix Earnings popups w/ menu setting",
             "Migrate Advanced Options from Win32 to Electron",
-            "Migrate Picklist from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Picklist from Win32 to Electron",
             "Migrate Database Search from Win32 to Electron", // TODO: Convert from Win32 to Electron
             "Migrate Settings/Cheats Menu from Win32 to Electron", // TODO: Convert from Win32 to Electron
             "Migrate Change Law Firm from Win32 to Electron", // TODO: Convert from Win32 to Electron

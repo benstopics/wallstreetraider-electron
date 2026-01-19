@@ -11,17 +11,20 @@ import InfoModal from './components/InfoModal.js';
 import NewGameSetupModal from './components/NewGameSetupModal.js';
 import AdvancedOptionsModal from './components/AdvancedOptionsModal.js';
 import InterestRateSwapsModal from './components/InterestRateSwapsModal.js';
+import TextAnnounceModal from './components/TextAnnounceModal.js';
 
 const logos = [
     { src: "assets/roninsoft_logo.png", backgroundColor: "#ffffff" },
     { src: "assets/hackjackgames_logo.png", backgroundColor: "#000000" }
 ];
 
+const isDev = process.env.NODE_ENV?.trim() == 'development';
+
 const AppInner = () => {
     const { helpShown, hideHelp, setGameState } = api.useWSRContext();
 
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
-    const splashScreenPlayed = api.useGameStore(s => s.gameState.splashScreenPlayed);
+    const splashScreenPlayed = isDev ? true : api.useGameStore(s => s.gameState.splashScreenPlayed);
     const gameLoaded = api.useGameStore(s => s.gameState.gameLoaded);
     const isLoading = api.useGameStore(s => s.gameState.isLoading);
     const modalType = api.useGameStore(s => s.gameState.modalType);
@@ -127,7 +130,7 @@ const AppInner = () => {
             holdMs=${1500}
             blackoutMs=${700}
             exitFadeMs=${700}
-            show=${false && !splashScreenPlayed}
+            show=${!splashScreenPlayed}
         />
         <div class="app-container">
             ${gameLoaded ? html`<${GameUI} />`
@@ -181,6 +184,13 @@ const AppInner = () => {
                 onSubmit=${(newState) => {
                     api.modalResult(api.serialize({...newState, buttonId: "OFFER"}));
                 }}
+            />
+            <${TextAnnounceModal}
+                show=${modalType === 8}
+                title=${modalTitle}
+                text=${modalText}
+                onSubmit=${(value) => { api.modalResult(value); }}
+                onCancel=${hideModal}
             />
         </div>
     `;

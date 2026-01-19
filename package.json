@@ -5,7 +5,7 @@
     "description": "Wall $treet Raider Electron UI",
     "author": "Ben Ward",
     "scripts": {
-        "start": "electron .",
+        "start": "set NODE_ENV=development && electron .",
         "pack": "electron-builder --dir --win"
     },
     "devDependencies": {
