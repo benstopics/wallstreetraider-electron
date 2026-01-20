@@ -1,25 +1,27 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
-import { insertCurrencySymbols } from './helpers.js';
+import { insertCurrencySymbols, renderLines } from './helpers.js';
 import Modal from './Modal.js';
 
 
 export default function InputStringModal({ show, title, text, defaultValue, onSubmit, onCancel }) {
-    const [inputValue, setInputValue] = useState(defaultValue || '');
+    const [inputValue, setInputValue] = useState((defaultValue || '').trim());
 
     useEffect(() => {
-        setInputValue(defaultValue || '');
-    }, [defaultValue]);
+        if (show) {
+            setInputValue((defaultValue || '').trim());
+        }
+    }, [defaultValue, show]);
 
     if (text?.includes('_____')) {
         const data = text.split('_____');
-        const actualText = data[0].trim();
+        const lines = data[0].trim().split('\r');
         const options = data[1].trim().split('|').map(kv => kv.split('=')).map(([k, v]) => ({ value: k.trim(), label: v.trim() }));
 
         return html`<${Modal} show=${show}>
             <div>
                 <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
                 <br/>
-                <div class="mb-4">${insertCurrencySymbols(actualText)}</div>
+                <div class="mb-4">${renderLines(lines)}</div>
                 <select class="basic flex-grow w-full" value=${inputValue} onChange=${(e) => setInputValue(e.target.value)}>
                     ${options.map(opt => html`<option value=${opt.value}>${opt.label}</option>`)}
                 </select>

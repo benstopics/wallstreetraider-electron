@@ -1,4 +1,4 @@
-import { html, render, useState, useEffect, useRef } from '../lib/preact.standalone.module.js';
+import { html, render, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import { formatCurrency } from './helpers.js';
 import * as api from '../api.js';
@@ -10,36 +10,6 @@ const StreamingQuotes = () => {
     const quotes = api.useGameStore(s => s.gameState.streamingQuotesList) || [];
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const activeEntityName = api.useGameStore(s => s.gameState.activeEntityName);
-
-    // Persist direction (up/down) per quote so the UI stays green until price drops,
-    // and stays red until price rises. This avoids "flicker" when backend only
-    // sends one-tick deltas.
-    const lastPriceRef = useRef(new Map()); // id -> last price
-    const lastDirRef = useRef(new Map());   // id -> -1|0|1
-
-    const getDirClass = (q) => {
-        const id = q.id;
-        const lastPrice = lastPriceRef.current.get(id);
-        const lastDir = lastDirRef.current.get(id) ?? 0;
-        const price = Number(q.price);
-
-        let dir = lastDir;
-        if (Number.isFinite(price)) {
-            if (Number.isFinite(lastPrice)) {
-                if (price > lastPrice) dir = 1;
-                else if (price < lastPrice) dir = -1;
-                // else keep prior dir
-            } else if (Number.isFinite(q.priceChange)) {
-                // First observation: fallback to provided priceChange if available.
-                if (q.priceChange > 0) dir = 1;
-                else if (q.priceChange < 0) dir = -1;
-            }
-            lastPriceRef.current.set(id, price);
-            lastDirRef.current.set(id, dir);
-        }
-
-        return dir > 0 ? 'positive' : dir < 0 ? 'negative' : 'neutral';
-    };
 
     return html`
         <div class="panel">
@@ -65,7 +35,7 @@ const StreamingQuotes = () => {
                 >
                     <span class="quote-symbol text-gray-400">${quote.symbol}</span>
                     <span class="quote-name">${quote.name}</span>
-                    <span class=${`fixed-width quote-price ${getDirClass(quote)}`}>
+                    <span class=${`fixed-width quote-price ${quote.priceChange > 0 ? 'positive' : quote.priceChange < 0 ? 'negative' : 'neutral'}`}>
                         $${formatCurrency(quote.price)}
                     </span>
                     <span class="ml-2">

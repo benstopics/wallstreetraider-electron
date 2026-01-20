@@ -117,8 +117,15 @@ const IndustrialView = () => {
                     ${!api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
                         && actingAsId !== activeEntityNum // Company cannot sue itself
                         ? html`<${ActingAsRequiredButton}
-                        onClick=${() => api.harrassingLawsuit(activeEntityNum)} 
+                        onClick=${() => api.harrassingLawsuit(activeEntityNum)}
                         label="Harrassing Lawsuit\n${actingAsSymbol} vs ${activeEntitySymbol}"
+                        color="red"
+                    />` : ''}
+                    ${!api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
+                        && actingAsId !== activeEntityNum // Company cannot spread rumors about itself
+                        ? html`<${ActingAsRequiredButton}
+                        onClick=${() => api.spreadRumors(activeEntityNum)}
+                        label="Spread Rumors\nabout ${activeEntitySymbol}"
                         color="red"
                     />` : ''}
                     ${activeIndustryId === api.INSURANCE_IND || activeIndustryId === api.SECURITIES_BROKER_IND ? html`<${ActingAsRequiredButton}

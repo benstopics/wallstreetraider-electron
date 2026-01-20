@@ -187,7 +187,6 @@ const CHANGELOG = [
 
 const MainMenu = () => {
     const [quote, setQuote] = useState('');
-    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -202,28 +201,6 @@ const MainMenu = () => {
         })();
     }, []);
 
-    // Close settings dropdown when clicking outside
-    useEffect(() => {
-        if (!settingsOpen) return;
-        const onDown = (e) => {
-            const el = e.target;
-            // If click is inside the settings wrapper, ignore.
-            if (el?.closest?.('.wsr-settings-wrap')) return;
-            setSettingsOpen(false);
-        };
-        window.addEventListener('mousedown', onDown, true);
-        return () => window.removeEventListener('mousedown', onDown, true);
-    }, [settingsOpen]);
-
-    const safe = async (fn) => {
-        try {
-            await fn();
-        } catch (e) {
-            console.error(e);
-            alert(e?.message || String(e));
-        }
-    };
-
     return html`
     <div class="wsr-root">
       <${VideoBackground} />
@@ -236,20 +213,7 @@ const MainMenu = () => {
               <button class="btn green main-menu" onClick=${api.newGame}>New Game</button>
             </div>
 
-          <div class="wsr-topbar-right">
-            <div class="wsr-settings-wrap menu-wrap">
-              <button class="btn main-menu" onClick=${() => setSettingsOpen(v => !v)}>Settings</button>
-              ${settingsOpen && html`
-                <div class="menu-dropdown" role="menu">
-                  <button onMouseDown=${(e) => { e.preventDefault(); setSettingsOpen(false); queueMicrotask(() => safe(api.unethicalScenarios)); }}>Unethical Scenarios</button>
-                  <button onMouseDown=${(e) => { e.preventDefault(); setSettingsOpen(false); queueMicrotask(() => safe(api.toggleSuppressPopups)); }}>Suppress Popups</button>
-                  <button onMouseDown=${(e) => { e.preventDefault(); setSettingsOpen(false); queueMicrotask(() => safe(api.enableCheats)); }}>Enable Cheats</button>
-                  <button onMouseDown=${(e) => { e.preventDefault(); setSettingsOpen(false); queueMicrotask(() => safe(api.toggleFullscreen)); }}>Fullscreen</button>
-                </div>
-              `}
-            </div>
           <div class="wsr-version">Early Access</div>
-          </div>
         </header>
 
         <main class="wsr-main">

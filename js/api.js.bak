@@ -259,48 +259,7 @@ export async function getQuoteOfTheDay() { return getJSON('/quote'); }
 export async function setActiveUIReport(uiId) { await postIdArg('/set_active_ui_report', uiId); }
 
 export async function getAssetChart(id) {
-    // Some Jenkins builds don't return chart history until later (e.g., after Q2 starts).
-    // The UI should still render charts early in the game, so we provide a bounded
-    // fallback: a flat series based on the latest known value.
-    const buildFallback = () => {
-        const gs = gameStore.getState?.().gameState || {};
-        const month = Number.isFinite(gs.currentMonth) ? gs.currentMonth : 0;
-        const year = Number.isFinite(gs.currentYear) ? gs.currentYear : 0;
-
-        const idNum = (typeof id === 'string') ? Number(id) : id;
-        let v = null;
-
-        // Player / human net worth chart.
-        if (idNum === HUMAN1_ID) v = gs.netWorth;
-        // Macro charts (best-effort).
-        else if (idNum === GNP_RATE_ID) v = gs.gnpRate ?? gs.gdpRate ?? gs.gdp;
-        else if (idNum === PRIME_RATE_ID) v = gs.primeRate;
-
-        // Stocks shown in Streaming Quotes.
-        if (v == null) {
-            const sq = Array.isArray(gs.streamingQuotesList) ? gs.streamingQuotesList : [];
-            const hit = sq.find(q => Number(q?.id) === idNum);
-            if (hit && Number.isFinite(hit.price)) v = hit.price;
-        }
-
-        // Last resort: 0 so chart can still paint.
-        if (!Number.isFinite(v)) v = 0;
-
-        return {
-            prices: [v, v, v, v, v, v],
-            baseMonth: month,
-            baseYear: year,
-        };
-    };
-
-    try {
-        const data = await postIdArg('/asset_chart', id);
-        if (data && Array.isArray(data.prices) && data.prices.length >= 2) return data;
-        return buildFallback();
-    } catch (e) {
-        console.error(e);
-        return buildFallback();
-    }
+    return postIdArg('/asset_chart', id);
 }
 
 /* Trading Center - Stocks */
@@ -415,38 +374,8 @@ export async function increaseEarnings() { await postNoArg('/increase_earnings')
 /* Legal */
 export async function changeLawFirm() { await postNoArg('/change_law_firm'); }
 export async function antitrustLawsuit(id) { await postIdArg('/antitrust_lawsuit', id); }
-
 export async function harrassingLawsuit(id) { await postIdArg('/harrassing_lawsuit', id); }
 export async function spreadRumors(id) { await postIdArg('/spread_rumors', id); }
-
-// Extra menu tools
-export async function unethicalScenarios() { return postNoArg('/unethical_scenarios'); }
-export async function toggleSuppressPopups() { return postNoArg('/toggle_suppress_popups'); }
-export async function enableCheats() { return postNoArg('/enable_cheats'); }
-
-// Fullscreen toggle (Electron if available, otherwise browser fullscreen API)
-export function toggleFullscreen() {
-    try {
-        // Electron preload bridge (if the host provides it)
-        if (window?.electron?.toggleFullscreen) {
-            return window.electron.toggleFullscreen();
-        }
-        if (window?.electron?.setFullscreen) {
-            // Some builds expose a setter that toggles internally
-            return window.electron.setFullscreen();
-        }
-
-        // Browser fallback
-        if (!document.fullscreenElement) {
-            return document.documentElement.requestFullscreen?.();
-        }
-        return document.exitFullscreen?.();
-    } catch (e) {
-        console.error('toggleFullscreen failed', e);
-        // Re-throw so Toolbar.safe() can show a user message
-        throw e;
-    }
-}
 
 /* Market Reports */
 export async function viewCurrentInterestRates() { await postNoArg('/view_current_interest_rates'); }
@@ -526,25 +455,6 @@ export async function viewIndustry(id) {
     shiftNavHistory({ id, type: 'industry' });
 }
 
-// Open the Market Heat Map (IndustryView -> "Heat Maps" tab) from anywhere (e.g., top Menu).
-// This sets a one-shot tab preference that IndustryView will consume and then clear.
-export async function openMarketHeatMap() {
-    const state = gameStore.getState();
-    const gs = state.gameState || {};
-
-    // Ensure IndustryView is active (needs activeIndustryNum >= 0)
-    const industryId = (typeof gs.activeIndustryNum === 'number' && gs.activeIndustryNum >= 0)
-        ? gs.activeIndustryNum
-        : 0;
-
-    // One-shot preference used by IndustryView to select the proper tab.
-    state.setGameState({ ...gs, uiPreferredIndustryTab: 'Heat Maps' });
-
-    // Navigate to IndustryView and request the correct report id.
-    await viewIndustry(industryId);
-    await setActiveUIReport(UI_MARKET_HEATMAP);
-}
-
 export async function setViewAsset(id) {
 
     await postIdArg('/set_view_asset', id);
@@ -576,6 +486,7 @@ export async function goForward() {
 }
 
 export async function changeActingAs(id) { await postIdArg('/change_acting_as', id); }
+export async function databaseSearch() { await postIdArg('/database_search'); }
 export async function toggleStreamingQuote(id) { await postIdArg('/toggle_streaming_quote', id); }
 
 export const commandMap = {
@@ -833,228 +744,4 @@ export function formatThousandsPreserveCaret(e, formatFn) {
     }
 
     input.setSelectionRange(pos, pos);
-}
-
-/* =========================================================
-   Stop Loss / Stop Gain (client-side)
-   - Stored in localStorage per actingAsId + positionId
-   - Checked on each gameState refresh (see app.js hook)
-   ========================================================= */
-
-// Internal no-refresh helpers (used by stop order auto-sell)
-async function _sellStockNoRefresh(id) { await postIdArg('/sell_stock', id); }
-async function _coverShortStockNoRefresh(id) { await postIdArg('/cover_short_stock', id); }
-async function _sellCorporateBondNoRefresh(id) { await postIdArg('/sell_corporate_bond', id); }
-async function _sellLongGovtBondsNoRefresh() { await postNoArg('/sell_long_govt_bonds'); }
-async function _sellShortGovtBondsNoRefresh() { await postNoArg('/sell_short_govt_bonds'); }
-
-const STOP_STORAGE_KEY = 'wsr_stop_orders_v1';
-
-// In-memory guard to avoid double-selling while polling fast
-const _stopInFlight = new Set();
-let _lastStopCheckMs = 0;
-
-function _nowMs() { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); }
-
-function _safeParseJSON(str, fallback) {
-    try { return JSON.parse(str); } catch { return fallback; }
-}
-
-function _loadStops() {
-    const raw = localStorage.getItem(STOP_STORAGE_KEY);
-    return _safeParseJSON(raw, {});
-}
-
-function _saveStops(obj) {
-    localStorage.setItem(STOP_STORAGE_KEY, JSON.stringify(obj));
-}
-
-function _posKey(positionKey) {
-    // Backward compatible: allow numeric ids, but prefer string keys like "C:123" (type:id)
-    if (positionKey == null) return null;
-    const s = String(positionKey);
-    return s;
-}
-
-export function getStopOrder(actingAsId, positionKey) {
-    const all = _loadStops();
-    const k = _posKey(positionKey);
-    if (!k) return null;
-    return all?.[String(actingAsId)]?.[k] || null;
-}
-
-export function setStopOrder(actingAsId, positionKey, stopLoss, stopGain) {
-    const all = _loadStops();
-    const a = String(actingAsId);
-    const p = _posKey(positionKey);
-    if (!p) return;
-    if (!all[a]) all[a] = {};
-
-    const sl = (stopLoss === null || stopLoss === '' || Number.isNaN(Number(stopLoss))) ? null : Number(stopLoss);
-    const sg = (stopGain === null || stopGain === '' || Number.isNaN(Number(stopGain))) ? null : Number(stopGain);
-
-    // If both are null -> clear
-    if (sl === null && sg === null) {
-        delete all[a][p];
-        if (Object.keys(all[a]).length === 0) delete all[a];
-        _saveStops(all);
-        return;
-    }
-
-    all[a][p] = {
-        stopLoss: sl,
-        stopGain: sg,
-        setAt: Date.now()
-    };
-    _saveStops(all);
-}
-
-export function clearStopOrder(actingAsId, positionKey) {
-    const all = _loadStops();
-    const a = String(actingAsId);
-    const p = _posKey(positionKey);
-    if (!p) return;
-    if (all?.[a]?.[p]) {
-        delete all[a][p];
-        if (Object.keys(all[a]).length === 0) delete all[a];
-        _saveStops(all);
-    }
-}
-
-function _parseHyperlink(line) {
-    const m = line && line.match(/@([A-Z]+)(\d*(\|\d+)*)$/);
-    if (!m) return null;
-    const type = m[1];
-    const value = m[2];
-    return { type, id: value.includes('|') ? value : parseInt(value, 10) };
-}
-
-function _cleanLineText(line) {
-    if (!line) return '';
-    const link = _parseHyperlink(line);
-    let clean = insertCurrencySymbols(line);
-    if (link) clean = clean.slice(0, clean.indexOf('@')).trimEnd();
-    return clean;
-}
-
-function _parseSharePriceFromPortfolioLine(cleanText) {
-    // Strategy: find token ending with '%' (pct held), then next numeric token is share price
-    const tokens = (cleanText || '').trim().split(/\s+/);
-    for (let i = 0; i < tokens.length - 1; i++) {
-        if (tokens[i].endsWith('%')) {
-            const next = tokens[i + 1];
-            const num = Number(String(next).replace(/,/g, '').replace(/[^0-9.\-]/g, ''));
-            if (!Number.isNaN(num)) return num;
-        }
-    }
-    return null;
-}
-
-export async function checkStopOrders(gameState) {
-    // Throttle: polling is ~50ms, we only need a few checks per second
-    const t = _nowMs();
-    if (t - _lastStopCheckMs < 180) return;
-    _lastStopCheckMs = t;
-
-    const currentActingAs = Number(gameState?.actingAsId);
-    if (!currentActingAs) return;
-
-    const allStops = _loadStops();
-    if (!allStops || Object.keys(allStops).length === 0) return;
-
-    // Fast lookup for stock share prices (companyId -> price)
-    const priceByCompanyId = new Map();
-    for (const c of gameState?.allCompanies || []) {
-        const id = Number(c?.id);
-        const p = Number(c?.sharePrice ?? c?.price ?? c?.lastPrice);
-        if (Number.isFinite(id) && Number.isFinite(p)) priceByCompanyId.set(id, p);
-    }
-
-    // Portfolio lines are only present for the currently selected report.
-    // We still use them as a fallback for instruments that don't have a global quote.
-    const portfolioLines = Array.isArray(gameState?.portfolio) ? gameState.portfolio : [];
-
-    const withTempActingAs = async (entityId, fn) => {
-        const target = Number(entityId);
-        if (!Number.isFinite(target) || target <= 0) return;
-        if (target === currentActingAs) {
-            await fn();
-            return;
-        }
-        // Switch acting-as just long enough to execute the sell, then restore.
-        // We avoid UI-report refreshes so it will not pop menus.
-        await changeActingAs(target);
-        try {
-            await fn();
-        } finally {
-            await changeActingAs(currentActingAs);
-        }
-    };
-
-    for (const [entityIdStr, stopsForEntity] of Object.entries(allStops)) {
-        if (!stopsForEntity || typeof stopsForEntity !== 'object') continue;
-        const entityId = Number(entityIdStr);
-        if (!Number.isFinite(entityId) || entityId <= 0) continue;
-
-        for (const [posKey, stop] of Object.entries(stopsForEntity)) {
-            if (!stop) continue;
-
-            // posKey should be like "C:123" or "S:123" etc.
-            const m = String(posKey).match(/^([A-Z]+):(\d+)$/);
-            const type = m ? m[1] : null;
-            const id = m ? Number(m[2]) : null;
-            if (!type || !id) continue;
-
-            const sl = typeof stop.stopLoss === 'number' ? stop.stopLoss : null;
-            const sg = typeof stop.stopGain === 'number' ? stop.stopGain : null;
-
-            // Determine current price
-            let price = null;
-            if (type === 'C' || type === 'S') {
-                price = priceByCompanyId.get(id) ?? null;
-            } else {
-                // Fallback: try to parse from current portfolio report lines (only works when report matches)
-                for (const rawLine of portfolioLines) {
-                    const link = _parseHyperlink(rawLine);
-                    if (!link || link.type !== type || Number(link.id) !== id) continue;
-                    const clean = _cleanLineText(rawLine);
-                    price = _parseSharePriceFromPortfolioLine(clean);
-                    break;
-                }
-            }
-            if (price === null) continue;
-
-            const hitLoss = (sl !== null && price <= sl);
-            const hitGain = (sg !== null && price >= sg);
-            if (!hitLoss && !hitGain) continue;
-
-            const inflightKey = `${entityId}:${type}:${id}`;
-            if (_stopInFlight.has(inflightKey)) continue;
-            _stopInFlight.add(inflightKey);
-
-            // Fire-and-forget: if it fails, keep the stop order so user can retry
-            (async () => {
-                try {
-                    await withTempActingAs(entityId, async () => {
-                        if (type === 'S') {
-                            await _coverShortStockNoRefresh(id);
-                        } else if (type === 'J') {
-                            await _sellCorporateBondNoRefresh(id);
-                        } else if (type === 'GS') {
-                            await _sellShortGovtBondsNoRefresh();
-                        } else if (type === 'GL') {
-                            await _sellLongGovtBondsNoRefresh();
-                        } else {
-                            await _sellStockNoRefresh(id);
-                        }
-                    });
-                    clearStopOrder(entityId, `${type}:${id}`);
-                } catch (e) {
-                    console.error('Stop order sell failed', e);
-                } finally {
-                    setTimeout(() => _stopInFlight.delete(inflightKey), 1500);
-                }
-            })();
-        }
-    }
 }

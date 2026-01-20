@@ -114,14 +114,6 @@ const AppInner = () => {
                     setGameState(newGameState);
                 });
 
-
-                // Stop orders (client-side): check on each refresh without blocking UI.
-                try {
-                    api.checkStopOrders(newGameState);
-                } catch (e) {
-                    console.error('checkStopOrders failed', e);
-                }
-
                 timeoutId = setTimeout(fetchGameState, 50);
             }).catch(console.error);
         };
