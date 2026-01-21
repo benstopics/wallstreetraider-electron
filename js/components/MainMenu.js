@@ -19,7 +19,9 @@ const CHANGELOG = [
     {
         ver: "v10.0.11",
         items: [
+            "Overhaul GUI look and feel with modern styles and improved usability",
             "Submit string input modals with Enter key",
+            "Fix load/new game after exiting a game",
             "Savescumming support (advanced game saving/loading, custom save names, fix exit game)", // TODO - /A–Za–z0–9_-./
             "Fix loan tab softlocking due to syntax error",
             "Major command prompt improvements including autocomplete preview and help text",
@@ -42,7 +44,8 @@ const CHANGELOG = [
             "Add Microsoft Visual C++ to Steam Common Redistributables installation list",
             "Migrated Strategy Manual to Help menu",
             "Display settings modal with zoom controls",
-            "Fix Unethical Scenarios functionality"
+            "Fix Unethical Scenarios functionality",
+            "Fix player cashflow projection",
         ]
     },
     {

@@ -5,6 +5,7 @@ import HelpChapter1Content from './HelpChapter1Content.js';
 import HelpChapter2Content from './HelpChapter2Content.js';
 import HelpChapter3Content from './HelpChapter3Content.js';
 import HelpChapter4Content from './HelpChapter4Content.js';
+import HelpChapter5Content from './HelpChapter5Content.js';
 
 // Help navigation structure with hardcoded hierarchy
 const HELP_STRUCTURE = [
@@ -96,6 +97,33 @@ const HELP_STRUCTURE = [
       { id: 'chap04_IV(P)', label: 'P. Foreign Exchange & Currencies', depth: 1 },
       { id: 'chap04_IV(Q)', label: 'Q. Real Estate & Mortgages', depth: 1 },
       { id: 'chap04_IV(R)', label: 'R. Additional Topics', depth: 1 }
+    ]
+  },
+  {
+    id: 'main-menu',
+    label: 'The Main Menu',
+    depth: 0,
+    component: HelpChapter5Content,
+    subsections: [
+      { id: 'chap05_V(A)', label: 'A. In General', depth: 1 },
+      { id: 'chap05_V(B)', label: 'B. Pulldown Menu Items', depth: 1 },
+      { id: 'chap05_V(B)(1)', label: '1. File Menu', depth: 2 },
+      { id: 'chap05_V(B)(2)', label: '2. Game Options Menu', depth: 2 },
+      { id: 'chap05_V(B)(3)', label: '3. Settings Menu', depth: 2 },
+      { id: 'chap05_V(B)(4)', label: '4. Help Menu', depth: 2 },
+      { id: 'chap05_V(C)', label: 'C. Information Displays', depth: 1 },
+      { id: 'chap05_V(C)(1)', label: '1. Active Entity Selected', depth: 2 },
+      { id: 'chap05_V(C)(2)', label: '2. Industry Group Selected', depth: 2 },
+      { id: 'chap05_V(C)(3)', label: '3. My Balance Sheet', depth: 2 },
+      { id: 'chap05_V(C)(4)', label: '4. Game Status Info', depth: 2 },
+      { id: 'chap05_V(C)(5)', label: '5. Economic Data Display', depth: 2 },
+      { id: 'chap05_V(C)(6)', label: '6. Stock and News Tickers', depth: 2 },
+      { id: 'chap05_V(C)(7)', label: '7. Search Function Buttons', depth: 2 },
+      { id: 'chap05_V(C)(8)', label: '8. Streaming Stock Quotes', depth: 2 },
+      { id: 'chap05_V(D)', label: 'D. Non-Menu Button Functions', depth: 1 },
+      { id: 'chap05_V(D)(1)', label: '1. Go Button', depth: 2 },
+      { id: 'chap05_V(D)(2)', label: '2. Ticker On/Off Button', depth: 2 },
+      { id: 'chap05_V(D)(3)', label: '3. Logo Image (Cheat)', depth: 2 }
     ]
   }
 ];
@@ -219,6 +247,11 @@ export default function HelpModal({ show, onClose }) {
         </ul>
       </nav>
       <div class="help-content" ref=${contentRef}>
+        <blockquote style="border-left: 4px solid #0d5473; padding-left: 16px; margin: 16px 0; background-color: rgba(13, 84, 115, 0.1);">
+        <p><strong>Note: This documentation is a port of the W$R v9.75 Strategy Manual PDF
+          and is a work in progress. Some UI descriptions and navigation instructions may differ
+          from W$R v10 Remastered.</strong></p>
+        </blockquote>
         ${ContentComponent && html`<${ContentComponent} helpLink=${helpLink} />`}
       </div>
     <//>

@@ -40,7 +40,7 @@ const PlayerView = () => {
                         <${Tab} label="Financials" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
                             <${FinancialsTab} />
                         <//>
-                        <${Tab} label="Cashflow">
+                        <${Tab} label="Cashflow" id=${api.UI_PLAYER_CASH_FLOW_PROJECTION}>
                             <div class="flex flex-col items-center">
                                 <${ActingAsRequiredButton} 
                                     disabledMessage=${!actingAs ? "Must be acting as yourself" : false}
@@ -48,6 +48,7 @@ const PlayerView = () => {
                                     label="Browse For Sale Items"
                                     color="green"
                                 />
+                                <br/>
                                 ${renderLines(cashflowProjection, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                             </div>
                         <//>

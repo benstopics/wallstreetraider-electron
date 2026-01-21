@@ -71,9 +71,7 @@ function CashflowTab() {
                 <br />
                 <div class="flex flex-col flex-[3] justify-center items-center">
                     <div class="flex flex-col items-center w-full">
-                        ${activeIndustryId !== api.BANK_IND
-                            ? renderLines(cashflowProjection ?? [], ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)
-                            : 'Cashflow projection unavailable for banks.'}
+                        ${renderLines(cashflowProjection ?? [], ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                     </div>
                 </div>
             </div>
