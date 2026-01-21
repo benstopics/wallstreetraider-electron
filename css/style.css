@@ -1130,7 +1130,7 @@ li.active {
     display: flex;
     align-items: center;
     padding: 2px;
-    background-color: black;
+    /* background-color: black; */
     border: 2px solid #0D5473;
     color: white;
     font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
@@ -1141,27 +1141,35 @@ li.active {
 
 .tab-button {
     white-space: nowrap;
-    font-size: 10px;
-    height: 20px;
-    line-height: 20px;
-    padding: 0 12px;
-    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 100%, 0% 100%);
+    font-size: 11px;
+    height: 28px;
+    line-height: 28px;
+    padding: 0 16px;
     cursor: pointer;
-    background-color: #222;
-    color: #aaa;
-    font-weight: bold;
-    transition: background-color 0.2s, color 0.2s;
+    background-color: rgba(255, 255, 255, 0.04);
+    color: rgba(230, 235, 245, 0.70);
+    font-weight: 600;
+    transition: all 0.15s ease;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: none;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    margin-bottom: -1px;
 }
 
 .tab-button:hover {
-    background-color: #444;
-    color: #fff;
+    background-color: rgba(59, 130, 246, 0.08);
+    color: rgba(230, 235, 245, 0.95);
+    border-color: rgba(59, 130, 246, 0.25);
+    border-bottom: none;
 }
 
-.tab-button:active,
-.tab-button.active {
-    background-color: #666;
-    color: #fff;
+.tab-button:active {
+    background-color: rgba(59, 130, 246, 0.14);
+    color: #ffffff;
+    border-color: rgba(59, 130, 246, 0.40);
+    border-bottom: none;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
 }
 
 
@@ -1169,6 +1177,7 @@ li.active {
 /* Modal overlay and card — Bloomberg-style */
 .modal-overlay {
     position: fixed;
+    height: 100vh;
     inset: 0;
     z-index: 99999;
     display: flex;
@@ -1192,8 +1201,7 @@ li.active {
     box-shadow:
         0 18px 60px rgba(0, 0, 0, .75),
         0 0 0 1px var(--main-bg-color) inset;
-    width: min(550px, 92vw);
-    max-width: 550px;
+    width: min(700px, 92vw);
     max-height: 90vh;
     overflow-y: auto;
     padding: 16px;
@@ -2021,13 +2029,6 @@ html, body, #app, .app-container{
 .negative{ color: var(--negative-color) !important; font-weight: 800; }
 .neutral { color: var(--neutral-color)  !important; }
 
-/* 8) Command line keep dark (prevents white bar effect) */
-.command-line{
-  background: #111827 !important;
-  color: var(--main-fg-color) !important;
-  border-color: rgba(184,107,255,0.35) !important;
-}
-
 /* 9) News scrolling text bold (as requested earlier) */
 .news-headline{ font-weight: 800 !important; }
 
@@ -2037,12 +2038,15 @@ html, body, #app, .app-container{
 
 .toolbar-menu{
   position: relative;
+  z-index: 99999;
   overflow: visible !important;
 }
 
 .toolbar-menu-popover{
-  position: fixed;
-  z-index: 99999;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 99999 !important;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -2054,32 +2058,20 @@ html, body, #app, .app-container{
   box-shadow: 0 18px 40px rgba(0,0,0,0.55);
 }
 
-.toolbar-menu-drag-handle{
-  cursor: grab;
-  user-select: none;
-  padding: 6px 8px;
-  margin: -2px -2px 6px -2px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(184,107,255,0.22), rgba(13,84,115,0.18));
-  color: rgba(230,235,245,0.90);
-  font-weight: 800;
-}
-
-.toolbar-menu-drag-handle:active{ cursor: grabbing; }
-
-.toolbar-menu-item{
+button.toolbar-menu-item{
   width: 100%;
   text-align: left;
   padding: 8px 10px;
   border-radius: 8px;
-  background: transparent;
-  border: 0;
+  background: transparent !important;
+  border: 0 !important;
   color: var(--main-fg-color);
   font-weight: 700;
 }
 
-.toolbar-menu-item:hover{
-  background: rgba(184,107,255,0.18);
+button.toolbar-menu-item:hover{
+  background: rgba(184,107,255,0.18) !important;
+  border-color: transparent !important;
 }
 
 .toolbar-menu-sep{
@@ -2668,26 +2660,7 @@ html, body, #app, .app-container{
   border-color: var(--border) !important;
 }
 
-/* 4) Tab buttons (orange active, cyan hover) */
-.tab-button{
-  background: #1d2026 !important;
-  color: rgba(242,242,242,0.70) !important;
-  border: 1px solid var(--border) !important;
-  font-weight: 800 !important;
-}
-
-.tab-button:hover{
-  background: rgba(0,200,255,0.18) !important;
-  border-color: rgba(0,200,255,0.70) !important;
-  color: var(--bb-white) !important;
-}
-
-.tab-button.active,
-.tab-button:active{
-  background: var(--bb-orange) !important;
-  border-color: #000 !important;
-  color: #000 !important;
-}
+/* 4) Tab buttons - styles defined at line 1142 */
 
 /* 5) Buttons + inputs (flat terminal style) */
 button, .btn, .icon{
@@ -2717,13 +2690,6 @@ input:focus, select:focus, textarea:focus{
   outline: none !important;
   border-color: rgba(0,200,255,0.95) !important;
   box-shadow: 0 0 0 1px rgba(0,200,255,0.35) inset !important;
-}
-
-/* 6) Command line (cyan border like terminal focus) */
-.command-line{
-  background: var(--main-bg-color) !important;
-  border-color: var(--bb-cyan) !important;
-  color: var(--main-fg-color) !important;
 }
 
 /* 7) Links / tickers (cyan) */
@@ -2778,13 +2744,6 @@ div::-webkit-scrollbar-thumb:hover{ background: #666 !important; }
 .negative{ color: var(--negative-color) !important; font-weight: 800; }
 .neutral { color: var(--neutral-color)  !important; }
 
-/* 8) Command line keep dark (prevents white bar effect) */
-.command-line{
-  background: #111827 !important;
-  color: var(--main-fg-color) !important;
-  border-color: rgba(184,107,255,0.35) !important;
-}
-
 /* 9) News scrolling text bold (as requested earlier) */
 .news-headline{ font-weight: 800 !important; }
 
@@ -2794,49 +2753,24 @@ div::-webkit-scrollbar-thumb:hover{ background: #666 !important; }
 
 .toolbar-menu{
   position: relative;
+  z-index: 99999;
   overflow: visible !important;
 }
 
-.toolbar-menu-popover{
-  position: fixed;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px;
-  min-width: 220px;
-  background: linear-gradient(180deg, #161c28, #0f141c);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 10px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.55);
-}
-
-.toolbar-menu-drag-handle{
-  cursor: grab;
-  user-select: none;
-  padding: 6px 8px;
-  margin: -2px -2px 6px -2px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(184,107,255,0.22), rgba(13,84,115,0.18));
-  color: rgba(230,235,245,0.90);
-  font-weight: 800;
-}
-
-.toolbar-menu-drag-handle:active{ cursor: grabbing; }
-
-.toolbar-menu-item{
+button.toolbar-menu-item{
   width: 100%;
   text-align: left;
   padding: 8px 10px;
   border-radius: 8px;
-  background: transparent;
-  border: 0;
+  background: transparent !important;
+  border: 0 !important;
   color: var(--main-fg-color);
   font-weight: 700;
 }
 
-.toolbar-menu-item:hover{
-  background: rgba(184,107,255,0.18);
+button.toolbar-menu-item:hover{
+  background: rgba(184,107,255,0.18) !important;
+  border-color: transparent !important;
 }
 
 .toolbar-menu-sep{
@@ -3033,24 +2967,7 @@ html, body, #app, .app-container{
   border-bottom: 1px solid #000 !important;
 }
 
-.tab-button{
-  background: #1d2026 !important;
-  color: rgba(242,242,242,0.70) !important;
-  border: 1px solid var(--border) !important;
-}
-
-.tab-button:hover{
-  background: rgba(0,200,255,0.18) !important;
-  border-color: rgba(0,200,255,0.70) !important;
-  color: var(--bb-white) !important;
-}
-
-.tab-button.active,
-.tab-button:active{
-  background: var(--bb-orange) !important;
-  border-color: #000 !important;
-  color: #000 !important;
-}
+/* Tab buttons - styles defined at line 1142 */
 
 button, .btn, .icon,
 .basic,
@@ -3068,12 +2985,6 @@ button:hover, .btn:hover, .icon:hover,
   background: rgba(0,200,255,0.10) !important;
 }
 
-.command-line{
-  background: var(--main-bg-color) !important;
-  color: var(--main-fg-color) !important;
-  border: 2px solid var(--bb-cyan) !important;
-}
-
 .positive{ color: var(--bb-green) !important; font-weight: 800 !important; }
 .negative{ color: var(--bb-red) !important; font-weight: 800 !important; }
 .neutral { color: var(--main-fg-color) !important; }
@@ -3081,11 +2992,6 @@ button:hover, .btn:hover, .icon:hover,
 th{ background: #101318 !important; color: var(--bb-yellow) !important; }
 td{ color: var(--main-fg-color) !important; }
 tr:hover td{ background: rgba(0,200,255,0.08) !important; }
-
-.toolbar-menu-popover{
-  background: var(--main-bg-color) !important;
-  border-color: var(--border) !important;
-}
 
 .toolbar-menu-drag-handle{
   background: var(--bb-orange) !important;
@@ -3231,28 +3137,7 @@ body{
   padding: 8px 10px;
 }
 
-/* Tabs: underline accent instead of chunky boxes */
-.tab-button{
-  height: 30px !important;
-  padding: 0 10px !important;
-  border-radius: 10px !important;
-  background: rgba(255,255,255,0.03) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  color: rgba(230,235,245,0.90) !important;
-  font-weight: 800 !important;
-}
-
-.tab-button:hover{
-  background: rgba(59,130,246,0.10) !important;
-  border-color: rgba(59,130,246,0.22) !important;
-}
-
-.tab-button.active,
-.tab-button:active{
-  background: rgba(59,130,246,0.16) !important;
-  border-color: rgba(59,130,246,0.35) !important;
-  box-shadow: 0 0 0 2px rgba(59,130,246,0.12) inset;
-}
+/* Tabs: proper tab styling (not pills/buttons) - styles defined at line 1142 */
 
 /* Buttons: remove old gray gradients, keep strong readability */
 .btn,
@@ -3304,10 +3189,15 @@ input:focus, select:focus, textarea:focus{
 
 /* Notes: remove the "white paper" look, match finetune theme */
 .notes-window{
-  background: linear-gradient(180deg, rgba(21,27,39,0.96), rgba(11,15,21,0.96)) !important;
+  background: linear-gradient(180deg, rgba(21,27,39,0.98), rgba(11,15,21,0.98)) !important;
   border: 1px solid rgba(255,255,255,0.14) !important;
   border-radius: var(--radius-2) !important;
   box-shadow: var(--shadow-2) !important;
+}
+
+/* Calculator window: even less transparent */
+.calc-window{
+  background: linear-gradient(180deg, rgba(21,27,39,0.99), rgba(11,15,21,0.99)) !important;
 }
 
 .notes-header{
@@ -3370,21 +3260,7 @@ input:focus, select:focus, textarea:focus{
   color: var(--header-text) !important;
 }
 
-/* Tabs: cleaner + stronger active/hover, matches finetune */
-.tab-button{
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  color: rgba(230,235,245,0.90) !important;
-}
-.tab-button:hover{
-  background: rgba(59,130,246,0.10) !important;
-  border-color: rgba(59,130,246,0.35) !important;
-}
-.tab-button.active{
-  background: linear-gradient(90deg, rgba(59,130,246,0.22), rgba(168,85,247,0.18)) !important;
-  border-color: rgba(59,130,246,0.55) !important;
-  color: #ffffff !important;
-}
+/* Tabs: styles defined at line 1142 */
 
 /* Force any stray black text to white (inputs/reports) */
 input, textarea, select, option, .modal-input, .report, .report-text{
@@ -3444,21 +3320,7 @@ pre, code{
   color: var(--header-text) !important;
 }
 
-/* Tabs: cleaner + stronger active/hover, matches finetune */
-.tab-button{
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  color: rgba(230,235,245,0.90) !important;
-}
-.tab-button:hover{
-  background: rgba(59,130,246,0.10) !important;
-  border-color: rgba(59,130,246,0.35) !important;
-}
-.tab-button.active{
-  background: linear-gradient(90deg, rgba(59,130,246,0.22), rgba(168,85,247,0.18)) !important;
-  border-color: rgba(59,130,246,0.55) !important;
-  color: #ffffff !important;
-}
+/* Tabs: styles defined at line 1142 */
 
 /* Force any stray black text to white (inputs/reports) */
 input, textarea, select, option, .modal-input, .report, .report-text{
@@ -3515,21 +3377,7 @@ pre, code{
   color: var(--header-text) !important;
 }
 
-/* Tabs: cleaner + stronger active/hover, matches finetune */
-.tab-button{
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  color: rgba(230,235,245,0.90) !important;
-}
-.tab-button:hover{
-  background: rgba(59,130,246,0.10) !important;
-  border-color: rgba(59,130,246,0.35) !important;
-}
-.tab-button.active{
-  background: linear-gradient(90deg, rgba(59,130,246,0.22), rgba(168,85,247,0.18)) !important;
-  border-color: rgba(59,130,246,0.55) !important;
-  color: #ffffff !important;
-}
+/* Tabs: styles defined at line 1142 */
 
 /* Force any stray black text to white (inputs/reports) */
 input, textarea, select, option, .modal-input, .report, .report-text{
@@ -3586,21 +3434,7 @@ pre, code{
   color: var(--header-text) !important;
 }
 
-/* Tabs: cleaner + stronger active/hover, matches finetune */
-.tab-button{
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  color: rgba(230,235,245,0.90) !important;
-}
-.tab-button:hover{
-  background: rgba(59,130,246,0.10) !important;
-  border-color: rgba(59,130,246,0.35) !important;
-}
-.tab-button.active{
-  background: linear-gradient(90deg, rgba(59,130,246,0.22), rgba(168,85,247,0.18)) !important;
-  border-color: rgba(59,130,246,0.55) !important;
-  color: #ffffff !important;
-}
+/* Tabs: styles defined at line 1142 */
 
 /* Force any stray black text to white (inputs/reports) */
 input, textarea, select, option, .modal-input, .report, .report-text{
@@ -3628,15 +3462,6 @@ pre, code{
   color: #f5edff !important;
 }
 
-
-/* =========================================================
-   FIX: Blue rounded bar above the Command Prompt
-   Cause: .suggestion-overlay element inherits .command-line border/padding.
-   CommandPrompt renders a background overlay div with classes:
-     class="command-line suggestion-overlay"
-   If that overlay keeps the border, it shows as a separate cyan bar.
-   ========================================================= */
-
 /* Ensure the overlay is truly an overlay and does NOT draw a border */
 .suggestion-overlay{
   position: absolute !important;
@@ -3648,12 +3473,42 @@ pre, code{
   /* keep text aligned with the input content */
   padding: 2px !important;
   z-index: 0 !important;
+  color: rgba(255, 255, 255, 0.25) !important;
 }
 
 /* Keep the real command input above the overlay */
 input.command-line{
   position: relative !important;
   z-index: 1 !important;
+}
+
+/* Command prompt suggestions dropdown - stays below menu popover, no hover effect on container */
+.command-suggestions {
+  list-style: none;
+  z-index: 99998 !important;
+}
+
+.command-suggestions:hover {
+  border-color: #444 !important;
+  background: #111 !important;
+}
+
+/* Command suggestions list items with active and hover states */
+.command-suggestions li {
+  list-style: none;
+  transition: background 0.1s ease;
+}
+
+.command-suggestions li:hover {
+  background: rgba(184, 107, 255, 0.15) !important;
+}
+
+.command-suggestions li.active {
+  background: rgba(184, 107, 255, 0.25) !important;
+}
+
+.command-suggestions li.active:hover {
+  background: rgba(184, 107, 255, 0.3) !important;
 }
 
 /* Added: WSR Heat Map */
@@ -3774,23 +3629,46 @@ input.command-line{
   color: rgba(255, 255, 255, 0.65);
 }
 
+/* Calculator: make buttons stretch to fill space */
+.calc-body{
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.calc-display{
+  flex-shrink: 0 !important;
+}
+
+.calc-actions{
+  flex-shrink: 0 !important;
+}
+
+.calc-grid{
+  flex: 1 !important;
+  min-height: 0 !important;
+  grid-template-rows: repeat(4, 1fr) !important;
+}
+
+.calc-btn{
+  height: 100% !important;
+  min-height: 46px !important;
+}
+
 /* ======================================================
    Notes / Notepad (draggable)
 */
 
 /* ===== PATCH: Hotkeys modal readability/position (FIX15) =====
    Goal: center the Hotkeys page, make it larger and easier to read.
+   Note: .modal-overlay centering is already handled globally at line 1170-1182.
+   Fixed: Changed from fixed height to max-height to prevent cutoff when centered.
 */
-.modal-overlay{
-  align-items: center !important;
-  justify-content: center !important;
-}
 
 .modal-card.keybinds-modal{
-  width: min(1200px, calc(100vw - 16px)) !important;
-  height: calc(100vh - 16px) !important;
+  width: min(1200px, calc(100vw - 32px)) !important;
   max-width: none !important;
-  max-height: none !important;
+  height: auto !important;
+  max-height: calc(100vh - 32px) !important;
   padding: 22px !important;
   border-radius: 12px !important;
   font-size: 15px;
@@ -3801,4 +3679,20 @@ input.command-line{
 .modal-card.keybinds-modal .keybinds-panel{ font-size: 14px; }
 .modal-card.keybinds-modal .keybinds-grid{ gap: 10px; }
 .modal-card.keybinds-modal .keybinds-bind{ min-height: 34px; font-size: 13px; }
+
+/* =========================================================
+   Tooltip - No stacking context wrapper
+   ========================================================= */
+.tooltip-wrapper {
+  display: inline-block;
+  /* NO position or z-index - wrapper stays in natural stacking order */
+}
+
+.tooltip-popup {
+  /* Position tooltip relative to viewport, then use transform */
+  margin-top: -2.5rem; /* Move up above the trigger */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 /* ===== END PATCH ===== */

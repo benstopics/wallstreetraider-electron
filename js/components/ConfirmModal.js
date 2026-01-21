@@ -1,14 +1,17 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
-import { insertCurrencySymbols } from './helpers.js';
+import { insertCurrencySymbols, renderLines } from './helpers.js';
 import Modal from './Modal.js';
 
 
 export default function ConfirmModal({ show, title, text, onYes, onNo, onCancel }) {
+
+    const lines = text?.trim().split('\r') || [];
+
     return html`<${Modal} show=${show} onClose=${onCancel}>
         <div>
-            <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
+            <div class="text-lg font-bold h-full text-center">${insertCurrencySymbols(title)}</div>
             <br/>
-            <div class="mb-4">${insertCurrencySymbols(text)}</div>
+            <div class="mb-4">${renderLines(lines)}</div>
         </div>
         <br/>
         <div class="flex justify-between items-center mb-4">

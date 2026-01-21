@@ -1,4 +1,4 @@
-import { html } from '../lib/preact.standalone.module.js';
+import { html, useMemo, useState } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import { renderLines } from './helpers.js';
@@ -71,74 +71,8 @@ function PortfolioTab() {
         return m;
     }, [allCompanies]);
 
-    const [stopModal, setStopModal] = useState(null); // { assetId, kind:'loss'|'gain', type, text, priceStr }
-
-    // Auto-trigger happens inside api.checkStopOrders(), called from app.js on each refresh.
-
-    const openStopModal = (kind, posType, assetId, lineText) => {
-        const company = companyById.get(Number(assetId));
-        const cur = getCompanyPrice(company);
-        setStopModal({ kind, posType, assetId, text: lineText || '', currentPrice: cur, priceStr: cur != null ? String(cur) : '' });
-    };
-
-    const submitStopModal = () => {
-        if (!stopModal) return;
-        const p = Number((stopModal.priceStr || '').toString().replace(/[^0-9.\-]/g, ''));
-        if (!Number.isFinite(p) || p <= 0) {
-            setStopModal(null);
-            return;
-        }
-        const assetId = Number(stopModal.assetId);
-        const posType = stopModal.posType || 'C';
-        const kind = stopModal.kind;
-        const key = `${posType}:${assetId}`;
-
-        const existing = api.getStopOrder(actingAsId, key) || {};
-        const nextStopLoss = (kind === 'loss') ? p : (existing.stopLoss ?? null);
-        const nextStopGain = (kind === 'gain') ? p : (existing.stopGain ?? null);
-        api.setStopOrder(actingAsId, key, nextStopLoss, nextStopGain);
-        setStopModal(null);
-    };
-
-    const clearStop = (assetId, posType, kind) => {
-        const key = `${posType || 'C'}:${Number(assetId)}`;
-        const existing = api.getStopOrder(actingAsId, key) || {};
-        const nextStopLoss = (kind === 'loss') ? null : (existing.stopLoss ?? null);
-        const nextStopGain = (kind === 'gain') ? null : (existing.stopGain ?? null);
-        api.setStopOrder(actingAsId, key, nextStopLoss, nextStopGain);
-    };
-
     return html`
             <div class="flex flex-col w-full">
-                ${stopModal ? html`
-                    <${Modal} show=${true} onClose=${() => setStopModal(null)} class="modal-card stop-modal">
-                        <div class="flex items-center justify-between" style="gap: 12px;">
-                            <div class="text-lg font-bold">${stopModal.kind === 'loss' ? 'Stop Loss' : 'Stop Gain'}</div>
-                            <button class="btn" onClick=${() => setStopModal(null)} style="height: 24px;">Close</button>
-                        </div>
-                        <div class="opacity-80" style="margin-top: 6px;">
-                            Current price: <b>${stopModal.currentPrice != null ? stopModal.currentPrice : '�'}</b>
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <div class="text-xs opacity-70" style="margin-bottom: 6px;">Sell automatically when price ${stopModal.kind === 'loss' ? 'falls to' : 'reaches'}:</div>
-                            <input
-                                type="text"
-                                class="modal-input"
-                                value=${stopModal.priceStr}
-                                onInput=${(e) => setStopModal((prev) => prev ? { ...prev, priceStr: e.target.value } : prev)}
-                            />
-                        </div>
-                        <div class="flex justify-between items-center" style="margin-top: 12px; gap: 10px;">
-                            <button class="btn" onClick=${() => { clearStop(stopModal.assetId, stopModal.posType, stopModal.kind); setStopModal(null); }}>
-                                Clear
-                            </button>
-                            <div class="flex gap-2">
-                                <button class="btn" onClick=${() => setStopModal(null)}>Cancel</button>
-                                <button class="btn green" onClick=${submitStopModal}>Save</button>
-                            </div>
-                        </div>
-                    <//>
-                ` : ''}
                 <div class="flex flex-row items-center justify-start gap-5">
                     <div class="items-center flex flex-row justify-center">
                         <${ActingAsRequiredButton} 
@@ -165,27 +99,7 @@ function PortfolioTab() {
                     ${renderLines(portfolio,
                         ({ id }) => id && api.setViewAsset(id),
                         ({ type, id, text }) => {
-                            const isGov = typeof text === 'string' && text.includes('GOVERNMENT');
-                            const assetId = Number(id);
-                            const stopKey = `${type || 'C'}:${assetId}`;
-                            const stop = (actingAsId && Number.isFinite(assetId)) ? (api.getStopOrder(actingAsId, stopKey) || null) : null;
-                            const hasStopLoss = (stop && typeof stop.stopLoss === 'number') ? stop.stopLoss : null;
-                            const hasStopGain = (stop && typeof stop.stopGain === 'number') ? stop.stopGain : null;
                             return html`<div class="flex flex-row stop-btn-row">
-                                ${!isGov && Number.isFinite(assetId) ? html`
-                                    <button
-                                        class=${`btn p-2 stop-btn stop-loss ${hasStopLoss != null ? 'is-set' : ''}`}
-                                        title=${hasStopLoss != null ? `Stop Loss @ ${hasStopLoss}` : 'Set Stop Loss'}
-                                        disabled=${!actingAs}
-                                        onClick=${() => openStopModal('loss', type, assetId, text)}
-                                    >SL</button>
-                                    <button
-                                        class=${`btn p-2 stop-btn stop-gain ${hasStopGain != null ? 'is-set' : ''}`}
-                                        title=${hasStopGain != null ? `Stop Gain @ ${hasStopGain}` : 'Set Stop Gain'}
-                                        disabled=${!actingAs}
-                                        onClick=${() => openStopModal('gain', type, assetId, text)}
-                                    >SG</button>
-                                ` : ''}
                                 <${ActingAsRequiredButton}
                                     disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                                     onClick=${() => (type === "S" ? api.coverShortStock

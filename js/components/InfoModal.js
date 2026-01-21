@@ -1,16 +1,18 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
-import { insertCurrencySymbols } from './helpers.js';
+import { insertCurrencySymbols, renderLines } from './helpers.js';
 import Modal from './Modal.js';
 
 
 export default function InfoModal({ show, text, onClose }) {
 
+    const lines = text?.trim().split('\r') || [];
+
     return html`<${Modal} show=${show} onClose=${onClose}>
-        ${(text ?? '').split(/\r\r|\r|\n/).map((line, index) => html`
-            <div key=${index} className="mb-2">
-                ${insertCurrencySymbols(line)}
+        <div class="h-full p-3">
+            <div>
+                ${renderLines(lines)}
             </div>
-        `)}
+        </div>
         <br/>
         <div class="flex justify-between items-center mb-4">
             <div></div>

@@ -2,15 +2,6 @@ import { html, useEffect, useMemo, useRef, useState } from '../lib/preact.standa
 import '../lib/tailwind.module.js';
 
 // Floating, draggable calculator (does not block the rest of the UI)
-// - Drag by header (unless docked)
-// - Resizable (custom handle + ResizeObserver persistence)
-// - Snap-to-edge on drop
-
-const POS_KEY = 'wsr_calc_pos_v2';
-const SIZE_KEY = 'wsr_calc_size_v1';
-const DOCK_KEY = 'wsr_calc_dock_v1';
-
-const SNAP_PX = 22;
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n));
@@ -20,6 +11,21 @@ function getViewport() {
   const w = Math.max(320, window.innerWidth || 0);
   const h = Math.max(320, window.innerHeight || 0);
   return { w, h };
+}
+
+function centerInViewport(el) {
+  if (!el) return;
+  const vp = getViewport();
+
+  // Assure des dimensions valides (si CSS pas encore appliqué)
+  const w = el.offsetWidth || 360;
+  const h = el.offsetHeight || 460;
+
+  const left = clamp(Math.round((vp.w - w) / 2), 10, vp.w - 40);
+  const top = clamp(Math.round((vp.h - h) / 2), 10, vp.h - 40);
+
+  el.style.left = `${left}px`;
+  el.style.top = `${top}px`;
 }
 
 function safeEval(expr) {
@@ -76,12 +82,9 @@ export default function CalculatorModal({ show, onClose }) {
   const boxRef = useRef(null);
   const inputRef = useRef(null);
   const drag = useRef({ dragging: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 });
-  const resizeRef = useRef({ resizing: false, startX: 0, startY: 0, startW: 0, startH: 0 });
 
   const [expr, setExpr] = useState('');
   const [justEvaluated, setJustEvaluated] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const [dock, setDock] = useState('free'); // free | left | right | bottom
 
   const result = useMemo(() => safeEval(expr), [expr]);
 
@@ -115,90 +118,19 @@ export default function CalculatorModal({ show, onClose }) {
     setJustEvaluated(true);
   };
 
-  // Restore & persist position; drag handlers
+  // Center calculator on open; simple drag handlers
   useEffect(() => {
     if (!show) return;
 
-    // Restore dock
-    try {
-      const d = localStorage.getItem(DOCK_KEY);
-      if (d === 'left' || d === 'right' || d === 'bottom' || d === 'free') setDock(d);
-    } catch {}
-
-    // Restore size
-    try {
-      const rawS = localStorage.getItem(SIZE_KEY);
-      if (rawS) {
-        const s = JSON.parse(rawS);
-        const el = boxRef.current;
-        if (el && typeof s?.w === 'number' && typeof s?.h === 'number') {
-          el.style.width = `${clamp(s.w, 280, 760)}px`;
-          el.style.height = `${clamp(s.h, 200, Math.floor(getViewport().h * 0.86))}px`;
-        }
-      }
-    } catch {}
-
-    // Restore position (or center on first open)
-    let hadSavedPos = false;
-    try {
-      const raw = localStorage.getItem(POS_KEY);
-      if (raw) {
-        const p = JSON.parse(raw);
-        const el = boxRef.current;
-        if (el && typeof p?.left === 'number' && typeof p?.top === 'number') {
-          el.style.left = `${p.left}px`;
-          el.style.top = `${p.top}px`;
-          hadSavedPos = true;
-        }
-      }
-    } catch {
-      // ignore
-    }
-
-    // If there's no saved position, force a true centered default (prevents half-off-screen)
-    try {
-      const el = boxRef.current;
-      if (el && !hadSavedPos) {
-        const vp = getViewport();
-        // Ensure we have dimensions
-        const w = el.offsetWidth || 360;
-        const h = el.offsetHeight || 460;
-        const left = clamp(Math.round((vp.w - w) / 2), 10, vp.w - 40);
-        const top = clamp(Math.round((vp.h - h) / 2), 10, vp.h - 40);
-        el.style.left = `${left}px`;
-        el.style.top = `${top}px`;
-      }
-    } catch {}
-
-    // Observe size changes to persist them (covers both CSS resize and handle resize)
+    // Force center every time the calculator opens
     const el = boxRef.current;
-    let ro;
-    if (el && typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(() => {
-        try {
-          localStorage.setItem(SIZE_KEY, JSON.stringify({ w: el.offsetWidth, h: el.offsetHeight }));
-        } catch {}
-      });
-      ro.observe(el);
+    if (el) {
+      requestAnimationFrame(() => centerInViewport(el));
     }
 
     const onMove = (e) => {
       const el2 = boxRef.current;
-      if (!el2) return;
-
-      if (resizeRef.current.resizing) {
-        const dx = e.clientX - resizeRef.current.startX;
-        const dy = e.clientY - resizeRef.current.startY;
-        const vp = getViewport();
-        const w = clamp(resizeRef.current.startW + dx, 280, 760);
-        const h = clamp(resizeRef.current.startH + dy, 200, Math.floor(vp.h * 0.86));
-        el2.style.width = `${w}px`;
-        el2.style.height = `${h}px`;
-        return;
-      }
-
-      if (!drag.current.dragging) return;
-      if (dock !== 'free') return;
+      if (!el2 || !drag.current.dragging) return;
 
       const dx = e.clientX - drag.current.startX;
       const dy = e.clientY - drag.current.startY;
@@ -210,41 +142,7 @@ export default function CalculatorModal({ show, onClose }) {
     };
 
     const onUp = () => {
-      const el2 = boxRef.current;
-      if (!el2) return;
-
-      if (resizeRef.current.resizing) {
-        resizeRef.current.resizing = false;
-        try {
-          localStorage.setItem(SIZE_KEY, JSON.stringify({ w: el2.offsetWidth, h: el2.offsetHeight }));
-        } catch {}
-        return;
-      }
-
-      if (!drag.current.dragging) return;
       drag.current.dragging = false;
-
-      // Snap to edges if close
-      const vp = getViewport();
-      const rect = el2.getBoundingClientRect();
-      const nearLeft = rect.left <= SNAP_PX;
-      const nearRight = vp.w - rect.right <= SNAP_PX;
-      const nearBottom = vp.h - rect.bottom <= SNAP_PX;
-
-      if (nearBottom) {
-        setDock('bottom');
-        try { localStorage.setItem(DOCK_KEY, 'bottom'); } catch {}
-      } else if (nearLeft) {
-        setDock('left');
-        try { localStorage.setItem(DOCK_KEY, 'left'); } catch {}
-      } else if (nearRight) {
-        setDock('right');
-        try { localStorage.setItem(DOCK_KEY, 'right'); } catch {}
-      } else {
-        try {
-          localStorage.setItem(POS_KEY, JSON.stringify({ left: el2.offsetLeft, top: el2.offsetTop }));
-        } catch {}
-      }
     };
 
     window.addEventListener('mousemove', onMove);
@@ -252,9 +150,8 @@ export default function CalculatorModal({ show, onClose }) {
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
-      try { ro?.disconnect?.(); } catch {}
     };
-  }, [show, dock]);
+  }, [show]);
 
   // Keyboard support (Enter to eval)
   useEffect(() => {
@@ -277,12 +174,12 @@ export default function CalculatorModal({ show, onClose }) {
 
   // Auto-focus input when opened
   useEffect(() => {
-    if (!show || collapsed) return;
+    if (!show) return;
     const t = setTimeout(() => {
       try { inputRef.current?.focus(); } catch {}
     }, 0);
     return () => clearTimeout(t);
-  }, [show, collapsed]);
+  }, [show]);
 
   // Reset any stale input artifacts when opening the calculator
   useEffect(() => {
@@ -304,16 +201,10 @@ export default function CalculatorModal({ show, onClose }) {
     <div class="notes-float calc-float" onClick=${(e) => e.stopPropagation()}>
       <div
         ref=${boxRef}
-        class=${`notes-window calc-window ${collapsed ? 'calc-collapsed' : ''} calc-dock-${dock}`}
+        class="notes-window calc-window"
         style=${{
-          // Position is restored from localStorage; if none is saved we center it on open.
-          left: dock === 'free' ? undefined : undefined,
-          top: dock === 'free' ? undefined : undefined,
-          resize: 'none',
-          minWidth: '280px',
-          minHeight: collapsed ? '56px' : '260px',
-          maxWidth: '760px',
-          maxHeight: '86vh',
+          width: '400px',
+          height: '550px',
           overflow: 'hidden',
         }}
       >
@@ -322,7 +213,6 @@ export default function CalculatorModal({ show, onClose }) {
           onMouseDown=${(e) => {
             const el = boxRef.current;
             if (!el) return;
-            if (dock !== 'free') return;
             drag.current.dragging = true;
             drag.current.startX = e.clientX;
             drag.current.startY = e.clientY;
@@ -332,55 +222,16 @@ export default function CalculatorModal({ show, onClose }) {
           }}
         >
           <div class="notes-title calc-titlebar">
-            <button class="calc-hamburger" title="Menu" onClick=${(e)=>e.stopPropagation()}>☰</button>
             <div class="calc-titletexts">
               <div class="calc-appname">Calculator</div>
-              <div class="calc-mode">Standard</div>
             </div>
           </div>
           <div class="calc-header-actions">
-            <button
-              class="notes-close calc-dock"
-              title="Dock left"
-              onClick=${() => {
-                setDock('left');
-                try { localStorage.setItem(DOCK_KEY, 'left'); } catch {}
-              }}
-            >◧</button>
-            <button
-              class="notes-close calc-dock"
-              title="Dock bottom"
-              onClick=${() => {
-                setDock('bottom');
-                try { localStorage.setItem(DOCK_KEY, 'bottom'); } catch {}
-              }}
-            >▤</button>
-            <button
-              class="notes-close calc-dock"
-              title="Dock right"
-              onClick=${() => {
-                setDock('right');
-                try { localStorage.setItem(DOCK_KEY, 'right'); } catch {}
-              }}
-            >◨</button>
-            <button
-              class="notes-close calc-dock"
-              title="Float"
-              onClick=${() => {
-                setDock('free');
-                try { localStorage.setItem(DOCK_KEY, 'free'); } catch {}
-              }}
-            >⤢</button>
-            <button class="notes-close calc-min" title=${collapsed ? 'Expand' : 'Minimize'} onClick=${() => setCollapsed((v) => !v)}>
-              ${collapsed ? '▢' : '—'}
-            </button>
             <button class="notes-close" title="Close" onClick=${() => onClose?.()}>×</button>
           </div>
         </div>
 
-        ${collapsed
-          ? null
-          : html`<div class="calc-body">
+        <div class="calc-body">
           <div class="calc-display">
             <input
               ref=${inputRef}
@@ -393,7 +244,7 @@ export default function CalculatorModal({ show, onClose }) {
                 setJustEvaluated(false);
               }}
             />
-            <div class="calc-result ">${renderResultText(result)}</div>
+            <div class="calc-result">${renderResultText(result)}</div>
           </div>
 
           <div class="calc-actions">
@@ -410,24 +261,7 @@ export default function CalculatorModal({ show, onClose }) {
             })}
             <button class="btn calc-btn calc-btn-eq" onClick=${evaluate}>=</button>
           </div>
-
-          <div
-            class="calc-resize"
-            title="Resize"
-            onMouseDown=${(e) => {
-              const el = boxRef.current;
-              if (!el) return;
-              if (collapsed) return;
-              resizeRef.current.resizing = true;
-              resizeRef.current.startX = e.clientX;
-              resizeRef.current.startY = e.clientY;
-              resizeRef.current.startW = el.offsetWidth;
-              resizeRef.current.startH = el.offsetHeight;
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          />
-        </div>`}
+        </div>
       </div>
     </div>
   `;

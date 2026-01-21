@@ -1,4 +1,4 @@
-import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
+import { html } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 

@@ -113,15 +113,7 @@ const AppInner = () => {
                 requestAnimationFrame(() => {
                     setGameState(newGameState);
                 });
-
-
-                // Stop orders (client-side): check on each refresh without blocking UI.
-                try {
-                    api.checkStopOrders(newGameState);
-                } catch (e) {
-                    console.error('checkStopOrders failed', e);
-                }
-
+                
                 timeoutId = setTimeout(fetchGameState, 50);
             }).catch(console.error);
         };
@@ -148,59 +140,60 @@ const AppInner = () => {
                     <img src="assets/loading.gif" alt="Loading..." />
                 </div>
             ` : ''}
-            <${ConfirmModal}
-                show=${modalType === 1 || modalType === 2}
-                title=${modalTitle}
-                text=${modalText}
-                onYes=${() => { api.modalResult(1); }}
-                onNo=${() => { api.modalResult(2); }}
-                onCancel=${modalType === 2 ? () => { api.modalResult(3); } : undefined}
-            />
-            <${InputStringModal}
-                show=${modalType === 3}
-                title=${modalTitle}
-                text=${modalText}
-                defaultValue=${modalDefault}
-                onSubmit=${(value) => { api.modalResult(value); }}
-                onCancel=${hideModal}
-            />
-            <${InfoModal}
-                show=${modalType === 4}
-                text=${modalText}
-                onClose=${hideModal}
-            />
-            <${NewGameSetupModal}
-                show=${modalType === 5}
-                onSubmit=${(newSettings) => {
+        </div>
+        <!-- Modals rendered outside app-container to prevent clipping -->
+        <${ConfirmModal}
+            show=${modalType === 1 || modalType === 2}
+            title=${modalTitle}
+            text=${modalText}
+            onYes=${() => { api.modalResult(1); }}
+            onNo=${() => { api.modalResult(2); }}
+            onCancel=${modalType === 2 ? () => { api.modalResult(3); } : undefined}
+        />
+        <${InputStringModal}
+            show=${modalType === 3}
+            title=${modalTitle}
+            text=${modalText}
+            defaultValue=${modalDefault}
+            onSubmit=${(value) => { api.modalResult(value); }}
+            onCancel=${hideModal}
+        />
+        <${InfoModal}
+            show=${modalType === 4}
+            text=${modalText}
+            onClose=${hideModal}
+        />
+        <${NewGameSetupModal}
+            show=${modalType === 5}
+            onSubmit=${(newSettings) => {
             api.modalResult(api.serialize(newSettings));
         }}
-                onCancel=${hideModal}
-            />
-            <${AdvancedOptionsModal}
-                show=${modalType === 6}
-                stateStr=${modalType === 6 ? modalText : ''}
-                title=${modalTitle}
-                onSubmit=${(newState) => {
-                    api.modalResult(api.serialize({...newState, buttonId: "SUBMIT"}));
-                }}
-            />
-            <${HelpModal} show=${helpShown} onClose=${hideHelp} />
-            <${InterestRateSwapsModal}
-                show=${modalType === 7}
-                title=${modalTitle}
-                stateStr=${modalType === 7 ? modalText : ''}
-                onSubmit=${(newState) => {
-                    api.modalResult(api.serialize({...newState, buttonId: "OFFER"}));
-                }}
-            />
-            <${TextAnnounceModal}
-                show=${modalType === 8}
-                title=${modalTitle}
-                text=${modalText}
-                onSubmit=${(value) => { api.modalResult(value); }}
-                onCancel=${hideModal}
-            />
-        </div>
+            onCancel=${hideModal}
+        />
+        <${AdvancedOptionsModal}
+            show=${modalType === 6}
+            stateStr=${modalType === 6 ? modalText : ''}
+            title=${modalTitle}
+            onSubmit=${(newState) => {
+                api.modalResult(api.serialize({...newState, buttonId: "SUBMIT"}));
+            }}
+        />
+        <${HelpModal} show=${helpShown} onClose=${hideHelp} />
+        <${InterestRateSwapsModal}
+            show=${modalType === 7}
+            title=${modalTitle}
+            stateStr=${modalType === 7 ? modalText : ''}
+            onSubmit=${(newState) => {
+                api.modalResult(api.serialize({...newState, buttonId: "OFFER"}));
+            }}
+        />
+        <${TextAnnounceModal}
+            show=${modalType === 8}
+            title=${modalTitle}
+            text=${modalText}
+            onSubmit=${(value) => { api.modalResult(value); }}
+            onCancel=${hideModal}
+        />
     `;
 }
 

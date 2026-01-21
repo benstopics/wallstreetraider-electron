@@ -3,6 +3,7 @@ import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import VideoBackground from './VideoBackground.js';
 import { renderMultilineText } from './helpers.js';
+import SettingsModal from './SettingsModal.js';
 
 // TODO: set your actual asset paths/links
 const LOGO_SRC = 'assets/wallstreetraider_logo.png';
@@ -18,7 +19,6 @@ const CHANGELOG = [
     {
         ver: "v10.0.11",
         items: [
-            "Settings menu", // TODO
             "Submit string input modals with Enter key",
             "Savescumming support (advanced game saving/loading, custom save names, fix exit game)", // TODO - /A–Za–z0–9_-./
             "Fix loan tab softlocking due to syntax error",
@@ -32,14 +32,17 @@ const CHANGELOG = [
             "Migrate Advanced Options from Win32 to Electron",
             "Migrate Picklist from Win32 to Electron",
             "Migrate Database Search from Win32 to Electron", // TODO: Convert from Win32 to Electron
-            "Migrate Settings/Cheats Menu from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Restore and migrate Settings menu to Electron",
             "Migrate Change Law Firm from Win32 to Electron",
-            "Migrate Spread Rumors from Win32 to Electron", // TODO: Convert from Win32 to Electron
-            "Migrate Harassing Lawsuit from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Spread Rumors from Win32 to Electron",
+            "Migrate Harassing Lawsuit from Win32 to Electron",
             "Migrate Capital Contributions from Win32 to Electron",
             "CustomData API endpoint for mods to store custom game data", // TODO
             "Localization support framework", // TODO - Need to make a menu for it and get first language added
             "Add Microsoft Visual C++ to Steam Common Redistributables installation list",
+            "Migrated Strategy Manual to Help menu",
+            "Display settings modal with zoom controls",
+            "Fix Unethical Scenarios functionality"
         ]
     },
     {
@@ -187,7 +190,6 @@ const CHANGELOG = [
 
 const MainMenu = () => {
     const [quote, setQuote] = useState('');
-    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -202,27 +204,7 @@ const MainMenu = () => {
         })();
     }, []);
 
-    // Close settings dropdown when clicking outside
-    useEffect(() => {
-        if (!settingsOpen) return;
-        const onDown = (e) => {
-            const el = e.target;
-            // If click is inside the settings wrapper, ignore.
-            if (el?.closest?.('.wsr-settings-wrap')) return;
-            setSettingsOpen(false);
-        };
-        window.addEventListener('mousedown', onDown, true);
-        return () => window.removeEventListener('mousedown', onDown, true);
-    }, [settingsOpen]);
-
-    const safe = async (fn) => {
-        try {
-            await fn();
-        } catch (e) {
-            console.error(e);
-            alert(e?.message || String(e));
-        }
-    };
+    const { showHelp } = api.useWSRContext();
 
     return html`
     <div class="wsr-root">
@@ -237,18 +219,11 @@ const MainMenu = () => {
             </div>
 
           <div class="wsr-topbar-right">
-            <div class="wsr-settings-wrap menu-wrap">
-              <button class="btn main-menu" onClick=${() => setSettingsOpen(v => !v)}>Settings</button>
-              ${settingsOpen && html`
-                <div class="menu-dropdown" role="menu">
-                  <button onMouseDown=${(e) => { e.preventDefault(); setSettingsOpen(false); queueMicrotask(() => safe(api.unethicalScenarios)); }}>Unethical Scenarios</button>
-                  <button onMouseDown=${(e) => { e.preventDefault(); setSettingsOpen(false); queueMicrotask(() => safe(api.toggleSuppressPopups)); }}>Suppress Popups</button>
-                  <button onMouseDown=${(e) => { e.preventDefault(); setSettingsOpen(false); queueMicrotask(() => safe(api.enableCheats)); }}>Enable Cheats</button>
-                  <button onMouseDown=${(e) => { e.preventDefault(); setSettingsOpen(false); queueMicrotask(() => safe(api.toggleFullscreen)); }}>Fullscreen</button>
-                </div>
-              `}
-            </div>
-          <div class="wsr-version">Early Access</div>
+            <button class="btn main-menu" onClick=${() => showHelp()}>Help</button>
+            <${SettingsModal}>
+              <button class="btn main-menu">Settings</button>
+            <//>
+            <div class="wsr-version">Early Access</div>
           </div>
         </header>
 

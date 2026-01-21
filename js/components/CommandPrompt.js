@@ -218,7 +218,7 @@ export default function CommandPrompt() {
       </div>
       ${open && suggestions.length ? html`
         <ul
-          class="basic"
+          class="command-suggestions"
           style="
             position:absolute; left:0; right:0; top:100%; z-index:50;
             max-height:180px; overflow:auto; border:1px solid #444; background:#111; padding:4px 0; margin:4px 0 0 0;

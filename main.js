@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
 
@@ -7,15 +7,14 @@ let mainWindow;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        frame: false,
-        transparent: true,
+        frame: true,
         show: false,
         autoHideMenuBar: true,
         icon: path.join(__dirname, 'assets', 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
-            backgroundThrottling: false
+            backgroundThrottling: false,
         }
     });
 
@@ -53,6 +52,32 @@ app.whenReady().then(() => {
 
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+
+    ipcMain.on('zoom-in', () => {
+        const currentZoom = mainWindow.webContents.getZoomLevel();
+        mainWindow.webContents.setZoomLevel(currentZoom + 1);
+    });
+
+    // Handle zoom out
+    ipcMain.on('zoom-out', () => {
+        const currentZoom = mainWindow.webContents.getZoomLevel();
+        mainWindow.webContents.setZoomLevel(currentZoom - 1);
+    });
+
+    // Handle zoom reset
+    ipcMain.on('zoom-reset', () => {
+        mainWindow.webContents.setZoomLevel(0);
+    });
+
+    // Function to get current zoom level
+    ipcMain.handle('get-zoom-level', () => {
+        return mainWindow.webContents.getZoomLevel();
+    });
+
+    // Set specific zoom level
+    ipcMain.on('set-zoom-level', (event, level) => {
+        mainWindow.webContents.setZoomLevel(level);
     });
 });
 
