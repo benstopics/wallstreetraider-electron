@@ -3,6 +3,7 @@ import Modal from './Modal.js';
 import * as api from '../api.js';
 import InTheMoneyChart from './InTheMoneyChart.js';
 import { renderMultilineText } from './helpers.js';
+import Button from './Button.js';
 
 /**
  * AdvancedOptionsModal
@@ -426,21 +427,21 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
       </div>
 
       <div class="mt-4 flex flex-wrap gap-2">
-        <button class="btn modal" onClick=${clearAll}>CLEAR ALL</button>
-        <button class="btn modal" onClick=${onHelp}>HELP</button>
-        <button class="btn modal" onClick=${onShowSizeLimits}>SHOW SIZE LIMITS</button>
-        <button class="btn modal" onClick=${onAutoTrade}>AUTO-TRADE</button>
+        <${Button} class="btn modal" onClick=${clearAll}>CLEAR ALL</button>
+        <${Button} class="btn modal" onClick=${onHelp}>HELP</button>
+        <${Button} class="btn modal" onClick=${onShowSizeLimits}>SHOW SIZE LIMITS</button>
+        <${Button} class="btn modal" onClick=${onAutoTrade}>AUTO-TRADE</button>
       </div>
 
       <div class="mt-3 flex flex-wrap gap-2">
         <div class="flex flex-wrap gap-2">
-          <button class="btn modal" onClick=${onCloseAll}>CLOSE ALL OPTIONS</button>
+          <${Button} class="btn modal" onClick=${onCloseAll}>CLOSE ALL OPTIONS</button>
         </div>
       </div>
 
       <div class="mt-3 flex justify-end gap-2">
-        <button class="btn modal green" onClick=${submit} disabled=${hasBlockingErrors}>SUBMIT</button>
-        <button class="btn modal" onClick=${onCancel}>CLOSE</button>
+        <${Button} class="btn modal green" onClick=${submit} disabled=${hasBlockingErrors}>SUBMIT</button>
+        <${Button} class="btn modal" onClick=${onCancel}>CLOSE</button>
       </div>
     <//>
   `;

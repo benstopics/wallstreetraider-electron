@@ -7,7 +7,7 @@ import CommoditiesTab from './CommoditiesTab.js';
 import PortfolioTab from './PortfolioTab.js';
 import OptionsTab from './OptionsTab.js';
 import Tooltip from './Tooltip.js';
-import { renderLines } from './helpers.js';
+import { insertCurrencySymbols, renderLines } from './helpers.js';
 import * as api from '../api.js';
 import EPSChart from './EPSChart.js';
 import FinancialsTab from './FinancialsTab.js';
@@ -16,6 +16,7 @@ import LoansTab from './LoansTab.js';
 import CashflowTab from './CashflowTab.js';
 import CommandPrompt from './CommandPrompt.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
+import Button from './Button.js';
 
 const Tab = Tabs.Tab;
 
@@ -111,21 +112,21 @@ const IndustrialView = () => {
                         && !api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
                         ? html`<${ActingAsRequiredButton}
                         onClick=${() => api.antitrustLawsuit(activeEntityNum)} 
-                        label="Antitrust Lawsuit\n${actingAsSymbol} vs ${activeEntitySymbol}"
+                        label=${insertCurrencySymbols(`Antitrust Lawsuit ${actingAsSymbol} vs ${activeEntitySymbol}`)}
                         color="red"
                     />` : ''}
                     ${!api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
                         && actingAsId !== activeEntityNum // Company cannot sue itself
                         ? html`<${ActingAsRequiredButton}
                         onClick=${() => api.harrassingLawsuit(activeEntityNum)}
-                        label="Harrassing Lawsuit\n${actingAsSymbol} vs ${activeEntitySymbol}"
+                        label=${insertCurrencySymbols(`Harrassing Lawsuit ${actingAsSymbol} vs ${activeEntitySymbol}`)}
                         color="red"
                     />` : ''}
                     ${!api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
                         && actingAsId !== activeEntityNum // Company cannot spread rumors about itself
                         ? html`<${ActingAsRequiredButton}
                         onClick=${() => api.spreadRumors(activeEntityNum)}
-                        label="Spread Rumors\nabout ${activeEntitySymbol}"
+                        label=${insertCurrencySymbols(`Spread Rumors about ${activeEntitySymbol}`)}
                         color="red"
                     />` : ''}
                     ${activeIndustryId === api.INSURANCE_IND || activeIndustryId === api.SECURITIES_BROKER_IND ? html`<${ActingAsRequiredButton}
@@ -170,32 +171,32 @@ const IndustrialView = () => {
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
                                         ${!buyStockDisabledMessage
                             ? html`
-                                                <button class="btn flex-1 mx-1 green" onClick=${() => api.buyStock(activeEntityNum)}>
+                                                <${Button} class="btn flex-1 mx-1 green" onClick=${() => api.buyStock(activeEntityNum)}>
                                                     Buy Stock
                                                 </button>`
                             : html`
                                                 <${Tooltip} text=${buyStockDisabledMessage}>
-                                                    <button class="btn disabled w-full">Buy Stock</button>
+                                                    <${Button} class="btn disabled w-full">Buy Stock</button>
                                                 <//>`}
 
                                         ${!shortStockDisabledMessage
                             ? html`
-                                                <button class="btn flex-1 mx-1 green" onClick=${() => api.shortStock(activeEntityNum)}>
+                                                <${Button} class="btn flex-1 mx-1 green" onClick=${() => api.shortStock(activeEntityNum)}>
                                                     Short Stock
                                                 </button>`
                             : html`
                                                 <${Tooltip} text=${shortStockDisabledMessage}>
-                                                    <button class="btn disabled w-full">Short Stock</button>
+                                                    <${Button} class="btn disabled w-full">Short Stock</button>
                                                 <//>`}
 
                                         ${!buyBondDisabledMessage
                             ? html`
-                                                <button class="btn flex-1 mx-1 green" onClick=${() => api.buyCorporateBond(activeEntityNum)}>
+                                                <${Button} class="btn flex-1 mx-1 green" onClick=${() => api.buyCorporateBond(activeEntityNum)}>
                                                     Buy Bonds
                                                 </button>`
                             : html`
                                                 <${Tooltip} text=${buyBondDisabledMessage}>
-                                                    <button class="btn disabled w-full">Buy Bonds</button>
+                                                    <${Button} class="btn disabled w-full">Buy Bonds</button>
                                                 <//>`}
                                     </div>
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">

@@ -3,6 +3,7 @@ import useInterval from '../hooks/useInterval.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import { DEFAULT_ASSET_PRICE_CHART_THEME } from '../../css/chart-styles.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -17,7 +18,7 @@ function dateLabel(index, baseMonth, baseYear, count) {
         year += Math.floor(month / 12);
         month = month % 12;
     }
-    return `${MONTHS[month % 12]} '${year.toString().slice(-2)}`;
+    return `${insertCurrencySymbols(MONTHS[month % 12])} '${year.toString().slice(-2)}`;
 }
 
 const AssetPriceChart = ({
@@ -63,8 +64,8 @@ const AssetPriceChart = ({
                 prices = prices.map(value => transformValue(value));
             }
 
-            const finalYAxisTitle = typeof yAxisTitle === 'function' ? yAxisTitle(chartData) : yAxisTitle;
-            const finalChartTitle = (typeof chartTitle === 'function' ? chartTitle(chartData) : chartTitle)
+            const finalYAxisTitle = insertCurrencySymbols(typeof yAxisTitle === 'function' ? yAxisTitle(chartData) : yAxisTitle);
+            const finalChartTitle = insertCurrencySymbols(typeof chartTitle === 'function' ? chartTitle(chartData) : chartTitle)
                 // Append current price to title if not already present
                 + (chartTitle && !chartTitle.toString().includes('$') ? ` (${prices[prices.length - 1].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})` : '');
             const w = canvas.width;

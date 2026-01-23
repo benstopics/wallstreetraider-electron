@@ -15,6 +15,7 @@ import {
   isForbiddenKey,
   eventToBindCode,
 } from '../keybinds.js';
+import Button from './Button.js';
 
 const cloneObj = (x) => {
   try {
@@ -247,8 +248,8 @@ export default function KeybindsModal({ show, onClose }) {
           <div class="text-xs opacity-70">Set shortcuts for UI tools and for switching <b>Acting As</b>.</div>
         </div>
         <div class="flex gap-2">
-          <button class="btn p-2" onClick=${resetAll}>Reset All</button>
-          <button class="btn p-2" onClick=${close}>Close</button>
+          <${Button} class="btn p-2" onClick=${resetAll}>Reset All</button>
+          <${Button} class="btn p-2" onClick=${close}>Close</button>
         </div>
       </div>
 
@@ -267,13 +268,13 @@ export default function KeybindsModal({ show, onClose }) {
               const valueLabel = isListening ? 'Press a key…' : (code ? formatCode(code) : '—');
               return html`
                 <div class="truncate">${a.label}</div>
-                <button
+                <${Button}
                   class="btn keybinds-bind"
                   style=${isListening ? { outline: '2px solid var(--selected-bg-color)' } : undefined}
                   onClick=${() => setListening({ kind: 'action', actionId: a.id })}
                 >${valueLabel}</button>
                 <div class="flex justify-center">
-                  <button class="btn p-2" onClick=${() => {
+                  <${Button} class="btn p-2" onClick=${() => {
                     setGlobalBinds((prev) => {
                       const next = cloneObj(prev || loadGlobalKeybinds());
                       next[a.id] = { primary: null, secondary: null };
@@ -314,10 +315,10 @@ export default function KeybindsModal({ show, onClose }) {
               return html`
                 <div class="truncate">${label}</div>
                 <div class="flex justify-center">
-                  <button class="btn keybinds-bind" style=${isListening ? { outline: '2px solid var(--selected-bg-color)' } : undefined} onClick=${() => setListening({ kind: 'company', companyId: r.companyId })}>${valueLabel}</button>
+                  <${Button} class="btn keybinds-bind" style=${isListening ? { outline: '2px solid var(--selected-bg-color)' } : undefined} onClick=${() => setListening({ kind: 'company', companyId: r.companyId })}>${valueLabel}</button>
                 </div>
                 <div class="flex justify-center">
-                  <button class="btn p-2" onClick=${() => resetRow(r.companyId)}>Clear</button>
+                  <${Button} class="btn p-2" onClick=${() => resetRow(r.companyId)}>Clear</button>
                 </div>
               `;
             })}

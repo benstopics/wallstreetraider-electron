@@ -1,5 +1,6 @@
 import { html } from '../lib/preact.standalone.module.js';
 import Tooltip from './Tooltip.js';
+import Button from './Button.js';
 
 
 
@@ -12,11 +13,11 @@ export default function ActingAsRequiredButton({ disabledMessage, onClick, label
     return !disabledMessage
         ? html`
             <div class="${containerClass}" style="">
-                <button class="btn ${color} ${buttonClass}" onclick=${onClick}>${label}</button>
+                <${Button} class="btn ${color} ${buttonClass}" onclick=${onClick}>${label}</button>
             </div>`
         : html`
             <${Tooltip} text=${disabledMessage} containerClass=${containerClass} style="">
-                <button class="btn disabled ${buttonClass}">${label}</button>
+                <${Button} class="btn disabled ${buttonClass}">${label}</button>
             <//>
         `;
 }

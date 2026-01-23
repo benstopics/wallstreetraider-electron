@@ -1,6 +1,7 @@
 import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
+import Button from './Button.js';
 
 
 function ActingAsDropdown() {
@@ -28,10 +29,10 @@ function ActingAsDropdown() {
                 <small>Acting As</small>
                 <div class="flex flex-row">
                     ${actingAsId !== activeEntityNum && options.find(opt => opt.id === activeEntityNum) ? html`
-                        <button class="btn mx-1 p-2" onclick=${() => api.changeActingAs(activeEntityNum)}>Act As ${activeEntitySymbol}</button>
+                        <${Button} class="btn mx-1 p-2" onclick=${() => api.changeActingAs(activeEntityNum)}>Act As ${activeEntitySymbol}</button>
                     ` : ''}
                     ${activeEntityNum !== api.HUMAN1_ID
-            ? html`<button class="btn mx-1 p-2" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>View Player</button>`
+            ? html`<${Button} class="btn mx-1 p-2" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>View Player</button>`
             : ''}
                 </div>
             </div>
@@ -41,7 +42,7 @@ function ActingAsDropdown() {
                 </select>
                 <div class="" style="height:25px">
                     ${actingAsId !== activeEntityNum || activeIndustryNum >= 0
-            ? html`<button class="btn mx-1 p-2 whitespace-nowrap" onclick=${() => api.setViewAsset(actingAsId)}>← View</button>`
+            ? html`<${Button} class="btn mx-1 p-2 whitespace-nowrap" onclick=${() => api.setViewAsset(actingAsId)}>← View</button>`
             : ''}
                 </div>
             </div>

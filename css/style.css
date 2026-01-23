@@ -14,12 +14,17 @@
   --pink: #ec4899;
 
   --muted: rgba(230, 235, 245, 0.70);
+
+  
+  --header-grad-a: rgba(59, 130, 246, 0.40);  /* blue */
+  --header-grad-b: rgba(168, 85, 247, 0.38);  /* mauve/purple */
+  --header-grad-c: rgba(236, 72, 153, 0.10);  /* tiny pink lift */
+  --header-text: #f4f7ff;
 }
 
 /* ======================================================
    Notes / Notepad (draggable)
 */
-   ====================================================== */
 
 .notes-float {
   position: fixed;
@@ -303,13 +308,6 @@ body {
 .menu-dropdown button:hover,
 .menu-panel button:hover {
   background: rgba(184,107,255,0.18);
-}
-
-    font-family: Helvetica, Arial, sans-serif;
-    color: var(--main-fg-color);
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
 /* ---------- UI polish (typography + crispness) ---------- */
@@ -888,20 +886,30 @@ div::-webkit-scrollbar-thumb:hover {
     white-space: nowrap;
 }
 
+.gameui-footer {
+    /* Ellipsis for overflow text */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    background: linear-gradient(90deg, rgba(184,107,255,0.22), rgba(13,84,115,0.18)) !important;
+    color: var(--main-fg-color) !important;
+}
+
 .notification {
     position: relative;
     display: inline-block;
-    width: 32px;
     /* adjust icon size */
     height: 32px;
+    color: var(--main-fg-color);
 }
 
 .notification svg {
-    fill: #FC9D23;
+    fill: var(--main-fg-color);
 }
 
-.notification svg:hover {
-    fill: #ffcf9e;
+.notification:hover {
+    fill: var(--blue);
 }
 
 .notification .badge {
@@ -1404,7 +1412,7 @@ li.active {
 /* Buttons row */
 .wsr-buttons {
     display: grid;
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
     gap: 12px;
 }
 
@@ -1648,13 +1656,164 @@ li.active {
 
 /* Sidebar container */
 .help-sidebar {
-  width: 260px;
+  width: 550px;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border-right: 1px solid var(--border);
   padding: 12px 10px;
   box-sizing: border-box;
   overflow-y: auto;
+}
+
+/* Search container */
+.help-search-container {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+/* Search input */
+.help-search-input {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--main-fg-color);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+  box-sizing: border-box;
+}
+
+.help-search-input:focus {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: #0d5473;
+}
+
+.help-search-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.help-search-input::placeholder {
+  color: rgba(195, 211, 229, 0.5);
+}
+
+/* Clear button */
+.help-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--main-fg-color);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.help-search-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #E9ECEF;
+}
+
+/* No results message */
+.help-no-results {
+  padding: 12px;
+  text-align: center;
+  color: rgba(195, 211, 229, 0.7);
+  font-size: 14px;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+/* Search mode toggle */
+.help-search-mode-toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.help-search-mode-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(195, 211, 229, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.help-mode-btn {
+  flex: 1;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: rgba(195, 211, 229, 0.7);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.help-mode-btn:hover {
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--main-fg-color);
+  border-color: #0d5473;
+  transform: translateY(-1px);
+}
+
+.help-mode-btn.active {
+  background: linear-gradient(to bottom, #0d5473, #083f4e);
+  border-color: #0d5473;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(13, 84, 115, 0.4);
+}
+
+.help-search-status {
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: rgba(195, 211, 229, 0.8);
+  background: rgba(13, 84, 115, 0.2);
+  border-radius: 3px;
+  text-align: center;
+}
+
+.help-search-status strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Search term highlighting (Aho-Corasick) */
+mark.search-highlight {
+  background: linear-gradient(to bottom, #ffd700, #ffb300);
+  color: #000;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(255, 215, 0, 0.4);
+  animation: highlight-pulse 0.5s ease-out;
+}
+
+@keyframes highlight-pulse {
+  0% {
+    background: linear-gradient(to bottom, #ffed4e, #ffd700);
+    transform: scale(1.1);
+  }
+  100% {
+    background: linear-gradient(to bottom, #ffd700, #ffb300);
+    transform: scale(1);
+  }
 }
 
 /* Flat list (no nested ULs) */
@@ -1681,6 +1840,101 @@ li.active {
   color: #fff;
   font-weight: 700;
   border-left-color: var(--selected-bg-color);
+}
+
+/* Snippet-based search results */
+.help-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-result-item {
+  margin: 4px 0;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: background-color 0.2s;
+}
+
+.search-result-item.active {
+  background: rgba(13, 84, 115, 0.2);
+}
+
+.search-result-button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: block;
+  border-left: 3px solid transparent;
+  transition: background-color 0.12s, border-left-color 0.12s;
+}
+
+.search-result-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-left-color: rgba(13, 84, 115, 0.5);
+}
+
+.search-result-item.active .search-result-button {
+  border-left-color: #0d5473;
+}
+
+.search-result-path {
+  font-size: 11px;
+  color: rgba(195, 211, 229, 0.7);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-result-chapter {
+  font-weight: 600;
+  color: rgba(195, 211, 229, 0.8);
+}
+
+.search-result-separator {
+  color: rgba(195, 211, 229, 0.5);
+  font-size: 10px;
+}
+
+.search-result-section {
+  color: rgba(195, 211, 229, 0.7);
+}
+
+.search-result-snippet {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--main-fg-color);
+  word-break: break-word;
+}
+
+.search-result-snippet mark.snippet-match {
+  background: linear-gradient(to bottom, rgba(255, 215, 0, 0.3), rgba(255, 179, 0, 0.3));
+  color: #ffd700;
+  padding: 1px 2px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+/* Focused match flash effect */
+mark.search-highlight.focused-match {
+  animation: focus-flash 1.5s ease-out;
+}
+
+@keyframes focus-flash {
+  0%, 50% {
+    background: linear-gradient(to bottom, #ffed4e, #ffd700);
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+    transform: scale(1.05);
+  }
+  100% {
+    background: linear-gradient(to bottom, #ffd700, #ffb300);
+    box-shadow: 0 1px 3px rgba(255, 215, 0, 0.4);
+    transform: scale(1);
+  }
 }
 
 /* Content area */
@@ -2663,7 +2917,7 @@ html, body, #app, .app-container{
 /* 4) Tab buttons - styles defined at line 1142 */
 
 /* 5) Buttons + inputs (flat terminal style) */
-button, .btn, .icon{
+.btn, .icon{
   background: #1d2026 !important;
   color: var(--main-fg-color) !important;
   border: 1px solid var(--border) !important;
@@ -2969,7 +3223,7 @@ html, body, #app, .app-container{
 
 /* Tab buttons - styles defined at line 1142 */
 
-button, .btn, .icon,
+.btn, .icon,
 .basic,
 select.basic,
 .top-bar select.basic{
@@ -3233,19 +3487,6 @@ input:focus, select:focus, textarea:focus{
   color: #ffffff !important;
 }
 
-/* ======================================================
-   Finetune v2 polish: section headers gradient + force white text
-   (Requested: more color in header strips: News / Advisory Summary /
-    Assets Management / My Balance Sheet / Streaming Quotes etc.)
-   ====================================================== */
-
-:root{
-  --header-grad-a: rgba(59, 130, 246, 0.40);  /* blue */
-  --header-grad-b: rgba(168, 85, 247, 0.38);  /* mauve/purple */
-  --header-grad-c: rgba(236, 72, 153, 0.10);  /* tiny pink lift */
-  --header-text: #f4f7ff;
-}
-
 /* Panel header strips */
 .panel-header{
   background: linear-gradient(90deg, var(--header-grad-a), var(--header-grad-b), var(--header-grad-c)) !important;
@@ -3293,7 +3534,52 @@ pre, code{
 .iu-table tr.sel{ background: rgba(59,130,246,0.14) !important; }
 .iu-card.sel{ border-color: rgba(59,130,246,0.55) !important; background: rgba(59,130,246,0.14) !important; }
 .iu-chip{ color: var(--header-text) !important; }
-\n\n/* ===== Imported Finetune v4 theme overrides (colors only) ===== */
+
+/* Panel header strips */
+.panel-header{
+  background: linear-gradient(90deg, var(--header-grad-a), var(--header-grad-b), var(--header-grad-c)) !important;
+  color: var(--header-text) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+  letter-spacing: 0.25px;
+}
+
+/* Some pages use their own title wrappers */
+.section-title, .panel-title, .title, .header-title,
+.mb-paneltitle, .news-title, .advisory-title{
+  color: var(--header-text) !important;
+}
+
+/* Tabs: styles defined at line 1142 */
+
+/* Force any stray black text to white (inputs/reports) */
+input, textarea, select, option, .modal-input, .report, .report-text{
+  color: var(--main-fg-color) !important;
+}
+.modal-input{
+  background-color: rgba(17, 24, 39, 0.55) !important;
+  border-color: rgba(255,255,255,0.14) !important;
+}
+
+/* Fix components that hardcode black */
+pre, code{
+  color: rgba(230,235,245,0.92) !important;
+}
+
+/* Calculator: remove remaining orange accents */
+.calc-op{
+  background: rgba(59,130,246,0.14) !important;
+  border-color: rgba(59,130,246,0.34) !important;
+  color: #d7e7ff !important;
+}
+.calc-btn-eq{
+  background: rgba(168,85,247,0.20) !important;
+  border-color: rgba(168,85,247,0.45) !important;
+  color: #f5edff !important;
+}
+
+
+
+/* ===== Imported finetune v4 theme overrides =====
    Finetune v2 polish: section headers gradient + force white text
    (Requested: more color in header strips: News / Advisory Summary /
     Assets Management / My Balance Sheet / Streaming Quotes etc.)
@@ -3350,64 +3636,7 @@ pre, code{
 
 
 
-/* ===== Imported finetune v4 theme overrides ===== */
-   Finetune v2 polish: section headers gradient + force white text
-   (Requested: more color in header strips: News / Advisory Summary /
-    Assets Management / My Balance Sheet / Streaming Quotes etc.)
-   ====================================================== */
-
-:root{
-  --header-grad-a: rgba(59, 130, 246, 0.40);  /* blue */
-  --header-grad-b: rgba(168, 85, 247, 0.38);  /* mauve/purple */
-  --header-grad-c: rgba(236, 72, 153, 0.10);  /* tiny pink lift */
-  --header-text: #f4f7ff;
-}
-
-/* Panel header strips */
-.panel-header{
-  background: linear-gradient(90deg, var(--header-grad-a), var(--header-grad-b), var(--header-grad-c)) !important;
-  color: var(--header-text) !important;
-  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
-  letter-spacing: 0.25px;
-}
-
-/* Some pages use their own title wrappers */
-.section-title, .panel-title, .title, .header-title,
-.mb-paneltitle, .news-title, .advisory-title{
-  color: var(--header-text) !important;
-}
-
-/* Tabs: styles defined at line 1142 */
-
-/* Force any stray black text to white (inputs/reports) */
-input, textarea, select, option, .modal-input, .report, .report-text{
-  color: var(--main-fg-color) !important;
-}
-.modal-input{
-  background-color: rgba(17, 24, 39, 0.55) !important;
-  border-color: rgba(255,255,255,0.14) !important;
-}
-
-/* Fix components that hardcode black */
-pre, code{
-  color: rgba(230,235,245,0.92) !important;
-}
-
-/* Calculator: remove remaining orange accents */
-.calc-op{
-  background: rgba(59,130,246,0.14) !important;
-  border-color: rgba(59,130,246,0.34) !important;
-  color: #d7e7ff !important;
-}
-.calc-btn-eq{
-  background: rgba(168,85,247,0.20) !important;
-  border-color: rgba(168,85,247,0.45) !important;
-  color: #f5edff !important;
-}
-
-
-
-/* ===== Applied Finetune v4 theme overrides (colors only) ===== */
+/* ===== Applied Finetune v4 theme overrides (colors only) =====
    Finetune v2 polish: section headers gradient + force white text
    (Requested: more color in header strips: News / Advisory Summary /
     Assets Management / My Balance Sheet / Streaming Quotes etc.)
@@ -3511,7 +3740,7 @@ input.command-line{
   background: rgba(184, 107, 255, 0.3) !important;
 }
 
-/* Added: WSR Heat Map */
+/* Added: WSR Heat Map
 
    Market heatmap (Finviz-style)
    Used by MarketHeatMapTab "All Sectors"

@@ -1,6 +1,6 @@
 import { useEffect, useRef, html } from '../lib/preact.standalone.module.js';
 
-export default function Modal({ show, onClose, children, class: cls = '', style = '' }) {
+export default function Modal({ show, onClose, enableClickOutsideClose = true, children, class: cls = '', style = '' }) {
     const cardRef = useRef(null);
 
     useEffect(() => {
@@ -21,7 +21,7 @@ export default function Modal({ show, onClose, children, class: cls = '', style 
         role="dialog"
         aria-modal="true"
         class="modal-overlay"
-        onClick=${onClose}
+        onClick=${enableClickOutsideClose ? onClose : undefined}
     >
         <div
             ref=${cardRef}

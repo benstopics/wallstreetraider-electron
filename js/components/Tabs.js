@@ -1,6 +1,7 @@
 import { html, render, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 
 const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
@@ -41,7 +42,7 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
                     class=${`tab-button ${label === activeTab ? 'active' : ''}`}
                     onClick=${() => changeTab(label)}
                 >
-                    ${label}
+                    ${insertCurrencySymbols(label)}
                 </div>
             `)}
         </div>

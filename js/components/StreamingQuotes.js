@@ -3,6 +3,7 @@ import '../lib/tailwind.module.js';
 import { formatCurrency } from './helpers.js';
 import * as api from '../api.js';
 import { StarIcon, TrashIcon } from '../icons.js';
+import Button from './Button.js';
 
 
 const StreamingQuotes = () => {
@@ -54,7 +55,7 @@ const StreamingQuotes = () => {
                         }}
                 >
                     <span class="mx-2">
-                        <button class="btn yellow" style="width: 30px"><${StarIcon} /></button>
+                        <${Button} class="btn yellow" style="width: 30px"><${StarIcon} /></button>
                     </span>
                     <span class="align-left">Add ${activeEntityName}</span>
                 </div>` : ''}
@@ -69,7 +70,7 @@ const StreamingQuotes = () => {
                         $${formatCurrency(quote.price)}
                     </span>
                     <span class="ml-2">
-                        <button class="btn red w-full" style="width: 30px" onClick=${(e) => {
+                        <${Button} class="btn red w-full" style="width: 30px" onClick=${(e) => {
                             e.stopPropagation();
                             api.toggleStreamingQuote(quote.id);
                         }}><${TrashIcon} /></button>

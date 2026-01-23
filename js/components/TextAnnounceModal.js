@@ -4,6 +4,7 @@ import { insertCurrencySymbols } from './helpers.js';
 import Modal from './Modal.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
+import Button from './Button.js';
 
 
 export default function TextAnnounceModal({ show, title, text, onSubmit, onCancel }) {
@@ -25,7 +26,7 @@ export default function TextAnnounceModal({ show, title, text, onSubmit, onCance
         <br/>
         <div class="flex justify-between items-center mb-4">
             <div></div>
-            <button class="btn modal" onClick=${onCancel}>CLOSE</button>
+            <${Button} class="btn modal" onClick=${onCancel}>CLOSE</button>
         </div>
     <//>`;
 }

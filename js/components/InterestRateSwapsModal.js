@@ -3,6 +3,7 @@ import Modal from './Modal.js';
 import * as api from '../api.js';
 import { renderMultilineText } from './helpers.js';
 import AssetPriceChart from './AssetPriceChart.js';
+import Button from './Button.js';
 
 function toStr(v) {
     return v == null ? '' : String(v).trim();
@@ -430,13 +431,13 @@ export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit
         <div class="col-span-12">
           <div class="mt-3 flex flex-wrap gap-2 justify-between items-center">
             <div>
-              <button class="btn modal" onClick=${() => swapInfo()}>SWAP INFO</button>
+              <${Button} class="btn modal" onClick=${() => swapInfo()}>SWAP INFO</button>
             </div>
             <div class="flex gap-2">
-              <button class="btn modal green" onClick=${() => submit()} disabled=${hasBlockingErrors}>
+              <${Button} class="btn modal green" onClick=${() => submit()} disabled=${hasBlockingErrors}>
                 OFFER
               </button>
-              <button class="btn modal" onClick=${() => exit()}>EXIT</button>
+              <${Button} class="btn modal" onClick=${() => exit()}>EXIT</button>
             </div>
           </div>
         </div>

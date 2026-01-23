@@ -1,6 +1,7 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
 import { insertCurrencySymbols, renderLines } from './helpers.js';
 import Modal from './Modal.js';
+import Button from './Button.js';
 
 
 export default function ConfirmModal({ show, title, text, onYes, onNo, onCancel }) {
@@ -15,9 +16,9 @@ export default function ConfirmModal({ show, title, text, onYes, onNo, onCancel 
         </div>
         <br/>
         <div class="flex justify-between items-center mb-4">
-            <button class="btn modal green" onClick=${onYes}>Yes</button>
-            <button class="btn modal red" onClick=${onNo}>No</button>
-            ${onCancel ? html`<button class="btn modal" onClick=${onCancel}>Cancel</button>` : ''}
+            <${Button} class="btn modal green" onClick=${onYes}>Yes</button>
+            <${Button} class="btn modal red" onClick=${onNo}>No</button>
+            ${onCancel ? html`<${Button} class="btn modal" onClick=${onCancel}>Cancel</button>` : ''}
         </div>
     <//>`;
 }

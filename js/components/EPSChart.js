@@ -1,5 +1,6 @@
 import { html, useEffect, useRef } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 const EPSChart = ({
     epsData = [], // Array of { year: number, eps: number }
@@ -121,14 +122,14 @@ const EPSChart = ({
                 ctx.translate(w - 10, padT + chartH / 2); // near right edge
                 ctx.rotate(-Math.PI / 2); // same as AssetPriceChart
                 ctx.textAlign = 'center';
-                ctx.fillText(yAxisTitle, 0, 0);
+                ctx.fillText(insertCurrencySymbols(yAxisTitle), 0, 0);
                 ctx.restore();
             }
 
             ctx.textAlign = 'center';
             ctx.fillStyle = '#fff';
             ctx.font = '14px Helvetica, Arial, sans-serif';
-            ctx.fillText("Earnings Per Share", w / 2, 25);
+            ctx.fillText(insertCurrencySymbols("Earnings Per Share"), w / 2, 25);
         };
 
         draw();

@@ -1,5 +1,6 @@
 import { html, useEffect, useMemo, useRef, useState } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
+import Button from './Button.js';
 
 // Floating, draggable calculator (does not block the rest of the UI)
 
@@ -227,7 +228,7 @@ export default function CalculatorModal({ show, onClose }) {
             </div>
           </div>
           <div class="calc-header-actions">
-            <button class="notes-close" title="Close" onClick=${() => onClose?.()}>×</button>
+            <${Button} class="notes-close" title="Close" onClick=${() => onClose?.()}>×</button>
           </div>
         </div>
 
@@ -248,18 +249,18 @@ export default function CalculatorModal({ show, onClose }) {
           </div>
 
           <div class="calc-actions">
-            <button class="btn calc-btn calc-btn-muted" onClick=${clear}>AC</button>
-            <button class="btn calc-btn calc-btn-muted" onClick=${backspace}>⌫</button>
-            <button class="btn calc-btn calc-btn-muted" onClick=${() => press('(')}>(</button>
-            <button class="btn calc-btn calc-btn-muted" onClick=${() => press(')')}>)</button>
+            <${Button} class="btn calc-btn calc-btn-muted" onClick=${clear}>AC</button>
+            <${Button} class="btn calc-btn calc-btn-muted" onClick=${backspace}>⌫</button>
+            <${Button} class="btn calc-btn calc-btn-muted" onClick=${() => press('(')}>(</button>
+            <${Button} class="btn calc-btn calc-btn-muted" onClick=${() => press(')')}>)</button>
           </div>
 
           <div class="calc-grid">
             ${keypad.flat().map((k) => {
               const isOp = ['/', '*', '-', '+'].includes(k);
-              return html`<button class="btn calc-btn ${isOp ? 'calc-op' : ''}" onClick=${() => press(k)}>${k}</button>`;
+              return html`<${Button} class="btn calc-btn ${isOp ? 'calc-op' : ''}" onClick=${() => press(k)}>${k}</button>`;
             })}
-            <button class="btn calc-btn calc-btn-eq" onClick=${evaluate}>=</button>
+            <${Button} class="btn calc-btn calc-btn-eq" onClick=${evaluate}>=</button>
           </div>
         </div>
       </div>

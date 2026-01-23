@@ -4,6 +4,7 @@ import * as api from '../api.js';
 import VideoBackground from './VideoBackground.js';
 import { renderMultilineText } from './helpers.js';
 import SettingsModal from './SettingsModal.js';
+import Button from './Button.js';
 
 // TODO: set your actual asset paths/links
 const LOGO_SRC = 'assets/wallstreetraider_logo.png';
@@ -21,7 +22,6 @@ const CHANGELOG = [
         items: [
             "Overhaul GUI look and feel with modern styles and improved usability",
             "Submit string input modals with Enter key",
-            "Fix load/new game after exiting a game",
             "Savescumming support (advanced game saving/loading, custom save names, fix exit game)", // TODO - /A–Za–z0–9_-./
             "Fix loan tab softlocking due to syntax error",
             "Major command prompt improvements including autocomplete preview and help text",
@@ -46,6 +46,7 @@ const CHANGELOG = [
             "Display settings modal with zoom controls",
             "Fix Unethical Scenarios functionality",
             "Fix player cashflow projection",
+            "Modulate interest rates to be more realistic",
         ]
     },
     {
@@ -217,14 +218,15 @@ const MainMenu = () => {
           <img src=${LOGO_SRC} alt="Wall Street Raider" class="wsr-logo" />
           
             <div class="wsr-buttons" style="margin: 0 auto;">
-              <button class="btn green main-menu" onClick=${api.loadGame}>Load Game</button>
-              <button class="btn green main-menu" onClick=${api.newGame}>New Game</button>
+              <${Button} class="btn green main-menu" onClick=${api.loadGame}>Load Game</button>
+              <${Button} class="btn green main-menu" onClick=${api.newGame}>New Game</button>
+              <${Button} class="btn green main-menu" onClick=${api.exitToDesktop}>Exit to Desktop</button>
             </div>
 
           <div class="wsr-topbar-right">
-            <button class="btn main-menu" onClick=${() => showHelp()}>Help</button>
+            <${Button} class="btn main-menu" onClick=${() => showHelp()}>Help</button>
             <${SettingsModal}>
-              <button class="btn main-menu">Settings</button>
+              <${Button} class="btn main-menu">Settings</button>
             <//>
             <div class="wsr-version">Early Access</div>
           </div>
@@ -251,7 +253,7 @@ const MainMenu = () => {
   <h4>Next Steps in the Conversion</h4>
   <ul>
     <li>- Swaps</li>
-    <li>- Advanced Options</li>
+    <li>- Advanced Options<span>🇦🇫</span></li>
     <li>- Picklist</li>
     <li>- Database Search</li>
     <li>- Settings/Cheats Menu</li>

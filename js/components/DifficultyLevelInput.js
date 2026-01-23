@@ -1,5 +1,6 @@
 // DifficultyLevelInput.js
 import { html, useState, useRef, useEffect, useLayoutEffect, useMemo } from '../lib/preact.standalone.module.js';
+import Button from './Button.js';
 
 const LEVELS = [
   { id: "1", label: 'Level 1', short: 'Easiest', desc: 'Easiest difficulty.' },
@@ -80,7 +81,7 @@ export default function DifficultyLevelInput({
 
   return html`
     <div style="position:relative; width:100%;">
-      <button
+      <${Button}
         ref=${btnRef}
         type="button"
         class="basic"

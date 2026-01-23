@@ -10,6 +10,8 @@ import { NewspaperIcon, NotificationIcon } from '../icons.js';
 import Modal from './Modal.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import CommandPrompt from './CommandPrompt.js';
+import Button from './Button.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -125,13 +127,16 @@ const GameUI = () => {
                 ${html`<${View} />`}
             </div>
         </div>
-        <div class="flex flex-row border items-center justify-between gap-2 px-2 mx-2" style="height: 30px;">
+        <div class="panel-header flex flex-row border items-center justify-between gap-2 px-2 mx-2" style="height: 30px;">
             <div></div>
             <div class="flex flex-[1] items-center gap-2 cursor-pointer justify-between" onClick=${() => setShowNotifications(true)}>
-                <div></div>
-                ${trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="width: 20px; height: 100%;"
+                <div>${(trendingNews.length > 0 ? insertCurrencySymbols(trendingNews[0]) : "")}</div>
+                ${trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="height: 100%;"
                     onClick=${() => setShowNotifications(true)}>
-                    <${NotificationIcon} />
+                    <div class="flex flex-row">
+                        <div style="width: 20px"><${NotificationIcon} /></div>
+                        ${insertCurrencySymbols("Notifications")}
+                    </div>
                     <!--<div class="badge">${trendingNews.length}</div>-->
                 </div>` : html`<div></div>`}
             </div>
@@ -139,7 +144,7 @@ const GameUI = () => {
         <${Modal} show=${showNotifications} onClose=${() => setShowNotifications(false)}>
             <div class="flex justify-between items-center mb-4">
                 <div class="text-lg font-bold h-full">Notifications</div>
-                <button class="btn red" onClick=${() => setShowNotifications(false)}>Close</button>
+                <${Button} class="btn red" onClick=${() => setShowNotifications(false)}>Close</button>
             </div>
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
                 ${trendingNews.map(h => html`

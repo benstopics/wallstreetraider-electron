@@ -2,6 +2,8 @@ import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../
 import Modal from './Modal.js';
 import * as api from '../api.js';
 import DifficultyLevelInput from './DifficultyLevelInput.js';
+import Button from './Button.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 
 export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
@@ -46,17 +48,17 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
 
     return html`<${Modal} show=${show}>
         <div>
-            <div class="text-lg font-bold h-full">Startup Choices</div>
+            <div class="text-lg font-bold h-full">${insertCurrencySymbols("Startup Choices")}</div>
             <br/>
             <div class="mb-4">
                 <div class="flex flex-col">
                     <div class="flex">
                         <div class="flex-1 p-2"></div>
-                        <div class="flex-1 p-2">Enter Player Names:</div>
-                        <div class="flex-1 p-2">(20 characters max)</div>
+                        <div class="flex-1 p-2">${insertCurrencySymbols("Enter Player Names:")}</div>
+                        <div class="flex-1 p-2">${insertCurrencySymbols("(20 characters max)")}</div>
                     </div>
                     ${playerIdsOrdered.slice(0, numPlayers).map((playerId, index) => html`<div class="flex">
-                        <div class="flex-1 p-2 text-right">${playerId === api.HUMAN1_ID ? "You:" : "Computer:"}</div>
+                        <div class="flex-1 p-2 text-right">${playerId === api.HUMAN1_ID ? insertCurrencySymbols("You:") : insertCurrencySymbols("Computer:")}</div>
                         <div class="flex-1 p-2">
                             <input type="text" maxlength="20" class="modal-input" value=${playerNames[index]} onInput=${(e) => {
                                 const newNames = [...playerNames];
@@ -67,19 +69,19 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                         <div class="flex-1 p-2"></div>
                     </div>`)}
                     <div class="flex mt-4">
-                        <div class="flex-2 p-2 w-36 text-right">Difficulty Level:</div>
+                        <div class="flex-2 p-2 w-36 text-right">${insertCurrencySymbols("Difficulty Level:")}</div>
                         <div class="flex-1 p-2 w-full">
                             <${DifficultyLevelInput}
                                 value=${difficultyLevel}
                                 onChange=${(val) => setDifficultyLevel(val)}
                                 disabled=${false}
-                                label="Difficulty"
+                                label=${insertCurrencySymbols("Difficulty")}
                             />
                         </div>
-                        <div class="flex-2 p-2">(Levels 1, 2, 3, or 4)</div>
+                        <div class="flex-2 p-2">${insertCurrencySymbols("(Levels 1, 2, 3, or 4)")}</div>
                     </div>
                     <div class="flex">
-                        <div class="flex-2 p-2 text-right w-36">Starting Money<br/>per Player:</div>
+                        <div class="flex-2 p-2 text-right w-36">${insertCurrencySymbols("Starting Money")}<br/>${insertCurrencySymbols("per Player:")}</div>
                         <div class="flex-1 p-2">
                             <input type="number" min="100" max="1000" class="modal-input w-full" value=${money} onInput=${(e) => {
                                 setMoney(String(e.target.value));
@@ -92,10 +94,10 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                             }} />
                             <br/>
                         </div>
-                        <div class="flex-2 p-2">(100 to 1000 mil. USD)</div>
+                        <div class="flex-2 p-2">${insertCurrencySymbols("(100 to 1000 mil. USD)")}</div>
                     </div>
                     <div class="flex mb-12 ">
-                        <div class="flex-2 p-2 text-right w-36">Game Length:</div>
+                        <div class="flex-2 p-2 text-right w-36">${insertCurrencySymbols("Game Length:")}</div>
                         <div class="flex-1 p-2 w-40">
                             <input
                                 type="number"
@@ -116,15 +118,15 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                             />
                             <br/>
                         </div>
-                        <div class="flex-2 p-2 text-right">(1 to 35 years)</div>
+                        <div class="flex-2 p-2 text-right">${insertCurrencySymbols("(1 to 35 years)")}</div>
                     </div>
                 </div>
             </div>
         </div>
         <br/>
         <div class="flex justify-between items-center mb-4">
-            <button class="btn modal green" onClick=${submit}>Submit</button>
-            <button class="btn modal" onClick=${onCancel}>Cancel</button>
+            <${Button} class="btn modal green" onClick=${submit}>${insertCurrencySymbols("Submit")}</button>
+            <${Button} class="btn modal" onClick=${onCancel}>${insertCurrencySymbols("Cancel")}</button>
         </div>
     <//>`;
 }

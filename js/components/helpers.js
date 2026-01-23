@@ -4,6 +4,17 @@ import * as api from '../api.js';
 import { createTranslator } from '../locale/translator.js';
 import { zhCN } from '../locale/zh-CN.js';
 
+const LANGUAGE_OPTIONS = {
+    'en-US': {
+        name: 'English (US)',
+        dictionary: {}
+    },
+    'zh-CN': {
+        name: '简体中文',
+        dictionary: zhCN
+    }
+}
+
 const tr = createTranslator(zhCN, { enabled: false, cacheSize: 5000 });
 
 export const MILLION = 1000000;
@@ -66,6 +77,33 @@ export const insertCurrencySymbols = (text) => {
     return result;
 };
 
+function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRegex) {
+    if (text === '') return ' ';
+
+    const idFound = link?.id > 0 || (link?.id && link?.id.includes('|'));
+
+    const classes = idFound && onLink
+        ? 'fixed-width cursor-pointer hover:bg-blue-900 text-blue-400'
+        : 'fixed-width';
+
+    const handler = idFound ? () => onLink && onLink(link) : null;
+
+    // If extras will be rendered, pad line with spaces
+    const padded = (renderExtras && link)
+        ? text.padEnd(maxLength, ' ')
+        : idFound ? text : api.renderHyperlinks(text, ({ id, type }) => {
+            if (type === 'C') api.setViewAsset(id);
+            else if (type === 'I') api.viewIndustry(id);
+        }, hyperlinkRegex);
+
+    return html`<div class="flex flex-row">
+            <div class=${classes} onClick=${handler}>
+                ${padded}
+            </div>
+            ${renderExtras && link && renderExtras({ ...link, text })}
+        </div>`;
+}
+
 export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
     if (!lines) return html``;
 
@@ -75,7 +113,7 @@ export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
         let clean = line;
         clean = insertCurrencySymbols(clean);
         clean = link ? clean.slice(0, clean.indexOf('@')).trimEnd() : clean;
-        return { raw: line, text: clean, link };
+        return { text: clean, link };
     });
 
     // Step 2: Determine max clean line length
@@ -91,32 +129,9 @@ export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
     }
 
     return html`<div class="whitespace-pre-wrap flex flex-col">
-        ${cleanedLines.map(({ raw, text, link }) => {
-            if (text === '') return ' ';
-
-            const idFound = link?.id > 0 || (link?.id && link?.id.includes('|'));
-
-            const classes = idFound && onLink
-                ? 'fixed-width cursor-pointer hover:bg-blue-900 text-blue-400'
-                : 'fixed-width';
-
-            const handler = idFound ? () => onLink && onLink(link) : null;
-
-            // If extras will be rendered, pad line with spaces
-            const padded = (renderExtras && link)
-                ? text.padEnd(maxLength, ' ')
-                : idFound ? text : api.renderHyperlinks(text, ({ id, type }) => {
-                    if (type === 'C') api.setViewAsset(id);
-                    else if (type === 'I') api.viewIndustry(id);
-                }, hyperlinkRegex);
-
-            return html`<div class="flex flex-row">
-                    <div class=${classes} onClick=${handler}>
-                        ${padded}
-                    </div>
-                    ${renderExtras && link && renderExtras({ ...link, text })}
-                </div>`;
-        })}
+        ${cleanedLines.map(cleanedLine => 
+            renderLine(cleanedLine, maxLength, onLink, renderExtras, hyperlinkRegex)
+        )}
     </div>`;
 }
 

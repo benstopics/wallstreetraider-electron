@@ -3,6 +3,7 @@ import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import Modal from './Modal.js';
 import { parseHyperlink, insertCurrencySymbols } from './helpers.js';
+import Button from './Button.js';
 
 // Throttle re-computation so we don't lock the UI when gamestate refreshes frequently.
 function useThrottledValue(value, ms = 750) {
@@ -227,7 +228,7 @@ export default function AssetsManagementPanel() {
         <${Modal} show=${true} onClose=${() => setStopModal(null)} class="modal-card stop-modal">
           <div class="flex items-center justify-between" style="gap: 12px;">
             <div class="text-lg font-bold">${stopModal.kind === 'loss' ? 'Stop Loss' : 'Stop Gain'}</div>
-            <button class="btn" onClick=${() => setStopModal(null)} style="height: 24px;">Close</button>
+            <${Button} class="btn" onClick=${() => setStopModal(null)} style="height: 24px;">Close</button>
           </div>
           <div class="opacity-80" style="margin-top: 6px;">
             Current price: <b>${stopModal.currentPrice != null ? stopModal.currentPrice : '—'}</b>
@@ -238,10 +239,10 @@ export default function AssetsManagementPanel() {
               onInput=${(e) => setStopModal((prev) => prev ? { ...prev, priceStr: e.target.value } : prev)} />
           </div>
           <div class="flex justify-between items-center" style="margin-top: 12px; gap: 10px;">
-            <button class="btn" onClick=${() => { clearStop(stopModal.assetId, stopModal.kind); setStopModal(null); }}>Clear</button>
+            <${Button} class="btn" onClick=${() => { clearStop(stopModal.assetId, stopModal.kind); setStopModal(null); }}>Clear</button>
             <div class="flex gap-2">
-              <button class="btn" onClick=${() => setStopModal(null)}>Cancel</button>
-              <button class="btn green" onClick=${submitStopModal}>Save</button>
+              <${Button} class="btn" onClick=${() => setStopModal(null)}>Cancel</button>
+              <${Button} class="btn green" onClick=${submitStopModal}>Save</button>
             </div>
           </div>
         <//>
@@ -281,19 +282,19 @@ export default function AssetsManagementPanel() {
                 <div class="mono assets-num">${typeof r.heldPct === 'number' ? r.heldPct.toFixed(2) + '%' : '—'}</div>
                 <div class=${`pl-badge ${badgeClass} assets-num`}>${pl == null ? '—' : pl.toFixed(2) + '%'}</div>
                 <div class="assets-actions" style="gap:6px;">
-                  <button
+                  <${Button}
                     class=${`btn p-2 stop-btn stop-loss ${hasStopLoss != null ? 'is-set' : ''}`}
                     title=${hasStopLoss != null ? `Stop Loss @ ${hasStopLoss}` : 'Set Stop Loss'}
                     disabled=${!actingAs}
                     onClick=${() => openStopModal('loss', r.id)}
                   >SL</button>
-                  <button
+                  <${Button}
                     class=${`btn p-2 stop-btn stop-gain ${hasStopGain != null ? 'is-set' : ''}`}
                     title=${hasStopGain != null ? `Stop Gain @ ${hasStopGain}` : 'Set Stop Gain'}
                     disabled=${!actingAs}
                     onClick=${() => openStopModal('gain', r.id)}
                   >SG</button>
-                  <button
+                  <${Button}
                     type="button"
                     class="assets-sell btn red"
                     disabled=${!actingAs}

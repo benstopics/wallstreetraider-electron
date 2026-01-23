@@ -13,6 +13,7 @@ import CommandPrompt from './CommandPrompt.js';
 import FinancialsTab from './FinancialsTab.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
+import Button from './Button.js';
 
 const Tab = Tabs.Tab;
 
@@ -30,10 +31,10 @@ const PlayerView = () => {
                 <div class="flex flex-col w-full gap-2 h-full">
                     <div class="flex gap-2 items-center" style="height: 35px;">
                         <div class="btn-container">
-                            <button class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
+                            <${Button} class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
                         </div>
                         <div class="btn-container">
-                            <button class="btn green mx-1" onclick=${api.startup}>Startup</button>
+                            <${Button} class="btn green mx-1" onclick=${api.startup}>Startup</button>
                         </div>
                     </div>
                     <${Tabs}>
@@ -67,26 +68,26 @@ const PlayerView = () => {
                         <${Tab} label="Advances" id=${api.UI_PLAYER_ADVANCES_LIST}>
                             <div class="flex flex-col items-center">
                                 ${actingAs ? html`
-                                    <button
+                                    <${Button}
                                         class="btn flex-1 mx-1 green"
                                         onClick=${api.advanceFunds}>
                                             Advance Funds
                                     </button>
                                 ` : html`
                                     <${Tooltip} text="Must be acting as this company">
-                                        <button class="btn disabled flex-1 mx-1">Advance Funds</button>
+                                        <${Button} class="btn disabled flex-1 mx-1">Advance Funds</button>
                                     <//>
                                 `}
                                 ${renderLines(advances,
         ({ id }) => api.setViewAsset(id),
-        ({ id }) => actingAs ? html`<button
+        ({ id }) => actingAs ? html`<${Button}
                                             class="btn flex-1 mx-1"
                                             onClick=${() => api.callInAdvance(id)}>
                                                 Recall
                                         </button>`
             : html`
                                             <${Tooltip} text="Must be acting as this company">
-                                                <button class="btn disabled w-full">Recall</button>
+                                                <${Button} class="btn disabled w-full">Recall</button>
                                             <//>`
     , hyperlinkRegex)}
                             </div>
@@ -96,12 +97,12 @@ const PlayerView = () => {
                                 ${renderLines(myCorporationsReport,
                                     ({ id }) => api.setViewAsset(id),
                                     ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
-                                        <button
+                                        <${Button}
                                             class="btn red flex-1 mx-1"
                                             onClick=${() => api.toggleCompanyAutopilot(id)}>
                                                 AutoPilot
                                         </button>
-                                        <button
+                                        <${Button}
                                             class="btn brown flex-1 mx-1"
                                             onClick=${() => api.changeActingAs(id)}>
                                                 Act As

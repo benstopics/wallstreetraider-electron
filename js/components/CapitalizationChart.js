@@ -1,6 +1,7 @@
 import { DEFAULT_CAPITALIZATION_CHART_THEME } from '../../css/chart-styles.js';
 import { html } from '../lib/preact.standalone.module.js';
 import AssetPriceChart from './AssetPriceChart.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 
 function CapitalizationChart({ assetId, chartTitle }) {
@@ -9,13 +10,13 @@ function CapitalizationChart({ assetId, chartTitle }) {
         const { prices } = chartData;
         const maxPrice = Math.max(...prices);
         if (maxPrice > 1e9) {
-            return `${chartTitle} (Quadrillions)`;
+            return `${chartTitle} (${insertCurrencySymbols("Quadrillions")})`;
         } else if (maxPrice > 1e6) {
-            return `${chartTitle} (Trillions)`;
+            return `${chartTitle} (${insertCurrencySymbols("Trillions")})`;
         } else if (maxPrice > 1e3) {
-            return `${chartTitle} (Billions)`;
+            return `${chartTitle} (${insertCurrencySymbols("Billions")})`;
         } else {
-            return `${chartTitle} (Millions)`;
+            return `${chartTitle} (${insertCurrencySymbols("Millions")})`;
         }
     }
 

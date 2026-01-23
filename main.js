@@ -7,7 +7,7 @@ let mainWindow;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        frame: true,
+        frame: false,
         show: false,
         autoHideMenuBar: true,
         icon: path.join(__dirname, 'assets', 'icon.ico'),
@@ -39,9 +39,9 @@ app.whenReady().then(() => {
 
     wsrProcess.unref();
 
-    // wsrProcess.on('exit', () => {
-    //     app.quit();
-    // });
+    wsrProcess.on('exit', () => {
+        app.quit();
+    });
 
     // Sleep a bit to ensure wsr.exe has started
     setTimeout(() => {
@@ -78,6 +78,11 @@ app.whenReady().then(() => {
     // Set specific zoom level
     ipcMain.on('set-zoom-level', (event, level) => {
         mainWindow.webContents.setZoomLevel(level);
+    });
+
+    ipcMain.on('exit-to-desktop', () => {
+        killWSR();
+        app.quit();
     });
 });
 

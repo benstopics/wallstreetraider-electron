@@ -1,6 +1,7 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
 import { insertCurrencySymbols, renderLines } from './helpers.js';
 import Modal from './Modal.js';
+import Button from './Button.js';
 
 
 export default function InputStringModal({ show, title, text, defaultValue, onSubmit, onCancel }) {
@@ -28,8 +29,8 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
             </div>
             <br/>
             <div class="flex justify-between items-center mb-4">
-                <button class="btn modal green" onClick=${() => { onSubmit(inputValue); }}>Submit</button>
-                <button class="btn modal" onClick=${onCancel}>Cancel</button>
+                <${Button} class="btn modal green" onClick=${() => { onSubmit(inputValue); }}>Submit</button>
+                <${Button} class="btn modal" onClick=${onCancel}>Cancel</button>
             </div>
         <//>`;
     }
@@ -53,8 +54,8 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
         </div>
         <br/>
         <div class="flex justify-between items-center mb-4">
-            <button class="btn modal green" onClick=${() => { onSubmit(inputValue); }}>Submit</button>
-            <button class="btn modal" onClick=${onCancel}>Cancel</button>
+            <${Button} class="btn modal green" onClick=${() => { onSubmit(inputValue); }}>Submit</button>
+            <${Button} class="btn modal" onClick=${onCancel}>Cancel</button>
         </div>
     <//>`;
 }

@@ -3,6 +3,8 @@ import { html, render, useRef, useState, useEffect, useContext, createContext } 
 import zustand from './lib/zustand.module.js';
 const { createStore } = zustand;
 
+const { ipcRenderer } = require('electron');
+
 export const apiBase = 'http://127.0.0.1:9631';
 
 // Industry IDs
@@ -254,6 +256,9 @@ export async function loadGame() { await postNoArg('/loadgame'); }
 export async function newGame() { await postNoArg('/newgame'); }
 export async function saveGame() { await postNoArg('/savegame'); }
 export async function exitGame() { await postNoArg('/exit_game'); }
+export async function exitToDesktop() { 
+    ipcRenderer.send('exit-to-desktop');
+ }
 export async function checkScoreboard() { await postNoArg('/check_scoreboard'); }
 export async function getQuoteOfTheDay() { return getJSON('/quote'); }
 export async function setActiveUIReport(uiId) { await postIdArg('/set_active_ui_report', uiId); }
@@ -488,6 +493,20 @@ export async function modalResult(result) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: typeof result === 'number' ? JSON.stringify({ answer: result }) : JSON.stringify({ str: result })
+    });
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.text();
+}
+
+/* CustomData API */
+export async function setCustomData(blob) {
+    const url = `${apiBase}/set_custom_data`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blob)
     });
     if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);

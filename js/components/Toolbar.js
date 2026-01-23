@@ -9,6 +9,8 @@ import NotesModal from './NotesModal.js';
 import CalculatorModal from './CalculatorModal.js';
 import KeybindsModal from './KeybindsModal.js';
 import SettingsModal from './SettingsModal.js';
+import Button from './Button.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 function Toolbar() {
     const { showHelp } = api.useWSRContext();
@@ -56,7 +58,7 @@ function Toolbar() {
         };
 
         return html`
-            <button class="toolbar-menu-item" onClick=${() => handleMenuAction(onActivate)}>${label}</button>
+            <${Button} class="toolbar-menu-item" onClick=${() => handleMenuAction(onActivate)}>${label}</button>
         `;
     }, []);
 
@@ -112,23 +114,23 @@ function Toolbar() {
                         <${SaveIcon} />
                     </div>-->
                     <span style="white-space: nowrap;">
-                        Save Game
+                        ${insertCurrencySymbols("Save Game")}
                     </span>
                 </div>
                 <div class="btn" onClick=${() => {
                     api.exitGame()
                 }}>
                     <span style="white-space: nowrap;">
-                        Exit Game
+                        ${insertCurrencySymbols("Exit Game")}
                     </span>
                 </div>
                 <${SettingsModal}>
                     <div class="btn">
-                        <span style="white-space: nowrap;">Settings</span>
+                        <span style="white-space: nowrap;">${insertCurrencySymbols("Settings")}</span>
                     </div>
                 <//>
                 <div class="btn" onClick=${() => showHelp()}>
-                    <span style="white-space: nowrap;">Help</span>
+                    <span style="white-space: nowrap;">${insertCurrencySymbols("Help")}</span>
                 </div>
             </div>
             <div class="flex items-center">
@@ -138,27 +140,27 @@ function Toolbar() {
             </div>
             <div class="flex items-center gap-2">
                 <div class="toolbar-menu" ref=${menuRef}>
-                    <button class="btn" ref=${menuButtonRef} onClick=${toggleMenu}>
-                        <span style="white-space: nowrap;">Tools</span>
+                    <${Button} class="btn" ref=${menuButtonRef} onClick=${toggleMenu}>
+                        <span style="white-space: nowrap;">${insertCurrencySymbols("Tools")}</span>
                     </button>
                     ${menuOpen && html`
                         <div class="toolbar-menu-popover">
-                            <${MenuItem} key="db-search" label="Database Search" onActivate=${() => api.databaseSearch()} />
-                            <${MenuItem} key="law-firm" label="Change Law Firm" onActivate=${() => api.changeLawFirm()} />
-                            <${MenuItem} key="autopilot" label="Toggle Global Autopilot" onActivate=${() => api.toggleGlobalAutopilot()} />
+                            <${MenuItem} key="db-search" label=${insertCurrencySymbols("Database Search")} onActivate=${() => api.databaseSearch()} />
+                            <${MenuItem} key="law-firm" label=${insertCurrencySymbols("Change Law Firm")} onActivate=${() => api.changeLawFirm()} />
+                            <${MenuItem} key="autopilot" label=${insertCurrencySymbols("Toggle Global Autopilot")} onActivate=${() => api.toggleGlobalAutopilot()} />
                             <div key="sep1" class="toolbar-menu-sep"></div>
-                            <${MenuItem} label="Fullscreen" onActivate=${() => api.toggleFullscreen()} />
+                            <${MenuItem} label=${insertCurrencySymbols("Fullscreen")} onActivate=${() => api.toggleFullscreen()} />
                             <!--<div key="sep4" class="toolbar-menu-sep"></div> -->
-                            <!--<${MenuItem} key="notepad" label="Notepad" onActivate=${() => setShowNotepad(true)} /> -->
-                            <!--<${MenuItem} key="calculator" label="Calculator" onActivate=${() => setShowCalculator(true)} />-->
-                            <${MenuItem} key="help" label="Help" onActivate=${() => showHelp()} />
-                            <!--<${MenuItem} key="keybinds" label="Keybinds" onActivate=${() => setShowKeybinds(true)} />-->
+                            <!--<${MenuItem} key="notepad" label=${insertCurrencySymbols("Notepad")} onActivate=${() => setShowNotepad(true)} /> -->
+                            <!--<${MenuItem} key="calculator" label=${insertCurrencySymbols("Calculator")} onActivate=${() => setShowCalculator(true)} />-->
+                            <${MenuItem} key="help" label=${insertCurrencySymbols("Help")} onActivate=${() => showHelp()} />
+                            <!--<${MenuItem} key="keybinds" label=${insertCurrencySymbols("Keybinds")} onActivate=${() => setShowKeybinds(true)} />-->
                         </div>
                     `}
                 </div>
 
                 <div class="btn" onClick=${() => api.viewIndustry(0)}>
-                    <span style="white-space: nowrap;">Market Reports</span>
+                    <span style="white-space: nowrap;">${insertCurrencySymbols("Market Reports")}</span>
                 </div>
             </div>
             <${ActingAsDropdown} />

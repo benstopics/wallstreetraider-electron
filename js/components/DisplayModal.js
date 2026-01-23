@@ -1,6 +1,7 @@
 import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import Modal from './Modal.js';
+import Button from './Button.js';
 const { ipcRenderer } = require('electron');
 
 // Convert zoom level to percentage (zoom level 0 = 100%, each level is ~20%)
@@ -59,7 +60,7 @@ function DisplayModal({ show, onClose }) {
                 <label style="display: block; margin-bottom: 12px; font-size: 13px; color: #ccc;">Zoom Level</label>
 
                 <div style="display: flex; align-items: center; justify-content: center; gap: 16px;">
-                    <button
+                    <${Button}
                         onClick=${handleZoomOut}
                         style="
                             width: 36px;
@@ -88,7 +89,7 @@ function DisplayModal({ show, onClose }) {
                         ${zoomPercent}%
                     </div>
 
-                    <button
+                    <${Button}
                         onClick=${handleZoomIn}
                         style="
                             width: 36px;
@@ -110,7 +111,7 @@ function DisplayModal({ show, onClose }) {
             </div>
 
             <div style="display: flex; justify-content: center; gap: 12px;">
-                <button
+                <${Button}
                     onClick=${handleReset}
                     style="
                         padding: 6px 16px;
@@ -124,7 +125,7 @@ function DisplayModal({ show, onClose }) {
                 >
                     Reset to 100%
                 </button>
-                <button
+                <${Button}
                     onClick=${onClose}
                     style="
                         padding: 6px 16px;

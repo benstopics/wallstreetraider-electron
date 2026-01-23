@@ -5,6 +5,7 @@ import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import Tooltip from './Tooltip.js';
 import SparkChart from './SparkChart.js';
+import Button from './Button.js';
 
 
 const Tab = Tabs.Tab;
@@ -47,34 +48,34 @@ function IndexPanel({ title, commodityId }) {
                 ${showBuyButton ? (
             !buyDisabledMessage
                 ? html`
-                            <button class="btn green flex-1 mx-1" onclick=${() => buy(commodityId)}>Buy</button>
+                            <${Button} class="btn green flex-1 mx-1" onclick=${() => buy(commodityId)}>Buy</button>
                         `
                 : html`
                             <${Tooltip} text=${buyDisabledMessage}>
-                                <button class="btn disabled w-full">Buy</button>
+                                <${Button} class="btn disabled w-full">Buy</button>
                             <//>
                         `
         ) : ''}
 
                 ${!buyFuturesDisabledMessage
             ? html`
-                        <button class="btn green flex-1 mx-1" onclick=${() => buyFutures(commodityId)}>Buy Futures</button>
+                        <${Button} class="btn green flex-1 mx-1" onclick=${() => buyFutures(commodityId)}>Buy Futures</button>
                     `
             : html`
                         <${Tooltip} text=${buyFuturesDisabledMessage}>
-                            <button class="btn disabled w-full">Buy Futures</button>
+                            <${Button} class="btn disabled w-full">Buy Futures</button>
                         <//>
                     `
         }
 
             ${!shortFuturesDisabledMessage
             ? html`
-                    <button class="btn red flex-1 mx-1" onclick=${() => shortFutures(commodityId)}>Short Futures</button>
+                    <${Button} class="btn red flex-1 mx-1" onclick=${() => shortFutures(commodityId)}>Short Futures</button>
                 `
             : html`
                     <${Tooltip} text=${shortFuturesDisabledMessage}>
                         <div class="flex flex-row justify-between w-full">
-                            <button class="btn disabled w-full">Short Futures</button>
+                            <${Button} class="btn disabled w-full">Short Futures</button>
                         </div>
                     <//>
                 `}
@@ -118,7 +119,7 @@ function CommoditiesTab() {
                 ${renderLines(commodityList,
                     undefined,
                     ({ type, id, text }) => actingAs ? html`
-                    <button
+                    <${Button}
                         class="btn red flex-1 mx-1"
                         onClick=${() => (type === "P" ? api.sellPhysicalCommodity
                                 : type === "PC" ? api.sellPhysicalCrypto
@@ -129,7 +130,7 @@ function CommoditiesTab() {
                         ${type.includes('F') && isContractShort(text) ? 'Cover' : 'Sell'}
                     </button>` : html`
                     <${Tooltip} text="Must be acting as this company">
-                        <button class="btn disabled w-full">Sell</button>
+                        <${Button} class="btn disabled w-full">Sell</button>
                     <//>`, hyperlinkRegex)}
                 </div>
             </div>

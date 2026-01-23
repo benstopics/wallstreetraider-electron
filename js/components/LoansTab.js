@@ -3,6 +3,7 @@ import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import Tooltip from './Tooltip.js';
+import Button from './Button.js';
 
 const renderExtras = (actingAs) => ({ type, id, text }) => {
 
@@ -24,26 +25,26 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
         
         if (!actingAs) {
             nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
-                <button class="btn disabled w-full">Sell</button>
+                <${Button} class="btn disabled w-full">Sell</button>
             <//>`);
 
             nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
-                <button class="btn disabled w-full">Buy</button>
+                <${Button} class="btn disabled w-full">Buy</button>
             <//>`);
         } else {
             if (!sellable) {
                 nodes.push(html`<${Tooltip} text="No securities to sell" containerClass="w-12 mx-1">
-                    <button class="btn disabled w-full">Sell</button>
+                    <${Button} class="btn disabled w-full">Sell</button>
                 <//>`);
             } else {
-                nodes.push(html`<button
+                nodes.push(html`<${Button}
                     class="btn red flex-1 mx-1 w-12"
                     onClick=${() => sell(id)}>
                     Sell
                 </button>`);
             }
 
-            nodes.push(html`<button
+            nodes.push(html`<${Button}
                 class="btn green flex-1 mx-1 w-12"
                 onClick=${() => buy(id)}>
                 Buy
@@ -58,9 +59,9 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
     if (!actingAs) {
         return html`<${Tooltip} text="Must be acting as this company">
             <div class="flex justify-center items-center">
-                <button class="btn disabled mx-1 w-12">Sell</button>
-                <button class="btn disabled mx-1 w-12">Freeze</button>
-                <button class="btn disabled mx-1 w-12 whitespace-nowrap">Call In</button>
+                <${Button} class="btn disabled mx-1 w-12">Sell</button>
+                <${Button} class="btn disabled mx-1 w-12">Freeze</button>
+                <${Button} class="btn disabled mx-1 w-12 whitespace-nowrap">Call In</button>
             </div>
         <//>`;
     }
@@ -74,10 +75,10 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
             ? 'Cannot sell loans of companies you control'
             : 'Depositor has no loans to sell';
         nodes.push(html`<${Tooltip} containerClass="w-12 mx-1" text=${tooltipText}>
-            <button class="btn disabled w-full">Sell</button>
+            <${Button} class="btn disabled w-full">Sell</button>
         <//>`);
     } else {
-        nodes.push(html`<button
+        nodes.push(html`<${Button}
             class="btn red flex-1 mx-1 w-12"
             onClick=${() => api.sellBusinessLoan(id)}>
             Sell
@@ -86,7 +87,7 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
 
     // FREEZE / UNFREEZE
     const isFrozen = text?.includes('FROZ');
-    nodes.push(html`<button
+    nodes.push(html`<${Button}
         class="btn ${isFrozen ? 'orange' : 'blue'} flex-1 mx-1 w-12"
         onClick=${() => api.freezeLoan(id)}>
         ${isFrozen ? 'Unfreeze' : 'Freeze'}
@@ -95,14 +96,14 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
     // CALL IN (BBB or better)
     const isBBBOrBetter = ['   AAA   ', '   AA   ', '   A   ', '   BBB   '].some(s => text?.includes(s));
     if (isBBBOrBetter) {
-        nodes.push(html`<button
+        nodes.push(html`<${Button}
             class="btn brown flex-1 mx-1 whitespace-nowrap w-12"
             onClick=${() => api.callInLoan(id)}>
             Call In
         </button>`);
     } else {
         nodes.push(html`<${Tooltip} text="Requires BBB credit rating or better">
-            <button class="btn disabled mx-1 whitespace-nowrap">Call In</button>
+            <${Button} class="btn disabled mx-1 whitespace-nowrap">Call In</button>
         <//>`);
     }
 

@@ -5,6 +5,7 @@ import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import CapitalizationChart from './CapitalizationChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
 import Tooltip from './Tooltip.js';
+import Button from './Button.js';
 
 
 // For insurance companies
@@ -17,26 +18,26 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
 
         if (!actingAs) {
             nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
-                <button class="btn disabled w-full">Sell</button>
+                <${Button} class="btn disabled w-full">Sell</button>
             <//>`);
 
             nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
-                <button class="btn disabled w-full">Buy</button>
+                <${Button} class="btn disabled w-full">Buy</button>
             <//>`);
         } else {
             if (!sellable) {
                 nodes.push(html`<${Tooltip} text="No securities to sell" containerClass="w-12 mx-1">
-                    <button class="btn disabled w-full">Sell</button>
+                    <${Button} class="btn disabled w-full">Sell</button>
                 <//>`);
             } else {
-                nodes.push(html`<button
+                nodes.push(html`<${Button}
                     class="btn red flex-1 mx-1 w-12"
                     onClick=${() => api.sellSubprimeMortgages(id)}>
                     Sell
                 </button>`);
             }
 
-            nodes.push(html`<button
+            nodes.push(html`<${Button}
                 class="btn green flex-1 mx-1 w-12"
                 onClick=${() => api.buySubprimeMortgages(id)}>
                 Buy

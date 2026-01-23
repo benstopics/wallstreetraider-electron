@@ -7,6 +7,7 @@ import * as api from '../api.js';
 import Tooltip from './Tooltip.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import Modal from './Modal.js';
+import Button from './Button.js';
 
 // Stop orders are managed centrally in api.js and checked on each gameState refresh.
 
@@ -43,12 +44,12 @@ function IndexPanel({ title, bondId }) {
             ${!disabledMessage
                 ? html`
                 <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
-                    <button class="btn green flex-1 mx-1" onclick=${() => buy(bondId)}>Buy</button>
+                    <${Button} class="btn green flex-1 mx-1" onclick=${() => buy(bondId)}>Buy</button>
                 </div>`
                 : html`
                 <${Tooltip} text=${disabledMessage}>
                     <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
-                        <button class="btn disabled flex-1 mx-1">Buy</button>
+                        <${Button} class="btn disabled flex-1 mx-1">Buy</button>
                     </div>
                 <//>
             `}

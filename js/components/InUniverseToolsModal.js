@@ -1,10 +1,11 @@
 import { html, useMemo, useState, useEffect, useRef } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
 import Modal from './Modal.js';
+import Button from './Button.js';
 
 function Pill({ active, label, onClick }) {
     return html`
-    <button class=${`iu-pill ${active ? 'active' : ''}`} onClick=${onClick}>
+    <${Button} class=${`iu-pill ${active ? 'active' : ''}`} onClick=${onClick}>
       ${label}
     </button>
   `;
@@ -1053,9 +1054,9 @@ function DbSearchBody({ onClose }) {
             <div class="iu-subtitle">Search the full company database with advanced filters and presets.</div>
           </div>
           <div class="iu-actions">
-            <button class="btn" onClick=${() => setFiltersOpen(v => !v)}>${filtersOpen ? 'Hide Filters' : 'Show Filters'}</button>
-            <button class="btn blue" onClick=${runSearch} disabled=${isSearching}>${isSearching ? 'Searching…' : 'Run Search'}</button>
-            <button class="btn" onClick=${onClose}>Close</button>
+            <${Button} class="btn" onClick=${() => setFiltersOpen(v => !v)}>${filtersOpen ? 'Hide Filters' : 'Show Filters'}</button>
+            <${Button} class="btn blue" onClick=${runSearch} disabled=${isSearching}>${isSearching ? 'Searching…' : 'Run Search'}</button>
+            <${Button} class="btn" onClick=${onClose}>Close</button>
           </div>
         </div>
 
@@ -1162,14 +1163,14 @@ function DbSearchBody({ onClose }) {
           </div>
 
           <div class="iu-footer-actions">
-            <button class="btn" disabled=${!selected?.id} onClick=${() => selected?.id ? api.setViewAsset(selected.id) : null}>Open Company</button>
-            <button class="btn" disabled=${!selected?.id} onClick=${toggleWatch}>
+            <${Button} class="btn" disabled=${!selected?.id} onClick=${() => selected?.id ? api.setViewAsset(selected.id) : null}>Open Company</button>
+            <${Button} class="btn" disabled=${!selected?.id} onClick=${toggleWatch}>
               ${selected?.id && watchIds.includes(selected.id) ? 'Remove Watch' : 'Watchlist'}
             </button>
-            <button class="btn" disabled=${!selected?.id || results.length < 2} onClick=${() => setCompareOpen(v => !v)}>
+            <${Button} class="btn" disabled=${!selected?.id || results.length < 2} onClick=${() => setCompareOpen(v => !v)}>
               ${compareOpen ? 'Close Compare' : 'Compare'}
             </button>
-            <button class="btn" disabled=${results.length === 0} onClick=${exportCSV}>Export CSV</button>
+            <${Button} class="btn" disabled=${results.length === 0} onClick=${exportCSV}>Export CSV</button>
           </div>
         </div>
       </div>
@@ -1203,11 +1204,11 @@ function DbSearchBody({ onClose }) {
             `;
         })() : html`<div class="iu-detail-sub">Select a row to see details.</div>`}
             ${selected ? html`<div class="iu-quick">
-              <button class="btn blue" onClick=${() => api.setViewAsset(selected.id)}>View</button>
-              <button class="btn" onClick=${toggleWatch}>
+              <${Button} class="btn blue" onClick=${() => api.setViewAsset(selected.id)}>View</button>
+              <${Button} class="btn" onClick=${toggleWatch}>
                 ${watchIds.includes(selected.id) ? 'Unwatch' : 'Watch'}
               </button>
-              <button class="btn" disabled=${results.length < 2} onClick=${() => setCompareOpen(true)}>Compare</button>
+              <${Button} class="btn" disabled=${results.length < 2} onClick=${() => setCompareOpen(true)}>Compare</button>
             </div>` : null}
         </div>
 
@@ -1297,8 +1298,8 @@ function DbSearchBody({ onClose }) {
                         <td><span class="iu-chip">${sym}</span></td>
                         <td>${name}</td>
                         <td class="num">
-                          <button class="btn" onClick=${() => api.setViewAsset(id)}>Open</button>
-                          <button class="btn" onClick=${() => saveWatch(watchIds.filter(x => x !== id))}>Remove</button>
+                          <${Button} class="btn" onClick=${() => api.setViewAsset(id)}>Open</button>
+                          <${Button} class="btn" onClick=${() => saveWatch(watchIds.filter(x => x !== id))}>Remove</button>
                         </td>
                       </tr>
                     `;

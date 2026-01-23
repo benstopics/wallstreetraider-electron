@@ -2,6 +2,8 @@ import { html, useState, useEffect, useRef, useMemo } from '../lib/preact.standa
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import DisplayModal from './DisplayModal.js';
+import Button from './Button.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 function SettingsModal({ children }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -37,8 +39,8 @@ function SettingsModal({ children }) {
 
     const SettingItem = useMemo(() => ({ label, isOn, onToggle }) => {
         return html`
-            <button class="toolbar-menu-item" onClick=${() => onToggle()}>
-                ${label}: ${isOn ? 'ON' : 'OFF'}
+            <${Button} class="toolbar-menu-item" onClick=${() => onToggle()}>
+                ${insertCurrencySymbols(label)}: ${isOn ? insertCurrencySymbols('ON') : insertCurrencySymbols('OFF')}
             </button>
         `;
     }, []);
@@ -56,16 +58,16 @@ function SettingsModal({ children }) {
             </div>
             ${isOpen && html`
                 <div ref=${popoverRef} class="toolbar-menu-popover" style="position: absolute; top: 100%; right: 0; z-index: 1000;">
-                    <button class="toolbar-menu-item" onClick=${handleDisplayClick}>Display</button>
+                    <${Button} class="toolbar-menu-item" onClick=${handleDisplayClick}>${insertCurrencySymbols("Display")}</button>
                     <div class="toolbar-menu-sep"></div>
-                    <${SettingItem} label="Suppress Earnings" isOn=${suppEarnSetting} onToggle=${() => api.suppEarnSelect()} />
-                    <${SettingItem} label="Suppress Warnings" isOn=${suppWarnSetting} onToggle=${() => api.suppWarnSelect()} />
-                    <${SettingItem} label="Suppress Popups" isOn=${supPopupSetting} onToggle=${() => api.suppressSelect()} />
-                    <${SettingItem} label="Autosave" isOn=${autosaveSetting} onToggle=${() => api.autosaveSelect()} />
-                    <${SettingItem} label="Exercise Options" isOn=${exerciseItSetting} onToggle=${() => api.exerciseSelect()} />
-                    <${SettingItem} label="Sweep" isOn=${sweepSetting} onToggle=${() => api.sweepSelect()} />
-                    <${SettingItem} label="Make Delivery" isOn=${makeDeliverySetting} onToggle=${() => api.makedeliverySelect()} />
-                    <${SettingItem} label="Take Delivery" isOn=${takeDeliverySetting} onToggle=${() => api.takedeliverySelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Suppress Earnings")}" isOn=${suppEarnSetting} onToggle=${() => api.suppEarnSelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Suppress Warnings")}" isOn=${suppWarnSetting} onToggle=${() => api.suppWarnSelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Suppress Popups")}" isOn=${supPopupSetting} onToggle=${() => api.suppressSelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Autosave")}" isOn=${autosaveSetting} onToggle=${() => api.autosaveSelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Exercise Options")}" isOn=${exerciseItSetting} onToggle=${() => api.exerciseSelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Sweep")}" isOn=${sweepSetting} onToggle=${() => api.sweepSelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Make Delivery")}" isOn=${makeDeliverySetting} onToggle=${() => api.makedeliverySelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Take Delivery")}" isOn=${takeDeliverySetting} onToggle=${() => api.takedeliverySelect()} />
                 </div>
             `}
         </div>

@@ -6,6 +6,7 @@ import * as api from '../api.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import MarketHeatMapTab from './MarketHeatMapTab.js';
 import SectorHeatMapTab from './SectorHeatMapTab.js';
+import Button from './Button.js';
 
 const Tab = Tabs.Tab;
 
@@ -67,10 +68,10 @@ const IndustryView = () => {
             <div class="flex flex-col w-3/4 gap-2 h-full">
                 <div class="flex gap-2 items-center" style="height: 35px;">
                     <!--<div class="btn-container">
-                        <button class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
+                        <${Button} class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
                     </div>
                     <div class="btn-container">
-                        <button class="btn green mx-1" onclick=${api.startup}>Startup</button>
+                        <${Button} class="btn green mx-1" onclick=${api.startup}>Startup</button>
                     </div>-->
                 </div>
                 <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>

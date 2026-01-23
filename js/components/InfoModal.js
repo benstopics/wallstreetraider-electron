@@ -1,6 +1,7 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
 import { insertCurrencySymbols, renderLines } from './helpers.js';
 import Modal from './Modal.js';
+import Button from './Button.js';
 
 
 export default function InfoModal({ show, text, onClose }) {
@@ -16,7 +17,7 @@ export default function InfoModal({ show, text, onClose }) {
         <br/>
         <div class="flex justify-between items-center mb-4">
             <div></div>
-            <button class="btn modal green" onClick=${onClose}>OK</button>
+            <${Button} class="btn modal green" onClick=${onClose}>OK</button>
         </div>
     <//>`;
 }
