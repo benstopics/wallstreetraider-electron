@@ -15,7 +15,7 @@ const LANGUAGE_OPTIONS = {
     }
 }
 
-const tr = createTranslator(zhCN, { enabled: false, cacheSize: 5000 });
+const tr = createTranslator(zhCN, { enabled: true, cacheSize: 5000 });
 
 export const MILLION = 1000000;
 
