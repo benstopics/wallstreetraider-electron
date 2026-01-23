@@ -1446,6 +1446,12 @@ li.active {
     min-height: 0;
 }
 
+.wsr-block.warning {
+    border-left: 4px solid #6ba4ff;
+    padding-left: 12px;
+    background: rgba(255, 255, 255, 0.588);
+}
+
 .wsr-block-title {
     color: #C3D3E5;
     font-weight: 700;

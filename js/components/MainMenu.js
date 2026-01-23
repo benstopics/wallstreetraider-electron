@@ -5,6 +5,8 @@ import VideoBackground from './VideoBackground.js';
 import { renderMultilineText } from './helpers.js';
 import SettingsModal from './SettingsModal.js';
 import Button from './Button.js';
+import LocalizationDropdown from './LocalizationDropdown.js';
+import localeManager from '../locale/localeManager.js';
 
 // TODO: set your actual asset paths/links
 const LOGO_SRC = 'assets/wallstreetraider_logo.png';
@@ -210,6 +212,8 @@ const MainMenu = () => {
 
     const { showHelp } = api.useWSRContext();
 
+    const localeWarning = localeManager.getWarningForLocale(localeManager.getCurrentLocale());
+
     return html`
     <div class="wsr-root">
       <${VideoBackground} />
@@ -228,6 +232,7 @@ const MainMenu = () => {
             <${SettingsModal}>
               <${Button} class="btn main-menu">Settings</button>
             <//>
+            <${LocalizationDropdown} />
             <div class="wsr-version">Early Access</div>
           </div>
         </header>
@@ -239,11 +244,10 @@ const MainMenu = () => {
                 <div class="quote-overlay glass">
               <h3 class="wsr-block-title">Quote of the Day</h3>
                     <blockquote class="flex flex-col">
-                        ${renderMultilineText(quote.trim(), { additionalDelimiters: ['--.*'] })}
+                        ${renderMultilineText(quote.trim(), { additionalDelimiters: [] })}
                     </blockquote>
                 </div>
             </div>
-
             <div class="wsr-block">
                 <div class="wsr-ann-welcome">
               <div class="h-full overflow-y-auto" style="max-height:40vh;">
@@ -303,6 +307,7 @@ const MainMenu = () => {
 
         <footer class="wsr-footer glass">
           <div>© 1986 - ${new Date().getFullYear()} Hackjack Games • Roninsoft</div>
+      ${localeWarning}
           <div class="wsr-legal">Simulated markets. Not investment advice.</div>
         </footer>
       </div>

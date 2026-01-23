@@ -1,21 +1,7 @@
 import { html, render, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
-import { createTranslator } from '../locale/translator.js';
-import { zhCN } from '../locale/zh-CN.js';
-
-const LANGUAGE_OPTIONS = {
-    'en-US': {
-        name: 'English (US)',
-        dictionary: {}
-    },
-    'zh-CN': {
-        name: '简体中文',
-        dictionary: zhCN
-    }
-}
-
-const tr = createTranslator(zhCN, { enabled: true, cacheSize: 5000 });
+import localeManager from '../locale/localeManager.js';
 
 export const MILLION = 1000000;
 
@@ -32,7 +18,7 @@ export function getMultilineTextLines(text, additionalDelimiters = []) {
     const regex = new RegExp(`(\\n${additionalDelimiters.length > 0 ? '|' : ''}${additionalDelimiters.join('|')})`, 'g');
 
     // Split the text while preserving delimiters
-    return tr.translate(text).split(regex).filter(Boolean);
+    return localeManager.translate(text).split(regex).filter(Boolean);
 }
 
 export function renderMultilineText(text, options = { additionalDelimiters: [], render: null }) {
@@ -70,7 +56,7 @@ const CURRENCY_SYMBOLS = {
 };
 
 export const insertCurrencySymbols = (text) => {
-    let result = tr.translate(text) || '';
+    let result = localeManager.translate(text) || '';
     Object.entries(CURRENCY_SYMBOLS).forEach(([key, symbol]) => {
         result = result.replaceAll(key, symbol);
     });
@@ -109,7 +95,7 @@ export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
 
     // Step 1: Strip hyperlinks and get clean lines
     const cleanedLines = lines.map(line => {
-        const link = parseHyperlink(tr.translate(line));
+        const link = parseHyperlink(localeManager.translate(line));
         let clean = line;
         clean = insertCurrencySymbols(clean);
         clean = link ? clean.slice(0, clean.indexOf('@')).trimEnd() : clean;
