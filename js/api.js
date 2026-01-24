@@ -514,6 +514,15 @@ export async function setCustomData(blob) {
     return response.text();
 }
 
+/* Tutorial API */
+export async function setTutorialStep(step) {
+    return postIdArg('/set_tutorial_step', step);
+}
+
+export async function setTutorialEnabled(enabled) {
+    return postIdArg('/set_tutorial_enabled', enabled ? 1 : 0);
+}
+
 export function serialize(obj) {
     return Object.entries(obj).map(([key, value]) => `${key}=${value}`).join('|');
 }
@@ -710,6 +719,17 @@ export function WSRProvider({ children }) {
     const [helpShown, setHelpShown] = useState(false);
     const showHelp = () => setHelpShown(true);
     const hideHelp = () => setHelpShown(false);
+
+    // Database Search modal state
+    const [dbSearchShown, setDbSearchShown] = useState(false);
+    const showDbSearch = () => setDbSearchShown(true);
+    const hideDbSearch = () => setDbSearchShown(false);
+
+    // Tutorial modal state
+    const [tutorialShown, setTutorialShown] = useState(false);
+    const showTutorial = () => setTutorialShown(true);
+    const hideTutorial = () => setTutorialShown(false);
+
     const { gameState, setGameState } = useGameStore(
         s => ({ gameState: s.gameState, setGameState: s.setGameState }),
         shallow
@@ -721,6 +741,12 @@ export function WSRProvider({ children }) {
         helpShown,
         showHelp,
         hideHelp,
+        dbSearchShown,
+        showDbSearch,
+        hideDbSearch,
+        tutorialShown,
+        showTutorial,
+        hideTutorial,
     }}>
         ${children}
     <//>`;

@@ -21,12 +21,14 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
     const [money, setMoney] = useState(() => defaultStartingMoney?.toString() || "1000");
     const [gameLength, setGameLength] = useState(() => defaultGameLength?.toString() || "35");
     const [difficultyLevel, setDifficultyLevel] = useState(() => defaultDifficultyLevel?.toString() || "2");
+    const [tutorialEnabled, setTutorialEnabled] = useState(true); // Default enabled for new games
 
     useEffect(() => {
         setPlayerNames(defaultPlayerNames || ["", "", "", "", ""]);
         setMoney(defaultStartingMoney?.toString() || "1000");
         setGameLength(defaultGameLength?.toString() || "35");
         setDifficultyLevel(defaultDifficultyLevel?.toString() || "2");
+        setTutorialEnabled(true); // Reset to enabled for new games
     }, [show]);
 
     const submit = () => {
@@ -36,7 +38,8 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
         const body = {
             startingMoney: money,
             gameLength,
-            difficultyLevel: difficultyLevel
+            difficultyLevel: difficultyLevel,
+            tutorialEnabled: tutorialEnabled ? 1 : 0
         };
         sanitizeNames.forEach((name, index) => {
             const playerNum = playerIdsOrdered[index];
@@ -96,7 +99,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                         </div>
                         <div class="flex-2 p-2">${insertCurrencySymbols("(100 to 1000 mil. USD)")}</div>
                     </div>
-                    <div class="flex mb-12 ">
+                    <div class="flex">
                         <div class="flex-2 p-2 text-right w-36">${insertCurrencySymbols("Game Length:")}</div>
                         <div class="flex-1 p-2 w-40">
                             <input
@@ -119,6 +122,21 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                             <br/>
                         </div>
                         <div class="flex-2 p-2 text-right">${insertCurrencySymbols("(1 to 35 years)")}</div>
+                    </div>
+                    <div class="flex mb-12">
+                        <div class="flex-2 p-2 text-right w-36">${insertCurrencySymbols("Tutorial:")}</div>
+                        <div class="flex-1 p-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked=${tutorialEnabled}
+                                    onChange=${(e) => setTutorialEnabled(e.target.checked)}
+                                    class="w-4 h-4"
+                                />
+                                <span>${insertCurrencySymbols("Enable interactive tutorial")}</span>
+                            </label>
+                        </div>
+                        <div class="flex-2 p-2"></div>
                     </div>
                 </div>
             </div>

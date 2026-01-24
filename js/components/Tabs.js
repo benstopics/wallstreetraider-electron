@@ -36,10 +36,11 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
     return html`
     <div class="flex flex-col w-full h-full min-h-0">
         <!-- Tab Header Row -->
-        <div class="flex flex-row flex-wrap items-center" style="gap: 5px;">
+        <div class="flex flex-row flex-wrap items-center" data-tutorial="tab-row" style="gap: 5px;">
             ${tabLabels.map(label => html`
                 <div
                     class=${`tab-button ${label === activeTab ? 'active' : ''}`}
+                    data-tutorial=${`tab-${label.toLowerCase().replace(/\s+/g, '-')}`}
                     onClick=${() => changeTab(label)}
                 >
                     ${insertCurrencySymbols(label)}

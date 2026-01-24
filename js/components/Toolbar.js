@@ -13,7 +13,7 @@ import Button from './Button.js';
 import { insertCurrencySymbols } from './helpers.js';
 
 function Toolbar() {
-    const { showHelp } = api.useWSRContext();
+    const { showHelp, showDbSearch, showTutorial } = api.useWSRContext();
 
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
@@ -27,6 +27,8 @@ function Toolbar() {
 
     const tickSpeed = api.useGameStore(s => s.gameState.tickSpeed);
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
+    const customData = api.useGameStore(s => s.gameState.customData || {});
+    const testValue = customData.test || 'off';
 
     const toggleTicker = () => {
         if (isTickerRunning) {
@@ -34,6 +36,11 @@ function Toolbar() {
         } else {
             api.startTicker();
         }
+    }
+
+    const toggleTest = () => {
+        const newValue = testValue === 'on' ? 'off' : 'on';
+        api.setCustomData({ test: newValue });
     }
 
     // Close menu on outside click
@@ -80,6 +87,7 @@ function Toolbar() {
             />
             <div class="flex items-center gap-2">
                 <div style="width: 25px; height: 20px"
+                data-tutorial="pause-button"
                 class="btn ${isTickerRunning ? 'stop' : 'play'}"
                 onClick=${toggleTicker}>
                     <div class="" style="width: 20px">
@@ -132,6 +140,12 @@ function Toolbar() {
                 <div class="btn" onClick=${() => showHelp()}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Help")}</span>
                 </div>
+                <div class="btn" onClick=${() => showTutorial()}>
+                    <span style="white-space: nowrap;">${insertCurrencySymbols("Tutorial")}</span>
+                </div>
+                <div class="btn ${testValue === 'on' ? 'green' : ''}" onClick=${toggleTest}>
+                    <span style="white-space: nowrap;">Test: ${testValue}</span>
+                </div>
             </div>
             <div class="flex items-center">
                 <div class="w-60">
@@ -139,13 +153,13 @@ function Toolbar() {
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <div class="toolbar-menu" ref=${menuRef}>
+                <div class="toolbar-menu" data-tutorial="tools-menu" ref=${menuRef}>
                     <${Button} class="btn" ref=${menuButtonRef} onClick=${toggleMenu}>
                         <span style="white-space: nowrap;">${insertCurrencySymbols("Tools")}</span>
                     </button>
                     ${menuOpen && html`
                         <div class="toolbar-menu-popover">
-                            <${MenuItem} key="db-search" label=${insertCurrencySymbols("Database Search")} onActivate=${() => api.databaseSearch()} />
+                            <${MenuItem} key="db-search" label=${insertCurrencySymbols("Database Search")} onActivate=${() => showDbSearch()} />
                             <${MenuItem} key="law-firm" label=${insertCurrencySymbols("Change Law Firm")} onActivate=${() => api.changeLawFirm()} />
                             <${MenuItem} key="autopilot" label=${insertCurrencySymbols("Toggle Global Autopilot")} onActivate=${() => api.toggleGlobalAutopilot()} />
                             <div key="sep1" class="toolbar-menu-sep"></div>
@@ -159,7 +173,7 @@ function Toolbar() {
                     `}
                 </div>
 
-                <div class="btn" onClick=${() => api.viewIndustry(0)}>
+                <div class="btn" data-tutorial="market-reports" onClick=${() => api.viewIndustry(0)}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Market Reports")}</span>
                 </div>
             </div>

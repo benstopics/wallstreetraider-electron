@@ -4,7 +4,7 @@ import { formatCurrency, insertCurrencySymbols } from './helpers.js';
 
 const BalanceSheet = ({ cash, otherAssets, totalAssets, totalDebt, netWorth }) => {
     return html`
-    <div class="panel">
+    <div class="panel" data-tutorial="balance-sheet">
         <div class="panel-header">${insertCurrencySymbols("My Balance Sheet ($ Millions)")}</div>
 
         <div class="p-1 panel-body">

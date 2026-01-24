@@ -171,12 +171,12 @@ const IndustrialView = () => {
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
                                         ${!buyStockDisabledMessage
                             ? html`
-                                                <${Button} class="btn flex-1 mx-1 green" onClick=${() => api.buyStock(activeEntityNum)}>
+                                                <${Button} class="btn flex-1 mx-1 green" data-tutorial="buy-stock" onClick=${() => api.buyStock(activeEntityNum)}>
                                                     Buy Stock
                                                 </button>`
                             : html`
                                                 <${Tooltip} text=${buyStockDisabledMessage}>
-                                                    <${Button} class="btn disabled w-full">Buy Stock</button>
+                                                    <${Button} class="btn disabled w-full" data-tutorial="buy-stock">Buy Stock</button>
                                                 <//>`}
 
                                         ${!shortStockDisabledMessage

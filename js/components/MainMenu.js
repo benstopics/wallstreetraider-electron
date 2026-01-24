@@ -42,7 +42,7 @@ const CHANGELOG = [
             "Migrate Harassing Lawsuit from Win32 to Electron",
             "Migrate Capital Contributions from Win32 to Electron",
             "CustomData API endpoint for mods to store custom game data", // TODO
-            "Localization support framework", // TODO - Need to make a menu for it and get first language added
+            "Localization support framework",
             "Add Microsoft Visual C++ to Steam Common Redistributables installation list",
             "Migrated Strategy Manual to Help menu",
             "Display settings modal with zoom controls",
