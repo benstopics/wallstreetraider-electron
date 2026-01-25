@@ -33,6 +33,9 @@ const GameUI = () => {
     const netWorth = api.useGameStore(s => s.gameState.netWorth);
     const trendingNews = api.useGameStore(s => s.gameState.trendingNews);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+    const activeIndustryNum = api.useGameStore(s => s.gameState.activeIndustryNum);
+
+    const isDbSearch = activeIndustryNum === -2;
 
     const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString());
     useEffect(() => {
@@ -60,6 +63,7 @@ const GameUI = () => {
         <!-- Toolbar -->
         <${Toolbar} />
         <div class="game-view flex flex-column gap-2 p-2">
+            ${!isDbSearch && html`
             <!-- Left Column -->
             <div class="flex flex-col w-1/6 gap-2">
                 <!-- Date and Time -->
@@ -69,15 +73,15 @@ const GameUI = () => {
                         <div class="bg-blue-600 h-2.5 rounded-full" style=${`width: ${timeOfDayPct * 100}%;`}></div>
                     </div>
                 </div>
-                
+
                 <!-- Balance Sheet -->
                 <div>
-                    ${html`<${BalanceSheet} 
-                        cash=${cash} 
-                        otherAssets=${otherAssets} 
-                        totalAssets=${totalAssets} 
-                        totalDebt=${totalDebt} 
-                        netWorth=${netWorth} 
+                    ${html`<${BalanceSheet}
+                        cash=${cash}
+                        otherAssets=${otherAssets}
+                        totalAssets=${totalAssets}
+                        totalDebt=${totalDebt}
+                        netWorth=${netWorth}
                     />`}
                 </div>
 
@@ -121,9 +125,10 @@ const GameUI = () => {
                     </div>
                 </div>
             </div>
-            
+            `}
+
             <!-- Right Column -->
-            <div class="flex flex-col w-4/6 gap-2 h-full">
+            <div class=${`flex flex-col gap-2 h-full ${isDbSearch ? 'w-full' : 'w-4/6'}`}>
                 ${html`<${View} />`}
             </div>
         </div>

@@ -81,7 +81,7 @@ function calculatePanelStyle(step) {
 }
 
 export default function TutorialModal() {
-    const { tutorialShown, hideTutorial, showHelp, showTutorial } = api.useWSRContext();
+    const { hideTutorial, showHelp, showTutorial } = api.useWSRContext();
     const tutorialStep = api.useGameStore(s => s.gameState.tutorialStep) || 0;
     const tutorialEnabled = api.useGameStore(s => s.gameState.tutorialEnabled);
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
@@ -97,7 +97,7 @@ export default function TutorialModal() {
 
     // Pause ticker when tutorial is shown
     useEffect(() => {
-        if (tutorialShown) {
+        if (tutorialEnabled) {
             // Remember if ticker was running when we opened
             wasTickerRunning.current = isTickerRunning;
             // Stop the ticker while tutorial is open
@@ -105,19 +105,7 @@ export default function TutorialModal() {
                 api.stopTicker();
             }
         }
-    }, [tutorialShown]);
-
-    // Auto-show tutorial when enabled and not already completed
-    useEffect(() => {
-        if (tutorialEnabled && !tutorialShown && tutorialStep < TUTORIAL_STEPS.length && !hasAutoShown.current) {
-            hasAutoShown.current = true;
-            // Small delay to let the game UI render first
-            const timeoutId = setTimeout(() => {
-                showTutorial();
-            }, 500);
-            return () => clearTimeout(timeoutId);
-        }
-    }, [tutorialEnabled, tutorialShown, tutorialStep, showTutorial]);
+    }, [tutorialEnabled]);
 
     // Reset auto-show flag when tutorial is disabled
     useEffect(() => {
@@ -128,8 +116,7 @@ export default function TutorialModal() {
 
     // Update panel position when step changes
     useEffect(() => {
-        if (!tutorialShown || !step) return;
-
+        if (!tutorialEnabled || !step) return;
         const updatePosition = () => {
             setPanelStyle(calculatePanelStyle(step));
         };
@@ -143,7 +130,7 @@ export default function TutorialModal() {
             clearTimeout(timeoutId);
             window.removeEventListener('resize', updatePosition);
         };
-    }, [tutorialShown, tutorialStep, step]);
+    }, [tutorialEnabled, tutorialStep, step]);
 
     // Navigation handlers
     const goNext = () => {
@@ -173,7 +160,7 @@ export default function TutorialModal() {
 
     // Keyboard navigation
     useEffect(() => {
-        if (!tutorialShown) return;
+        if (!tutorialEnabled) return;
 
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
@@ -187,14 +174,14 @@ export default function TutorialModal() {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [tutorialShown, tutorialStep]);
+    }, [tutorialEnabled, tutorialStep]);
 
-    if (!tutorialShown || !step) return null;
+    if (!tutorialEnabled || !step) return null;
 
     return html`
         <${TutorialOverlay}
             selector=${step.highlightSelector}
-            enabled=${tutorialShown}
+            enabled=${tutorialEnabled}
         />
         <div class="tutorial-panel" style=${panelStyle} ref=${panelRef}>
             <div class="tutorial-header">
@@ -228,7 +215,7 @@ export default function TutorialModal() {
             `}
             <div class="tutorial-footer">
                 <${Button} class="btn tutorial-skip" onClick=${skipTutorial}>
-                    ${insertCurrencySymbols("Skip Tutorial")}
+                    ${insertCurrencySymbols("Hide")}
                 </button>
                 <div class="tutorial-nav">
                     <${Button}

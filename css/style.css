@@ -3449,6 +3449,23 @@ input:focus, select:focus, textarea:focus{
   box-shadow: 0 0 0 2px rgba(59,130,246,0.16);
 }
 
+/* Global select dropdown styling - ensure dark theme for all selects */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: var(--main-bg-color, #0f141c) !important;
+  color: var(--main-fg-color, #e6ebf5) !important;
+}
+
+select option:hover,
+select option:checked,
+select option:focus {
+  background-color: rgba(59,130,246,0.35) !important;
+  color: #ffffff !important;
+}
+
 /* Notes: remove the "white paper" look, match finetune theme */
 .notes-window{
   background: linear-gradient(180deg, rgba(21,27,39,0.98), rgba(11,15,21,0.98)) !important;
@@ -4157,3 +4174,95 @@ input.command-line{
 }
 
 /* ===== END TUTORIAL ===== */
+
+/* ===== DATABASE SEARCH ===== */
+
+.db-input {
+    background: var(--main-bg-color);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: var(--main-fg-color);
+    font-size: 12px;
+}
+
+.db-input:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
+select.db-input {
+    color-scheme: dark;
+    background-color: var(--main-bg-color);
+    color: var(--main-fg-color);
+}
+
+select.db-input option {
+    background-color: var(--main-bg-color);
+    color: var(--main-fg-color);
+}
+
+.db-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.db-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--main-bg-color-highlight);
+    z-index: 1;
+}
+
+.db-table th {
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    user-select: none;
+}
+
+.db-table th.num {
+    text-align: right;
+}
+
+.db-table td {
+    padding: 4px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.db-table td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.db-table tbody tr {
+    cursor: pointer;
+}
+
+.db-table tbody tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.db-table tbody tr.selected {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.symbol-chip {
+    display: inline-block;
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--blue);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.btn-sm {
+    padding: 2px 8px !important;
+    font-size: 11px !important;
+}
+
+/* ===== END DATABASE SEARCH ===== */

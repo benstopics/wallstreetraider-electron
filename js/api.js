@@ -72,6 +72,7 @@ export const UI_INDUSTRIES_HEATMAP = 35;
 export const UI_COMPANIES_HEATMAP = 36;
 export const UI_CORP_SWAPS_PORTFOLIO = 37;
 export const UI_PLAYER_SWAPS_PORTFOLIO = 38;
+export const UI_DB_SEARCH = 39;
 
 export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
@@ -122,6 +123,11 @@ export async function getJSON(path) {
     const data = await response.json();
 
     return data;
+}
+
+// Fetch database search data
+export async function getDatabaseData() {
+    return getJSON('/database_data');
 }
 
 export function isPlayerControlled(controlledCompanies, entityId) {
@@ -560,6 +566,13 @@ export async function viewIndustry(id) {
     shiftNavHistory({ id, type: 'industry' });
 }
 
+// Open the Database Search view (sets activeIndustryNum to -2)
+export async function viewDbSearch() {
+    await postIdArg('/set_view_industry', -2);
+    // Also set the active UI report to trigger UpdateDatabase
+    await postIdArg('/set_active_ui_report', UI_DB_SEARCH);
+}
+
 // Open the Market Heat Map (IndustryView -> "Heat Maps" tab) from anywhere (e.g., top Menu).
 // This sets a one-shot tab preference that IndustryView will consume and then clear.
 export async function openMarketHeatMap() {
@@ -726,9 +739,8 @@ export function WSRProvider({ children }) {
     const hideDbSearch = () => setDbSearchShown(false);
 
     // Tutorial modal state
-    const [tutorialShown, setTutorialShown] = useState(false);
-    const showTutorial = () => setTutorialShown(true);
-    const hideTutorial = () => setTutorialShown(false);
+    const showTutorial = () => setTutorialEnabled(true);
+    const hideTutorial = () =>  setTutorialEnabled(false);
 
     const { gameState, setGameState } = useGameStore(
         s => ({ gameState: s.gameState, setGameState: s.setGameState }),
@@ -744,7 +756,6 @@ export function WSRProvider({ children }) {
         dbSearchShown,
         showDbSearch,
         hideDbSearch,
-        tutorialShown,
         showTutorial,
         hideTutorial,
     }}>

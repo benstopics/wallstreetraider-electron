@@ -1,4 +1,4 @@
-import { html, useState, useEffect, useRef, useMemo } from '../lib/preact.standalone.module.js';
+import { html, useState } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import { PauseIcon, StopIcon, SaveIcon, GaugeIcon, ForwardIcon } from '../icons.js';
@@ -9,15 +9,10 @@ import NotesModal from './NotesModal.js';
 import CalculatorModal from './CalculatorModal.js';
 import KeybindsModal from './KeybindsModal.js';
 import SettingsModal from './SettingsModal.js';
-import Button from './Button.js';
 import { insertCurrencySymbols } from './helpers.js';
 
 function Toolbar() {
-    const { showHelp, showDbSearch, showTutorial } = api.useWSRContext();
-
-    const [menuOpen, setMenuOpen] = useState(false);
-    const menuRef = useRef(null);
-    const menuButtonRef = useRef(null);
+    const { showTutorial, showHelp } = api.useWSRContext();
 
     const [showNotepad, setShowNotepad] = useState(false);
     const [showCalculator, setShowCalculator] = useState(false);
@@ -27,8 +22,6 @@ function Toolbar() {
 
     const tickSpeed = api.useGameStore(s => s.gameState.tickSpeed);
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
-    const customData = api.useGameStore(s => s.gameState.customData || {});
-    const testValue = customData.test || 'off';
 
     const toggleTicker = () => {
         if (isTickerRunning) {
@@ -37,37 +30,6 @@ function Toolbar() {
             api.startTicker();
         }
     }
-
-    const toggleTest = () => {
-        const newValue = testValue === 'on' ? 'off' : 'on';
-        api.setCustomData({ test: newValue });
-    }
-
-    // Close menu on outside click
-    useEffect(() => {
-        if (!menuOpen) return;
-        const onDocMouseDown = (e) => {
-            if (!menuRef.current) return;
-            if (!menuRef.current.contains(e.target)) setMenuOpen(false);
-        };
-        document.addEventListener('mousedown', onDocMouseDown);
-        return () => document.removeEventListener('mousedown', onDocMouseDown);
-    }, [menuOpen]);
-
-    const toggleMenu = () => {
-        setMenuOpen(prev => !prev);
-    };
-
-    const MenuItem = useMemo(() => ({ label, onActivate }) => {
-        const handleMenuAction = (action) => {
-            setMenuOpen(false);
-            action();
-        };
-
-        return html`
-            <${Button} class="toolbar-menu-item" onClick=${() => handleMenuAction(onActivate)}>${label}</button>
-        `;
-    }, []);
 
     return html`
         <div class="top-bar items-center justify-between" style="height: 40px; flex-shrink: 0;">
@@ -137,14 +99,14 @@ function Toolbar() {
                         <span style="white-space: nowrap;">${insertCurrencySymbols("Settings")}</span>
                     </div>
                 <//>
-                <div class="btn" onClick=${() => showHelp()}>
-                    <span style="white-space: nowrap;">${insertCurrencySymbols("Help")}</span>
+                <div class="btn" onClick=${() => api.toggleFullscreen()}>
+                    <span style="white-space: nowrap;">${insertCurrencySymbols("Fullscreen")}</span>
                 </div>
                 <div class="btn" onClick=${() => showTutorial()}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Tutorial")}</span>
                 </div>
-                <div class="btn ${testValue === 'on' ? 'green' : ''}" onClick=${toggleTest}>
-                    <span style="white-space: nowrap;">Test: ${testValue}</span>
+                <div class="btn" onClick=${() => showHelp()}>
+                    <span style="white-space: nowrap;">${insertCurrencySymbols("Help")}</span>
                 </div>
             </div>
             <div class="flex items-center">
@@ -153,28 +115,17 @@ function Toolbar() {
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <div class="toolbar-menu" data-tutorial="tools-menu" ref=${menuRef}>
-                    <${Button} class="btn" ref=${menuButtonRef} onClick=${toggleMenu}>
-                        <span style="white-space: nowrap;">${insertCurrencySymbols("Tools")}</span>
-                    </button>
-                    ${menuOpen && html`
-                        <div class="toolbar-menu-popover">
-                            <${MenuItem} key="db-search" label=${insertCurrencySymbols("Database Search")} onActivate=${() => showDbSearch()} />
-                            <${MenuItem} key="law-firm" label=${insertCurrencySymbols("Change Law Firm")} onActivate=${() => api.changeLawFirm()} />
-                            <${MenuItem} key="autopilot" label=${insertCurrencySymbols("Toggle Global Autopilot")} onActivate=${() => api.toggleGlobalAutopilot()} />
-                            <div key="sep1" class="toolbar-menu-sep"></div>
-                            <${MenuItem} label=${insertCurrencySymbols("Fullscreen")} onActivate=${() => api.toggleFullscreen()} />
-                            <!--<div key="sep4" class="toolbar-menu-sep"></div> -->
-                            <!--<${MenuItem} key="notepad" label=${insertCurrencySymbols("Notepad")} onActivate=${() => setShowNotepad(true)} /> -->
-                            <!--<${MenuItem} key="calculator" label=${insertCurrencySymbols("Calculator")} onActivate=${() => setShowCalculator(true)} />-->
-                            <${MenuItem} key="help" label=${insertCurrencySymbols("Help")} onActivate=${() => showHelp()} />
-                            <!--<${MenuItem} key="keybinds" label=${insertCurrencySymbols("Keybinds")} onActivate=${() => setShowKeybinds(true)} />-->
-                        </div>
-                    `}
+                <div class="btn" onClick=${() => api.changeLawFirm()}>
+                    <span style="white-space: nowrap;">${insertCurrencySymbols("Change Law Firm")}</span>
                 </div>
-
+                <div class="btn" onClick=${() => api.toggleGlobalAutopilot()}>
+                    <span style="white-space: nowrap;">${insertCurrencySymbols("Toggle Global Autopilot")}</span>
+                </div>
                 <div class="btn" data-tutorial="market-reports" onClick=${() => api.viewIndustry(0)}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Market Reports")}</span>
+                </div>
+                <div class="btn" onClick=${() => api.viewDbSearch()}>
+                    <span style="white-space: nowrap;">${insertCurrencySymbols("Database Search")}</span>
                 </div>
             </div>
             <${ActingAsDropdown} />

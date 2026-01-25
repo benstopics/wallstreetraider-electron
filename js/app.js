@@ -12,7 +12,6 @@ import NewGameSetupModal from './components/NewGameSetupModal.js';
 import AdvancedOptionsModal from './components/AdvancedOptionsModal.js';
 import InterestRateSwapsModal from './components/InterestRateSwapsModal.js';
 import TextAnnounceModal from './components/TextAnnounceModal.js';
-import DatabaseSearchModal from './components/DatabaseSearchModal.js';
 import TutorialModal from './components/TutorialModal.js';
 
 const logos = [
@@ -196,7 +195,6 @@ const AppInner = () => {
             onSubmit=${(value) => { api.modalResult(value); }}
             onCancel=${hideModal}
         />
-        <${DatabaseSearchModal} />
         <${TutorialModal} />
     `;
 }
