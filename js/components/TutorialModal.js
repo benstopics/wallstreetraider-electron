@@ -92,7 +92,7 @@ function calculatePanelStyle(step, sidebarMode = false) {
 }
 
 export default function TutorialModal() {
-    const { hideTutorial, showHelp } = api.useWSRContext();
+    const { hideTutorial, showHelp, helpShown } = api.useWSRContext();
     const tutorialStep = api.useGameStore(s => s.gameState.tutorialStep) || 0;
     const tutorialEnabled = api.useGameStore(s => s.gameState.tutorialEnabled);
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
@@ -252,7 +252,7 @@ export default function TutorialModal() {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [tutorialEnabled, tutorialStep, goNext]);
 
-    if (!tutorialEnabled || !step || showHelp) return null;
+    if (!tutorialEnabled || !step || helpShown) return null;
 
     // Determine if we should show the overlay (not in sidebar mode with active modal)
     const showOverlay = !sidebarMode || !step.sidebarMode;

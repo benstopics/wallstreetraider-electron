@@ -87,6 +87,16 @@ function Toolbar() {
                         ${insertCurrencySymbols("Save Game")}
                     </span>
                 </div>
+                <div class="btn green" onClick=${() => {
+                    api.saveGameAs()
+                }}>
+                    <!--<div class="mr-1" style="width: 7px">
+                        <${SaveIcon} />
+                    </div>-->
+                    <span style="white-space: nowrap;">
+                        ${insertCurrencySymbols("Save As")}
+                    </span>
+                </div>
                 <div class="btn" onClick=${() => {
                     api.exitGame()
                 }}>
