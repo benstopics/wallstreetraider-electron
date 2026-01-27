@@ -51,6 +51,7 @@ const CHANGELOG = [
             "Modulate interest rates to be more realistic",
             "Tutorial system",
             "Solved Network IO suspended reconnect after computer sleep",
+            "Ownership graphs",
         ]
     },
     {

@@ -168,6 +168,16 @@ export async function getDatabaseData() {
     return getJSON('/database_data');
 }
 
+// Fetch ownership tree (who owns the active entity)
+export async function getOwnershipTree() {
+    return getJSON('/ownership_tree');
+}
+
+// Fetch subsidiaries tree (what the active entity owns)
+export async function getSubsidiariesTree() {
+    return getJSON('/subsidiaries_tree');
+}
+
 export function isPlayerControlled(controlledCompanies, entityId) {
     return (controlledCompanies || []).some(c => c.id === entityId);
 }
@@ -299,8 +309,14 @@ export async function stopTicker() {
     advanceTutorialOnAction('stopTicker');
 }
 export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed', speed); }
-export async function loadGame() { await postNoArg('/loadgame'); }
-export async function newGame() { await postNoArg('/newgame'); }
+export async function loadGame() {
+    resetNavHistoryRestoration(); // Allow nav history to be restored from new save
+    await postNoArg('/loadgame');
+}
+export async function newGame() {
+    resetNavHistoryRestoration(); // Clear nav history for new game
+    await postNoArg('/newgame');
+}
 export async function saveGame() { await postNoArg('/savegame'); }
 export async function saveGameAs(filename) {
     const url = `${apiBase}/savegameas`;
@@ -311,6 +327,7 @@ export async function saveGameAs(filename) {
     });
 }
 export async function exitGame() {
+    resetNavHistoryRestoration(); // Allow nav history to be restored when returning to game
     ipcRenderer.send('restart-wsr');
     await postNoArg('/exit_game');
 }
@@ -567,6 +584,46 @@ export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 /* Misc */
 export const navHistory = [];
 export let navPointerIdx = -1; // -1 means "not pointing", reset after setViewAsset
+let navHistoryRestored = false; // Track if we've restored from customData this session
+
+// Persist navigation history to CustomData (saved with game)
+function persistNavHistory() {
+    setCustomData({
+        navHistory: {
+            entries: navHistory,
+            pointerIndex: navPointerIdx
+        }
+    });
+}
+
+// Restore navigation history from CustomData (on game load)
+export function restoreNavHistory(customData) {
+    if (navHistoryRestored) return; // Only restore once per session
+    if (!customData?.navHistory) return;
+
+    const { entries } = customData.navHistory;
+    if (Array.isArray(entries) && entries.length > 0) {
+        // Clear and repopulate navHistory, filtering out invalid entries
+        navHistory.length = 0;
+        entries.forEach(entry => {
+            if (entry && typeof entry.type === 'string' && entry.id !== undefined) {
+                navHistory.push(entry);
+            }
+        });
+        // Reset pointer to -1 after refresh - user's current view might not match saved state
+        // They can use back/forward to navigate the restored history
+        navPointerIdx = -1;
+        navHistoryRestored = true;
+    }
+}
+
+// Reset restoration flag (call when starting new game or loading different save)
+export function resetNavHistoryRestoration() {
+    navHistoryRestored = false;
+    navHistory.length = 0;
+    navPointerIdx = -1;
+}
+
 export async function splashScreenPlayed() { await postNoArg('/splash_screen_played'); }
 
 /* Modal */
@@ -647,6 +704,11 @@ export function mergeGameState(newState) {
         }
     }
 
+    // Restore navigation history from customData (once per session/load)
+    if (newState.customData) {
+        restoreNavHistory(newState.customData);
+    }
+
     return newState;
 }
 
@@ -709,6 +771,9 @@ function shiftNavHistory(page) {
 
     // Reset pointer to start
     navPointerIdx = 0;
+
+    // Persist to game save
+    persistNavHistory();
 }
 
 export async function viewIndustry(id) {
@@ -758,6 +823,10 @@ export async function setViewAsset(id) {
 
 export function gotoPage(p) {
     const page = p ?? navHistory[navPointerIdx];
+    if (!page || !page.type) {
+        console.warn('gotoPage: invalid page', page, 'navPointerIdx:', navPointerIdx);
+        return;
+    }
     if (page.type === 'industry') {
         // Restore preferred tab if stored
         if (page.tab) {
@@ -786,6 +855,7 @@ export async function goBack() {
     if (navPointerIdx < navHistory.length - 1) {
         navPointerIdx++;
         gotoPage();
+        persistNavHistory();
     }
 }
 
@@ -793,13 +863,15 @@ export async function goForward() {
     if (navPointerIdx > 0) {
         navPointerIdx--;
         gotoPage();
+        persistNavHistory();
     }
 }
 
 // Update the tab on the current navigation entry (called when user changes tabs)
 export function updateCurrentNavTab(tab) {
-    if (navHistory.length > navPointerIdx) {
+    if (navPointerIdx >= 0 && navHistory.length > navPointerIdx) {
         navHistory[navPointerIdx].tab = tab;
+        persistNavHistory();
     }
 }
 

@@ -17,6 +17,7 @@ import CashflowTab from './CashflowTab.js';
 import CommandPrompt from './CommandPrompt.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import Button from './Button.js';
+import OwnershipGraph from './OwnershipGraph.js';
 
 const Tab = Tabs.Tab;
 
@@ -182,7 +183,7 @@ const IndustrialView = () => {
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0">
                                 <div class="flex flex-col flex-[4] min-h-0">
                                     <div class="flex-[4] min-h-0 flex flex-col">
-                                        <div class="earnings-date-badge mb-1">Next Earnings Date: ${nextEarningsDate}</div>
+                                        <div class="earnings-date-badge mb-1">Earnings Date: ${nextEarningsDate}</div>
                                         ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" />`}
                                     </div>
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
@@ -310,48 +311,53 @@ const IndustrialView = () => {
                         ${html`<${CommoditiesTab} />`}
                     <//>
                     <${Tab} label="Shareholders" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
-                        <div class="flex flex-col w-full items-center">
-                            <div class="flex flex-row items-center gap-5">
-                                <${ActingAsRequiredButton} 
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                                    onClick=${api.publicStockOffering} 
+                        <div class="flex flex-col h-full">
+                            <div class="flex flex-row items-center gap-5 justify-center mb-2">
+                                <${ActingAsRequiredButton}
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                    onClick=${api.publicStockOffering}
                                     label="Public Offering"
                                     color="green"
                                 />
-                                <${ActingAsRequiredButton} 
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                                    onClick=${api.privateStockOffering} 
+                                <${ActingAsRequiredButton}
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                    onClick=${api.privateStockOffering}
                                     label="Private Offering"
                                     color="brown"
                                 />
-                                <${ActingAsRequiredButton} 
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                                    onClick=${api.greenmail} 
+                                <${ActingAsRequiredButton}
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                    onClick=${api.greenmail}
                                     label="Greenmail"
                                     color="green"
                                 />
-                                <${ActingAsRequiredButton} 
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                                    onClick=${api.lbo} 
+                                <${ActingAsRequiredButton}
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                    onClick=${api.lbo}
                                     label="Leveraged Buyout"
                                     color="green"
                                 />
-                                <${ActingAsRequiredButton} 
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                                    onClick=${api.splitStock} 
+                                <${ActingAsRequiredButton}
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                    onClick=${api.splitStock}
                                     label="Split Stock"
                                     color="green"
                                 />
-                                <${ActingAsRequiredButton} 
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                                    onClick=${api.reverseSplitStock} 
+                                <${ActingAsRequiredButton}
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                    onClick=${api.reverseSplitStock}
                                     label="Reverse Split"
                                     color="red"
                                 />
                             </div>
-                        </div>
-                        <div class="flex justify-center items-center">
-                            ${renderLines(shareholdersList, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
+                            <div class="flex-1 min-h-0 overflow-auto" style="min-height: 280px;">
+                                <${OwnershipGraph} showOwners=${true} showSubsidiaries=${true} />
+                            </div>
+                            ${/* Old text report - commented out
+                            <div class="flex justify-center items-center overflow-y-auto" style="max-height: 30%;">
+                                ${renderLines(shareholdersList, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
+                            </div>
+                            */ ''}
                         </div>
                     <//>
                 <//>

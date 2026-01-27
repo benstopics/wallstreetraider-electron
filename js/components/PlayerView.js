@@ -14,6 +14,7 @@ import FinancialsTab from './FinancialsTab.js';
 import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import Button from './Button.js';
+import OwnershipGraph from './OwnershipGraph.js';
 
 const Tab = Tabs.Tab;
 
@@ -112,21 +113,28 @@ const PlayerView = () => {
                             </div>
                         <//>
                         <${Tab} label="My Corporations" id=${api.UI_PLAYER_CORPORATIONS_LIST}>
-                            <div class="flex flex-col items-center">
-                                ${renderLines(myCorporationsReport,
-                                    ({ id }) => api.setViewAsset(id),
-                                    ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
-                                        <${Button}
-                                            class="btn red flex-1 mx-1"
-                                            onClick=${() => api.toggleCompanyAutopilot(id)}>
-                                                AutoPilot
-                                        </button>
-                                        <${Button}
-                                            class="btn brown flex-1 mx-1"
-                                            onClick=${() => api.changeActingAs(id)}>
-                                                Act As
-                                        </button>
-                                    </div>` : '', hyperlinkRegex)}
+                            <div class="flex flex-col h-full overflow-hidden">
+                                <div class="flex-1 min-h-0 overflow-auto">
+                                    <${OwnershipGraph} showOwners=${false} showSubsidiaries=${true} />
+                                </div>
+                                ${/* Old text report - commented out
+                                <div class="flex flex-col items-center overflow-y-auto" style="max-height: 40%;">
+                                    ${renderLines(myCorporationsReport,
+                                        ({ id }) => api.setViewAsset(id),
+                                        ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
+                                            <${Button}
+                                                class="btn red flex-1 mx-1"
+                                                onClick=${() => api.toggleCompanyAutopilot(id)}>
+                                                    AutoPilot
+                                            </button>
+                                            <${Button}
+                                                class="btn brown flex-1 mx-1"
+                                                onClick=${() => api.changeActingAs(id)}>
+                                                    Act As
+                                            </button>
+                                        </div>` : '', hyperlinkRegex)}
+                                </div>
+                                */ ''}
                             </div>
                         <//>
                     <//>

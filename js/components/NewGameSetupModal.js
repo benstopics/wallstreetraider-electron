@@ -17,18 +17,28 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
     const playerIdsOrdered = [api.HUMAN1_ID, api.COMPUTER1_ID, api.COMPUTER2_ID, api.COMPUTER3_ID, api.COMPUTER4_ID];
     const defaultPlayerNames = playerIdsOrdered.map(id => allPlayers?.find(p => p.id === id)?.name || "");
 
-    const [playerNames, setPlayerNames] = useState(defaultPlayerNames);
-    const [money, setMoney] = useState(() => defaultStartingMoney?.toString() || "1000");
-    const [gameLength, setGameLength] = useState(() => defaultGameLength?.toString() || "35");
-    const [difficultyLevel, setDifficultyLevel] = useState(() => defaultDifficultyLevel?.toString() || "2");
-    const [tutorialEnabled, setTutorialEnabled] = useState(true); // Default enabled for new games
+    const [playerNames, setPlayerNames] = useState(["", "", "", "", ""]);
+    const [money, setMoney] = useState("1000");
+    const [gameLength, setGameLength] = useState("35");
+    const [difficultyLevel, setDifficultyLevel] = useState("2");
+    const [tutorialEnabled, setTutorialEnabled] = useState(true);
+    const hasInitialized = useRef(false);
 
+    // Reset form state only when modal opens (show transitions to true)
     useEffect(() => {
-        setPlayerNames(defaultPlayerNames || ["", "", "", "", ""]);
-        setMoney(defaultStartingMoney?.toString() || "1000");
-        setGameLength(defaultGameLength?.toString() || "35");
-        setDifficultyLevel(defaultDifficultyLevel?.toString() || "2");
-        setTutorialEnabled(true); // Reset to enabled for new games
+        if (show) {
+            if (!hasInitialized.current) {
+                hasInitialized.current = true;
+                // Initialize with current values from game state
+                setPlayerNames(defaultPlayerNames || ["", "", "", "", ""]);
+                setMoney(defaultStartingMoney?.toString() || "1000");
+                setGameLength(defaultGameLength?.toString() || "35");
+                setDifficultyLevel(defaultDifficultyLevel?.toString() || "2");
+                setTutorialEnabled(true);
+            }
+        } else {
+            hasInitialized.current = false; // Reset flag when modal closes
+        }
     }, [show]);
 
     const submit = () => {
@@ -63,10 +73,13 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                     ${playerIdsOrdered.slice(0, numPlayers).map((playerId, index) => html`<div class="flex">
                         <div class="flex-1 p-2 text-right">${playerId === api.HUMAN1_ID ? insertCurrencySymbols("You:") : insertCurrencySymbols("Computer:")}</div>
                         <div class="flex-1 p-2">
-                            <input type="text" maxlength="20" class="modal-input" value=${playerNames[index]} onInput=${(e) => {
-                                const newNames = [...playerNames];
-                                newNames[index] = e.target.value;
-                                setPlayerNames(newNames);
+                            <input type="text" maxlength="20" class="modal-input" value=${playerNames[index] || ""} onInput=${(e) => {
+                                const val = e.target.value;
+                                setPlayerNames(prev => {
+                                    const newNames = [...prev];
+                                    newNames[index] = val;
+                                    return newNames;
+                                });
                             }} /><br/>
                         </div>
                         <div class="flex-1 p-2"></div>

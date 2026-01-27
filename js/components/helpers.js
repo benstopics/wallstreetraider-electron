@@ -105,7 +105,7 @@ export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
     // Step 2: Determine max clean line length
     const maxLength = Math.max(...cleanedLines.map(({ text }) => text.length));
 
-    if (!onLink || !hyperlinkRegex) {
+    if ((!onLink && !renderExtras) || !hyperlinkRegex) {
         return html`<div class="whitespace-pre-wrap flex flex-col">
             ${cleanedLines.map(({ text }) => {
                 if (text === '') return ' ';
