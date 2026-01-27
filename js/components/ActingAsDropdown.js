@@ -32,7 +32,7 @@ function ActingAsDropdown() {
                         <${Button} class="btn mx-1 p-2" onclick=${() => api.changeActingAs(activeEntityNum)}>Act As ${activeEntitySymbol}</button>
                     ` : ''}
                     ${activeEntityNum !== api.HUMAN1_ID
-            ? html`<${Button} class="btn mx-1 p-2" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>View Player</button>`
+            ? html`<${Button} class="btn mx-1 p-2" data-tutorial="view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>View Player</button>`
             : ''}
                 </div>
             </div>

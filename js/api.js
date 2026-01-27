@@ -7,6 +7,44 @@ const { ipcRenderer } = require('electron');
 
 export const apiBase = 'http://127.0.0.1:9631';
 
+// Network retry logic for handling sleep/wake scenarios (ERR_NETWORK_IO_SUSPENDED)
+async function fetchWithRetry(url, options = {}, retries = 3, delay = 500) {
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            const response = await fetch(url, options);
+            return response;
+        } catch (error) {
+            const isNetworkError =
+                error.message?.includes('ERR_NETWORK_IO_SUSPENDED') ||
+                error.message?.includes('Failed to fetch') ||
+                error.message?.includes('network') ||
+                error.name === 'TypeError';
+
+            if (isNetworkError && attempt < retries - 1) {
+                console.log(`Network error, retrying (${attempt + 1}/${retries})...`);
+                await new Promise(r => setTimeout(r, delay * (attempt + 1)));
+                continue;
+            }
+            throw error;
+        }
+    }
+}
+
+// Listen for system resume event from main process
+ipcRenderer.on('system-resumed', async () => {
+    console.log('System resumed from sleep, warming up network...');
+
+    // Small delay for network stack to recover
+    await new Promise(r => setTimeout(r, 500));
+
+    // Warm up the connection with a simple request
+    try {
+        await fetch(`${apiBase}/gamestate`, { method: 'HEAD' });
+    } catch (e) {
+        // Ignore - the retry logic will handle real requests
+    }
+});
+
 // Industry IDs
 export const PLAYER_IND = 0;
 export const BANK_IND = 1;
@@ -76,7 +114,7 @@ export const UI_DB_SEARCH = 39;
 
 export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
     });
@@ -88,7 +126,7 @@ export async function postNoArg(path) {
 
 export async function postIdArg(path, id) {
     const url = `${apiBase}${path}`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
@@ -102,7 +140,7 @@ export async function postIdArg(path, id) {
 
 export async function postStringArg(path, str) {
     const url = `${apiBase}${path}`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ str })
@@ -115,7 +153,7 @@ export async function postStringArg(path, str) {
 
 export async function getJSON(path) {
     const url = `${apiBase}${path}`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
     }
@@ -256,15 +294,38 @@ export function getGameState() { return getJSON('/gamestate'); }
 export async function clearEventString() { await postNoArg('/clear_event_string'); }
 export async function startTicker() { await postNoArg('/start_ticker'); }
 export async function runTicker() { await postNoArg('/run_ticker'); }
-export async function stopTicker() { await postNoArg('/stop_ticker'); }
+export async function stopTicker() {
+    await postNoArg('/stop_ticker');
+    advanceTutorialOnAction('stopTicker');
+}
 export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed', speed); }
 export async function loadGame() { await postNoArg('/loadgame'); }
 export async function newGame() { await postNoArg('/newgame'); }
 export async function saveGame() { await postNoArg('/savegame'); }
-export async function exitGame() { await postNoArg('/exit_game'); }
-export async function exitToDesktop() { 
+export async function exitGame() {
+    ipcRenderer.send('restart-wsr');
+    await postNoArg('/exit_game');
+}
+export async function exitToDesktop() {
+    gameStore.setState(state => ({
+        gameState: { ...state.gameState, isLoading: true }
+    }));
     ipcRenderer.send('exit-to-desktop');
- }
+}
+
+// Listen for wsr.exe restarting - show loading state
+ipcRenderer.on('wsr-restarting', () => {
+    console.log('wsr.exe exited, restarting...');
+    gameStore.setState(state => ({
+        gameState: { ...state.gameState, isLoading: true }
+    }));
+});
+
+// Listen for wsr.exe restart completion - reset game state to show main menu
+ipcRenderer.on('wsr-restarted', () => {
+    console.log('wsr.exe restarted, returning to main menu...');
+    gameStore.setState({ gameState: { gameLoaded: false, isLoading: false } });
+});
 export async function checkScoreboard() { await postNoArg('/check_scoreboard'); }
 export async function getQuoteOfTheDay() { return getJSON('/quote'); }
 export async function setActiveUIReport(uiId) { await postIdArg('/set_active_ui_report', uiId); }
@@ -315,7 +376,10 @@ export async function getAssetChart(id) {
 }
 
 /* Trading Center - Stocks */
-export async function buyStock(id) { await postIdArg('/buy_stock', id); }
+export async function buyStock(id) {
+    await postIdArg('/buy_stock', id);
+    advanceTutorialOnAction('buyStock');
+}
 export async function sellStock(id) { await postIdArg('/sell_stock', id); }
 export async function shortStock(id) { await postIdArg('/short_stock', id); }
 export async function coverShortStock(id) { await postIdArg('/cover_short_stock', id); }
@@ -495,7 +559,7 @@ export async function splashScreenPlayed() { await postNoArg('/splash_screen_pla
 export async function closeModal(result) { await postNoArg('/close_modal', result); }
 export async function modalResult(result) {
     const url = `${apiBase}/modal_result`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: typeof result === 'number' ? JSON.stringify({ answer: result }) : JSON.stringify({ str: result })
@@ -509,7 +573,7 @@ export async function modalResult(result) {
 /* CustomData API */
 export async function setCustomData(blob) {
     const url = `${apiBase}/set_custom_data`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(blob)
@@ -527,6 +591,45 @@ export async function setTutorialStep(step) {
 
 export async function setTutorialEnabled(enabled) {
     return postIdArg('/set_tutorial_enabled', enabled ? 1 : 0);
+}
+
+// Tutorial action-to-step advancement map
+// Maps action names to the tutorial step IDs that should advance when that action occurs
+const TUTORIAL_ACTION_MAP = {
+    'stopTicker': 'pause-game',
+    'viewIndustry': ['market-reports', 'industry-selection'],
+    'viewCorp': 'company-selection',
+    'buyStock': 'buy-stock',
+    'viewPlayer': 'view-player'
+};
+
+// Advance tutorial when specific actions are performed
+export function advanceTutorialOnAction(actionName) {
+    const state = gameStore.getState();
+    const gs = state.gameState;
+    if (!gs?.tutorialEnabled) return;
+
+    const currentStepIndex = gs.tutorialStep || 0;
+    // Import step IDs dynamically to avoid circular deps
+    const stepIds = [
+        'welcome', 'pause-game', 'balance-sheet', 'market-reports', 'industry-selection',
+        'company-selection', 'company-tabs', 'buy-stock', 'buy-stock-confirm', 'ownership-levels',
+        'view-player', 'portfolio-tab', 'acting-as-dropdown', 'taking-control', 'control-benefits',
+        'database-search', 'complete'
+    ];
+    const currentStepId = stepIds[currentStepIndex];
+    if (!currentStepId) return;
+
+    const advanceSteps = TUTORIAL_ACTION_MAP[actionName];
+    if (!advanceSteps) return;
+
+    const shouldAdvance = Array.isArray(advanceSteps)
+        ? advanceSteps.includes(currentStepId)
+        : advanceSteps === currentStepId;
+
+    if (shouldAdvance) {
+        setTutorialStep(currentStepIndex + 1);
+    }
 }
 
 export function serialize(obj) {
@@ -562,8 +665,8 @@ function shiftNavHistory(page) {
 
 export async function viewIndustry(id) {
     await postIdArg('/set_view_industry', id);
-
     shiftNavHistory({ id, type: 'industry' });
+    advanceTutorialOnAction('viewIndustry');
 }
 
 // Open the Database Search view (sets activeIndustryNum to -2)
@@ -593,10 +696,15 @@ export async function openMarketHeatMap() {
 }
 
 export async function setViewAsset(id) {
-
     await postIdArg('/set_view_asset', id);
-
     shiftNavHistory({ id, type: 'asset' });
+
+    // Tutorial advancement
+    if (id === HUMAN1_ID) {
+        advanceTutorialOnAction('viewPlayer');
+    } else {
+        advanceTutorialOnAction('viewCorp');
+    }
 }
 
 export function gotoPage(p) {
@@ -730,8 +838,15 @@ export function useGameStore(selector = s => s, isEqual = Object.is) {
 
 export function WSRProvider({ children }) {
     const [helpShown, setHelpShown] = useState(false);
-    const showHelp = () => setHelpShown(true);
-    const hideHelp = () => setHelpShown(false);
+    const [helpSectionId, setHelpSectionId] = useState(null);
+    const showHelp = (sectionId = null) => {
+        setHelpSectionId(sectionId);
+        setHelpShown(true);
+    };
+    const hideHelp = () => {
+        setHelpShown(false);
+        setHelpSectionId(null);
+    };
 
     // Database Search modal state
     const [dbSearchShown, setDbSearchShown] = useState(false);
@@ -751,6 +866,7 @@ export function WSRProvider({ children }) {
         gameState,
         setGameState,
         helpShown,
+        helpSectionId,
         showHelp,
         hideHelp,
         dbSearchShown,

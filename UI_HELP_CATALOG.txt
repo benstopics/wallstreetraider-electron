@@ -1,0 +1,828 @@
+================================================================================
+UI ELEMENTS TO HELP SECTIONS CATALOG
+Generated for HelpTooltip integration
+================================================================================
+
+LEGEND:
+  [MATCHED]   - Help section found, ready for helpId attribute
+  [PARTIAL]   - Help section exists but may need verification
+  [NOT FOUND] - No matching help section, needs manual lookup
+
+FORMAT:
+  File: {path}
+  Line: {number}
+  Element: {button/tab/label text}
+  Help ID: {section id from HELP_STRUCTURE or "NEEDS MANUAL LOOKUP"}
+
+================================================================================
+MAIN MENU (MainMenu.js)
+================================================================================
+
+File: electron/js/components/MainMenu.js
+Line: 226
+Element: "Load Game"
+Help ID: chap02_II(4)  [MATCHED - "Step 4 - Resume Saved Game"]
+
+File: electron/js/components/MainMenu.js
+Line: 227
+Element: "New Game"
+Help ID: chap02_II(3)  [MATCHED - "Step 3 - Start a New Game"]
+
+File: electron/js/components/MainMenu.js
+Line: 228
+Element: "Exit to Desktop"
+Help ID: NEEDS MANUAL LOOKUP  [NOT FOUND]
+
+File: electron/js/components/MainMenu.js
+Line: 232
+Element: "Help"
+Help ID: intro  [MATCHED - "Introduction"]
+
+File: electron/js/components/MainMenu.js
+Line: 234
+Element: "Settings"
+Help ID: chap05_V(B)(3)  [MATCHED - "Settings Menu"]
+
+================================================================================
+TOOLBAR (Toolbar.js)
+================================================================================
+
+File: electron/js/components/Toolbar.js
+Line: 52
+Element: "Pause/Play Button"
+Help ID: chap05_V(D)(2)  [MATCHED - "Ticker On/Off Button"]
+
+File: electron/js/components/Toolbar.js
+Line: 59
+Element: "Ticker Speed"
+Help ID: chap03_III(L)  [MATCHED - "Time Progression"]
+
+File: electron/js/components/Toolbar.js
+Line: 80
+Element: "Save Game"
+Help ID: chap02_II(5)  [MATCHED - "Step 5 - Saving a Game"]
+
+File: electron/js/components/Toolbar.js
+Line: 90
+Element: "Exit Game"
+Help ID: chap02_II(6)  [PARTIAL - "Step 6 - Completing a Game"]
+
+File: electron/js/components/Toolbar.js
+Line: 98
+Element: "Settings"
+Help ID: chap05_V(B)(3)  [MATCHED - "Settings Menu"]
+
+File: electron/js/components/Toolbar.js
+Line: 105
+Element: "Tutorial"
+Help ID: NEEDS MANUAL LOOKUP  [NOT FOUND - New feature]
+
+File: electron/js/components/Toolbar.js
+Line: 108
+Element: "Help"
+Help ID: intro  [MATCHED - "Introduction"]
+
+File: electron/js/components/Toolbar.js
+Line: 118
+Element: "Change Law Firm"
+Help ID: NEEDS MANUAL LOOKUP  [NOT FOUND]
+
+File: electron/js/components/Toolbar.js
+Line: 121
+Element: "Toggle Global Autopilot"
+Help ID: chap08_VIII(B)(11)  [MATCHED - "Turn Autopilot On/Off"]
+
+File: electron/js/components/Toolbar.js
+Line: 124
+Element: "Market Reports"
+Help ID: chap10_X(E)  [MATCHED - "'General' Research Button and Menu"]
+
+File: electron/js/components/Toolbar.js
+Line: 127
+Element: "Database Search"
+Help ID: chap10_X(E)(12)  [MATCHED - "Database Search"]
+
+================================================================================
+PLAYER VIEW (PlayerView.js)
+================================================================================
+
+File: electron/js/components/PlayerView.js
+Line: 34
+Element: "Prepay Taxes"
+Help ID: chap11_XI(C)(8)  [MATCHED - "Prepay Income Tax"]
+
+File: electron/js/components/PlayerView.js
+Line: 37
+Element: "Startup"
+Help ID: chap07_VII(B)(1)  [MATCHED - "Start Up New Corp."]
+
+File: electron/js/components/PlayerView.js
+Line: 41
+Element: Tab "Financials"
+Help ID: chap04_IV(E)  [MATCHED - "Understanding Financial Statements"]
+
+File: electron/js/components/PlayerView.js
+Line: 44
+Element: Tab "Cashflow"
+Help ID: chap10_X(D)(16)  [MATCHED - "Cash Flow Projection"]
+
+File: electron/js/components/PlayerView.js
+Line: 48
+Element: "Browse For Sale Items"
+Help ID: chap09_IX(B)(12)  [MATCHED - "For Sale Items"]
+
+File: electron/js/components/PlayerView.js
+Line: 56
+Element: Tab "Stocks & Bonds"
+Help ID: chap10_X(D)(6)  [MATCHED - "List Portfolio"]
+
+File: electron/js/components/PlayerView.js
+Line: 59
+Element: Tab "Swaps"
+Help ID: chap09_IX(B)(11)  [MATCHED - "Interest Rate Swaps"]
+
+File: electron/js/components/PlayerView.js
+Line: 62
+Element: Tab "Options"
+Help ID: chap10_X(D)(14)  [MATCHED - "List Options"]
+
+File: electron/js/components/PlayerView.js
+Line: 65
+Element: Tab "Commodities & Crypto"
+Help ID: chap04_IV(A)(13)  [PARTIAL - "Trading Physical Commodities"]
+
+File: electron/js/components/PlayerView.js
+Line: 68
+Element: Tab "Advances"
+Help ID: chap10_X(D)(13)  [MATCHED - "List Advances to Corps"]
+
+File: electron/js/components/PlayerView.js
+Line: 73
+Element: "Advance Funds"
+Help ID: chap11_XI(C)(6)  [MATCHED - "Advance to Corp."]
+
+File: electron/js/components/PlayerView.js
+Line: 86
+Element: "Recall"
+Help ID: chap11_XI(C)(7)  [MATCHED - "Recall Advance"]
+
+File: electron/js/components/PlayerView.js
+Line: 95
+Element: Tab "My Corporations"
+Help ID: chap10_X(D)(17)  [MATCHED - "My Corps"]
+
+File: electron/js/components/PlayerView.js
+Line: 102
+Element: "AutoPilot"
+Help ID: chap08_VIII(B)(11)  [MATCHED - "Turn Autopilot On/Off"]
+
+File: electron/js/components/PlayerView.js
+Line: 107
+Element: "Act As"
+Help ID: chap03_III(A)  [MATCHED - "Active Entity & Transacting Entity"]
+
+================================================================================
+INDUSTRIAL VIEW - COMPANY BUTTONS (IndustrialView.js)
+================================================================================
+
+File: electron/js/components/IndustrialView.js
+Line: 92-101
+Element: "Elect as CEO" / "Resign as CEO"
+Help ID: chap08_VIII(B)(1) / chap08_VIII(B)(2)  [MATCHED]
+
+File: electron/js/components/IndustrialView.js
+Line: 103
+Element: "Rebrand" (Name Change)
+Help ID: chap11_XI(C)(5)  [MATCHED - "Name Change"]
+
+File: electron/js/components/IndustrialView.js
+Line: 113-117
+Element: "Antitrust Lawsuit"
+Help ID: chap08_VIII(B)(8)  [MATCHED - "Antitrust Suit"]
+
+File: electron/js/components/IndustrialView.js
+Line: 120-124
+Element: "Harassing Lawsuit"
+Help ID: chap09_IX(B)(1)  [MATCHED - "Harassing Lawsuit"]
+
+File: electron/js/components/IndustrialView.js
+Line: 127-131
+Element: "Spread Rumors"
+Help ID: chap09_IX(B)(2)  [MATCHED - "Spread Rumors"]
+
+File: electron/js/components/IndustrialView.js
+Line: 134
+Element: "Set Advisory Fee"
+Help ID: chap08_VIII(B)(9)  [MATCHED - "Set Fund Advisor Fee"]
+
+File: electron/js/components/IndustrialView.js
+Line: 140
+Element: "Startup"
+Help ID: chap07_VII(B)(1)  [MATCHED - "Start Up New Corp."]
+
+File: electron/js/components/IndustrialView.js
+Line: 146
+Element: "Contribute Capital"
+Help ID: chap07_VII(B)(2)  [MATCHED - "Capital Contribution"]
+
+File: electron/js/components/IndustrialView.js
+Line: 152
+Element: "Issue Corp Bonds"
+Help ID: chap07_VII(B)(5)  [MATCHED - "Issue Bonds"]
+
+File: electron/js/components/IndustrialView.js
+Line: 158
+Element: "Redeem Corp Bonds"
+Help ID: chap07_VII(B)(6)  [MATCHED - "Buy Back or Call Bonds"]
+
+File: electron/js/components/IndustrialView.js
+Line: 164
+Element: Tab "General" (Research Report)
+Help ID: chap10_X(D)(2)  [MATCHED - "Research Report"]
+
+File: electron/js/components/IndustrialView.js
+Line: 174
+Element: "Buy Stock"
+Help ID: chap06_VI(B)(1)  [MATCHED - "Buy Stock (or Cover Short)"]
+
+File: electron/js/components/IndustrialView.js
+Line: 184
+Element: "Short Stock"
+Help ID: chap03_III(P)  [MATCHED - "Short Sales"]
+
+File: electron/js/components/IndustrialView.js
+Line: 194
+Element: "Buy Bonds"
+Help ID: chap06_VI(B)(3)  [MATCHED - "Buy Corporate Bonds"]
+
+File: electron/js/components/IndustrialView.js
+Line: 205
+Element: "Buy Calls"
+Help ID: chap06_VI(B)(12)  [MATCHED - "Buy Call Options"]
+
+File: electron/js/components/IndustrialView.js
+Line: 211
+Element: "Sell Calls"
+Help ID: chap06_VI(B)(13)  [MATCHED - "Sell Call Options"]
+
+File: electron/js/components/IndustrialView.js
+Line: 217
+Element: "Buy Puts"
+Help ID: chap06_VI(B)(14)  [MATCHED - "Buy Put Options"]
+
+File: electron/js/components/IndustrialView.js
+Line: 223
+Element: "Sell Puts"
+Help ID: chap06_VI(B)(15)  [MATCHED - "Sell Put Options"]
+
+File: electron/js/components/IndustrialView.js
+Line: 231
+Element: "Advanced Options"
+Help ID: chap06_VI(B)(19)  [MATCHED - "Advanced Option Trading"]
+
+File: electron/js/components/IndustrialView.js
+Line: 251
+Element: Tab "Earnings"
+Help ID: chap10_X(D)(4)  [MATCHED - "Earnings Report"]
+
+File: electron/js/components/IndustrialView.js
+Line: 255
+Element: "Decrease Earnings"
+Help ID: chap09_IX(B)(9)  [MATCHED - "Decrease Earnings"]
+
+File: electron/js/components/IndustrialView.js
+Line: 263
+Element: "Increase Earnings"
+Help ID: chap09_IX(B)(10)  [MATCHED - "Increase Earnings"]
+
+File: electron/js/components/IndustrialView.js
+Line: 274
+Element: Tab "Financials"
+Help ID: chap10_X(D)(3)  [MATCHED - "Financial Profile"]
+
+File: electron/js/components/IndustrialView.js
+Line: 277
+Element: Tab "Cashflow"
+Help ID: chap10_X(D)(16)  [MATCHED - "Cash Flow Projection"]
+
+File: electron/js/components/IndustrialView.js
+Line: 280-282
+Element: Tab "Loans"
+Help ID: chap10_X(D)(11)  [MATCHED - "List Bank Loans"]
+
+File: electron/js/components/IndustrialView.js
+Line: 283
+Element: Tab "Stocks & Bonds"
+Help ID: chap10_X(D)(6)  [MATCHED - "List Portfolio"]
+
+File: electron/js/components/IndustrialView.js
+Line: 286
+Element: Tab "Swaps"
+Help ID: chap09_IX(B)(11)  [MATCHED - "Interest Rate Swaps"]
+
+File: electron/js/components/IndustrialView.js
+Line: 289
+Element: Tab "Options"
+Help ID: chap10_X(D)(14)  [MATCHED - "List Options"]
+
+File: electron/js/components/IndustrialView.js
+Line: 292
+Element: Tab "Commodities & Crypto"
+Help ID: chap06_VI(B)(18)  [PARTIAL - "Trade Cryptocurrencies"]
+
+File: electron/js/components/IndustrialView.js
+Line: 295
+Element: Tab "Shareholders"
+Help ID: chap10_X(D)(5)  [MATCHED - "List Shareholders"]
+
+File: electron/js/components/IndustrialView.js
+Line: 300
+Element: "Public Offering"
+Help ID: chap07_VII(B)(3)  [MATCHED - "Public Stock Offering"]
+
+File: electron/js/components/IndustrialView.js
+Line: 306
+Element: "Private Offering"
+Help ID: chap07_VII(B)(4)  [MATCHED - "Private Stock Offering"]
+
+File: electron/js/components/IndustrialView.js
+Line: 312
+Element: "Greenmail"
+Help ID: chap06_VI(B)(7)  [MATCHED - "Greenmail"]
+
+File: electron/js/components/IndustrialView.js
+Line: 318
+Element: "Leveraged Buyout"
+Help ID: chap06_VI(B)(8)  [MATCHED - "LBO (Leveraged Buyout)"]
+
+File: electron/js/components/IndustrialView.js
+Line: 324
+Element: "Split Stock"
+Help ID: chap11_XI(C)(3)  [MATCHED - "Stock Split"]
+
+File: electron/js/components/IndustrialView.js
+Line: 330
+Element: "Reverse Split"
+Help ID: chap11_XI(C)(4)  [MATCHED - "Reverse Split"]
+
+================================================================================
+FINANCIALS TAB (FinancialsTab.js)
+================================================================================
+
+File: electron/js/components/FinancialsTab.js
+Line: 66
+Element: "Borrow Money"
+Help ID: chap11_XI(C)(1)  [MATCHED - "Borrow Money"]
+
+File: electron/js/components/FinancialsTab.js
+Line: 72
+Element: "Repay Loan"
+Help ID: chap11_XI(C)(2)  [MATCHED - "Repay Loan"]
+
+File: electron/js/components/FinancialsTab.js
+Line: 80
+Element: "Extraordinary Dividend"
+Help ID: chap07_VII(B)(7)  [MATCHED - "Extraordinary Dividend"]
+
+File: electron/js/components/FinancialsTab.js
+Line: 86
+Element: "Tax-Free Liquidation"
+Help ID: chap07_VII(B)(8)  [MATCHED - "Tax-Free Liquidation"]
+
+File: electron/js/components/FinancialsTab.js
+Line: 92
+Element: "Taxable Liquidation"
+Help ID: chap07_VII(B)(9)  [MATCHED - "Taxable Liquidation"]
+
+File: electron/js/components/FinancialsTab.js
+Line: 98
+Element: "Change Bank"
+Help ID: chap09_IX(B)(3)  [MATCHED - "Change Bank"]
+
+File: electron/js/components/FinancialsTab.js
+Line: 104
+Element: "Trade T-Bills"
+Help ID: chap11_XI(C)(12)  [MATCHED - "Trade Treasury Bills"]
+
+File: electron/js/components/FinancialsTab.js
+Line: 21-44
+Element: "Buy/Sell Subprime Mortgages"
+Help ID: chap09_IX(B)(13) / chap09_IX(B)(14)  [MATCHED]
+
+================================================================================
+CASHFLOW TAB (CashflowTab.js)
+================================================================================
+
+File: electron/js/components/CashflowTab.js
+Line: 21
+Element: "Buy Corporate Assets"
+Help ID: chap06_VI(B)(9)  [MATCHED - "Buy Corporate Assets"]
+
+File: electron/js/components/CashflowTab.js
+Line: 28
+Element: "Sell Corporate Assets"
+Help ID: chap06_VI(B)(10)  [MATCHED - "Sell Corporate Assets"]
+
+File: electron/js/components/CashflowTab.js
+Line: 35
+Element: "Offer Corporate Assets for Sale"
+Help ID: chap11_XI(C)(10)  [MATCHED - "Offer to Sell Assets"]
+
+File: electron/js/components/CashflowTab.js
+Line: 42
+Element: "Browse For Sale Items"
+Help ID: chap09_IX(B)(12)  [MATCHED - "For Sale Items"]
+
+File: electron/js/components/CashflowTab.js
+Line: 48
+Element: "Set Dividend"
+Help ID: chap08_VIII(B)(4)  [MATCHED - "Set Dividend Payout"]
+
+File: electron/js/components/CashflowTab.js
+Line: 54
+Element: "Set Productivity"
+Help ID: chap08_VIII(B)(5)  [MATCHED - "Set Productivity Spending"]
+
+File: electron/js/components/CashflowTab.js
+Line: 60
+Element: "Set Growth Rate"
+Help ID: chap08_VIII(B)(6)  [MATCHED - "Set Growth Rate%"]
+
+File: electron/js/components/CashflowTab.js
+Line: 66
+Element: "Fire Managers"
+Help ID: chap08_VIII(B)(3)  [MATCHED - "Change Managers"]
+
+================================================================================
+PORTFOLIO TAB (PortfolioTab.js)
+================================================================================
+
+File: electron/js/components/PortfolioTab.js
+Line: 79
+Element: "Merge With"
+Help ID: chap06_VI(B)(6)  [MATCHED - "Merger"]
+
+File: electron/js/components/PortfolioTab.js
+Line: 88
+Element: "Offer Stock for Sale"
+Help ID: chap11_XI(C)(9)  [MATCHED - "Offer to Sell Stock"]
+
+File: electron/js/components/PortfolioTab.js
+Line: 96
+Element: "Buy" (Stock)
+Help ID: chap06_VI(B)(1)  [MATCHED - "Buy Stock (or Cover Short)"]
+
+File: electron/js/components/PortfolioTab.js
+Line: 104
+Element: "Cover / Sell" (Stock)
+Help ID: chap06_VI(B)(2)  [MATCHED - "Sell Stock (or Sell Short)"]
+
+File: electron/js/components/PortfolioTab.js
+Line: 117
+Element: "Spin-Off"
+Help ID: chap07_VII(B)(10)  [MATCHED - "Spin-Off Subsidiary"]
+
+================================================================================
+LOANS TAB (LoansTab.js)
+================================================================================
+
+File: electron/js/components/LoansTab.js
+Line: 122
+Element: "Buy Business Loans"
+Help ID: chap06_VI(B)(11)  [MATCHED - "Buy or Sell Bank Loans"]
+
+File: electron/js/components/LoansTab.js
+Line: 130
+Element: "Freeze / Unfreeze All Loans"
+Help ID: chap09_IX(B)(5)  [MATCHED - "Freeze/Unfreeze Loans"]
+
+File: electron/js/components/LoansTab.js
+Line: 138
+Element: "Set Allocation"
+Help ID: chap08_VIII(B)(12)  [MATCHED - "Asset Allocation"]
+
+File: electron/js/components/LoansTab.js
+Line: 81-85
+Element: "Sell" (Bank Loan)
+Help ID: chap09_IX(B)(6)  [MATCHED - "Buy or Sell Bank Loans"]
+
+File: electron/js/components/LoansTab.js
+Line: 99-103
+Element: "Call In"
+Help ID: chap09_IX(B)(4)  [MATCHED - "Call in Bank Loan"]
+
+================================================================================
+COMMODITIES TAB (CommoditiesTab.js)
+================================================================================
+
+File: electron/js/components/CommoditiesTab.js
+Line: 51
+Element: "Buy" (Physical Commodity)
+Help ID: chap06_VI(B)(17)  [MATCHED - "Trade Commodities"]
+
+File: electron/js/components/CommoditiesTab.js
+Line: 62
+Element: "Buy Futures"
+Help ID: chap06_VI(B)(16)  [MATCHED - "Trade Futures"]
+
+File: electron/js/components/CommoditiesTab.js
+Line: 73
+Element: "Short Futures"
+Help ID: chap06_VI(B)(16)  [MATCHED - "Trade Futures"]
+
+File: electron/js/components/CommoditiesTab.js
+Line: 122
+Element: "Sell / Cover" (Commodities)
+Help ID: chap06_VI(B)(17)  [MATCHED - "Trade Commodities"]
+
+================================================================================
+OPTIONS TAB (OptionsTab.js)
+================================================================================
+
+File: electron/js/components/OptionsTab.js
+Line: 37
+Element: "Sell / Cover"
+Help ID: chap06_VI(B)(13)  [PARTIAL - "Sell Call Options"]
+
+File: electron/js/components/OptionsTab.js
+Line: 49
+Element: "Exercise Early"
+Help ID: chap09_IX(B)(7)  [MATCHED - "Exercise Call Option"]
+
+================================================================================
+INTEREST RATE SWAPS TAB (InterestRateSwapsTab.js)
+================================================================================
+
+File: electron/js/components/InterestRateSwapsTab.js
+Line: 31-36
+Element: "Buy" (Long/Short Bond)
+Help ID: chap06_VI(B)(5)  [PARTIAL - "Trade Government Bonds"]
+
+File: electron/js/components/InterestRateSwapsTab.js
+Line: 54
+Element: "Create New Swap"
+Help ID: chap09_IX(B)(11)  [MATCHED - "Interest Rate Swaps"]
+
+File: electron/js/components/InterestRateSwapsTab.js
+Line: 79
+Element: "Terminate" (Swap)
+Help ID: chap09_IX(B)(11)  [MATCHED - "Interest Rate Swaps"]
+
+================================================================================
+INDUSTRY VIEW TABS (IndustryView.js)
+================================================================================
+
+File: electron/js/components/IndustryView.js
+Line: 81
+Element: Tab "Summary"
+Help ID: chap10_X(D)(9)  [MATCHED - "Industry Summary"]
+
+File: electron/js/components/IndustryView.js
+Line: 86-93
+Element: Tab "Projection"
+Help ID: chap10_X(D)(10)  [MATCHED - "Industry Projection"]
+
+File: electron/js/components/IndustryView.js
+Line: 94
+Element: Tab "Heat Map"
+Help ID: NEEDS MANUAL LOOKUP  [NOT FOUND - New feature]
+
+File: electron/js/components/IndustryView.js
+Line: 100
+Element: Tab "Heat Maps"
+Help ID: NEEDS MANUAL LOOKUP  [NOT FOUND - New feature]
+
+File: electron/js/components/IndustryView.js
+Line: 103
+Element: Tab "Industry Growth Rates"
+Help ID: chap10_X(E)(2)  [MATCHED - "Industrial Growth Rates"]
+
+File: electron/js/components/IndustryView.js
+Line: 110
+Element: Tab "Economic Data"
+Help ID: chap10_X(E)(5)  [MATCHED - "Economic Statistics"]
+
+File: electron/js/components/IndustryView.js
+Line: 117
+Element: Tab "Interest Rates"
+Help ID: chap10_X(E)(6)  [MATCHED - "Interest Rates"]
+
+File: electron/js/components/IndustryView.js
+Line: 127
+Element: Tab "Market Share"
+Help ID: chap10_X(E)(1)  [MATCHED - "Market Share"]
+
+File: electron/js/components/IndustryView.js
+Line: 132
+Element: Tab "Tax Losses"
+Help ID: chap10_X(E)(10)  [MATCHED - "Largest Tax Losses"]
+
+File: electron/js/components/IndustryView.js
+Line: 137
+Element: Tab "Market Cap"
+Help ID: chap10_X(E)(11)  [MATCHED - "Largest Market Cap"]
+
+File: electron/js/components/IndustryView.js
+Line: 142
+Element: Tab "Cash"
+Help ID: chap10_X(E)(9)  [MATCHED - "Most Cash"]
+
+File: electron/js/components/IndustryView.js
+Line: 150
+Element: Tab "Who Owns What?"
+Help ID: chap10_X(E)(13)  [MATCHED - "Who Owns What?"]
+
+File: electron/js/components/IndustryView.js
+Line: 153
+Element: Tab "Futures"
+Help ID: chap04_IV(A)(12)  [MATCHED - "Trading Futures"]
+
+File: electron/js/components/IndustryView.js
+Line: 158
+Element: Tab "Commodities"
+Help ID: chap04_IV(O)  [MATCHED - "Commodity Markets"]
+
+File: electron/js/components/IndustryView.js
+Line: 163
+Element: Tab "Swaps"
+Help ID: chap09_IX(B)(11)  [MATCHED - "Interest Rate Swaps"]
+
+File: electron/js/components/IndustryView.js
+Line: 168
+Element: Tab "Options"
+Help ID: chap04_IV(A)(11)  [MATCHED - "Options Trading"]
+
+File: electron/js/components/IndustryView.js
+Line: 173
+Element: Tab "Stocks"
+Help ID: chap04_IV(L)  [PARTIAL - "Stock Price Determination"]
+
+File: electron/js/components/IndustryView.js
+Line: 178
+Element: Tab "Management Contracts"
+Help ID: chap03_III(N)  [PARTIAL - "Executive Compensation"]
+
+File: electron/js/components/IndustryView.js
+Line: 186
+Element: Tab "Who's Ahead?"
+Help ID: chap10_X(E)(8)  [MATCHED - "Who's Ahead?"]
+
+================================================================================
+SETTINGS MODAL (SettingsModal.js)
+================================================================================
+
+File: electron/js/components/SettingsModal.js
+Line: 61
+Element: "Display"
+Help ID: NEEDS MANUAL LOOKUP  [NOT FOUND - New feature]
+
+File: electron/js/components/SettingsModal.js
+Line: 63
+Element: "Suppress Earnings"
+Help ID: chap05_V(B)(3)  [PARTIAL - "Settings Menu"]
+
+File: electron/js/components/SettingsModal.js
+Line: 64
+Element: "Suppress Warnings"
+Help ID: chap05_V(B)(3)  [PARTIAL - "Settings Menu"]
+
+File: electron/js/components/SettingsModal.js
+Line: 65
+Element: "Suppress Popups"
+Help ID: chap05_V(B)(3)  [PARTIAL - "Settings Menu"]
+
+File: electron/js/components/SettingsModal.js
+Line: 66
+Element: "Autosave"
+Help ID: chap02_II(5)  [PARTIAL - "Saving a Game"]
+
+File: electron/js/components/SettingsModal.js
+Line: 67
+Element: "Exercise Options"
+Help ID: chap09_IX(B)(7)  [PARTIAL - "Exercise Call Option"]
+
+File: electron/js/components/SettingsModal.js
+Line: 68
+Element: "Sweep"
+Help ID: NEEDS MANUAL LOOKUP  [NOT FOUND]
+
+File: electron/js/components/SettingsModal.js
+Line: 69
+Element: "Make Delivery"
+Help ID: chap06_VI(B)(17)  [PARTIAL - "Trade Commodities"]
+
+File: electron/js/components/SettingsModal.js
+Line: 70
+Element: "Take Delivery"
+Help ID: chap06_VI(B)(17)  [PARTIAL - "Trade Commodities"]
+
+================================================================================
+ADVANCED OPTIONS MODAL (AdvancedOptionsModal.js)
+================================================================================
+
+File: electron/js/components/AdvancedOptionsModal.js
+Line: 430
+Element: "CLEAR ALL"
+Help ID: chap06_VI(B)(19)  [PARTIAL - "Advanced Option Trading"]
+
+File: electron/js/components/AdvancedOptionsModal.js
+Line: 431
+Element: "HELP"
+Help ID: chap06_VI(B)(19)  [MATCHED - "Advanced Option Trading"]
+
+File: electron/js/components/AdvancedOptionsModal.js
+Line: 432
+Element: "SHOW SIZE LIMITS"
+Help ID: chap06_VI(B)(19)  [PARTIAL - "Advanced Option Trading"]
+
+File: electron/js/components/AdvancedOptionsModal.js
+Line: 433
+Element: "AUTO-TRADE"
+Help ID: chap06_VI(B)(19)  [PARTIAL - "Advanced Option Trading"]
+
+File: electron/js/components/AdvancedOptionsModal.js
+Line: 438
+Element: "CLOSE ALL OPTIONS"
+Help ID: chap06_VI(B)(19)  [PARTIAL - "Advanced Option Trading"]
+
+================================================================================
+CONCEPTS - STRATEGY/FAQ SECTIONS
+================================================================================
+
+These are general concepts that buttons may relate to:
+
+Topic: "Control" (of companies)
+Help ID: chap03_III(G)  [FAQs - "What Is Control?"]
+
+Topic: "Margin Calls" / "Net Worth"
+Help ID: chap03_III(I)  [FAQs - "Margin Calls & Net Worth"]
+
+Topic: "Line of Credit"
+Help ID: chap03_III(J)  [FAQs - "Line of Credit"]
+
+Topic: "Cheat Mode"
+Help ID: chap03_III(K)  [FAQs - "Cheat Mode"]
+
+Topic: "ETF Management"
+Help ID: chap03_III(Q)  [FAQs - "ETF Management"]
+
+Topic: "Banking & Insurance Companies"
+Help ID: chap04_IV(G)  [Strategies - "Banking & Insurance Companies"]
+
+Topic: "Exchange-Traded Funds (ETFs)"
+Help ID: chap04_IV(H)  [Strategies - "Exchange-Traded Funds (ETFs)"]
+
+Topic: "Mergers & Acquisitions"
+Help ID: chap04_IV(I)  [Strategies - "Mergers & Acquisitions"]
+
+Topic: "Bankruptcies & Liquidations"
+Help ID: chap04_IV(J)  [Strategies - "Bankruptcies & Liquidations"]
+
+Topic: "The Economic Model"
+Help ID: chap04_IV(K)  [Strategies - "The Economic Model"]
+
+Topic: "Bond Pricing & Yields"
+Help ID: chap04_IV(M)  [Strategies - "Bond Pricing & Yields"]
+
+Topic: "Foreign Exchange & Currencies"
+Help ID: chap04_IV(P)  [Strategies - "Foreign Exchange & Currencies"]
+
+Topic: "Real Estate & Mortgages"
+Help ID: chap04_IV(Q)  [Strategies - "Real Estate & Mortgages"]
+
+================================================================================
+SUMMARY - NEEDS MANUAL LOOKUP
+================================================================================
+
+The following elements need manual lookup - no matching help section found:
+
+1. MainMenu.js:228 - "Exit to Desktop"
+2. Toolbar.js:105 - "Tutorial" (New v10 feature)
+3. Toolbar.js:118 - "Change Law Firm"
+4. IndustryView.js:94 - Tab "Heat Map" (New v10 feature)
+5. IndustryView.js:100 - Tab "Heat Maps" (New v10 feature)
+6. SettingsModal.js:61 - "Display" (New v10 feature)
+7. SettingsModal.js:68 - "Sweep"
+
+================================================================================
+USAGE EXAMPLE - Adding HelpTooltip to a Button
+================================================================================
+
+Before:
+  <${Button} class="btn green" onClick=${api.buyStock}>Buy Stock</button>
+
+After:
+  import HelpTooltip from './HelpTooltip.js';
+
+  <${HelpTooltip} helpId="chap06_VI(B)(1)">
+    <${Button} class="btn green" onClick=${api.buyStock}>Buy Stock</button>
+  <//>
+
+Or with data attribute (for future global tooltip system):
+  <${Button}
+    class="btn green"
+    onClick=${api.buyStock}
+    data-help-id="chap06_VI(B)(1)"
+  >Buy Stock</button>
+
+================================================================================

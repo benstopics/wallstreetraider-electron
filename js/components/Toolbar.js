@@ -124,7 +124,7 @@ function Toolbar() {
                 <div class="btn" data-tutorial="market-reports" onClick=${() => api.viewIndustry(0)}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Market Reports")}</span>
                 </div>
-                <div class="btn" onClick=${() => api.viewDbSearch()}>
+                <div class="btn" data-tutorial="database-search" onClick=${() => api.viewDbSearch()}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Database Search")}</span>
                 </div>
             </div>

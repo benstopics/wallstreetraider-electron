@@ -5,7 +5,14 @@
 // - content: HTML content for the step
 // - highlightSelector: CSS selector for element to spotlight (null for centered modal)
 // - position: 'left', 'right', 'top', 'bottom', or 'center'
-// - helpLinks: array of help chapter IDs for "Learn more" links
+// - helpId: help section ID for "Learn more" link (from HELP_STRUCTURE)
+// - advanceOn: object specifying what triggers auto-advancement to next step
+//   - click: CSS selector - advances when element matching selector is clicked
+//   - action: string - advances when this API action is called (e.g., 'buyStock', 'viewIndustry')
+//   - tab: string - advances when this tab is selected
+//   - state: function - advances when this returns true based on game state
+// - allowInteraction: boolean - if true, user can interact with highlighted element
+// - sidebarMode: boolean - if true, tutorial shows in sidebar mode (for transaction flows)
 
 export const TUTORIAL_STEPS = [
     {
@@ -18,19 +25,27 @@ export const TUTORIAL_STEPS = [
         `,
         highlightSelector: null,
         position: 'center',
-        helpLinks: []
+        helpId: 'intro',
+        advanceOn: null, // Manual advance only
+        allowInteraction: false
     },
     {
         id: 'pause-game',
         title: 'Pause the Game',
         content: `
             <p>First, let's pause the game so you can learn at your own pace.</p>
-            <p>This is the <strong>Pause/Play</strong> button. Click it to stop the simulation.</p>
+            <p>Click the <strong>Pause/Play</strong> button to stop the simulation.</p>
             <p class="tutorial-tip">The game runs in real-time, so pausing gives you time to make decisions without pressure. You can also press <strong>Spacebar</strong> to toggle pause.</p>
+            <p class="tutorial-action"><strong>Action:</strong> Click the pause button to continue.</p>
         `,
         highlightSelector: '[data-tutorial="pause-button"]',
         position: 'bottom',
-        helpLinks: []
+        helpId: 'chap05_V(D)(2)',
+        advanceOn: {
+            click: '[data-tutorial="pause-button"]',
+            state: (gameState) => !gameState.isTickerRunning
+        },
+        allowInteraction: true
     },
     {
         id: 'balance-sheet',
@@ -47,7 +62,9 @@ export const TUTORIAL_STEPS = [
         `,
         highlightSelector: '[data-tutorial="balance-sheet"]',
         position: 'right',
-        helpLinks: []
+        helpId: 'chap05_V(C)(3)',
+        advanceOn: null, // Manual advance
+        allowInteraction: false
     },
     {
         id: 'market-reports',
@@ -56,66 +73,89 @@ export const TUTORIAL_STEPS = [
             <p>Before investing, you need to research the market.</p>
             <p>Click <strong>Market Reports</strong> to see industry performance and find promising sectors.</p>
             <p class="tutorial-tip">Look for industries with strong growth rates and high profitability - these make good investment targets.</p>
+            <p class="tutorial-action"><strong>Action:</strong> Click "Market Reports" to continue.</p>
         `,
         highlightSelector: '[data-tutorial="market-reports"]',
         position: 'bottom',
-        helpLinks: []
+        helpId: 'chap10_X(E)',
+        advanceOn: {
+            click: '[data-tutorial="market-reports"]',
+            action: 'viewIndustry'
+        },
+        allowInteraction: true
     },
     {
         id: 'industry-selection',
         title: 'Exploring Industries',
         content: `
-            <p>After clicking Market Reports, you'll see a list of industries. When looking at an industry, check:</p>
+            <p>You're now viewing the Market Reports. You'll see tabs for different industries on the left.</p>
+            <p>When looking at an industry, check:</p>
             <ul>
                 <li><strong>Short-term growth rate:</strong> Immediate momentum</li>
                 <li><strong>Long-term growth rate:</strong> Sustained potential</li>
                 <li><strong>Return on Assets:</strong> 20%+ is excellent</li>
             </ul>
-            <p>Click on any industry name to see the companies within it.</p>
-            <p class="tutorial-tip">Click "Next" to continue learning while exploring.</p>
+            <p>Click on any <strong>industry tab</strong> to see the companies within it.</p>
+            <p class="tutorial-action"><strong>Action:</strong> Click on an industry tab (e.g., "Airlines", "Banking") to continue.</p>
         `,
-        highlightSelector: null,
-        position: 'center',
-        helpLinks: []
+        highlightSelector: '[data-tutorial="industry-tabs"]',
+        position: 'right',
+        helpId: 'chap10_X(D)(9)',
+        advanceOn: {
+            action: 'viewIndustry',
+            // Advances when viewing a specific industry (not the summary)
+            state: (gameState) => gameState.currentIndustry > 0
+        },
+        allowInteraction: true
     },
     {
-        id: 'company-analysis',
+        id: 'company-selection',
         title: 'Selecting a Company',
         content: `
-            <p>When looking at companies in an industry, consider:</p>
+            <p>You're now viewing companies in an industry. Click on any <strong>company symbol</strong> (like "AAL" or "DAL") to view its detailed profile.</p>
+            <p>When comparing companies, consider:</p>
             <ul>
                 <li><strong>Stock price trends:</strong> Is it rising or falling?</li>
                 <li><strong>Analyst ratings:</strong> BUY or STRONG BUY are favorable</li>
                 <li><strong>Market cap:</strong> $500M - $2B is affordable for initial investments</li>
             </ul>
-            <p>Click on any company symbol to view its detailed profile.</p>
+            <p class="tutorial-action"><strong>Action:</strong> Click on a company symbol to continue.</p>
         `,
         highlightSelector: null,
         position: 'center',
-        helpLinks: []
+        helpId: 'chap10_X(C)',
+        advanceOn: {
+            action: 'viewCorp'
+        },
+        allowInteraction: true
     },
     {
         id: 'company-tabs',
         title: 'Company Information Tabs',
         content: `
-            <p>When viewing a company, you'll see several tabs with different information:</p>
+            <p>You're now viewing a company's profile. Notice the tabs below:</p>
             <ul>
-                <li><strong>General:</strong> Overview and stock chart</li>
+                <li><strong>General:</strong> Overview, stock chart, and analyst ratings</li>
                 <li><strong>Earnings:</strong> Quarterly earnings history</li>
                 <li><strong>Financials:</strong> Balance sheet and management rating</li>
                 <li><strong>Cashflow:</strong> Cash flow projections</li>
             </ul>
-            <p>Click these tabs to explore different aspects of a company's performance.</p>
+            <p>Try clicking on the <strong>Earnings</strong> tab to see the company's earnings history.</p>
+            <p class="tutorial-action"><strong>Action:</strong> Click on any company tab to continue.</p>
         `,
         highlightSelector: '[data-tutorial="tab-row"]',
         position: 'bottom',
-        helpLinks: []
+        helpId: 'chap10_X(D)',
+        advanceOn: {
+            click: '[data-tutorial^="tab-"]'
+        },
+        allowInteraction: true
     },
     {
         id: 'buy-stock',
         title: 'Making Your First Investment',
         content: `
-            <p>When viewing a company, you can buy its stock using the <strong>Buy Stock</strong> button.</p>
+            <p>Now let's buy some stock! Find the <strong>Buy Stock</strong> button.</p>
             <p>For your first investment, try buying <strong>5%</strong> or less of the company.</p>
             <p class="tutorial-why"><strong>Why 5%?</strong></p>
             <ul>
@@ -124,16 +164,47 @@ export const TUTORIAL_STEPS = [
                 <li>Easy to exit if needed</li>
             </ul>
             <p class="tutorial-tip">Buying over 5% requires a tender offer at a premium price.</p>
+            <p class="tutorial-action"><strong>Action:</strong> Click "Buy Stock" to continue.</p>
         `,
         highlightSelector: '[data-tutorial="buy-stock"]',
         position: 'left',
-        helpLinks: []
+        helpId: 'chap06_VI(B)(1)',
+        advanceOn: {
+            click: '[data-tutorial="buy-stock"]',
+            action: 'buyStock'
+        },
+        allowInteraction: true,
+        sidebarMode: true // Stay visible during buy stock flow
+    },
+    {
+        id: 'buy-stock-confirm',
+        title: 'Completing Your Purchase',
+        content: `
+            <p>A dialog has appeared asking how much stock to buy.</p>
+            <p><strong>Enter a percentage</strong> (try 5 or less) and click Submit.</p>
+            <p>The transaction will execute at the current market price.</p>
+            <p class="tutorial-tip">Watch the Balance Sheet - your T-bills will convert to stock holdings!</p>
+        `,
+        highlightSelector: null,
+        position: 'left',
+        helpId: 'chap06_VI(C)',
+        advanceOn: {
+            // Advances when a stock purchase is completed
+            action: 'modalResult',
+            state: (gameState, prevState) => {
+                // Check if portfolio changed (stock was purchased)
+                return gameState.portfolioChanged === true;
+            }
+        },
+        allowInteraction: true,
+        sidebarMode: true
     },
     {
         id: 'ownership-levels',
         title: 'Understanding Ownership',
         content: `
-            <p>After buying stock, you become a shareholder. Ownership levels matter:</p>
+            <p><strong>Congratulations!</strong> You now own stock in a company.</p>
+            <p>Ownership levels matter for what you can do:</p>
             <ul>
                 <li><strong>0-5%:</strong> Easy to buy/sell, no control</li>
                 <li><strong>5-20%:</strong> Significant stake, still passive</li>
@@ -144,7 +215,52 @@ export const TUTORIAL_STEPS = [
         `,
         highlightSelector: null,
         position: 'center',
-        helpLinks: []
+        helpId: 'chap03_III(G)',
+        advanceOn: null, // Manual advance
+        allowInteraction: false
+    },
+    {
+        id: 'view-player',
+        title: 'Viewing Your Portfolio',
+        content: `
+            <p>Let's check your portfolio. Click the <strong>View Player</strong> button to see all your holdings.</p>
+            <p>The Player View shows:</p>
+            <ul>
+                <li><strong>Financials:</strong> Your complete balance sheet</li>
+                <li><strong>Stocks & Bonds:</strong> All your investments</li>
+                <li><strong>My Corporations:</strong> Companies you control</li>
+            </ul>
+            <p class="tutorial-action"><strong>Action:</strong> Click "View Player" to continue.</p>
+        `,
+        highlightSelector: '[data-tutorial="view-player"]',
+        position: 'bottom',
+        helpId: 'chap05_V(C)(3)',
+        advanceOn: {
+            click: '[data-tutorial="view-player"]',
+            action: 'viewPlayer'
+        },
+        allowInteraction: true
+    },
+    {
+        id: 'portfolio-tab',
+        title: 'Your Stock Portfolio',
+        content: `
+            <p>Click on the <strong>Stocks & Bonds</strong> tab to see your investments.</p>
+            <p>Here you can:</p>
+            <ul>
+                <li>See all stocks and bonds you own</li>
+                <li>View your cost basis and current value</li>
+                <li>Sell or buy more of your holdings</li>
+            </ul>
+            <p class="tutorial-action"><strong>Action:</strong> Click the "Stocks & Bonds" tab to continue.</p>
+        `,
+        highlightSelector: '[data-tutorial="tab-stocks-bonds"], [data-tutorial="tab-stocks-&-bonds"]',
+        position: 'bottom',
+        helpId: 'chap10_X(D)(6)',
+        advanceOn: {
+            click: '[data-tutorial="tab-stocks-bonds"], [data-tutorial="tab-stocks-&-bonds"]'
+        },
+        allowInteraction: true
     },
     {
         id: 'acting-as-dropdown',
@@ -153,22 +269,28 @@ export const TUTORIAL_STEPS = [
             <p>This dropdown shows who you're currently making decisions for.</p>
             <p>Right now, you're acting as yourself (the player). When you control a company (20%+ ownership), it will appear here.</p>
             <p>Select a company from this dropdown to manage its operations.</p>
+            <p class="tutorial-tip">Try clicking it to see your options!</p>
         `,
         highlightSelector: '[data-tutorial="acting-as-dropdown"]',
         position: 'bottom',
-        helpLinks: []
+        helpId: 'chap03_III(A)',
+        advanceOn: null, // Manual advance
+        allowInteraction: true
     },
     {
         id: 'taking-control',
         title: 'Taking Control of a Company',
         content: `
-            <p>To take control, you need at least <strong>20%</strong> ownership.</p>
+            <p>To take control of a company, you need at least <strong>20%</strong> ownership.</p>
             <p><strong>Important:</strong> Buying more than 5% at once requires a tender offer, meaning you'll pay a premium (typically 10-15% above market price).</p>
             <p>The premium is worth it - you gain the power to manage the company!</p>
+            <p class="tutorial-tip">Start with a small company (lower market cap) - it's easier to acquire 20%!</p>
         `,
         highlightSelector: null,
         position: 'center',
-        helpLinks: []
+        helpId: 'chap04_IV(B)',
+        advanceOn: null, // Manual advance
+        allowInteraction: false
     },
     {
         id: 'control-benefits',
@@ -182,27 +304,32 @@ export const TUTORIAL_STEPS = [
                 <li>Make acquisition decisions</li>
                 <li>Set dividend policies</li>
             </ul>
-            <p>Use the "Acting As" dropdown to switch to your controlled company, then explore the Management options.</p>
+            <p>Use the "Acting As" dropdown to switch to your controlled company, then explore the Cashflow tab for management options.</p>
         `,
         highlightSelector: '[data-tutorial="acting-as-dropdown"]',
         position: 'bottom',
-        helpLinks: []
+        helpId: 'chap08_VIII(A)',
+        advanceOn: null, // Manual advance
+        allowInteraction: true
     },
     {
-        id: 'tools-menu',
-        title: 'The Tools Menu',
+        id: 'database-search',
+        title: 'Database Search',
         content: `
-            <p>The <strong>Tools</strong> menu provides additional features:</p>
+            <p>The <strong>Database Search</strong> tool helps you find specific investment opportunities.</p>
+            <p>You can search for companies by:</p>
             <ul>
-                <li><strong>Database Search:</strong> Find companies matching specific criteria</li>
-                <li><strong>Change Law Firm:</strong> Affects transaction success rates</li>
-                <li><strong>Toggle Autopilot:</strong> Let the AI manage operations</li>
+                <li>Industry, market cap, or stock price</li>
+                <li>Financial metrics (P/E ratio, ROA, etc.)</li>
+                <li>Ownership levels and control status</li>
             </ul>
-            <p>Database Search is especially useful for finding undervalued companies!</p>
+            <p>This is especially useful for finding undervalued companies or acquisition targets!</p>
         `,
-        highlightSelector: '[data-tutorial="tools-menu"]',
+        highlightSelector: '[data-tutorial="database-search"]',
         position: 'bottom',
-        helpLinks: []
+        helpId: 'chap10_X(E)(12)',
+        advanceOn: null, // Manual advance
+        allowInteraction: true
     },
     {
         id: 'complete',
@@ -213,21 +340,48 @@ export const TUTORIAL_STEPS = [
                 <li>Pausing the game to think strategically</li>
                 <li>Researching industries and companies</li>
                 <li>Making investments (up to 5% for easy trading)</li>
+                <li>Viewing your portfolio</li>
                 <li>Taking control of companies (20%+)</li>
-                <li>Managing controlled companies</li>
             </ul>
             <p><strong>Next Steps:</strong></p>
             <ul>
                 <li>Find a promising company and invest in it</li>
                 <li>Build up to 20% ownership to take control</li>
-                <li>Explore the Management menu when controlling a company</li>
+                <li>Explore the Cashflow tab when controlling a company</li>
             </ul>
             <p class="tutorial-tip">Click <strong>Help</strong> anytime for detailed explanations of any feature!</p>
         `,
         highlightSelector: null,
         position: 'center',
-        helpLinks: []
+        helpId: 'intro',
+        advanceOn: null, // End of tutorial
+        allowInteraction: false
     }
 ];
+
+// Map of action names to tutorial step IDs that should advance when that action occurs
+export const ACTION_ADVANCE_MAP = {
+    'stopTicker': 'pause-game',
+    'viewIndustry': ['market-reports', 'industry-selection'],
+    'viewCorp': 'company-selection',
+    'buyStock': 'buy-stock',
+    'viewPlayer': 'view-player'
+};
+
+// Get the step index by ID
+export function getStepIndexById(id) {
+    return TUTORIAL_STEPS.findIndex(step => step.id === id);
+}
+
+// Check if an action should advance the tutorial
+export function shouldAdvanceOnAction(actionName, currentStepId) {
+    const advanceSteps = ACTION_ADVANCE_MAP[actionName];
+    if (!advanceSteps) return false;
+
+    if (Array.isArray(advanceSteps)) {
+        return advanceSteps.includes(currentStepId);
+    }
+    return advanceSteps === currentStepId;
+}
 
 export default TUTORIAL_STEPS;

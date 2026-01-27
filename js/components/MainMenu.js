@@ -35,13 +35,13 @@ const CHANGELOG = [
             "Fix Earnings popups w/ menu setting",
             "Migrate Advanced Options from Win32 to Electron",
             "Migrate Picklist from Win32 to Electron",
-            "Migrate Database Search from Win32 to Electron", // TODO: Convert from Win32 to Electron
+            "Migrate Database Search from Win32 to Electron",
             "Restore and migrate Settings menu to Electron",
             "Migrate Change Law Firm from Win32 to Electron",
             "Migrate Spread Rumors from Win32 to Electron",
             "Migrate Harassing Lawsuit from Win32 to Electron",
             "Migrate Capital Contributions from Win32 to Electron",
-            "CustomData API endpoint for mods to store custom game data", // TODO
+            "CustomData API endpoint for mods to store custom game data",
             "Localization support framework",
             "Add Microsoft Visual C++ to Steam Common Redistributables installation list",
             "Migrated Strategy Manual to Help menu",
@@ -49,6 +49,8 @@ const CHANGELOG = [
             "Fix Unethical Scenarios functionality",
             "Fix player cashflow projection",
             "Modulate interest rates to be more realistic",
+            "Tutorial system",
+            "Solved Network IO suspended reconnect after computer sleep",
         ]
     },
     {
@@ -224,7 +226,7 @@ const MainMenu = () => {
             <div class="wsr-buttons" style="margin: 0 auto;">
               <${Button} class="btn green main-menu" onClick=${api.loadGame}>Load Game</button>
               <${Button} class="btn green main-menu" onClick=${api.newGame}>New Game</button>
-              <${Button} class="btn green main-menu" onClick=${api.exitToDesktop}>Exit to Desktop</button>
+              <${Button} class="btn main-menu" onClick=${api.exitToDesktop}>Exit to Desktop</button>
             </div>
 
           <div class="wsr-topbar-right">

@@ -1,12 +1,23 @@
-import { html, useEffect, useState, useRef } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useState, useRef, useCallback } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
 import Button from './Button.js';
 import TutorialOverlay from './TutorialOverlay.js';
-import { TUTORIAL_STEPS } from './TutorialSteps.js';
+import { TUTORIAL_STEPS, shouldAdvanceOnAction, getStepIndexById } from './TutorialSteps.js';
 import { insertCurrencySymbols } from './helpers.js';
 
 // Calculate panel position based on step position and highlighted element
-function calculatePanelStyle(step) {
+function calculatePanelStyle(step, sidebarMode = false) {
+    // In sidebar mode, always position on the left side
+    if (sidebarMode || step?.sidebarMode) {
+        return {
+            position: 'fixed',
+            top: '100px',
+            left: '20px',
+            maxWidth: '350px',
+            maxHeight: 'calc(100vh - 140px)'
+        };
+    }
+
     if (!step?.highlightSelector || step.position === 'center') {
         return {
             position: 'fixed',
@@ -81,15 +92,18 @@ function calculatePanelStyle(step) {
 }
 
 export default function TutorialModal() {
-    const { hideTutorial, showHelp, showTutorial } = api.useWSRContext();
+    const { hideTutorial, showHelp } = api.useWSRContext();
     const tutorialStep = api.useGameStore(s => s.gameState.tutorialStep) || 0;
     const tutorialEnabled = api.useGameStore(s => s.gameState.tutorialEnabled);
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
+    const modalType = api.useGameStore(s => s.gameState.modalType);
 
     const [panelStyle, setPanelStyle] = useState({});
+    const [sidebarMode, setSidebarMode] = useState(false);
     const panelRef = useRef(null);
     const hasAutoShown = useRef(false);
     const wasTickerRunning = useRef(false);
+    const prevGameStateRef = useRef(null);
 
     const step = TUTORIAL_STEPS[tutorialStep];
     const isFirst = tutorialStep === 0;
@@ -114,11 +128,18 @@ export default function TutorialModal() {
         }
     }, [tutorialEnabled]);
 
-    // Update panel position when step changes
+    // Check if a modal is open and switch to sidebar mode
+    useEffect(() => {
+        const hasActiveModal = modalType > 0;
+        const stepWantsSidebar = step?.sidebarMode === true;
+        setSidebarMode(hasActiveModal || stepWantsSidebar);
+    }, [modalType, step]);
+
+    // Update panel position when step changes or sidebar mode changes
     useEffect(() => {
         if (!tutorialEnabled || !step) return;
         const updatePosition = () => {
-            setPanelStyle(calculatePanelStyle(step));
+            setPanelStyle(calculatePanelStyle(step, sidebarMode));
         };
 
         // Small delay to allow DOM to update
@@ -130,16 +151,16 @@ export default function TutorialModal() {
             clearTimeout(timeoutId);
             window.removeEventListener('resize', updatePosition);
         };
-    }, [tutorialEnabled, tutorialStep, step]);
+    }, [tutorialEnabled, tutorialStep, step, sidebarMode]);
 
     // Navigation handlers
-    const goNext = () => {
+    const goNext = useCallback(() => {
         if (isLast) {
             completeTutorial();
         } else {
             api.setTutorialStep(tutorialStep + 1);
         }
-    };
+    }, [isLast, tutorialStep]);
 
     const goPrev = () => {
         if (!isFirst) {
@@ -158,6 +179,61 @@ export default function TutorialModal() {
         hideTutorial();
     };
 
+    // Handle "Learn more" click - opens help without closing tutorial
+    const handleLearnMore = useCallback(() => {
+        if (step?.helpId) {
+            showHelp(step.helpId);
+        } else {
+            showHelp();
+        }
+    }, [step, showHelp]);
+
+    // Auto-advance when user clicks on highlighted element or performs action
+    useEffect(() => {
+        if (!tutorialEnabled || !step?.advanceOn) return;
+
+        const advanceOn = step.advanceOn;
+
+        // Click-based advancement
+        if (advanceOn.click) {
+            const handleClick = (e) => {
+                const target = e.target;
+                const selector = advanceOn.click;
+
+                // Check if clicked element matches the selector or is a child of it
+                if (target.matches(selector) || target.closest(selector)) {
+                    // Small delay to let the action complete
+                    setTimeout(() => {
+                        goNext();
+                    }, 100);
+                }
+            };
+
+            document.addEventListener('click', handleClick, true);
+            return () => document.removeEventListener('click', handleClick, true);
+        }
+    }, [tutorialEnabled, step, goNext]);
+
+    // State-based auto-advancement
+    useEffect(() => {
+        if (!tutorialEnabled || !step?.advanceOn?.state) return;
+
+        const gameState = api.gameStore.getState().gameState;
+        const checkState = step.advanceOn.state;
+
+        // Check if the state condition is met
+        if (typeof checkState === 'function') {
+            const prevState = prevGameStateRef.current;
+            if (checkState(gameState, prevState)) {
+                setTimeout(() => {
+                    goNext();
+                }, 100);
+            }
+        }
+
+        prevGameStateRef.current = gameState;
+    }, [tutorialEnabled, step, goNext]);
+
     // Keyboard navigation
     useEffect(() => {
         if (!tutorialEnabled) return;
@@ -174,16 +250,25 @@ export default function TutorialModal() {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [tutorialEnabled, tutorialStep]);
+    }, [tutorialEnabled, tutorialStep, goNext]);
 
-    if (!tutorialEnabled || !step) return null;
+    if (!tutorialEnabled || !step || showHelp) return null;
+
+    // Determine if we should show the overlay (not in sidebar mode with active modal)
+    const showOverlay = !sidebarMode || !step.sidebarMode;
 
     return html`
-        <${TutorialOverlay}
-            selector=${step.highlightSelector}
-            enabled=${tutorialEnabled}
-        />
-        <div class="tutorial-panel" style=${panelStyle} ref=${panelRef}>
+        ${showOverlay && html`
+            <${TutorialOverlay}
+                selector=${step.highlightSelector}
+                enabled=${tutorialEnabled && !sidebarMode}
+            />
+        `}
+        <div
+            class=${`tutorial-panel ${sidebarMode ? 'tutorial-sidebar' : ''}`}
+            style=${panelStyle}
+            ref=${panelRef}
+        >
             <div class="tutorial-header">
                 <span class="tutorial-step-indicator">
                     ${insertCurrencySymbols(`Step ${tutorialStep + 1} of ${TUTORIAL_STEPS.length}`)}
@@ -200,17 +285,14 @@ export default function TutorialModal() {
                 class="tutorial-content"
                 dangerouslySetInnerHTML=${{ __html: step.content }}
             ></div>
-            ${step.helpLinks?.length > 0 && html`
+            ${step.helpId && html`
                 <div class="tutorial-help-links">
-                    <span>${insertCurrencySymbols("Learn more:")} </span>
-                    ${step.helpLinks.map(link => html`
-                        <${Button}
-                            class="tutorial-help-link"
-                            onClick=${() => showHelp()}
-                        >
-                            ${insertCurrencySymbols("Help")}
-                        </button>
-                    `)}
+                    <${Button}
+                        class="tutorial-help-link"
+                        onClick=${handleLearnMore}
+                    >
+                        ${insertCurrencySymbols("Learn more in Help")} →
+                    </button>
                 </div>
             `}
             <div class="tutorial-footer">
@@ -235,4 +317,18 @@ export default function TutorialModal() {
             </div>
         </div>
     `;
+}
+
+// Export function to advance tutorial from API calls
+export function advanceTutorialOnAction(actionName) {
+    const gameState = api.gameStore.getState().gameState;
+    if (!gameState.tutorialEnabled) return;
+
+    const currentStep = TUTORIAL_STEPS[gameState.tutorialStep];
+    if (!currentStep) return;
+
+    if (shouldAdvanceOnAction(actionName, currentStep.id)) {
+        // Advance to next step
+        api.setTutorialStep(gameState.tutorialStep + 1);
+    }
 }

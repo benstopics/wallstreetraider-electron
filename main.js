@@ -1,9 +1,10 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, powerMonitor } = require('electron');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
 
 let wsrProcess;
 let mainWindow;
+let isRestarting = false; // Flag to prevent app.quit() during intentional restart
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -31,17 +32,35 @@ app.whenReady().then(() => {
 
     killWSR();
 
-    wsrProcess = spawn(exePath, [], {
-        detached: true,
-        stdio: 'ignore',
-        env: { ...process.env, ENVIRONMENT: app.isPackaged ? 'production' : '09a7sd0(&)(Fd70s(*S&DF)987df0ds987f09&)F97)F&(*D7f9s7d0(S*D&f09d8s7f0s97F)(7d))' },
-    });
+    function runWSRProcess() {
+        wsrProcess = spawn(exePath, [], {
+            detached: true,
+            stdio: 'ignore',
+            env: { ...process.env, ENVIRONMENT: app.isPackaged ? 'production' : '09a7sd0(&)(Fd70s(*S&DF)987df0ds987f09&)F97)F&(*D7f9s7d0(S*D&f09d8s7f0s97F)(7d))' },
+        });
 
-    wsrProcess.unref();
+        wsrProcess.unref();
 
-    wsrProcess.on('exit', () => {
-        app.quit();
-    });
+        wsrProcess.on('exit', () => {
+            if (!isRestarting) {
+                app.quit();
+            } else {
+                // Notify renderer that wsr.exe is restarting (show loading)
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.webContents.send('wsr-restarting');
+                }
+                runWSRProcess();
+                isRestarting = false;
+            }
+        });
+
+        // Notify renderer that wsr.exe has restarted
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('wsr-restarted');
+        }
+    }
+
+    runWSRProcess()
 
     // Sleep a bit to ensure wsr.exe has started
     setTimeout(() => {
@@ -83,6 +102,20 @@ app.whenReady().then(() => {
     ipcMain.on('exit-to-desktop', () => {
         killWSR();
         app.quit();
+    });
+
+    // Restart wsr.exe without closing Electron (for "Exit Game" / return to main menu)
+    ipcMain.on('restart-wsr', () => {
+        console.log('Restarting wsr.exe...');
+        isRestarting = true;
+    });
+
+    // Notify renderer when system resumes from sleep to recover network connections
+    powerMonitor.on('resume', () => {
+        console.log('System resumed from sleep');
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('system-resumed');
+        }
     });
 });
 

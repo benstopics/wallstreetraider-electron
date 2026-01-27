@@ -1,5 +1,5 @@
 // HelpModal.jsx (Preact + htm) - Refactored with hardcoded hierarchy + Pre-indexed Search
-import { html, useState, useRef, useCallback, useMemo, useEffect } from '../lib/preact.standalone.module.js';
+import { html, useState, useRef, useCallback, useEffect } from '../lib/preact.standalone.module.js';
 import Modal from './Modal.js';
 import HelpChapter1Content from './HelpChapter1Content.js';
 import HelpChapter2Content from './HelpChapter2Content.js';
@@ -767,17 +767,80 @@ function flattenStructure(structure) {
     return flat;
 }
 
-export default function HelpModal({ show, onClose }) {
+export default function HelpModal({ show, onClose, initialSectionId }) {
     const [selectedId, setSelectedId] = useState('intro');
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [searchMode, setSearchMode] = useState('deep'); // 'fast' or 'deep'
     const [indexReady, setIndexReady] = useState(false);
     const [selectedMatchIndex, setSelectedMatchIndex] = useState(null);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchResults, setSearchResults] = useState(null);
     const contentRef = useRef(null);
     const searchIndexRef = useRef(null);
     const ahoCorasickRef = useRef(null);
+    const searchAbortRef = useRef(null);
 
     const searchInputRef = useRef(null);
+
+    // Navigate to initial section when modal opens with a specific section
+    useEffect(() => {
+        if (show && initialSectionId) {
+            // Find if this is a subsection to get the parent chapter
+            const flatStructure = flattenStructure(HELP_STRUCTURE);
+            const targetItem = flatStructure.find(item => item.id === initialSectionId);
+
+            if (targetItem) {
+                // Set the selected ID (use parent if it's a subsection)
+                const chapterId = targetItem.parentId || targetItem.id;
+                setSelectedId(chapterId);
+
+                // If it's a subsection, scroll to it after content renders
+                if (targetItem.parentId || targetItem.id !== chapterId) {
+                    setTimeout(() => {
+                        const element = document.getElementById(initialSectionId);
+                        if (element && contentRef.current) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 150);
+                } else {
+                    // Main chapter, scroll to top
+                    if (contentRef.current) {
+                        contentRef.current.scrollTop = 0;
+                    }
+                }
+            }
+        }
+    }, [show, initialSectionId]);
+
+    // Debounce search query to prevent blocking typing
+    useEffect(() => {
+        // Clear previous timeout
+        if (searchAbortRef.current) {
+            clearTimeout(searchAbortRef.current);
+        }
+
+        // If query is empty, update immediately
+        if (!searchQuery.trim()) {
+            setDebouncedSearchQuery('');
+            setIsSearching(false);
+            return;
+        }
+
+        // Show searching indicator
+        setIsSearching(true);
+
+        // Debounce the search query
+        searchAbortRef.current = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 200); // 200ms debounce
+
+        return () => {
+            if (searchAbortRef.current) {
+                clearTimeout(searchAbortRef.current);
+            }
+        };
+    }, [searchQuery]);
 
     const flatStructure = flattenStructure(HELP_STRUCTURE);
 
@@ -867,47 +930,63 @@ export default function HelpModal({ show, onClose }) {
         console.log('[Aho-Corasick] Applied highlighting to', textNodes.length, 'text nodes');
     }, [searchQuery, searchMode, selectedId]); // Re-run when query, mode, or selected content changes
 
-    // Search and filter results
-    const searchResults = useMemo(() => {
-        if (!searchQuery.trim()) {
+    // Perform search asynchronously when debounced query changes
+    useEffect(() => {
+        if (!debouncedSearchQuery.trim()) {
             ahoCorasickRef.current = null;
-            return null;
+            setSearchResults(null);
+            setIsSearching(false);
+            return;
         }
 
-        if (searchMode === 'fast') {
-            // Fast mode: Use pre-indexed search (returns section IDs)
-            ahoCorasickRef.current = null;
-            if (!indexReady) {
-                return null;
-            }
-            const matchingIds = searchIndexRanked(searchQuery, searchIndexRef.current);
-
-            if (matchingIds.length === 0) {
-                return [];
-            }
-
-            // Filter flatStructure to only matching sections
-            return flatStructure.filter(item => matchingIds.includes(item.id));
-        } else {
-            // Deep mode: Snippet-based search with Aho-Corasick highlighting
-            const results = searchDeepWithSnippets(searchQuery, HELP_STRUCTURE);
-
-            // Build Aho-Corasick automaton for highlighting
-            const ac = new AhoCorasick();
-            const queryTerms = [searchQuery.trim().replace(/\s+/g, ' ')];
-            queryTerms.forEach(term => {
-                if (term.length > 0) {
-                    ac.addPattern(term);
+        // Use requestAnimationFrame to yield to the browser for smoother typing
+        const performSearch = () => {
+            if (searchMode === 'fast') {
+                // Fast mode: Use pre-indexed search (returns section IDs)
+                ahoCorasickRef.current = null;
+                if (!indexReady) {
+                    setSearchResults(null);
+                    setIsSearching(false);
+                    return;
                 }
-            });
-            ac.buildFailureLinks();
-            ahoCorasickRef.current = ac;
+                const matchingIds = searchIndexRanked(debouncedSearchQuery, searchIndexRef.current);
 
-            console.log('[Deep Search] Built Aho-Corasick automaton for highlighting with', queryTerms.length, 'patterns');
+                if (matchingIds.length === 0) {
+                    setSearchResults([]);
+                } else {
+                    // Filter flatStructure to only matching sections
+                    setSearchResults(flatStructure.filter(item => matchingIds.includes(item.id)));
+                }
+            } else {
+                // Deep mode: Snippet-based search with Aho-Corasick highlighting
+                const results = searchDeepWithSnippets(debouncedSearchQuery, HELP_STRUCTURE);
 
-            return results;
-        }
-    }, [searchQuery, searchMode, indexReady, flatStructure]);
+                // Build Aho-Corasick automaton for highlighting
+                const ac = new AhoCorasick();
+                const queryTerms = [debouncedSearchQuery.trim().replace(/\s+/g, ' ')];
+                queryTerms.forEach(term => {
+                    if (term.length > 0) {
+                        ac.addPattern(term);
+                    }
+                });
+                ac.buildFailureLinks();
+                ahoCorasickRef.current = ac;
+
+                console.log('[Deep Search] Built Aho-Corasick automaton for highlighting with', queryTerms.length, 'patterns');
+
+                setSearchResults(results);
+            }
+            setIsSearching(false);
+        };
+
+        // Use requestAnimationFrame to avoid blocking the main thread during typing
+        const rafId = requestAnimationFrame(() => {
+            // Use setTimeout(0) to further yield to allow any pending UI updates
+            setTimeout(performSearch, 0);
+        });
+
+        return () => cancelAnimationFrame(rafId);
+    }, [debouncedSearchQuery, searchMode, indexReady, flatStructure]);
 
     // Display either search results or full structure
     // In deep mode with search, we show snippet-based results
@@ -1081,7 +1160,7 @@ export default function HelpModal({ show, onClose }) {
             ref=${searchInputRef}
             type="text"
             class="help-search-input"
-            placeholder=${indexReady ? "Search help..." : "Building search index..."}
+            placeholder=${!indexReady ? "Building search index..." : isSearching ? "Searching..." : "Search help..."}
             value=${searchQuery}
             disabled=${!indexReady}
             onInput=${(e) => setSearchQuery(e.target.value)}

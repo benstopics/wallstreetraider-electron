@@ -22,7 +22,7 @@ const logos = [
 const isDev = process.env.NODE_ENV?.trim() == 'development';
 
 const AppInner = () => {
-    const { helpShown, hideHelp, setGameState } = api.useWSRContext();
+    const { helpShown, helpSectionId, hideHelp, setGameState } = api.useWSRContext();
 
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
     const splashScreenPlayed = isDev ? true : api.useGameStore(s => s.gameState.splashScreenPlayed);
@@ -179,7 +179,7 @@ const AppInner = () => {
                 api.modalResult(api.serialize({...newState, buttonId: "SUBMIT"}));
             }}
         />
-        <${HelpModal} show=${helpShown} onClose=${hideHelp} />
+        <${HelpModal} show=${helpShown} onClose=${hideHelp} initialSectionId=${helpSectionId} />
         <${InterestRateSwapsModal}
             show=${modalType === 7}
             title=${modalTitle}
