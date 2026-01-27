@@ -385,8 +385,13 @@ export async function getAssetChart(id) {
 
 /* Trading Center - Stocks */
 export async function buyStock(id) {
-    await postIdArg('/buy_stock', id);
-    advanceTutorialOnAction('buyStock');
+    console.log('[Tutorial] buyStock called with id:', id);
+    try {
+        await postIdArg('/buy_stock', id);
+    } finally {
+        // Call advanceTutorialOnAction even if API call fails
+        advanceTutorialOnAction('buyStock');
+    }
 }
 export async function sellStock(id) { await postIdArg('/sell_stock', id); }
 export async function shortStock(id) { await postIdArg('/short_stock', id); }
@@ -512,6 +517,7 @@ export async function exerciseSelect() { await postNoArg('/exercise_select'); }
 export async function sweepSelect() { await postNoArg('/sweep_select'); }
 export async function makedeliverySelect() { await postNoArg('/makedelivery_select'); }
 export async function takedeliverySelect() { await postNoArg('/takedelivery_select'); }
+export async function tooltipsSelect() { await postNoArg('/tooltips_select'); }
 
 // Fullscreen toggle (Electron if available, otherwise browser fullscreen API)
 export function toggleFullscreen() {
@@ -593,50 +599,84 @@ export async function setCustomData(blob) {
 }
 
 /* Tutorial API */
+// Track locally set tutorial values - preserve until backend catches up
+let localTutorialStep = null; // null means use backend value
+let localTutorialEnabled = null; // null means use backend value
+
 export async function setTutorialStep(step) {
+    // Optimistically update the local state immediately
+    const state = gameStore.getState();
+    state.setGameState({ ...state.gameState, tutorialStep: step });
+    localTutorialStep = step; // Track expected value
     return postIdArg('/set_tutorial_step', step);
 }
 
 export async function setTutorialEnabled(enabled) {
-    return postIdArg('/set_tutorial_enabled', enabled ? 1 : 0);
+    // Optimistically update the local state immediately
+    const state = gameStore.getState();
+    const value = enabled ? 1 : 0;
+    state.setGameState({ ...state.gameState, tutorialEnabled: value });
+    localTutorialEnabled = value; // Track expected value
+    return postIdArg('/set_tutorial_enabled', value);
 }
 
-// Tutorial action-to-step advancement map
-// Maps action names to the tutorial step IDs that should advance when that action occurs
-const TUTORIAL_ACTION_MAP = {
-    'stopTicker': 'pause-game',
-    'viewIndustry': ['market-reports', 'industry-selection'],
-    'viewCorp': 'company-selection',
-    'buyStock': 'buy-stock',
-    'viewPlayer': 'view-player'
-};
+// Merge new game state from polling, preserving local tutorial changes until backend catches up
+export function mergeGameState(newState) {
+    const state = gameStore.getState();
+    const currentState = state.gameState || {};
 
-// Advance tutorial when specific actions are performed
+    // For tutorialStep: keep local value until backend matches or exceeds it
+    if (localTutorialStep !== null) {
+        if (newState.tutorialStep >= localTutorialStep) {
+            // Backend caught up, clear local override
+            localTutorialStep = null;
+        } else {
+            // Backend hasn't caught up, use local value
+            newState.tutorialStep = currentState.tutorialStep;
+        }
+    }
+
+    // For tutorialEnabled: keep local value until backend matches
+    if (localTutorialEnabled !== null) {
+        if (newState.tutorialEnabled === localTutorialEnabled) {
+            // Backend caught up, clear local override
+            localTutorialEnabled = null;
+        } else {
+            // Backend hasn't caught up, use local value
+            newState.tutorialEnabled = currentState.tutorialEnabled;
+        }
+    }
+
+    return newState;
+}
+
+// Module-level tutorial action listener
+// TutorialModal registers its listener here via registerTutorialActionListener
+let tutorialActionListener = null;
+let pendingTutorialAction = null;
+
+export function setTutorialActionListener(listener) {
+    tutorialActionListener = listener;
+    // Process any pending action when listener is registered
+    if (listener && pendingTutorialAction) {
+        const action = pendingTutorialAction;
+        pendingTutorialAction = null;
+        listener(action);
+    }
+}
+
+// Emit tutorial action - TutorialModal will check advanceOn.action and advanceOn.state
 export function advanceTutorialOnAction(actionName) {
     const state = gameStore.getState();
     const gs = state.gameState;
     if (!gs?.tutorialEnabled) return;
 
-    const currentStepIndex = gs.tutorialStep || 0;
-    // Import step IDs dynamically to avoid circular deps
-    const stepIds = [
-        'welcome', 'pause-game', 'balance-sheet', 'market-reports', 'industry-selection',
-        'company-selection', 'company-tabs', 'buy-stock', 'buy-stock-confirm', 'ownership-levels',
-        'view-player', 'portfolio-tab', 'acting-as-dropdown', 'taking-control', 'control-benefits',
-        'database-search', 'complete'
-    ];
-    const currentStepId = stepIds[currentStepIndex];
-    if (!currentStepId) return;
-
-    const advanceSteps = TUTORIAL_ACTION_MAP[actionName];
-    if (!advanceSteps) return;
-
-    const shouldAdvance = Array.isArray(advanceSteps)
-        ? advanceSteps.includes(currentStepId)
-        : advanceSteps === currentStepId;
-
-    if (shouldAdvance) {
-        setTutorialStep(currentStepIndex + 1);
+    // Emit to the listener (TutorialModal handles the advancement logic)
+    if (tutorialActionListener) {
+        tutorialActionListener(actionName);
+    } else {
+        // Store pending action if listener not ready (will be processed when listener registers)
+        pendingTutorialAction = actionName;
     }
 }
 
@@ -682,6 +722,7 @@ export async function viewDbSearch() {
     await postIdArg('/set_view_industry', -2);
     // Also set the active UI report to trigger UpdateDatabase
     await postIdArg('/set_active_ui_report', UI_DB_SEARCH);
+    shiftNavHistory({ id: -2, type: 'dbsearch' });
 }
 
 // Open the Market Heat Map (IndustryView -> "Heat Maps" tab) from anywhere (e.g., top Menu).
@@ -718,9 +759,26 @@ export async function setViewAsset(id) {
 export function gotoPage(p) {
     const page = p ?? navHistory[navPointerIdx];
     if (page.type === 'industry') {
+        // Restore preferred tab if stored
+        if (page.tab) {
+            const state = gameStore.getState();
+            state.setGameState({ ...state.gameState, uiPreferredIndustryTab: page.tab });
+        }
         return postIdArg('/set_view_industry', page.id);
     } else if (page.type === 'asset') {
+        // Restore preferred tab if stored
+        if (page.tab) {
+            const state = gameStore.getState();
+            const gs = state.gameState || {};
+            if (page.id === HUMAN1_ID) {
+                state.setGameState({ ...gs, uiPreferredPlayerTab: page.tab });
+            } else {
+                state.setGameState({ ...gs, uiPreferredCompanyTab: page.tab });
+            }
+        }
         return postIdArg('/set_view_asset', page.id);
+    } else if (page.type === 'dbsearch') {
+        return postIdArg('/set_view_industry', -2);
     }
 }
 
@@ -735,6 +793,13 @@ export async function goForward() {
     if (navPointerIdx > 0) {
         navPointerIdx--;
         gotoPage();
+    }
+}
+
+// Update the tab on the current navigation entry (called when user changes tabs)
+export function updateCurrentNavTab(tab) {
+    if (navHistory.length > navPointerIdx) {
+        navHistory[navPointerIdx].tab = tab;
     }
 }
 

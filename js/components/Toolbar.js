@@ -105,11 +105,11 @@ function Toolbar() {
                     </span>
                 </div>
                 <${SettingsModal}>
-                    <div class="btn">
+                    <div class="btn" data-tutorial="settings-dropdown">
                         <span style="white-space: nowrap;">${insertCurrencySymbols("Settings")}</span>
                     </div>
                 <//>
-                <div class="btn" onClick=${() => api.toggleFullscreen()}>
+                <div class="btn" data-tutorial="fullscreen-button" onClick=${() => api.toggleFullscreen()}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Fullscreen")}</span>
                 </div>
                 <div class="btn" onClick=${() => showTutorial()}>

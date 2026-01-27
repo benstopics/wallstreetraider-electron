@@ -33,24 +33,30 @@ const IndustryView = () => {
     const whosAheadReport = api.useGameStore(s => s.gameState.whosAheadReport);
 
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredIndustryTab);
-    const [activeTab, setActiveTab] = useState(preferredTab || 'Heat Map');
+    const [activeTab, setActiveTabInternal] = useState(preferredTab || 'Heat Map');
 
     const activeIndustryName = api.getIndustry(allIndustries, activeIndustryNum)?.name
 
     const { setGameState } = api.useWSRContext();
 
+    // Wrapper to also update navigation history when tab changes
+    const setActiveTab = (tab) => {
+        setActiveTabInternal(tab);
+        api.updateCurrentNavTab(tab);
+    };
+
     // If a caller (e.g., the Menu) requested a specific IndustryView tab,
     // honor it once and avoid auto-switching to the industry name.
     useEffect(() => {
         if (preferredTab && preferredTab !== activeTab) {
-            setActiveTab(preferredTab);
+            setActiveTabInternal(preferredTab);
             // clear one-shot preference
             const gs = api.gameStore.getState().gameState || {};
             api.gameStore.getState().setGameState({ ...gs, uiPreferredIndustryTab: null });
             return;
         }
         if (activeIndustryName && activeIndustryName !== activeTab) {
-            setActiveTab(activeIndustryName);
+            setActiveTabInternal(activeIndustryName);
         }
     }, [activeIndustryName, preferredTab]);
 

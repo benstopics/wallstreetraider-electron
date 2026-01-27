@@ -860,21 +860,30 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
         }
     }, [show]);
 
+    // Helper function to clear all search highlights from content
+    const clearHighlights = useCallback(() => {
+        if (!contentRef.current) return;
+        contentRef.current.querySelectorAll('mark.search-highlight').forEach(mark => {
+            const parent = mark.parentNode;
+            if (parent) {
+                parent.replaceChild(document.createTextNode(mark.textContent), mark);
+                parent.normalize(); // Merge adjacent text nodes
+            }
+        });
+    }, []);
+
     // Apply Aho-Corasick highlighting to content when in deep search mode
     useEffect(() => {
-        if (!contentRef.current || !ahoCorasickRef.current || searchMode !== 'deep' || !searchQuery) {
+        // Always clear existing highlights first
+        clearHighlights();
+
+        // Only apply new highlights if we have a valid search
+        if (!contentRef.current || !ahoCorasickRef.current || searchMode !== 'deep' || !debouncedSearchQuery) {
             return;
         }
 
         const ac = ahoCorasickRef.current;
         const contentElement = contentRef.current;
-
-        // Remove any existing highlights first
-        contentElement.querySelectorAll('mark.search-highlight').forEach(mark => {
-            const parent = mark.parentNode;
-            parent.replaceChild(document.createTextNode(mark.textContent), mark);
-            parent.normalize(); // Merge adjacent text nodes
-        });
 
         // Function to highlight text in a single text node
         const highlightTextNode = (textNode) => {
@@ -891,10 +900,12 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
 
             // Replace the text node with the highlighted content
             const parent = textNode.parentNode;
-            while (temp.firstChild) {
-                parent.insertBefore(temp.firstChild, textNode);
+            if (parent) {
+                while (temp.firstChild) {
+                    parent.insertBefore(temp.firstChild, textNode);
+                }
+                parent.removeChild(textNode);
             }
-            parent.removeChild(textNode);
         };
 
         // Walk through all text nodes in the content
@@ -903,10 +914,12 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
             NodeFilter.SHOW_TEXT,
             {
                 acceptNode: (node) => {
-                    // Skip script, style, already highlighted content, and anchor tags
-                    // Anchor tags (from helpLink) are managed by Preact - modifying them causes duplication
+                    // Skip script, style, already highlighted content, anchor tags, and buttons
+                    // These elements are managed by Preact - modifying them causes duplication
                     const parent = node.parentNode;
-                    if (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE' || parent.tagName === 'MARK' || parent.tagName === 'A') {
+                    const tagName = parent?.tagName;
+                    if (tagName === 'SCRIPT' || tagName === 'STYLE' || tagName === 'MARK' ||
+                        tagName === 'A' || tagName === 'BUTTON') {
                         return NodeFilter.FILTER_REJECT;
                     }
                     // Only process nodes with actual text content
@@ -928,7 +941,7 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
         textNodes.forEach(highlightTextNode);
 
         console.log('[Aho-Corasick] Applied highlighting to', textNodes.length, 'text nodes');
-    }, [searchQuery, searchMode, selectedId]); // Re-run when query, mode, or selected content changes
+    }, [debouncedSearchQuery, searchMode, selectedId, clearHighlights]); // Re-run when query, mode, or selected content changes
 
     // Perform search asynchronously when debounced query changes
     useEffect(() => {

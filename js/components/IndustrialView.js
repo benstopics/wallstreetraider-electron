@@ -54,18 +54,34 @@ const IndustrialView = () => {
     const shareholdersList = api.useGameStore(s => s.gameState.shareholdersList);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const eventString = api.useGameStore(s => s.gameState.eventString);
+    const nextEarningsDate = api.useGameStore(s => s.gameState.nextEarningsDate);
+    const preferredTab = api.useGameStore(s => s.gameState.uiPreferredCompanyTab);
 
-    const [activeTab, setActiveTab] = useState("General");
+    const [activeTab, setActiveTabInternal] = useState("General");
+
+    // Wrapper to also update navigation history when tab changes
+    const setActiveTab = (tab) => {
+        setActiveTabInternal(tab);
+        api.updateCurrentNavTab(tab);
+    };
 
     useEffect(() => {
-        setActiveTab("General");
-    }, [activeEntityNum]);
+        // Check for preferred tab from navigation
+        if (preferredTab) {
+            setActiveTabInternal(preferredTab);
+            // Clear one-shot preference
+            const gs = api.gameStore.getState().gameState || {};
+            api.gameStore.getState().setGameState({ ...gs, uiPreferredCompanyTab: null });
+        } else {
+            setActiveTabInternal("General");
+        }
+    }, [activeEntityNum, preferredTab]);
 
     useEffect(() => {
         if (eventString) {
             const eventData = JSON.parse(eventString);
             if (eventData.eventType === "setIndustrialViewActiveTab") {
-                setActiveTab(eventData.tab);
+                setActiveTabInternal(eventData.tab);
                 api.clearEventString();
             }
         }
@@ -153,9 +169,9 @@ const IndustrialView = () => {
                         label="Issue Corp Bonds"
                         color="brown"
                     />
-                    <${ActingAsRequiredButton} 
-                        disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                        onClick=${api.redeemCorpBonds} 
+                    <${ActingAsRequiredButton}
+                        disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                        onClick=${api.redeemCorpBonds}
                         label="Redeem Corp Bonds"
                         color="brown"
                     />
@@ -165,7 +181,8 @@ const IndustrialView = () => {
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0">
                                 <div class="flex flex-col flex-[4] min-h-0">
-                                    <div class="flex-[4] min-h-0">
+                                    <div class="flex-[4] min-h-0 flex flex-col">
+                                        <div class="earnings-date-badge mb-1">Next Earnings Date: ${nextEarningsDate}</div>
                                         ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" />`}
                                     </div>
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">

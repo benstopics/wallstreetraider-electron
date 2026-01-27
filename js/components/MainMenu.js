@@ -24,7 +24,7 @@ const CHANGELOG = [
         items: [
             "Overhaul GUI look and feel with modern styles and improved usability",
             "Submit string input modals with Enter key",
-            "Savescumming support (advanced game saving/loading, custom save names, fix exit game)", // TODO - /A–Za–z0–9_-./
+            "Savescumming support (advanced game saving/loading, custom save names, fix exit game)",
             "Fix loan tab softlocking due to syntax error",
             "Major command prompt improvements including autocomplete preview and help text",
             "Market heat maps for companies and sectors",

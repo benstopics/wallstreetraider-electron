@@ -41,8 +41,8 @@ function ActingAsDropdown() {
                     ${options.map(opt => html`<option value=${opt.id}>${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)}
                 </select>
                 <div class="" style="height:25px">
-                    ${actingAsId !== activeEntityNum || activeIndustryNum >= 0
-            ? html`<${Button} class="btn mx-1 p-2 whitespace-nowrap" onclick=${() => api.setViewAsset(actingAsId)}>← View</button>`
+                    ${actingAsId !== activeEntityNum || activeIndustryNum >= 0 || activeIndustryNum === -2
+            ? html`<${Button} class="btn mx-1 p-2 whitespace-nowrap" data-tutorial="view-acting-as" onclick=${() => api.setViewAsset(actingAsId)}>← View</button>`
             : ''}
                 </div>
             </div>

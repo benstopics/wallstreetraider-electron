@@ -1,4 +1,4 @@
-import { html } from '../lib/preact.standalone.module.js';
+import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import CapitalizationChart from './CapitalizationChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
@@ -24,7 +24,26 @@ const PlayerView = () => {
     const advances = api.useGameStore(s => s.gameState.advances);
     const myCorporationsReport = api.useGameStore(s => s.gameState.myCorporationsReport);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
-    
+    const preferredTab = api.useGameStore(s => s.gameState.uiPreferredPlayerTab);
+
+    const [activeTab, setActiveTabInternal] = useState("Financials");
+
+    // Wrapper to also update navigation history when tab changes
+    const setActiveTab = (tab) => {
+        setActiveTabInternal(tab);
+        api.updateCurrentNavTab(tab);
+    };
+
+    // Handle preferred tab from navigation
+    useEffect(() => {
+        if (preferredTab) {
+            setActiveTabInternal(preferredTab);
+            // Clear one-shot preference
+            const gs = api.gameStore.getState().gameState || {};
+            api.gameStore.getState().setGameState({ ...gs, uiPreferredPlayerTab: null });
+        }
+    }, [preferredTab]);
+
     return html`
         <div class="flex flex-col h-full">
             <div class="flex flex-row gap-2 flex-1 min-h-0">
@@ -37,7 +56,7 @@ const PlayerView = () => {
                             <${Button} class="btn green mx-1" onclick=${api.startup}>Startup</button>
                         </div>
                     </div>
-                    <${Tabs}>
+                    <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
                         <${Tab} label="Financials" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
                             <${FinancialsTab} />
                         <//>

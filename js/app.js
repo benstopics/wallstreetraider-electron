@@ -81,7 +81,8 @@ const AppInner = () => {
 
     useEffect(() => {
         const handleKey = (e) => {
-            if (e.key === ' ') {
+            // Don't handle spacebar when help modal is open (user may be typing in search)
+            if (e.key === ' ' && !helpShown) {
                 if (isTickerRunning) {
                     api.stopTicker();
                 } else {
@@ -95,7 +96,14 @@ const AppInner = () => {
 
         document.addEventListener('keydown', handleKey);
         return () => document.removeEventListener('keydown', handleKey);
-    }, [isTickerRunning]);
+    }, [isTickerRunning, helpShown]);
+
+    // Stop ticker when help modal is shown
+    useEffect(() => {
+        if (helpShown && isTickerRunning) {
+            api.stopTicker();
+        }
+    }, [helpShown]);
 
     const hideModal = () => {
         api.closeModal();
@@ -111,10 +119,12 @@ const AppInner = () => {
                     newGameState.allIndustries
                 );
                 newGameState.hyperlinkRegex = hyperlinkRegex;
+                // Merge with current state to preserve recent local changes (e.g., tutorial step)
+                const mergedState = api.mergeGameState(newGameState);
                 requestAnimationFrame(() => {
-                    setGameState(newGameState);
+                    setGameState(mergedState);
                 });
-                
+
                 timeoutId = setTimeout(fetchGameState, 50);
             }).catch(console.error);
         };

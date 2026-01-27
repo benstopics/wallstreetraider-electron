@@ -20,6 +20,7 @@ function SettingsModal({ children }) {
     const sweepSetting = api.useGameStore(s => s.gameState.sweepSetting);
     const makeDeliverySetting = api.useGameStore(s => s.gameState.makeDeliverySetting);
     const takeDeliverySetting = api.useGameStore(s => s.gameState.takeDeliverySetting);
+    const tooltipsSetting = api.useGameStore(s => s.gameState.tooltipsSetting);
 
     // Close on outside click
     useEffect(() => {
@@ -58,7 +59,7 @@ function SettingsModal({ children }) {
             </div>
             ${isOpen && html`
                 <div ref=${popoverRef} class="toolbar-menu-popover" style="position: absolute; top: 100%; right: 0; z-index: 1000;">
-                    <${Button} class="toolbar-menu-item" onClick=${handleDisplayClick}>${insertCurrencySymbols("Display")}</button>
+                    <${Button} class="toolbar-menu-item" data-tutorial="display-button" onClick=${handleDisplayClick}>${insertCurrencySymbols("Display")}</button>
                     <div class="toolbar-menu-sep"></div>
                     <${SettingItem} label="${insertCurrencySymbols("Suppress Earnings")}" isOn=${suppEarnSetting} onToggle=${() => api.suppEarnSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Suppress Warnings")}" isOn=${suppWarnSetting} onToggle=${() => api.suppWarnSelect()} />
@@ -68,6 +69,7 @@ function SettingsModal({ children }) {
                     <${SettingItem} label="${insertCurrencySymbols("Sweep")}" isOn=${sweepSetting} onToggle=${() => api.sweepSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Make Delivery")}" isOn=${makeDeliverySetting} onToggle=${() => api.makedeliverySelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Take Delivery")}" isOn=${takeDeliverySetting} onToggle=${() => api.takedeliverySelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Tooltips")}" isOn=${tooltipsSetting} onToggle=${() => api.tooltipsSelect()} />
                 </div>
             `}
         </div>
