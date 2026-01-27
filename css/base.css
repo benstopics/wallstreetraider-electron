@@ -1,0 +1,121 @@
+/* =========================================================
+   Base Styles - HTML, Body, Typography, Scrollbars
+   ========================================================= */
+
+html,
+body,
+#app {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: radial-gradient(1200px 600px at 25% 0%, rgba(59,130,246,0.10), transparent 60%),
+              radial-gradient(900px 500px at 75% 10%, rgba(168,85,247,0.08), transparent 55%),
+              var(--bg-primary);
+  color: var(--fg-primary);
+  font-family: Helvetica, Arial, "Helvetica Neue", sans-serif;
+  letter-spacing: 0.2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+/* Typography */
+body, button, input, select, textarea {
+  font-family: Helvetica, Arial, "Helvetica Neue", sans-serif;
+  letter-spacing: 0.2px;
+}
+
+.fixed-width {
+  font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
+}
+
+/* Text rendering */
+.panel, .top-bar, .tab-button, .btn {
+  text-rendering: geometricPrecision;
+}
+
+/* Headings */
+h1, h2, h3, h4, th, .section-title, .panel-title, .title, .header-title {
+  color: var(--color-warning);
+}
+
+/* Labels */
+label, .label, .field-label, .metric-label {
+  color: var(--fg-muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Values */
+.value, .money, .amount, .number, .price, .metric-value {
+  color: var(--color-warning);
+}
+
+/* Finance colors */
+.positive {
+  color: var(--color-positive) !important;
+  font-weight: 800;
+}
+
+.negative {
+  color: var(--color-negative) !important;
+  font-weight: 800;
+}
+
+.neutral {
+  color: var(--fg-primary);
+}
+
+/* Links */
+a, .ticker, .link {
+  color: var(--accent-secondary);
+}
+
+/* Pre/Code */
+pre, code {
+  font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
+  color: rgba(230,235,245,0.92);
+}
+
+/* Borders */
+.border {
+  border: 1px solid var(--border-light);
+}
+
+/* Scrollbar Styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,0.15);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+/* Dark color scheme for native controls */
+select {
+  color-scheme: dark;
+}

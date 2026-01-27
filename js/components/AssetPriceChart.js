@@ -1,5 +1,4 @@
 import { html, useEffect, useRef, useState, useCallback } from '../lib/preact.standalone.module.js';
-import useInterval from '../hooks/useInterval.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import { DEFAULT_ASSET_PRICE_CHART_THEME } from '../../css/chart-styles.js';
@@ -21,6 +20,21 @@ function dateLabel(index, baseMonth, baseYear, count) {
     return `${insertCurrencySymbols(MONTHS[month % 12])} '${year.toString().slice(-2)}`;
 }
 
+// Special security IDs (commodities, rates, crypto) that are in allSecurities
+const SECURITY_IDS = [
+    api.OIL_ID,        // 6
+    api.GOLD_ID,       // 7
+    api.SILVER_ID,     // 8
+    api.WHEAT_ID,      // 9
+    api.CORN_ID,       // 10
+    api.PRIME_RATE_ID, // 1601
+    api.TBOND_RATE_ID, // 1602
+    api.SBOND_RATE_ID, // 1603
+    api.GNP_RATE_ID,   // 1604
+    api.BITCOIN_ID,    // 1605
+    api.ETHEREUM_ID,   // 1606
+];
+
 const AssetPriceChart = ({
     assetId,
     yAxisTitle,
@@ -31,6 +45,20 @@ const AssetPriceChart = ({
     const canvasRef = useRef(null);
     const [chartData, setChartData] = useState(null);
 
+    // Get current price from allSecurities (for special IDs) or allCompanies (for regular companies)
+    const currentPrice = api.useGameStore(s => {
+        const id = Number(assetId);
+        if (SECURITY_IDS.includes(id)) {
+            // Search in allSecurities for commodities, rates, crypto
+            const security = s.gameState.allSecurities?.find(sec => sec.id == id);
+            return security?.price ?? null;
+        } else {
+            // Search in allCompanies for regular companies
+            const company = s.gameState.allCompanies?.find(comp => comp.id == id);
+            return company?.price ?? null;
+        }
+    });
+
     // Function to refresh chart data
     const refreshData = useCallback(() => {
         let active = true;
@@ -40,13 +68,12 @@ const AssetPriceChart = ({
         return () => { active = false; };
     }, [assetId]);
 
-    // Initial data fetch when assetId changes
+    // Refresh chart data when price changes
     useEffect(() => {
-        refreshData();
-    }, [assetId]);
-
-    // Fetch data every 3 seconds
-    useInterval(refreshData, 3000);
+        if (currentPrice !== null) {
+            refreshData();
+        }
+    }, [assetId, currentPrice]);
 
     // Draw chart whenever data changes or on resize
     useEffect(() => {
@@ -56,8 +83,13 @@ const AssetPriceChart = ({
             const ctx = canvas.getContext('2d');
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
+            // Skip drawing if canvas has no size
+            if (canvas.width <= 0 || canvas.height <= 0) return;
             const { prices: originalPrices, baseMonth, baseYear } = chartData;
             const { background, lineColor, gridColor, shadedAreaTopColor, shadedAreaBottomColor } = theme;
+
+            // Skip if no price data
+            if (!originalPrices || originalPrices.length === 0) return;
 
             let prices = [...originalPrices];
             if (transformValue !== undefined) {
@@ -80,7 +112,7 @@ const AssetPriceChart = ({
             const minVal = Math.floor(Math.min(...prices));
             const maxVal = Math.ceil(Math.max(...prices));
             const range = maxVal - minVal || 1;
-            const stepX = chartW / (prices.length - 1);
+            const stepX = prices.length > 1 ? chartW / (prices.length - 1) : chartW;
 
             ctx.clearRect(0, 0, w, h);
 
@@ -90,11 +122,18 @@ const AssetPriceChart = ({
 
             // line and shaded area
             ctx.beginPath();
-            for (let i = 0; i < prices.length; i++) {
-                const x = padL + stepX * i;
-                const y = padT + chartH - Math.round((prices[i] - minVal) / range * chartH);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+            if (prices.length === 1) {
+                // Single data point - draw horizontal line across chart
+                const y = padT + chartH - Math.round((prices[0] - minVal) / range * chartH);
+                ctx.moveTo(padL, y);
+                ctx.lineTo(padL + chartW, y);
+            } else {
+                for (let i = 0; i < prices.length; i++) {
+                    const x = padL + stepX * i;
+                    const y = padT + chartH - Math.round((prices[i] - minVal) / range * chartH);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
             }
             ctx.lineTo(padL + chartW, padT + chartH);
             ctx.lineTo(padL, padT + chartH);

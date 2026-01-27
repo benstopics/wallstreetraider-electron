@@ -16,9 +16,24 @@ const REDDIT_WIDGET = 'assets/reddit-widget.png';
 const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
-    // {
-
-    // },
+    {
+        ver: "v10.0.12",
+        items: [
+            "Can now start game with more than 1 computer player and rename them like normal",
+            "Can create new company again",
+            "Navigation history saving now",
+            "Inline text report buttons (sell, cover, etc. contracts) working again",
+            "Fix crash when buying a fourth corporate loan as a bank",
+            "Fix Call In loan button logic being inverted (now correctly enabled for BB or worse)",
+            "Fix news event popups showing stale data (e.g. Bitcoin options instead of actual event)",
+            "Fix scenario event placeholders not being replaced (e.g. @AMOUNT showing instead of dollar value)",
+            "Re-organize style sheets and simplify CSS classes, restore button colors, improve visual accessibility",
+            "Fix startup selecting country other than United States for incorporation",
+            "Fix hide tutorial bugging out ticker start/stop",
+            "Fix asset price charts show zero in first month of game",
+            "Optimize asset price chart data fetching and rendering to be real-time",
+        ]
+    },
     {
         ver: "v10.0.11",
         items: [

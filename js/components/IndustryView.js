@@ -192,7 +192,7 @@ const IndustryView = () => {
                     <${Tab} label="Who's Ahead?" id=${api.UI_MARKET_REPORTS_WHO_AHEAD_REPORT}>
                         <div class="flex justify-center items-center">
                             ${renderLines(whosAheadReport, ({ id }) => {
-                                api.viewIndustry(id)
+                                api.setViewAsset(id)
                             }, null, hyperlinkRegex)}
                         </div>
                     <//>

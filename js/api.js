@@ -392,7 +392,7 @@ export async function getAssetChart(id) {
 
     try {
         const data = await postIdArg('/asset_chart', id);
-        if (data && Array.isArray(data.prices) && data.prices.length >= 2) return data;
+        if (data && Array.isArray(data.prices) && data.prices.length >= 1) return data;
         return buildFallback();
     } catch (e) {
         console.error(e);

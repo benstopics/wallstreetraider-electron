@@ -1,7 +1,7 @@
 import { html, useState } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
-import { PauseIcon, StopIcon, SaveIcon, GaugeIcon, ForwardIcon } from '../icons.js';
+import { PauseIcon, StopIcon, SaveIcon, GaugeIcon, ForwardIcon, PlayIcon } from '../icons.js';
 import NavigationControl from './NavigationControl.js';
 import ActingAsDropdown from './ActingAsDropdown.js';
 import InputStringModal from './InputStringModal.js';
@@ -53,7 +53,7 @@ function Toolbar() {
                 class="btn ${isTickerRunning ? 'stop' : 'play'}"
                 onClick=${toggleTicker}>
                     <div class="" style="width: 20px">
-                        <${isTickerRunning ? StopIcon : PauseIcon} />
+                        <${isTickerRunning ? StopIcon : PlayIcon} />
                     </div>
                 </div>
                 <div style="height: 20px" class="btn blue" onClick=${() => {

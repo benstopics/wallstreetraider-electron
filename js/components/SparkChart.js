@@ -39,6 +39,7 @@ const SparkChart = ({
       canvas.height = canvas.clientHeight;
 
       const { prices: originalPrices } = chartData;
+      if (!originalPrices || originalPrices.length === 0) return;
       let prices = [...originalPrices];
       if (transformValue !== undefined) prices = prices.map(v => transformValue(v));
 
@@ -68,11 +69,18 @@ const SparkChart = ({
 
       // Path for line + area
       ctx.beginPath();
-      for (let i = 0; i < prices.length; i++) {
-        const x = padL + stepX * i;
-        const y = padT + chartH - ((prices[i] - minVal) / range) * chartH;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+      if (prices.length === 1) {
+        // Single data point - draw horizontal line
+        const y = padT + chartH - ((prices[0] - minVal) / range) * chartH;
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + chartW, y);
+      } else {
+        for (let i = 0; i < prices.length; i++) {
+          const x = padL + stepX * i;
+          const y = padT + chartH - ((prices[i] - minVal) / range) * chartH;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
       }
 
       // Close to baseline for area fill
@@ -91,11 +99,18 @@ const SparkChart = ({
 
       // Stroke line on top
       ctx.beginPath();
-      for (let i = 0; i < prices.length; i++) {
-        const x = padL + stepX * i;
-        const y = padT + chartH - ((prices[i] - minVal) / range) * chartH;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+      if (prices.length === 1) {
+        // Single data point - draw horizontal line
+        const y = padT + chartH - ((prices[0] - minVal) / range) * chartH;
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + chartW, y);
+      } else {
+        for (let i = 0; i < prices.length; i++) {
+          const x = padL + stepX * i;
+          const y = padT + chartH - ((prices[i] - minVal) / range) * chartH;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
       }
       ctx.strokeStyle = lineColor;
       ctx.lineWidth = 1;

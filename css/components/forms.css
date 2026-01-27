@@ -1,0 +1,252 @@
+/* =========================================================
+   Forms - Inputs, selects, textareas
+   ========================================================= */
+
+input,
+select,
+textarea {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-light);
+  color: var(--fg-primary);
+  border-radius: 10px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(59,130,246,0.55);
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.16);
+}
+
+/* Basic form element */
+.basic {
+  padding: 5px;
+  background: var(--bg-secondary);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+ul.basic {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 50;
+  display: inline-block;
+  min-width: max-content;
+  width: auto;
+  padding: 5px;
+  background-color: var(--accent-primary);
+  color: black;
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.basic li {
+  color: white;
+  background-color: var(--bg-secondary);
+}
+
+li.active {
+  background-color: var(--accent-primary);
+}
+
+/* Select dropdown styling */
+select.basic {
+  background: linear-gradient(180deg, var(--bg-secondary), var(--bg-primary));
+  color: var(--fg-primary);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+select.basic option {
+  background-color: var(--bg-primary);
+  color: var(--fg-primary);
+  font-weight: 600;
+}
+
+select.basic option:hover,
+select.basic option:checked,
+select.basic option:focus {
+  background-color: rgba(59,130,246,0.35);
+  color: #ffffff;
+}
+
+select.basic optgroup {
+  background-color: var(--bg-primary);
+  color: var(--fg-muted);
+  font-style: normal;
+}
+
+select option {
+  background-color: var(--bg-primary);
+  color: var(--fg-primary);
+}
+
+select option:hover,
+select option:checked,
+select option:focus {
+  background-color: rgba(59,130,246,0.35);
+  color: #ffffff;
+}
+
+/* Command line input */
+.command-line {
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border: 2px solid var(--accent-secondary);
+  color: white;
+  font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
+  font-size: 16px;
+  height: 100%;
+  width: 100%;
+}
+
+input.command-line {
+  position: relative;
+  z-index: 1;
+}
+
+/* Command suggestions */
+.command-suggestions {
+  list-style: none;
+  z-index: 99998;
+}
+
+.command-suggestions:hover {
+  border-color: #444;
+  background: #111;
+}
+
+.command-suggestions li {
+  list-style: none;
+  transition: background 0.1s ease;
+}
+
+.command-suggestions li:hover {
+  background: rgba(184, 107, 255, 0.15);
+}
+
+.command-suggestions li.active {
+  background: rgba(184, 107, 255, 0.25);
+}
+
+.command-suggestions li.active:hover {
+  background: rgba(184, 107, 255, 0.3);
+}
+
+/* Suggestion overlay */
+.suggestion-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 2px;
+  z-index: 0;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* Keybinds input */
+.keybinds-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 2.6fr) minmax(220px, 1.2fr) minmax(220px, 1.2fr) minmax(120px, 0.7fr);
+  gap: 0;
+  align-items: center;
+}
+
+.keybinds-grid > :nth-child(-n+4) {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+
+.keybinds-grid > :nth-child(n+5) {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.keybinds-grid > :nth-child(8n+5),
+.keybinds-grid > :nth-child(8n+6),
+.keybinds-grid > :nth-child(8n+7),
+.keybinds-grid > :nth-child(8n+8) {
+  background: rgba(255,255,255,0.015);
+}
+
+.keybinds-bind {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 34px 0 10px;
+  border-radius: 8px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.3px;
+}
+
+.keybinds-clear {
+  width: 34px;
+  justify-content: center;
+}
+
+.keybinds-clear-inset {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 8px;
+  opacity: 0.75;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.keybinds-clear-inset:hover {
+  opacity: 1;
+}
+
+.keybinds-scroll {
+  padding: 0;
+}
+
+.keybinds-grid .truncate {
+  max-width: 100%;
+}
+
+/* Database search input */
+.db-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: var(--fg-primary);
+  font-size: 12px;
+}
+
+.db-input:focus {
+  outline: none;
+  border-color: var(--accent-secondary);
+}
+
+select.db-input {
+  color-scheme: dark;
+  background-color: var(--bg-primary);
+  color: var(--fg-primary);
+}
+
+select.db-input option {
+  background-color: var(--bg-primary);
+  color: var(--fg-primary);
+}

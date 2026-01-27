@@ -1,0 +1,231 @@
+/* =========================================================
+   Calculator - Floating calculator tool
+   ========================================================= */
+
+.calc-window {
+  width: 360px;
+  height: 460px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(21,27,39,0.99), rgba(11,15,21,0.99));
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xl);
+}
+
+.calc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.22);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.calc-header .notes-title {
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+.calc-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.calc-hamburger {
+  width: 34px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: rgba(255,255,255,0.04);
+  color: var(--fg-primary);
+}
+
+.calc-hamburger:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.calc-titletexts {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.calc-appname {
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.calc-mode {
+  font-size: 11px;
+  opacity: .75;
+  font-weight: 600;
+}
+
+.calc-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.calc-header-actions .notes-close {
+  width: 34px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: rgba(255,255,255,0.04);
+  color: var(--fg-primary);
+}
+
+.calc-header-actions .notes-close:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.calc-header-actions .calc-dock {
+  width: 30px;
+}
+
+.calc-min {
+  width: 34px;
+}
+
+.calc-body {
+  position: relative;
+  padding: 12px;
+  height: calc(100% - 44px);
+  display: flex;
+  flex-direction: column;
+}
+
+.calc-display {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.09);
+  flex-shrink: 0;
+}
+
+.calc-expr-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--fg-primary);
+  font-size: 14px;
+  font-weight: 600;
+  opacity: .85;
+  text-align: right;
+  letter-spacing: .2px;
+}
+
+.calc-result {
+  text-align: right;
+  font-size: 42px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.calc-result-error {
+  color: var(--color-negative);
+}
+
+.calc-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: repeat(4, 1fr);
+}
+
+.calc-btn {
+  height: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 900;
+  border: 1px solid var(--border-light);
+  background: rgba(255,255,255,0.04);
+  color: var(--fg-primary);
+}
+
+.calc-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.calc-btn-muted {
+  color: rgba(255,255,255,0.85);
+}
+
+.calc-op {
+  background: rgba(59,130,246,0.14);
+  border-color: rgba(59,130,246,0.34);
+  color: #d7e7ff;
+}
+
+.calc-btn-eq {
+  grid-column: span 4;
+  height: 48px;
+  background: rgba(168,85,247,0.20);
+  border-color: rgba(168,85,247,0.45);
+  color: #f5edff;
+}
+
+.calc-resize {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  cursor: nwse-resize;
+}
+
+.calc-resize:hover {
+  background: rgba(255,255,255,0.10);
+}
+
+/* Dock positions */
+.calc-dock-left {
+  left: 12px !important;
+  top: 80px !important;
+}
+
+.calc-dock-right {
+  right: 12px !important;
+  left: auto !important;
+  top: 80px !important;
+}
+
+.calc-dock-bottom {
+  left: 12px !important;
+  bottom: 12px !important;
+  top: auto !important;
+}
+
+/* Collapsed state */
+.calc-collapsed .calc-body {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .calc-window {
+    width: 320px;
+    height: 440px;
+  }
+  .calc-btn {
+    height: 44px;
+  }
+}

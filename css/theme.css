@@ -1,0 +1,75 @@
+/* =========================================================
+   Theme - Bloomberg terminal inspired theme overrides
+   ========================================================= */
+
+/* Terminal-style typography */
+html, body, #app, .app-container {
+  font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dense grid feel for separators */
+.news-headline,
+.border,
+.panel,
+.panel-body,
+.assets-table,
+.streaming-quotes,
+.market,
+.balance-sheet {
+  border-color: var(--border-color);
+}
+
+/* Tables - terminal grid style */
+table {
+  border-color: var(--border-color);
+}
+
+th {
+  background: var(--bg-elevated);
+  color: var(--color-warning);
+  border-bottom: 1px solid var(--border-color);
+}
+
+td {
+  color: var(--fg-primary);
+  border-bottom: 1px solid rgba(43,43,43,0.85);
+}
+
+tr:hover td {
+  background: rgba(0,200,255,0.08);
+}
+
+/* Value emphasis */
+.value, .money, .amount, .number, .price, .metric-value {
+  color: var(--color-warning);
+}
+
+/* Panel headers with gradient */
+.panel-header {
+  background: linear-gradient(90deg, var(--header-grad-start), var(--header-grad-mid), var(--header-grad-end));
+  color: var(--header-text);
+  border-bottom: 1px solid var(--border-light);
+  letter-spacing: 0.25px;
+}
+
+/* Title elements */
+.section-title, .panel-title, .title, .header-title,
+.mb-paneltitle, .news-title, .advisory-title {
+  color: var(--header-text);
+}
+
+/* Force dark colors on form elements */
+input, textarea, select, option, .modal-input, .report, .report-text {
+  color: var(--fg-primary);
+}
+
+.modal-input {
+  background-color: rgba(17, 24, 39, 0.55);
+  border-color: var(--border-light);
+}
+
+/* Code elements */
+pre, code {
+  color: rgba(230,235,245,0.92);
+}

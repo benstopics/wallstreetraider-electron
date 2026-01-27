@@ -1,0 +1,74 @@
+/* =========================================================
+   Notes - Floating notepad window
+   ========================================================= */
+
+.notes-float {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  pointer-events: none;
+}
+
+.notes-window {
+  position: absolute;
+  width: 380px;
+  height: 260px;
+  min-width: 260px;
+  min-height: 180px;
+  resize: both;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  background: linear-gradient(180deg, rgba(21,27,39,0.98), rgba(11,15,21,0.98));
+  box-shadow: var(--shadow-xl);
+  pointer-events: auto;
+}
+
+.notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.22);
+  border-bottom: 1px solid var(--border-light);
+  cursor: move;
+  user-select: none;
+}
+
+.notes-title {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--fg-primary);
+}
+
+.notes-close {
+  width: 28px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  background: rgba(255,255,255,0.04);
+  color: var(--fg-primary);
+  cursor: pointer;
+}
+
+.notes-close:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.notes-body {
+  width: 100%;
+  height: calc(100% - 40px);
+  padding: 10px;
+  border: 0;
+  outline: none;
+  color: var(--fg-primary);
+  background: transparent;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.notes-body textarea,
+.notes-body input {
+  color: var(--fg-primary);
+}

@@ -5,7 +5,7 @@ import ActingAsRequiredButton from './ActingAsRequiredButton.js';
 import Tooltip from './Tooltip.js';
 import Button from './Button.js';
 
-const renderExtras = (actingAs) => ({ type, id, text }) => {
+const renderExtras = (actingAs, gameState) => ({ type, id, text }) => {
 
     const nodes = [];
 
@@ -68,7 +68,7 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
 
     // SELL
     const hasLoans = !text?.includes('   0.0   ');
-    const playerControlled = api.isPlayerControlled(gameState, id);
+    const playerControlled = api.isPlayerControlled(gameState.controlledCompanies, id);
 
     if (!hasLoans || playerControlled) {
         const tooltipText = playerControlled
@@ -93,16 +93,16 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
         ${isFrozen ? 'Unfreeze' : 'Freeze'}
     </button>`);
 
-    // CALL IN (BBB or better)
+    // CALL IN (below investment grade only - BB or worse)
     const isBBBOrBetter = ['   AAA   ', '   AA   ', '   A   ', '   BBB   '].some(s => text?.includes(s));
-    if (isBBBOrBetter) {
+    if (!isBBBOrBetter) {
         nodes.push(html`<${Button}
             class="btn brown flex-1 mx-1 whitespace-nowrap w-12"
             onClick=${() => api.callInLoan(id)}>
             Call In
         </button>`);
     } else {
-        nodes.push(html`<${Tooltip} text="Requires BBB credit rating or better">
+        nodes.push(html`<${Tooltip} text="Can only call in loans below investment grade (BB or worse)">
             <${Button} class="btn disabled mx-1 whitespace-nowrap">Call In</button>
         <//>`);
     }
@@ -112,10 +112,11 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
 
 function LoansTab() {
 
-    const frozenAllLoans = api.useGameStore(s => s.gameState.frozenAllLoans);
-    const loansReport = api.useGameStore(s => s.gameState.loansReport);
-    const actingAs = api.useGameStore(s => s.gameState.actingAs);
-    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+    const gameState = api.useGameStore(s => s.gameState);
+    const frozenAllLoans = gameState.frozenAllLoans;
+    const loansReport = gameState.loansReport;
+    const actingAs = gameState.actingAs;
+    const hyperlinkRegex = gameState.hyperlinkRegex;
 
     return html`
         <div class="flex flex-col w-full items-center">
@@ -148,7 +149,7 @@ function LoansTab() {
 
             <div class="flex flex-col flex-[3] justify-center items-center">
                 <div class="flex flex-col items-center w-full">
-                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(actingAs), hyperlinkRegex)}
+                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(actingAs, gameState), hyperlinkRegex)}
                 </div>
             </div>
         </div>

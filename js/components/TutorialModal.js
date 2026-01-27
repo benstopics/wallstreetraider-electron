@@ -95,6 +95,7 @@ function calculatePanelStyle(step, sidebarMode = false) {
 export default function TutorialModal() {
     const { hideTutorial, showHelp, helpShown } = api.useWSRContext();
     const gameState = api.useGameStore(s => s.gameState);
+    const gameLoaded = gameState.gameLoaded;
     const tutorialStep = gameState.tutorialStep || 0;
     const tutorialEnabled = gameState.tutorialEnabled;
     const isTickerRunning = gameState.isTickerRunning;
@@ -103,8 +104,6 @@ export default function TutorialModal() {
     const [panelStyle, setPanelStyle] = useState({});
     const [sidebarMode, setSidebarMode] = useState(false);
     const panelRef = useRef(null);
-    const hasAutoShown = useRef(false);
-    const wasTickerRunning = useRef(false);
 
     const step = TUTORIAL_STEPS[tutorialStep];
     const isFirst = tutorialStep === 0;
@@ -112,25 +111,6 @@ export default function TutorialModal() {
 
     // Check if a tooltip is active (replaces regular tutorial content)
     const activeTooltip = useActiveTooltip();
-
-    // Pause ticker when tutorial is shown
-    useEffect(() => {
-        if (tutorialEnabled) {
-            // Remember if ticker was running when we opened
-            wasTickerRunning.current = isTickerRunning;
-            // Stop the ticker while tutorial is open
-            if (isTickerRunning) {
-                api.stopTicker();
-            }
-        }
-    }, [tutorialEnabled]);
-
-    // Reset auto-show flag when tutorial is disabled
-    useEffect(() => {
-        if (!tutorialEnabled) {
-            hasAutoShown.current = false;
-        }
-    }, [tutorialEnabled]);
 
     // Check if a modal is open and switch to sidebar mode
     useEffect(() => {
@@ -289,7 +269,7 @@ export default function TutorialModal() {
     }
 
     // For the regular tutorial modal, check if tutorial is enabled
-    if (!tutorialEnabled || !step || helpShown) return null;
+    if (!tutorialEnabled || !step || helpShown || !gameLoaded) return null;
 
     // Determine if we should show the overlay (not in sidebar mode with active modal)
     const showOverlay = !sidebarMode || !step.sidebarMode;

@@ -20,7 +20,7 @@ export default function TextAnnounceModal({ show, title, text, onSubmit, onCance
             <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
             <br/>
             ${lines.length > 0 && html`<div class="mb-4 overflow-y-auto justify-center flex fixed-width" style="max-height: 75vh">
-                ${renderLines(lines, ({ id }) => { api.modalResult(id.toString()); }, null, hyperlinkRegex)}
+                ${renderLines(lines, ({ type, id }) => { api.modalResult(type + id.toString().padStart(4, '0')); }, null, hyperlinkRegex)}
             </div>`}
         </div>
         <br/>

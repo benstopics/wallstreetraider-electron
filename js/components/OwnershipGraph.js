@@ -378,7 +378,7 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
                 })}
 
                 <!-- Column labels -->
-                ${owners.length > 0 ? html`
+                <!--${owners.length > 0 ? html`
                     <text
                         x=${ownerX + NODE_WIDTH / 2}
                         y="15"
@@ -389,9 +389,9 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
                         text-transform="uppercase">
                         OWNERS
                     </text>
-                ` : ''}
+                ` : ''}-->
 
-                ${subsidiaries.length > 0 ? html`
+                <!--${subsidiaries.length > 0 ? html`
                     <text
                         x=${subX + NODE_WIDTH / 2}
                         y="15"
@@ -402,7 +402,7 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
                         text-transform="uppercase">
                         HOLDINGS
                     </text>
-                ` : ''}
+                ` : ''}-->
 
                 <!-- Empty state messages -->
                 ${showOwners && owners.length === 0 ? html`

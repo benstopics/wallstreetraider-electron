@@ -1,0 +1,167 @@
+/* =========================================================
+   Buttons - All button styles and variants
+   ========================================================= */
+
+.btn,
+.icon {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  color: var(--fg-primary);
+  padding: 3px 7px;
+  height: 100%;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
+
+.btn:hover,
+.icon:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--btn-hover-border);
+}
+
+.btn:active,
+.icon:active {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--btn-active-border);
+}
+
+.btn.modal {
+  font-size: 14px;
+  min-width: 75px;
+}
+
+.btn-container {
+  height: 100%;
+}
+
+.btn svg {
+  fill: white;
+}
+
+.btn.main-menu {
+  width: 200px;
+  font-size: large;
+}
+
+.btn.disabled {
+  pointer-events: none;
+  background: linear-gradient(to bottom, #555555, #333333);
+  color: #888888;
+  opacity: 0.6;
+}
+
+/* Color variants */
+.btn.green {
+  background: linear-gradient(to bottom, #10821a, #0a5e12);
+}
+
+.btn.green:hover {
+  background: linear-gradient(to bottom, #1aa82e, #0c7e16);
+}
+
+.btn.green:active {
+  background: linear-gradient(to bottom, #0a5e12, #083f0d);
+}
+
+.btn.blue,
+.btn.orange {
+  background: rgba(59,130,246,0.18);
+  border-color: rgba(59,130,246,0.35);
+}
+
+.btn.blue:hover,
+.btn.orange:hover {
+  background: rgba(59,130,246,0.26);
+  border-color: rgba(59,130,246,0.45);
+}
+
+.btn.red,
+.btn.stop {
+  background: linear-gradient(to bottom, #9d132a, #6b0d1e);
+}
+
+.btn.red:hover,
+.btn.stop:hover {
+  background: linear-gradient(to bottom, #b31a3c, #7d1124);
+}
+
+.btn.red:active,
+.btn.stop:active {
+  background: linear-gradient(to bottom, #6b0d1e, #4a0914);
+}
+
+.btn.brown {
+  background: linear-gradient(to bottom, #7a4b2c, #5a3621);
+}
+
+.btn.brown:hover {
+  background: linear-gradient(to bottom, #8b5c3d, #6a472a);
+}
+
+.btn.brown:active {
+  background: linear-gradient(to bottom, #5a3621, #3c2517);
+}
+
+.btn.yellow {
+  background: linear-gradient(to bottom, #d9a800, #b88a00);
+}
+
+.btn.yellow:hover {
+  background: linear-gradient(to bottom, #e0b800, #c49a00);
+}
+
+.btn.yellow:active {
+  background: linear-gradient(to bottom, #b88a00, #9a6f00);
+}
+
+.btn.play {
+  background: linear-gradient(to bottom, #2d8a3d, #1f6b2e);
+}
+
+.btn.play:hover {
+  background: linear-gradient(to bottom, #3ca34f, #2a7d3f);
+}
+
+.btn.play:active {
+  background: linear-gradient(to bottom, #1f6b2e, #165222);
+}
+
+/* Small button variant */
+.btn-sm {
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+}
+
+/* Stop loss/gain buttons */
+.stop-btn-row {
+  gap: 8px;
+  align-items: center;
+}
+
+.stop-btn {
+  width: 42px;
+  height: 28px;
+  border-radius: 8px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.stop-btn.stop-loss {
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+.stop-btn.stop-gain {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.stop-btn.is-set {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.20) inset;
+}

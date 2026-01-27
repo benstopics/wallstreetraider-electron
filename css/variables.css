@@ -1,0 +1,78 @@
+/* =========================================================
+   CSS Variables - All theme colors and values
+   To change the theme, edit these variables.
+   ========================================================= */
+
+:root {
+  /* === Core Palette === */
+  --bg-primary: #16181d;
+  --bg-secondary: #1d2026;
+  --bg-elevated: #121212;
+  --fg-primary: #e6e6e6;
+  --fg-muted: rgba(230,230,230,0.72);
+  --border-color: #2a303a;
+  --border-light: rgba(255,255,255,0.12);
+
+  /* === Accent Colors === */
+  --accent-primary: #ff9f1a;     /* orange - main brand */
+  --accent-secondary: #0d5473;   /* cyan/teal - links/focus */
+  --accent-tertiary: #b86bff;    /* purple */
+
+  /* === Semantic Colors === */
+  --color-positive: #28ff6a;     /* green - gains/success */
+  --color-negative: #ff3b3b;     /* red - losses/errors */
+  --color-warning: #ffd84d;      /* yellow - alerts */
+  --color-info: #00c8ff;         /* cyan - information */
+
+  /* === Button Colors === */
+  --btn-bg: var(--bg-secondary);
+  --btn-border: var(--border-color);
+  --btn-hover-bg: rgba(0,200,255,0.10);
+  --btn-hover-border: rgba(0,200,255,0.70);
+  --btn-active-bg: rgba(255,159,26,0.12);
+  --btn-active-border: rgba(255,159,26,0.95);
+
+  /* === Panel Colors === */
+  --panel-header-bg: var(--accent-primary);
+  --panel-header-fg: #000;
+  --panel-body-bg: var(--bg-primary);
+
+  /* === Header Gradient === */
+  --header-grad-start: rgba(59, 130, 246, 0.40);  /* blue */
+  --header-grad-mid: rgba(168, 85, 247, 0.38);    /* purple */
+  --header-grad-end: rgba(236, 72, 153, 0.10);    /* pink */
+  --header-text: #f4f7ff;
+
+  /* === Form Colors === */
+  --input-bg: var(--bg-primary);
+  --input-border: var(--border-color);
+  --input-focus-border: rgba(0,200,255,0.95);
+  --input-focus-shadow: 0 0 0 1px rgba(0,200,255,0.35) inset;
+
+  /* === Glass/Overlay === */
+  --glass-bg: rgba(10, 12, 16, 0.55);
+  --glass-blur: blur(6px);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+
+  /* === Shadows === */
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-md: 0 12px 32px rgba(0,0,0,0.55);
+  --shadow-lg: 0 18px 60px rgba(0,0,0,0.75);
+  --shadow-xl: 0 22px 60px rgba(0,0,0,0.55);
+
+  /* === Radii === */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* === Scrollbar === */
+  --scrollbar-thumb: #666;
+  --scrollbar-track: #222;
+  --scrollbar-thumb-hover: #888;
+
+  /* === Surface Layers (for depth) === */
+  --surface-0: #0b0f15;
+  --surface-1: #0f141c;
+  --surface-2: #151b27;
+  --surface-3: #1b2332;
+}

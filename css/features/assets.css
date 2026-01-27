@@ -1,0 +1,145 @@
+/* =========================================================
+   Assets Management - Portfolio table and controls
+   ========================================================= */
+
+.assets-panel {
+  height: 100%;
+}
+
+.assets-panel .panel-body {
+  min-height: 0;
+}
+
+.assets-table {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.assets-row {
+  display: grid;
+  grid-template-columns: 72px 1.4fr 90px 80px 70px 56px;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.assets-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(15, 18, 23, 0.92);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.assets-scroll {
+  overflow: auto;
+  height: calc(100% - 34px);
+}
+
+.assets-row .c-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Numeric columns */
+.assets-num {
+  text-align: right;
+}
+
+/* P/L badges */
+.pl-badge {
+  display: inline-block;
+  min-width: 54px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pl-badge.positive,
+.assets-pl.positive {
+  color: var(--color-positive);
+  font-weight: 800;
+}
+
+.pl-badge.negative,
+.assets-pl.negative {
+  color: var(--color-negative);
+  font-weight: 800;
+}
+
+.pl-badge.neutral,
+.assets-pl.neutral {
+  color: var(--fg-primary);
+  opacity: 0.85;
+}
+
+/* Actions column */
+.assets-actions,
+.assets-actions-head {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Sell button */
+.assets-sell {
+  height: 24px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light);
+  background: var(--accent-tertiary);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.assets-sell:hover {
+  filter: brightness(1.06);
+}
+
+.assets-sell:active {
+  transform: translateY(1px);
+}
+
+.assets-sell:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Table variant sell button */
+.assets-table .assets-sell-btn,
+.assets-table button.assets-sell-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #b8142a;
+  border: 1px solid rgba(255,255,255,0.16);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.assets-table .assets-sell-btn:hover {
+  filter: brightness(1.06);
+}
+
+/* Center alignment for P/L and Sell columns */
+.assets-table th:nth-child(5),
+.assets-table td:nth-child(5),
+.assets-table th:nth-child(6),
+.assets-table td:nth-child(6) {
+  text-align: center;
+}
+
+.assets-table td:nth-child(6) {
+  vertical-align: middle;
+}
