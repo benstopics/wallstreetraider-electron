@@ -124,6 +124,7 @@ const IndustrialView = () => {
                                             onClick=${() => api.buyStock(actingAs ? 0 : activeEntityNum)}
                                             label="Buy Stock"
                                             color="green"
+                                            dataTutorial="buy-stock"
                                         />
                                         ${canShortStock && html`<${DisabledTooltipButton}
                                             onClick=${() => api.shortStock(actingAs ? 0 : activeEntityNum)}

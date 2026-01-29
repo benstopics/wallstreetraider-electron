@@ -25,6 +25,11 @@ const CHANGELOG = [
             "Advanced Options auto-trade expiration year/month selection is now dropdown of all available expirations",
             "Fix Advanced Options auto-trade setting target as acting company when target was chosen via company select modal",
             "Fix blank options price box in Advanced Options due to white text white background",
+            "Symmetrized auto-trade strikes around ATM, narrowed strangles from 23% to 10% OTM for realism, added Bull Put and Bear Put spreads, removed call-only butterfly/condor strategies",
+            "Overhauled option pricing model: removed excessive discounts that made puts ~38% underpriced, credit strategies like Iron Butterfly now have realistic risk/reward",
+            "Option premiums now adjust based on industry volatility (tech/biotech higher, utilities/packaged foods lower)",
+            "Fixed P/L chart calculations for multi-leg options - chart now correctly shows profit/loss at all stock prices",
+            "Optimize charts and text reports, remove update throttling"
         ]
     },
     {

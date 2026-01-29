@@ -11,7 +11,7 @@ import Tooltip from './Tooltip.js';
  * @param {string} color - Button color variant
  * @param {boolean} disabled - Whether the dropdown is disabled
  */
-export default function DropdownMenu({ label, icon, items = [], columns = null, color = '', disabled = false }) {
+export default function DropdownMenu({ label, icon, items = [], columns = null, color = '', disabled = false, dataTutorial = null }) {
     const [isOpen, setIsOpen] = useState(false);
     const [openSubmenuIndex, setOpenSubmenuIndex] = useState(null);
     const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
@@ -210,6 +210,7 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
         <div class="dropdown-container" ref=${containerRef}>
             <button
                 class="btn dropdown-trigger ${color} ${isOpen ? 'active' : ''} ${disabled ? 'disabled' : ''}"
+                data-tutorial=${dataTutorial || undefined}
                 onClick=${() => !disabled && setIsOpen(!isOpen)}
             >
                 ${icon ? html`<span class="dropdown-icon">${icon}</span>` : ''}

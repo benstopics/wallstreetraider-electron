@@ -382,7 +382,7 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
             }
             return contracts;
         })}
-        totalSharesM=${(mergedState.outstandingShares || 1) * 100}
+        totalSharesM=${(mergedState.outstandingShares || 1000000) / 1000000}
         currentPrice=${parseFloatOrNull(mergedState.stockPrice)}
         theme=${api.DEFAULT_ASSET_PRICE_CHART_THEME}
         profitColor="#008000"

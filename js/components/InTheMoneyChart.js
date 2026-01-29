@@ -47,8 +47,6 @@ function formatMillions(v) {
     return `${sign}${rounded}M`;
 }
 
-let printed = 0
-
 function payoffMillionsAtPrice(S, contracts, totalSharesM) {
     let total = 0; // millions
     const sharesPerPct = totalSharesM / 100.0;
@@ -64,20 +62,15 @@ function payoffMillionsAtPrice(S, contracts, totalSharesM) {
             continue; // ignore incomplete legs
         }
 
-        const shares = sharesPerPct * pct;
-        const premiumM = pricePerPct * pct; // millions
+        const sharesM = sharesPerPct * pct; // shares in millions
+        const premiumM = pricePerPct * sharesM; // price per share × shares in millions = cost in millions
 
-        let intrinsicDollars = 0;
-        if (type === 'CALL') intrinsicDollars = Math.max(0, S - strike) * shares;
-        if (type === 'PUT') intrinsicDollars = Math.max(0, strike - S) * shares;
+        // Since sharesM is in millions, (S - strike) * sharesM gives millions of dollars directly
+        let intrinsicM = 0;
+        if (type === 'CALL') intrinsicM = Math.max(0, S - strike) * sharesM;
+        if (type === 'PUT') intrinsicM = Math.max(0, strike - S) * sharesM;
 
-        const intrinsicM = intrinsicDollars / 1_000_000.0;
         const payoff = bs === 'B' ? intrinsicM - premiumM : premiumM - intrinsicM;
-
-        if (printed < 8 && S > 19 && S < 31) {
-            printed++;
-            console.log({ S, type, bs, strike, pct, pricePerPct, shares, premiumM, intrinsicDollars, intrinsicM, payoff });
-        }
 
         total += payoff;
     }
