@@ -21,6 +21,8 @@ const PlayerView = () => {
     const advances = api.useGameStore(s => s.gameState.advances);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredPlayerTab);
+    const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
+    const myCorporationsReport = api.useGameStore(s => s.gameState.myCorporationsReport);
 
     const [activeTab, setActiveTabInternal] = useState("Financials");
 
@@ -94,11 +96,30 @@ const PlayerView = () => {
                             </div>
                         <//>
                         <${Tab} label="My Corporations" id=${api.UI_PLAYER_CORPORATIONS_LIST}>
-                            <div class="flex flex-col h-full overflow-hidden">
-                                <div class="flex-1 min-h-0 overflow-auto">
-                                    <${OwnershipGraph} showOwners=${false} showSubsidiaries=${true} />
+                            ${shareholderGraphSetting ? html`
+                                <div class="flex flex-col h-full overflow-hidden">
+                                    <div class="flex-1 min-h-0 overflow-auto">
+                                        <${OwnershipGraph} showOwners=${false} showSubsidiaries=${true} />
+                                    </div>
                                 </div>
-                            </div>
+                            ` : html`
+                                <div class="flex flex-col items-center">
+                                    ${renderLines(myCorporationsReport,
+                                        ({ id }) => api.setViewAsset(id),
+                                        ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
+                                            <${Button}
+                                                class="btn red flex-1 mx-1"
+                                                onClick=${() => api.toggleCompanyAutopilot(id)}>
+                                                    AutoPilot
+                                            </button>
+                                            <${Button}
+                                                class="btn brown flex-1 mx-1"
+                                                onClick=${() => api.changeActingAs(id)}>
+                                                    Act As
+                                            </button>
+                                        </div>` : '', hyperlinkRegex)}
+                                </div>
+                            `}
                         <//>
                     <//>
                 </div>
