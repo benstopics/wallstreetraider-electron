@@ -250,10 +250,6 @@ export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit
         return title || 'Interest Rate Swaps';
     }, [mergedState.stockName, title]);
 
-    const swapInfo = () => {
-        api.modalResult(api.serialize({ ...mergedState, buttonId: "SWAP_INFO" }));
-    }
-
     const exit = () => {
         api.modalResult(api.serialize({ ...mergedState, buttonId: "EXIT" }));
     }
@@ -429,10 +425,7 @@ export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit
           
         <!-- Actions -->
         <div class="col-span-12">
-          <div class="mt-3 flex flex-wrap gap-2 justify-between items-center">
-            <div>
-              <${Button} class="btn modal" onClick=${() => swapInfo()}>SWAP INFO</button>
-            </div>
+          <div class="mt-3 flex flex-wrap gap-2 justify-end items-center">
             <div class="flex gap-2">
               <${Button} class="btn modal green" onClick=${() => submit()} disabled=${hasBlockingErrors}>
                 OFFER

@@ -8,7 +8,7 @@ let isRestarting = false; // Flag to prevent app.quit() during intentional resta
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        frame: false,
+        frame: true,
         show: false,
         autoHideMenuBar: true,
         icon: path.join(__dirname, 'assets', 'icon.ico'),

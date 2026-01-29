@@ -97,21 +97,21 @@ export default function CommandPrompt() {
         if (symU === q) {
             // exact/full symbol match -> ready to execute
             tail = ''; // nothing to complete
-            hints.push('↵ to execute');
+            hints.push('↵ submit');
         }
         
         if (symU.startsWith(q) && symU !== q) {
             // symbol prefix -> we can complete remainder
             tail = sym.slice(lastPart.length);
-            hints.push('⇥ to complete');
+            hints.push('⇥ autofill');
         } else {
             // name match -> show "(SYM)" to suggest which symbol would be completed
             tail = ` (${sym})`;
-            hints.push('⇥ to complete');
+            hints.push('⇥ autofill');
         }
 
         if (suggestions.length > 1)
-            hints.push(`${activeIdx + 1}/${suggestions.length} ↑/↓ to navigate`);
+            hints.push(`↑/↓ up/down`);
         return { tail, hint: hints.join(' • ') };
     }
 
@@ -148,13 +148,12 @@ export default function CommandPrompt() {
     }, [command]);
 
     const onKeyDown = (e) => {
-        console.log('KeyDown', { key: e.key });
         if (e.key === 'Enter' && command.trim()) {
 
             if ((cmdId ?? false) && !cmdFn) {
                 api.setViewAsset(cmdId);
-            } else if (cmd) {
-                cmdFn(id, gameState);
+            } else if (command) {
+                cmdFn(cmdId, gameState);
             }
 
             setCommand('');

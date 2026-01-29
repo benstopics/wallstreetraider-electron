@@ -4,7 +4,7 @@ import AssetPriceChart from './AssetPriceChart.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import Tooltip from './Tooltip.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 
 
 const Tab = Tabs.Tab;
@@ -53,7 +53,7 @@ function PortfolioTab() {
             <div class="flex flex-col w-full">
                 <div class="flex flex-row items-center justify-start gap-5">
                     <div class="items-center flex flex-row justify-center">
-                        <${ActingAsRequiredButton} 
+                        <${DisabledTooltipButton} 
                             disabledMessage=${actingAs ? "Cannot merge with yourself"
                                 : actingAsIndustryId === api.PLAYER_IND ? "Must be acting as this company a company"
                                 : false} 
@@ -61,7 +61,7 @@ function PortfolioTab() {
                             label="Merge With"
                             color="green"
                         />
-                        <${ActingAsRequiredButton} 
+                        <${DisabledTooltipButton} 
                             disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                             onClick=${api.sellSubsidiaryStock} 
                             label="Offer Stock for Sale"
@@ -77,7 +77,7 @@ function PortfolioTab() {
                     ${renderLines(portfolio,
                         ({ id }) => id && api.setViewAsset(id),
                         ({ type, id, text }) => html`<div class="flex flex-row">
-                        <${ActingAsRequiredButton}
+                        <${DisabledTooltipButton}
                             disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                             onClick=${() => (type === "S" ? api.coverShortStock
                                 : type === "J" ? api.sellCorporateBond
@@ -88,7 +88,7 @@ function PortfolioTab() {
                             label="${type === "S" ? "Cover" : "Sell"}"
                             color="red"
                         />
-                        ${!text.includes('GOVERNMENT') ?html`<${ActingAsRequiredButton} 
+                        ${!text.includes('GOVERNMENT') ?html`<${DisabledTooltipButton} 
                             disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                             onClick=${() => api.spinOff(id)} 
                             label="Spin-Off"

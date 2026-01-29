@@ -64,7 +64,7 @@ export const insertCurrencySymbols = (text) => {
 };
 
 function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRegex) {
-    if (text === '') return ' ';
+    if (text === '') return html`<div>\u00A0</div>`;
 
     const idFound = link?.id > 0 || (link?.id && link?.id.includes('|'));
 
@@ -108,7 +108,7 @@ export function renderLines(lines, onLink, renderExtras, hyperlinkRegex) {
     if ((!onLink && !renderExtras) || !hyperlinkRegex) {
         return html`<div class="whitespace-pre-wrap flex flex-col">
             ${cleanedLines.map(({ text }) => {
-                if (text === '') return ' ';
+                if (text === '') return html`<div>\u00A0</div>`;
                 return html`<div>${text}</div>`;
             })}
         </div>`;

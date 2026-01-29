@@ -1126,12 +1126,29 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
         setSelectedId(result.chapterId);
         setSelectedMatchIndex(resultIndex);
 
-        // Wait for content to render, then scroll to the specific match
-        setTimeout(() => {
-            if (!contentRef.current || !ahoCorasickRef.current) return;
+        // Poll for highlights to appear after content renders and highlighting is applied
+        const maxAttempts = 30;
+        const pollInterval = 50;
+        let attempts = 0;
+
+        const scrollToHighlight = () => {
+            attempts++;
+
+            if (!contentRef.current) {
+                if (attempts < maxAttempts) {
+                    setTimeout(scrollToHighlight, pollInterval);
+                }
+                return;
+            }
 
             // Find all highlighted marks
             const highlights = contentRef.current.querySelectorAll('mark.search-highlight');
+
+            // If no highlights found yet and we haven't exceeded max attempts, keep polling
+            if (highlights.length === 0 && attempts < maxAttempts) {
+                setTimeout(scrollToHighlight, pollInterval);
+                return;
+            }
 
             if (highlights.length > 0) {
                 // Try to find the specific match based on charOffset
@@ -1150,9 +1167,14 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
                 // Scroll to it
                 targetHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                console.log('[Navigation] Scrolled to match, total highlights:', highlights.length);
+                console.log('[Navigation] Scrolled to match after', attempts, 'attempts, total highlights:', highlights.length);
+            } else {
+                console.log('[Navigation] No highlights found after', attempts, 'attempts');
             }
-        }, 200);
+        };
+
+        // Start polling after a brief initial delay for React to start re-rendering
+        setTimeout(scrollToHighlight, 50);
     }, []);
 
     const searchInputFocusedOn = searchInputRef.current === document.activeElement;

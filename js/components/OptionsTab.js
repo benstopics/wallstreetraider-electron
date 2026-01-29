@@ -1,5 +1,5 @@
 import { html } from '../lib/preact.standalone.module.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 
@@ -23,8 +23,29 @@ function parseReportLine(line) {
 function OptionsTab() {
 
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
+    const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
+    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
     const optionsList = api.useGameStore(s => s.gameState.optionsList);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+
+    // ETF Advisor detection
+    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
+    const activeEntity = allCompanies.find(c => c.id === activeEntityNum);
+    const etfAdvisorId = activeEntity?.advisorId || 0;
+    const controlsETFAdvisor = isActiveEntityETF && (controlledCompanies || []).some(c => c.id === etfAdvisorId);
+    const isActingAsETFAdvisor = isActiveEntityETF && controlsETFAdvisor && actingAsId === etfAdvisorId;
+
+    const getActingAsDisabledMessage = () => {
+        if (isActiveEntityETF) {
+            if (!controlsETFAdvisor) return "You must control the ETF's investment advisor";
+            if (!isActingAsETFAdvisor) return "Must be acting as the ETF's investment advisor";
+            return false;
+        }
+        return !actingAs ? "Must be acting as this company" : false;
+    };
 
     return html`
             <div class="flex flex-col w-full">
@@ -34,21 +55,22 @@ function OptionsTab() {
                         optionsList,
                         ({ id }) => api.setViewAsset(parseInt(id.split('|').pop())),
                         ({ id, type, text }) => html`
-                            <${ActingAsRequiredButton} 
-                                disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
+                            <${DisabledTooltipButton}
+                                disabledMessage=${getActingAsDisabledMessage()}
                                 onClick=${() => (
                                     type === 'LONGCALL' ? api.sellCalls
                                     : type === 'LONGPUT' ? api.sellPuts
                                     : type === 'SHORTCALL' ? api.buyCalls
                                     : type === 'SHORTPUT' ? api.buyPuts
                                     : () => { }
-                                )(parseInt(id.split('|')[0]))} 
+                                )(parseInt(id.split('|')[0]))}
                                 label=${type.includes('LONG') ? 'Sell' : 'Cover'}
                                 color="red"
                             />
-                            <${ActingAsRequiredButton}
+                            <${DisabledTooltipButton}
                                 disabledMessage=${(() => {
-                                    if (!actingAs) return "Must be acting as this company"
+                                    const actingAsMsg = getActingAsDisabledMessage();
+                                    if (actingAsMsg) return actingAsMsg;
 
                                     const contract = parseReportLine(text)
                                     if ((type.includes('LONGCALL') && contract.stockPrice < contract.strikePrice)
@@ -57,12 +79,12 @@ function OptionsTab() {
                                     }
 
                                     return false
-                                })()} 
+                                })()}
                                 onClick=${() => (
                                     type.includes('CALL') ? api.exerciseCallOptionsEarly
                                     : type.includes('PUT') ? api.exercisePutOptionsEarly
                                     : () => { }
-                                )(parseInt(id.split('|')[0]))} 
+                                )(parseInt(id.split('|')[0]))}
                                 label="Exercise Early"
                                 color="blue"
                             />

@@ -2,21 +2,18 @@ import { html, useEffect, useState } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
-import ActingAsDropdown from './ActingAsDropdown.js';
 import CommoditiesTab from './CommoditiesTab.js';
 import PortfolioTab from './PortfolioTab.js';
 import OptionsTab from './OptionsTab.js';
-import Tooltip from './Tooltip.js';
 import { insertCurrencySymbols, renderLines } from './helpers.js';
 import * as api from '../api.js';
 import EPSChart from './EPSChart.js';
 import FinancialsTab from './FinancialsTab.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
+import Button from './Button.js';
 import LoansTab from './LoansTab.js';
 import CashflowTab from './CashflowTab.js';
-import CommandPrompt from './CommandPrompt.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
-import Button from './Button.js';
 import OwnershipGraph from './OwnershipGraph.js';
 
 const Tab = Tabs.Tab;
@@ -57,6 +54,14 @@ const IndustrialView = () => {
     const eventString = api.useGameStore(s => s.gameState.eventString);
     const nextEarningsDate = api.useGameStore(s => s.gameState.nextEarningsDate);
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredCompanyTab);
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
+
+    // ETF Advisor detection
+    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
+    const activeEntity = allCompanies.find(c => c.id === activeEntityNum);
+    const etfAdvisorId = activeEntity?.advisorId || 0;
+    const controlsETFAdvisor = isActiveEntityETF && (controlledCompanies || []).some(c => c.id === etfAdvisorId);
+    const isActingAsETFAdvisor = isActiveEntityETF && controlsETFAdvisor && actingAsId === etfAdvisorId;
 
     const [activeTab, setActiveTabInternal] = useState("General");
 
@@ -88,90 +93,106 @@ const IndustrialView = () => {
         }
     }, [eventString]);
 
-    const buyStockDisabledMessage = !actingAsId
-        ? "Must be acting as this company"
-        : false;
+    // Disabled message helper for standard "must be acting as" checks
+    const getActingAsDisabledMessage = () => {
+        if (isActiveEntityETF) {
+            if (!controlsETFAdvisor) return "You must control the ETF's investment advisor";
+            if (!isActingAsETFAdvisor) return "Must be acting as the ETF's investment advisor";
+            return false;
+        }
+        return !actingAs ? "Must be acting as this company" : false;
+    };
 
-    const shortStockDisabledMessage = actingAsId !== api.HUMAN1_ID
-        ? "Only players can short stocks."
-        : false;
+    // Check if the acting-as entity is an advisor for any ETF
+    const actingAsManagesETF = actingAsId >= 10 && allCompanies.some(c => c.advisorId === actingAsId);
 
-    const buyBondDisabledMessage = ![api.PLAYER_IND, api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)
-        ? "Only players, banks, and insurance companies can buy bonds."
-        : false;
+    const canShortStock = isActingAsETFAdvisor
+        ? false //"ETFs cannot short stocks"
+        : actingAsId !== api.HUMAN1_ID
+            ? false //"Only players can short stocks."
+            : true;
+
+    const buyBondDisabledMessage = isActiveEntityETF
+        ? false // Buy Bonds button is hidden for ETFs
+        : ![api.PLAYER_IND, api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)
+            ? "Only players, banks, and insurance companies can buy bonds."
+            : false;
 
     return html`
     <div class="flex flex-col h-full">
         <div class="flex flex-row gap-2 flex-1 min-h-0">
             <div class="flex flex-col w-full gap-2 h-full">
                 <div class="flex gap-2 items-center" style="height: 35px;">
-                    ${api.isPlayerControlled(controlledCompanies, activeEntityNum)
-                        ? api.isPlayerCEO(chairedCompanyId, activeEntityNum) ? html`<${ActingAsRequiredButton}
+                    ${!isActiveEntityETF && api.isPlayerControlled(controlledCompanies, activeEntityNum)
+                        ? api.isPlayerCEO(chairedCompanyId, activeEntityNum) ? html`<${DisabledTooltipButton}
                             disabledMessage=${!actingAs ? "Must be acting as this company" : false}
-                            onClick=${api.resignAsCeo} 
+                            onClick=${api.resignAsCeo}
                             label="Resign as CEO"
                             color="red"
-                        />` : html`<${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.electCeo} 
+                        />` : html`<${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.electCeo}
                             label="Elect as CEO"
                             color="red"
                         />` : ''}
-                    <${ActingAsRequiredButton} 
-                        disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                        onClick=${api.rebrand} 
+                    ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
+                        disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                        onClick=${api.rebrand}
                         label="Rebrand"
                         color="red"
-                    />
-                    ${actingAsId !== activeEntityNum // Cannot sue itself
-                        && actingAsId !== api.HUMAN1_ID // Players cannot file antitrust lawsuits
-                        && actingAsIndustryId === activeIndustryId // Must be same industry
-                        && !api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
-                        ? html`<${ActingAsRequiredButton}
-                        onClick=${() => api.antitrustLawsuit(activeEntityNum)} 
+                    />` : ''}
+                    ${!isActiveEntityETF
+                        && actingAsId !== activeEntityNum
+                        && actingAsId !== api.HUMAN1_ID
+                        && actingAsIndustryId === activeIndustryId
+                        && !api.isPlayerControlled(controlledCompanies, activeEntityNum)
+                        ? html`<${DisabledTooltipButton}
+                        onClick=${() => api.antitrustLawsuit(activeEntityNum)}
                         label=${insertCurrencySymbols(`Antitrust Lawsuit ${actingAsSymbol} vs ${activeEntitySymbol}`)}
                         color="red"
                     />` : ''}
-                    ${!api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
-                        && actingAsId !== activeEntityNum // Company cannot sue itself
-                        ? html`<${ActingAsRequiredButton}
+                    ${!isActiveEntityETF
+                        && !api.isPlayerControlled(controlledCompanies, activeEntityNum)
+                        && actingAs
+                        ? html`<${DisabledTooltipButton}
                         onClick=${() => api.harrassingLawsuit(activeEntityNum)}
                         label=${insertCurrencySymbols(`Harrassing Lawsuit ${actingAsSymbol} vs ${activeEntitySymbol}`)}
                         color="red"
                     />` : ''}
-                    ${!api.isPlayerControlled(controlledCompanies, activeEntityNum) // Cannot be controlled by you
-                        && actingAsId !== activeEntityNum // Company cannot spread rumors about itself
-                        ? html`<${ActingAsRequiredButton}
+                    ${!isActiveEntityETF
+                        && !api.isPlayerControlled(controlledCompanies, activeEntityNum)
+                        && actingAs
+                        ? html`<${DisabledTooltipButton}
                         onClick=${() => api.spreadRumors(activeEntityNum)}
                         label=${insertCurrencySymbols(`Spread Rumors about ${activeEntitySymbol}`)}
                         color="red"
                     />` : ''}
-                    ${activeIndustryId === api.INSURANCE_IND || activeIndustryId === api.SECURITIES_BROKER_IND ? html`<${ActingAsRequiredButton}
+                    ${!isActiveEntityETF && (activeIndustryId === api.INSURANCE_IND || activeIndustryId === api.SECURITIES_BROKER_IND) ? html`<${DisabledTooltipButton}
                         disabledMessage=${!actingAs ? "Must be acting as this company" : false}
-                        onClick=${api.setAdvisoryFee} 
+                        onClick=${api.setAdvisoryFee}
                         label="Set Advisory Fee"
                         color="blue"
                     />` : ''}
-                    <${ActingAsRequiredButton}
-                        disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                        onClick=${api.startup} 
+                    ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
+                        disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                        onClick=${api.startup}
                         label="Startup"
                         color="green"
-                    />
-                    <${ActingAsRequiredButton}
-                        disabledMessage=${actingAs ? "You cannot capital contribute to yourself!" : false} 
-                        onClick=${api.capitalContribution} 
+                    />` : ''}
+                    ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
+                        disabledMessage=${actingAs ? "You cannot capital contribute to yourself!" : false}
+                        onClick=${api.capitalContribution}
                         label="Contribute Capital"
                         color="green"
-                    />
-                    <${ActingAsRequiredButton} 
-                        disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                        onClick=${api.issueNewCorpBonds} 
+                    />` : ''}
+                    <${DisabledTooltipButton}
+                        disabledMessage=${getActingAsDisabledMessage()}
+                        onClick=${api.issueNewCorpBonds}
                         label="Issue Corp Bonds"
                         color="brown"
                     />
-                    <${ActingAsRequiredButton}
-                        disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                    <${DisabledTooltipButton}
+                        disabledMessage=${getActingAsDisabledMessage()}
                         onClick=${api.redeemCorpBonds}
                         label="Redeem Corp Bonds"
                         color="brown"
@@ -181,82 +202,69 @@ const IndustrialView = () => {
                     <${Tab} label="General" id=${api.UI_CORP_RESEARCH_REPORT}>
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0">
-                                <div class="flex flex-col flex-[4] min-h-0">
-                                    <div class="flex-[4] min-h-0 flex flex-col">
+                                <div class="flex flex-col min-h-0">
+                                    <div class="flex flex-col" style="height: 200px;">
                                         <div class="earnings-date-badge mb-1">Earnings Date: ${nextEarningsDate}</div>
                                         ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" />`}
                                     </div>
-                                    <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
-                                        ${!buyStockDisabledMessage
-                            ? html`
-                                                <${Button} class="btn flex-1 mx-1 green" data-tutorial="buy-stock" onClick=${() => api.buyStock(activeEntityNum)}>
-                                                    Buy Stock
-                                                </button>`
-                            : html`
-                                                <${Tooltip} text=${buyStockDisabledMessage}>
-                                                    <${Button} class="btn disabled w-full" data-tutorial="buy-stock">Buy Stock</button>
-                                                <//>`}
-
-                                        ${!shortStockDisabledMessage
-                            ? html`
-                                                <${Button} class="btn flex-1 mx-1 green" onClick=${() => api.shortStock(activeEntityNum)}>
-                                                    Short Stock
-                                                </button>`
-                            : html`
-                                                <${Tooltip} text=${shortStockDisabledMessage}>
-                                                    <${Button} class="btn disabled w-full">Short Stock</button>
-                                                <//>`}
-
-                                        ${!buyBondDisabledMessage
-                            ? html`
-                                                <${Button} class="btn flex-1 mx-1 green" onClick=${() => api.buyCorporateBond(activeEntityNum)}>
-                                                    Buy Bonds
-                                                </button>`
-                            : html`
-                                                <${Tooltip} text=${buyBondDisabledMessage}>
-                                                    <${Button} class="btn disabled w-full">Buy Bonds</button>
-                                                <//>`}
+                                    <div class="flex flex- flex-row items-center justify-center mt-2 w-full">
+                                        <label class="h-full flex items-center justify-center">
+                                            ${actingAs ? `Buy on behalf of ${activeEntitySymbol}:` : `${actingAsSymbol} buys ${activeEntitySymbol} positions:`}
+                                        </label>
                                     </div>
                                     <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
-                                        <${ActingAsRequiredButton}
-                                            disabledMessage=${actingAs ? "Entity cannot buy options on itself" : false} 
+                                        <${DisabledTooltipButton}
+                                            onClick=${() => api.buyStock(actingAs ? 0 : activeEntityNum)}
+                                            label="Buy Stock"
+                                            color="green"
+                                        />
+                                        ${canShortStock && html`<${DisabledTooltipButton}
+                                            onClick=${() => api.shortStock(actingAs ? 0 : activeEntityNum)}
+                                            label="Short Stock"
+                                            color="green"
+                                        />`}
+                                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
+                                            disabledMessage=${buyBondDisabledMessage}
+                                            onClick=${() => api.buyCorporateBond(actingAs ? 0 : activeEntityNum)}
+                                            label="Buy Bonds"
+                                            color="green"
+                                        />` : ''}
+                                    </div>
+                                    <div class="flex flex-row justify-between mt-2 w-full" style="height:30px">
+                                        <${DisabledTooltipButton}
                                             onClick=${() => api.buyCalls(0)} 
                                             label="Buy Calls"
                                             color="green"
                                         />
-                                        <${ActingAsRequiredButton} 
-                                            disabledMessage=${actingAs ? "Entity cannot sell options on itself" : false} 
+                                        <${DisabledTooltipButton}
                                             onClick=${() => api.sellCalls(0)} 
                                             label="Sell Calls"
                                             color="red"
                                         />
-                                        <${ActingAsRequiredButton} 
-                                            disabledMessage=${actingAs ? "Entity cannot buy options on itself" : false} 
+                                        <${DisabledTooltipButton} 
                                             onClick=${() => api.buyPuts(0)} 
                                             label="Buy Puts"
                                             color="green"
                                         />
-                                        <${ActingAsRequiredButton} 
-                                            disabledMessage=${actingAs ? "Entity cannot sell options on itself" : false} 
+                                        <${DisabledTooltipButton} 
                                             onClick=${() => api.sellPuts(0)} 
                                             label="Sell Puts"
                                             color="red"
                                         />
                                     </div>
-                                    <div class="flex flex-row justify-between mt-2 w-full" style="height:20px">
-                                        <${ActingAsRequiredButton} 
-                                            disabledMessage=${actingAs ? "Entity cannot buy options on itself" : false} 
-                                            onClick=${api.advancedOptionsTrading} 
+                                     ${!isActiveEntityETF ? html`<div class="flex flex-row justify-between mt-2 w-full" style="height:20px">
+                                       <${DisabledTooltipButton}
+                                            onClick=${api.advancedOptionsTrading}
                                             label="Advanced Options"
                                             color="green"
                                             containerClass="w-full"
                                             buttonClass="w-full"
                                         />
-                                    </div>
+                                    </div>` : ''}
                                 </div>
-                                <div class="flex flex-[1.75] min-h-0">
+                                ${!isActiveEntityETF && html`<div class="flex flex-[1.75] min-h-0">
                                     ${html`<${EPSChart} epsData=${extractEPSData(financialProfile)} />`}
-                                </div>
+                                </div>`}
                                 <div class="flex flex-[4] min-h-0">
                                     ${html`<${AdvisorySummary} />`}
                                 </div>
@@ -268,22 +276,23 @@ const IndustrialView = () => {
                     <//>
                     <${Tab} label="Earnings" id=${api.UI_CORP_EARNINGS_REPORT}>
 
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.decreaseEarnings} 
+                        ${!isActiveEntityETF ? html`
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.decreaseEarnings}
                             label="Decrease Earnings"
                             color="red"
                             containerClass="flex flex-row justify-between mt-2 w-full"
                             buttonClass="btn flex-1 mx-1"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.increaseEarnings} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.increaseEarnings}
                             label="Increase Earnings"
                             color="green"
                             containerClass="flex flex-row justify-between mt-2 w-full"
                             buttonClass="btn flex-1 mx-1"
-                        />
+                        />` : ''}
 
                         <div class="flex flex-col justify-center items-center">
                             ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
@@ -313,38 +322,38 @@ const IndustrialView = () => {
                     <${Tab} label="Shareholders" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
                         <div class="flex flex-col h-full">
                             <div class="flex flex-row items-center gap-5 justify-center mb-2">
-                                <${ActingAsRequiredButton}
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                <${DisabledTooltipButton}
+                                    disabledMessage=${getActingAsDisabledMessage()}
                                     onClick=${api.publicStockOffering}
                                     label="Public Offering"
                                     color="green"
                                 />
-                                <${ActingAsRequiredButton}
+                                ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
                                     disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                                     onClick=${api.privateStockOffering}
                                     label="Private Offering"
                                     color="brown"
-                                />
-                                <${ActingAsRequiredButton}
+                                />` : ''}
+                                ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
                                     disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                                     onClick=${api.greenmail}
                                     label="Greenmail"
                                     color="green"
-                                />
-                                <${ActingAsRequiredButton}
+                                />` : ''}
+                                ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
                                     disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                                     onClick=${api.lbo}
                                     label="Leveraged Buyout"
                                     color="green"
-                                />
-                                <${ActingAsRequiredButton}
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                />` : ''}
+                                <${DisabledTooltipButton}
+                                    disabledMessage=${getActingAsDisabledMessage()}
                                     onClick=${api.splitStock}
                                     label="Split Stock"
                                     color="green"
                                 />
-                                <${ActingAsRequiredButton}
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                <${DisabledTooltipButton}
+                                    disabledMessage=${getActingAsDisabledMessage()}
                                     onClick=${api.reverseSplitStock}
                                     label="Reverse Split"
                                     color="red"

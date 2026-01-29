@@ -5,7 +5,7 @@ import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 // Hedge Fund UI removed in this build (UI-only).
 import Tooltip from './Tooltip.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
 
@@ -61,10 +61,30 @@ function PortfolioTab() {
 
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
+    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
     const portfolio = api.useGameStore(s => s.gameState.portfolio);
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
+
+    // ETF Advisor detection
+    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
+    const activeEntity = allCompanies.find(c => c.id === activeEntityNum);
+    const etfAdvisorId = activeEntity?.advisorId || 0;
+    const controlsETFAdvisor = isActiveEntityETF && (controlledCompanies || []).some(c => c.id === etfAdvisorId);
+    const isActingAsETFAdvisor = isActiveEntityETF && controlsETFAdvisor && actingAsId === etfAdvisorId;
+
+    // Disabled message helper for ETF advisor checks
+    const getActingAsDisabledMessage = () => {
+        if (isActiveEntityETF) {
+            if (!controlsETFAdvisor) return "You must control the ETF's investment advisor";
+            if (!isActingAsETFAdvisor) return "Must be acting as the ETF's investment advisor";
+            return false;
+        }
+        return !actingAs ? "Must be acting as this company" : false;
+    };
 
     const companyById = useMemo(() => {
         const m = new Map();
@@ -76,20 +96,20 @@ function PortfolioTab() {
             <div class="flex flex-col w-full">
                 <div class="flex flex-row items-center justify-start gap-5">
                     <div class="items-center flex flex-row justify-center">
-                        <${ActingAsRequiredButton} 
+                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
                             disabledMessage=${actingAs ? "Cannot merge with yourself"
-                                : actingAsIndustryId === api.PLAYER_IND ? "Must be acting as this company a company"
-                                : false} 
-                            onClick=${api.merger} 
+                                : actingAsIndustryId === api.PLAYER_IND ? "Must be acting as a company"
+                                : false}
+                            onClick=${api.merger}
                             label="Merge With"
                             color="green"
-                        />
-                        <${ActingAsRequiredButton} 
+                        />` : ''}
+                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
                             disabledMessage=${!actingAs ? "Must be acting as this company" : false}
-                            onClick=${api.sellSubsidiaryStock} 
+                            onClick=${api.sellSubsidiaryStock}
                             label="Offer Stock for Sale"
                             color="red"
-                        />
+                        />` : ''}
                     </div>
                 </div>
                 <div class="flex flex-row flex-[1]">
@@ -101,8 +121,8 @@ function PortfolioTab() {
                         ({ id }) => id && api.setViewAsset(id),
                         ({ type, id, text }) => {
                             return html`<div class="flex flex-row stop-btn-row">
-                                <${ActingAsRequiredButton}
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                <${DisabledTooltipButton}
+                                    disabledMessage=${getActingAsDisabledMessage()}
                                     onClick=${() => (type === "S" ? api.coverShortStock
                                         : type === "J" ? api.sellCorporateBond
                                         : type === "GS" ? api.sellShortGovtBonds
@@ -112,14 +132,14 @@ function PortfolioTab() {
                                     label="${type === "S" ? "Cover" : "Sell"}"
                                     color="red"
                                 />
-                                ${!text.includes('GOVERNMENT') ?html`<${ActingAsRequiredButton} 
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                                    onClick=${() => api.spinOff(id)} 
+                                ${!isActiveEntityETF && !text.includes('GOVERNMENT') ? html`<${DisabledTooltipButton}
+                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                    onClick=${() => api.spinOff(id)}
                                     label="Spin-Off"
                                     color="blue"
                                 />` : ''}
                             </div>`
-                        }, hyperlinkRegex)} 
+                        }, hyperlinkRegex)}
                 </div>
             </div>
     `;

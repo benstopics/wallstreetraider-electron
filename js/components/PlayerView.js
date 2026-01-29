@@ -11,7 +11,7 @@ import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
 import CommandPrompt from './CommandPrompt.js';
 import FinancialsTab from './FinancialsTab.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import Button from './Button.js';
 import OwnershipGraph from './OwnershipGraph.js';
@@ -63,7 +63,7 @@ const PlayerView = () => {
                         <//>
                         <${Tab} label="Cashflow" id=${api.UI_PLAYER_CASH_FLOW_PROJECTION}>
                             <div class="flex flex-col items-center">
-                                <${ActingAsRequiredButton} 
+                                <${DisabledTooltipButton} 
                                     disabledMessage=${!actingAs ? "Must be acting as yourself" : false}
                                     onClick=${api.viewForSaleItems}
                                     label="Browse For Sale Items"

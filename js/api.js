@@ -7,49 +7,33 @@ const { ipcRenderer } = require('electron');
 
 export const apiBase = 'http://127.0.0.1:9631';
 
-// Network retry logic for handling sleep/wake scenarios (ERR_NETWORK_IO_SUSPENDED)
-async function fetchWithRetry(url, options = {}, retries = 3, delay = 500) {
-    for (let attempt = 0; attempt < retries; attempt++) {
-        try {
-            const response = await fetch(url, options);
-            return response;
-        } catch (error) {
-            const isNetworkError =
-                error.message?.includes('ERR_NETWORK_IO_SUSPENDED') ||
-                error.message?.includes('Failed to fetch') ||
-                error.message?.includes('network') ||
-                error.name === 'TypeError';
+// Network error handling - refresh browser on network errors (e.g., sleep/wake scenarios)
+async function fetchWithRetry(url, options = {}) {
+    try {
+        const response = await fetch(url, options);
+        return response;
+    } catch (error) {
+        const isNetworkError =
+            error.message?.includes('ERR_NETWORK_IO_SUSPENDED') ||
+            error.message?.includes('Failed to fetch') ||
+            error.message?.includes('network') ||
+            error.name === 'TypeError';
 
-            if (isNetworkError && attempt < retries - 1) {
-                console.log(`Network error, retrying (${attempt + 1}/${retries})...`);
-                await new Promise(r => setTimeout(r, delay * (attempt + 1)));
-                continue;
-            }
-            throw error;
+        if (isNetworkError) {
+            console.log('Network error detected, refreshing browser...');
+            location.reload();
+            return; // Won't reach here, but for clarity
         }
+        throw error;
     }
 }
-
-// Listen for system resume event from main process
-ipcRenderer.on('system-resumed', async () => {
-    console.log('System resumed from sleep, warming up network...');
-
-    // Small delay for network stack to recover
-    await new Promise(r => setTimeout(r, 500));
-
-    // Warm up the connection with a simple request
-    try {
-        await fetch(`${apiBase}/gamestate`, { method: 'HEAD' });
-    } catch (e) {
-        // Ignore - the retry logic will handle real requests
-    }
-});
 
 // Industry IDs
 export const PLAYER_IND = 0;
 export const BANK_IND = 1;
 export const INSURANCE_IND = 2;
 export const SECURITIES_BROKER_IND = 37;
+export const ETF_IND = 71;
 
 // Entity IDs
 export const HUMAN1_ID = 2;

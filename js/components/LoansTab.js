@@ -1,7 +1,7 @@
 import { html } from '../lib/preact.standalone.module.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 import Tooltip from './Tooltip.js';
 import Button from './Button.js';
 
@@ -120,7 +120,7 @@ function LoansTab() {
 
     return html`
         <div class="flex flex-col w-full items-center">
-            <${ActingAsRequiredButton} 
+            <${DisabledTooltipButton} 
                 disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                 onClick=${api.buyBusinessLoans} 
                 label="Buy Business Loans"
@@ -128,7 +128,7 @@ function LoansTab() {
                 containerClass="flex flex-row justify-between mt-2 w-full"
                 buttonClass="btn flex-1 mx-1"
             />
-            <${ActingAsRequiredButton} 
+            <${DisabledTooltipButton} 
                 disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
                 onClick=${api.freezeAllLoans} 
                 label="${frozenAllLoans ? "Unfreeze" : "Freeze"} All Loans"
@@ -136,7 +136,7 @@ function LoansTab() {
                 containerClass="flex flex-row justify-between mt-2 w-full"
                 buttonClass="btn flex-1 mx-1"
             />
-            <${ActingAsRequiredButton}
+            <${DisabledTooltipButton}
                 disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                 onClick=${api.setBankAllocation}
                 label="Set Allocation"

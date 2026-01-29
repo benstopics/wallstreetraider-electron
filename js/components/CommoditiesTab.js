@@ -14,30 +14,40 @@ function IndexPanel({ title, commodityId }) {
 
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
+    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
 
-    const buy = [api.BITCOIN_ID, api.ETHEREUM_ID].includes(commodityId) ? api.buyPhysicalCrypto : api.buyPhysicalCommodity;
-    const buyFutures = [api.BITCOIN_ID, api.ETHEREUM_ID].includes(commodityId) ? api.buyCryptoFutures : api.buyCommodityFutures;
-    const shortFutures = [api.BITCOIN_ID, api.ETHEREUM_ID].includes(commodityId) ? api.sellCryptoFutures : api.shortCommodityFutures;
+    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
+    const isCrypto = [api.BITCOIN_ID, api.ETHEREUM_ID].includes(commodityId);
+
+    const buy = isCrypto ? api.buyPhysicalCrypto : api.buyPhysicalCommodity;
+    const buyFutures = isCrypto ? api.buyCryptoFutures : api.buyCommodityFutures;
+    const shortFutures = isCrypto ? api.sellCryptoFutures : api.shortCommodityFutures;
 
     const showBuyButton = commodityId !== api.STOCK_INDEX_ID
-    const buyDisabledMessage = !actingAs ? "Must be acting as this company"
+    const buyDisabledMessage = isActiveEntityETF
+        ? (isCrypto ? "ETFs cannot trade cryptocurrencies" : "ETFs cannot trade physical commodities")
+        : !actingAs ? "Must be acting as this company"
         : actingAsIndustryId === api.BANK_IND
             ? "Banks cannot trade commodities, indexes or crypto."
             : false;
 
-    const buyFuturesDisabledMessage = !actingAs
-        ? "Must be acting as this company"
-        : actingAsIndustryId === api.BANK_IND
-            ? "Banks cannot trade futures."
-            : actingAsIndustryId === api.INSURANCE_IND && commodityId !== api.STOCK_INDEX_ID
-                ? "Insurance companies can only trade stock index futures."
-                : false;
+    const buyFuturesDisabledMessage = isActiveEntityETF
+        ? (isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot trade commodity futures")
+        : !actingAs
+            ? "Must be acting as this company"
+            : actingAsIndustryId === api.BANK_IND
+                ? "Banks cannot trade futures."
+                : actingAsIndustryId === api.INSURANCE_IND && commodityId !== api.STOCK_INDEX_ID
+                    ? "Insurance companies can only trade stock index futures."
+                    : false;
 
-    const shortFuturesDisabledMessage = !actingAs
-        ? "Must be acting as this company"
-        : [api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)
-            ? "Banks and insurance companies cannot short futures."
-            : false;
+    const shortFuturesDisabledMessage = isActiveEntityETF
+        ? (isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot short futures")
+        : !actingAs
+            ? "Must be acting as this company"
+            : [api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)
+                ? "Banks and insurance companies cannot short futures."
+                : false;
 
     return html`
         <div class="flex flex-col w-full">

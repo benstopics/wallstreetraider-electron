@@ -22,6 +22,7 @@ function dateLabel(index, baseMonth, baseYear, count) {
 
 // Special security IDs (commodities, rates, crypto) that are in allSecurities
 const SECURITY_IDS = [
+    api.STOCK_INDEX_ID,
     api.OIL_ID,        // 6
     api.GOLD_ID,       // 7
     api.SILVER_ID,     // 8
@@ -52,6 +53,9 @@ const AssetPriceChart = ({
             // Search in allSecurities for commodities, rates, crypto
             const security = s.gameState.allSecurities?.find(sec => sec.id == id);
             return security?.price ?? null;
+        } else if (id == api.HUMAN1_ID) {
+            const netWorth = s.gameState.netWorth;
+            return netWorth
         } else {
             // Search in allCompanies for regular companies
             const company = s.gameState.allCompanies?.find(comp => comp.id == id);
@@ -178,7 +182,7 @@ const AssetPriceChart = ({
             ctx.font = '11px Helvetica, Arial, sans-serif';
             ctx.textAlign = 'center';
             const labelSteps = 4;
-            
+
             // Whether to skip odd labels depending on canvas width
             const skipOddLabels = w < 200;
 
@@ -202,7 +206,7 @@ const AssetPriceChart = ({
                 const y = padT + chartH * i / 4;
                 ctx.fillText(val.toFixed(2), padL + chartW + 5, y + 3);
             }
-            
+
             // Render chart title if defined
             if (finalChartTitle) {
                 ctx.textAlign = 'center';
@@ -224,8 +228,9 @@ const AssetPriceChart = ({
         };
 
         draw();
-        window.addEventListener('resize', draw);
-        return () => window.removeEventListener('resize', draw);
+        const ro = new ResizeObserver(draw);
+        if (canvasRef.current) ro.observe(canvasRef.current);
+        return () => ro.disconnect();
     }, [chartData]);
 
     return html`<canvas ref=${canvasRef} class="price-chart"></canvas>`;

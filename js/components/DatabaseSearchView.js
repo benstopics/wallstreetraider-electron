@@ -1,5 +1,8 @@
-import { html, useState, useEffect, useMemo, useCallback } from '../lib/preact.standalone.module.js';
+import { html, useState, useEffect, useMemo, useCallback, useRef } from '../lib/preact.standalone.module.js';
+// useCallback still used for getIndustryName
 import * as api from '../api.js';
+
+const DEBOUNCE_DELAY = 500;
 
 // Formatting helpers
 const fmt = (n, decimals = 1) => {
@@ -56,18 +59,45 @@ const DatabaseSearchView = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Filter states - all 17 original filters
-    const [search, setSearch] = useState('');
-    const [industry, setIndustry] = useState('');
+    // Filter states - using uncontrolled inputs with refs to avoid re-renders during typing
+    // Only the debounced filter values are in state
+    const searchRef = useRef(null);
+    const minROERef = useRef(null);
+    const maxPERef = useRef(null);
+    const maxPctBookRef = useRef(null);
+    const minDivRef = useRef(null);
+    const minMarketCapRef = useRef(null);
+    const maxMarketCapRef = useRef(null);
+    const maxConvPremRef = useRef(null);
 
-    // Numeric filters
-    const [minROE, setMinROE] = useState('');
-    const [maxPE, setMaxPE] = useState('');
-    const [maxPctBook, setMaxPctBook] = useState('');
-    const [minDiv, setMinDiv] = useState('');
-    const [minMarketCap, setMinMarketCap] = useState('');
-    const [maxMarketCap, setMaxMarketCap] = useState('');
-    const [maxConvPrem, setMaxConvPrem] = useState('');
+    const [searchFilter, setSearchFilter] = useState('');
+    const [industry, setIndustry] = useState('');
+    const [minROEFilter, setMinROEFilter] = useState('');
+    const [maxPEFilter, setMaxPEFilter] = useState('');
+    const [maxPctBookFilter, setMaxPctBookFilter] = useState('');
+    const [minDivFilter, setMinDivFilter] = useState('');
+    const [minMarketCapFilter, setMinMarketCapFilter] = useState('');
+    const [maxMarketCapFilter, setMaxMarketCapFilter] = useState('');
+    const [maxConvPremFilter, setMaxConvPremFilter] = useState('');
+
+    // Create debounced setters (memoized so they don't change)
+    const debouncedSetSearch = useMemo(() => api.debounce(setSearchFilter, DEBOUNCE_DELAY), []);
+    const debouncedSetMinROE = useMemo(() => api.debounce(setMinROEFilter, DEBOUNCE_DELAY), []);
+    const debouncedSetMaxPE = useMemo(() => api.debounce(setMaxPEFilter, DEBOUNCE_DELAY), []);
+    const debouncedSetMaxPctBook = useMemo(() => api.debounce(setMaxPctBookFilter, DEBOUNCE_DELAY), []);
+    const debouncedSetMinDiv = useMemo(() => api.debounce(setMinDivFilter, DEBOUNCE_DELAY), []);
+    const debouncedSetMinMarketCap = useMemo(() => api.debounce(setMinMarketCapFilter, DEBOUNCE_DELAY), []);
+    const debouncedSetMaxMarketCap = useMemo(() => api.debounce(setMaxMarketCapFilter, DEBOUNCE_DELAY), []);
+    const debouncedSetMaxConvPrem = useMemo(() => api.debounce(setMaxConvPremFilter, DEBOUNCE_DELAY), []);
+
+    // Immediate setters for presets (updates both ref and state)
+    const setMinROE = (v) => { if (minROERef.current) minROERef.current.value = v; setMinROEFilter(v); };
+    const setMaxPE = (v) => { if (maxPERef.current) maxPERef.current.value = v; setMaxPEFilter(v); };
+    const setMaxPctBook = (v) => { if (maxPctBookRef.current) maxPctBookRef.current.value = v; setMaxPctBookFilter(v); };
+    const setMinDiv = (v) => { if (minDivRef.current) minDivRef.current.value = v; setMinDivFilter(v); };
+    const setMinMarketCap = (v) => { if (minMarketCapRef.current) minMarketCapRef.current.value = v; setMinMarketCapFilter(v); };
+    const setMaxMarketCap = (v) => { if (maxMarketCapRef.current) maxMarketCapRef.current.value = v; setMaxMarketCapFilter(v); };
+    const setMaxConvPrem = (v) => { if (maxConvPremRef.current) maxConvPremRef.current.value = v; setMaxConvPremFilter(v); };
 
     // Dropdown/select filters
     const [minMgmtRating, setMinMgmtRating] = useState('');
@@ -135,17 +165,17 @@ const DatabaseSearchView = () => {
         return allIndustries?.find(i => i.id === id)?.name || '-';
     }, [allIndustries]);
 
-    // Filter
+    // Filter (uses debounced values for performance)
     const filtered = useMemo(() => {
-        const q = search.trim().toLowerCase();
+        const q = searchFilter.trim().toLowerCase();
         const indId = industry ? parseInt(industry) : null;
-        const minR = minROE ? parseFloat(minROE) : null;
-        const maxP = maxPE ? parseFloat(maxPE) : null;
-        const maxBook = maxPctBook ? parseFloat(maxPctBook) : null;
-        const minD = minDiv ? parseFloat(minDiv) : null;
-        const minCap = minMarketCap ? parseFloat(minMarketCap) : null;
-        const maxCap = maxMarketCap ? parseFloat(maxMarketCap) : null;
-        const maxConv = maxConvPrem ? parseFloat(maxConvPrem) : null;
+        const minR = minROEFilter ? parseFloat(minROEFilter) : null;
+        const maxP = maxPEFilter ? parseFloat(maxPEFilter) : null;
+        const maxBook = maxPctBookFilter ? parseFloat(maxPctBookFilter) : null;
+        const minD = minDivFilter ? parseFloat(minDivFilter) : null;
+        const minCap = minMarketCapFilter ? parseFloat(minMarketCapFilter) : null;
+        const maxCap = maxMarketCapFilter ? parseFloat(maxMarketCapFilter) : null;
+        const maxConv = maxConvPremFilter ? parseFloat(maxConvPremFilter) : null;
         const minMgmt = minMgmtRating ? parseInt(minMgmtRating) : null;
         const minCred = minCredRating ? parseInt(minCredRating) : null;
         const minAnalyst = minAnalystRating ? parseInt(minAnalystRating) : null;
@@ -161,7 +191,7 @@ const DatabaseSearchView = () => {
             if (minR && (c.roe || 0) < minR) return false;
             if (maxP && c.pe > 0 && c.pe > maxP) return false;
             if (maxBook && c.bookValue > 0 && c.price > 0) {
-                const pctOfBook = (c.price / c.bookValue) * 100;
+                const pctOfBook = (c.marketCap / c.bookValue) * 100;
                 if (pctOfBook > maxBook) return false;
             }
             if (minD && (c.divYield || 0) < minD) return false;
@@ -186,16 +216,24 @@ const DatabaseSearchView = () => {
 
             return true;
         });
-    }, [data, search, industry, minROE, maxPE, maxPctBook, minDiv, minMarketCap, maxMarketCap,
-        maxConvPrem, minMgmtRating, minCredRating, minAnalystRating, excludeFinancials,
-        excludeHoldings, hasBonds, convertiblesOnly, positiveCashFlow, cashFlowBeforeDebt,
-        shortCandidates, hasPublicShares]);
+    }, [data, searchFilter, industry, minROEFilter, maxPEFilter, maxPctBookFilter, minDivFilter,
+        minMarketCapFilter, maxMarketCapFilter, maxConvPremFilter, minMgmtRating, minCredRating,
+        minAnalystRating, excludeFinancials, excludeHoldings, hasBonds, convertiblesOnly,
+        positiveCashFlow, cashFlowBeforeDebt, shortCandidates, hasPublicShares]);
 
     // Sort
     const sorted = useMemo(() => {
         const arr = [...filtered];
         arr.sort((a, b) => {
-            let av = a[sortCol], bv = b[sortCol];
+            let av, bv;
+            if (sortCol === 'pctBook') {
+                // Calculated column: marketCap / bookValue * 100
+                av = (a.bookValue > 0 && a.marketCap > 0) ? (a.marketCap / a.bookValue) * 100 : null;
+                bv = (b.bookValue > 0 && b.marketCap > 0) ? (b.marketCap / b.bookValue) * 100 : null;
+            } else {
+                av = a[sortCol];
+                bv = b[sortCol];
+            }
             if (av == null) av = sortDir === 'asc' ? Infinity : -Infinity;
             if (bv == null) bv = sortDir === 'asc' ? Infinity : -Infinity;
             if (sortCol === 'name' || sortCol === 'symbol') {
@@ -214,8 +252,18 @@ const DatabaseSearchView = () => {
     const sortIcon = (col) => sortCol === col ? (sortDir === 'asc' ? ' \u25B2' : ' \u25BC') : '';
 
     const clearFilters = () => {
-        setSearch(''); setIndustry(''); setMinROE(''); setMaxPE(''); setMaxPctBook('');
-        setMinDiv(''); setMinMarketCap(''); setMaxMarketCap(''); setMaxConvPrem('');
+        // Clear input refs
+        if (searchRef.current) searchRef.current.value = '';
+        if (minROERef.current) minROERef.current.value = '';
+        if (maxPERef.current) maxPERef.current.value = '';
+        if (maxPctBookRef.current) maxPctBookRef.current.value = '';
+        if (minDivRef.current) minDivRef.current.value = '';
+        if (minMarketCapRef.current) minMarketCapRef.current.value = '';
+        if (maxMarketCapRef.current) maxMarketCapRef.current.value = '';
+        if (maxConvPremRef.current) maxConvPremRef.current.value = '';
+        // Clear filter state immediately
+        setSearchFilter(''); setIndustry(''); setMinROEFilter(''); setMaxPEFilter(''); setMaxPctBookFilter('');
+        setMinDivFilter(''); setMinMarketCapFilter(''); setMaxMarketCapFilter(''); setMaxConvPremFilter('');
         setMinMgmtRating(''); setMinCredRating(''); setMinAnalystRating('');
         setExcludeFinancials(false); setExcludeHoldings(false); setHasBonds(false);
         setConvertiblesOnly(false); setPositiveCashFlow(false); setCashFlowBeforeDebt(false);
@@ -306,10 +354,10 @@ const DatabaseSearchView = () => {
                     </div>
                 </div>
                 <div class="flex flex-wrap items-end gap-x-3 gap-y-2">
-                    <!-- Row 1: Text search and dropdowns -->
+                    <!-- Row 1: Text search and dropdowns (uncontrolled inputs for performance) -->
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Search</div>
-                        <input class="db-input" style="width:100px" value=${search} onInput=${e => setSearch(e.target.value)} placeholder="Symbol/Name" />
+                        <input ref=${searchRef} class="db-input" style="width:100px" onInput=${e => debouncedSetSearch(e.target.value)} placeholder="Symbol/Name" />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Industry</div>
@@ -319,31 +367,31 @@ const DatabaseSearchView = () => {
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Max P/E</div>
-                        <input class="db-input" style="width:80px" type="number" value=${maxPE} onInput=${e => setMaxPE(e.target.value)} />
+                        <input ref=${maxPERef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMaxPE(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Min Div%</div>
-                        <input class="db-input" style="width:80px" type="number" value=${minDiv} onInput=${e => setMinDiv(e.target.value)} />
+                        <input ref=${minDivRef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMinDiv(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Min ROE%</div>
-                        <input class="db-input" style="width:80px" type="number" value=${minROE} onInput=${e => setMinROE(e.target.value)} />
+                        <input ref=${minROERef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMinROE(e.target.value)} />
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Max %Book</div>
-                        <input class="db-input" style="width:80px" type="number" value=${maxPctBook} onInput=${e => setMaxPctBook(e.target.value)} />
+                        <div class="text-xs text-gray-400 mb-1">Max P/B%</div>
+                        <input ref=${maxPctBookRef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMaxPctBook(e.target.value)} />
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Min Cap</div>
-                        <input class="db-input" style="width:100px" type="number" value=${minMarketCap} onInput=${e => setMinMarketCap(e.target.value)} />
+                        <div class="text-xs text-gray-400 mb-1">Min Cap ($ millions)</div>
+                        <input ref=${minMarketCapRef} class="db-input" style="width:100px" type="number" onInput=${e => debouncedSetMinMarketCap(e.target.value)} />
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Max Cap</div>
-                        <input class="db-input" style="width:100px" type="number" value=${maxMarketCap} onInput=${e => setMaxMarketCap(e.target.value)} />
+                        <div class="text-xs text-gray-400 mb-1">Max Cap ($ millions)</div>
+                        <input ref=${maxMarketCapRef} class="db-input" style="width:100px" type="number" onInput=${e => debouncedSetMaxMarketCap(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Max Conv%</div>
-                        <input class="db-input" style="width:80px" type="number" value=${maxConvPrem} onInput=${e => setMaxConvPrem(e.target.value)} />
+                        <input ref=${maxConvPremRef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMaxConvPrem(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Min Mgmt</div>
@@ -422,8 +470,9 @@ const DatabaseSearchView = () => {
                             <th class="num cursor-pointer" onClick=${() => handleSort('marketCap')}>Market Cap${sortIcon('marketCap')}</th>
                             <th class="num cursor-pointer" onClick=${() => handleSort('pe')}>P/E${sortIcon('pe')}</th>
                             <th class="num cursor-pointer" onClick=${() => handleSort('bookValue')}>Book Value${sortIcon('bookValue')}</th>
+                            <th class="num cursor-pointer" onClick=${() => handleSort('pctBook')}>P/B${sortIcon('pctBook')}</th>
                             <th class="num cursor-pointer" onClick=${() => handleSort('divYield')}>Dividend %${sortIcon('divYield')}</th>
-                            <th class="num cursor-pointer" onClick=${() => handleSort('roe')}>ROE %${sortIcon('roe')}</th>
+                            <th class="num cursor-pointer" onClick=${() => handleSort('roe')}>ROE${sortIcon('roe')}</th>
                             <th class="num cursor-pointer" onClick=${() => handleSort('convPrem')}>Conv. Premium${sortIcon('convPrem')}</th>
                             <th class="num cursor-pointer" onClick=${() => handleSort('credRating')}>Credit${sortIcon('credRating')}</th>
                             <th class="num cursor-pointer" onClick=${() => handleSort('analystRating')}>Analyst${sortIcon('analystRating')}</th>
@@ -435,16 +484,17 @@ const DatabaseSearchView = () => {
                     </thead>
                     <tbody>
                         ${sorted.length === 0 ? html`
-                            <tr><td colspan="16" class="text-center text-gray-400 py-4">No results</td></tr>
+                            <tr><td colspan="17" class="text-center text-gray-400 py-4">No results</td></tr>
                         ` : sorted.map(c => html`
                             <tr onClick=${() => api.setViewAsset(c.id)}>
                                 <td><span class="symbol-chip">${c.symbol}</span></td>
                                 <td class="truncate" style="max-width:120px" title=${c.name}>${c.name}</td>
                                 <td class="truncate" style="max-width:60px" title=${getIndustryName(c.industryId)}>${getIndustryName(c.industryId)}</td>
-                                <td class="num">$${fmt(c.price, 2)}</td>
-                                <td class="num">${fmtInt(c.marketCap)}M</td>
+                                <td class="num">$ ${fmt(c.price, 2)}</td>
+                                <td class="num">$ ${fmtInt(c.marketCap)} M</td>
                                 <td class="num">${c.pe > 0 ? fmt(c.pe) : '-'}</td>
-                                <td class="num">${c.bookValue > 0 ? fmt(c.bookValue, 2) : '-'}</td>
+                                <td class="num">$ ${c.bookValue > 0 ? fmt(c.bookValue, 2) : '-'} M</td>
+                                <td class="num">${c.bookValue > 0 && c.price > 0 ? fmt((c.marketCap / c.bookValue) * 100) + '%' : '-'}</td>
                                 <td class="num">${c.divYield > 0 ? fmt(c.divYield) + '%' : '-'}</td>
                                 <td class="num">${c.roe ? fmt(c.roe) + '%' : '-'}</td>
                                 <td class="num">${c.convPrem > 0 ? fmt(c.convPrem) + '%' : '-'}</td>
@@ -453,7 +503,7 @@ const DatabaseSearchView = () => {
                                 <td class="num">${getMgmtRating(c.mgmtRating)}</td>
                                 <td class="num">${getCashFlowText(c.cashFlow)}</td>
                                 <td class="num">${getShortScoreText(c.shortScore)}</td>
-                                <td class="num">${c.jBondsPublic > 0 ? fmtInt(c.jBondsPublic) : '-'}</td>
+                                <td class="num">$ ${c.jBondsPublic > 0 ? fmtInt(c.jBondsPublic) : '-'} M</td>
                             </tr>
                         `)}
                     </tbody>

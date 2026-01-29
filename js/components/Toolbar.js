@@ -32,7 +32,7 @@ function Toolbar() {
     }
 
     return html`
-        <div class="top-bar items-center justify-between" style="height: 40px; flex-shrink: 0;">
+        <div class="top-bar items-center justify-between" style="height: 60px; flex-shrink: 0;">
             <${NotesModal} show=${showNotepad} onClose=${() => setShowNotepad(false)} />
             <${CalculatorModal} show=${showCalculator} onClose=${() => setShowCalculator(false)} />
             <${KeybindsModal} show=${showKeybinds} onClose=${() => setShowKeybinds(false)} />

@@ -1,7 +1,7 @@
 import { html } from '../lib/preact.standalone.module.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 
 
 function CashflowTab() {
@@ -12,62 +12,63 @@ function CashflowTab() {
     const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
+    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
     const hasCorporateAssets = financialProfile.some(asset => asset.includes('Business Assets/Equipment'));
 
     return html`
             <div class="flex flex-col w-full items-center">
-                <div class="flex flex-row items-center gap-5">
+                ${!isActiveEntityETF ? html`<div class="flex flex-row items-center gap-5">
                     ${activeIndustryId !== api.BANK_IND ? html`
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.buyCorporateAssets} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.buyCorporateAssets}
                             label="Buy Corporate Assets"
                             color="green"
                         />
-                        ${hasCorporateAssets ? html`<${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.sellCorporateAssets} 
+                        ${hasCorporateAssets ? html`<${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.sellCorporateAssets}
                             label="Sell Corporate Assets"
                             color="red"
                         />` : ''}
-                        ${hasCorporateAssets ? html`<${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.offerCorporateAssetsForSale} 
+                        ${hasCorporateAssets ? html`<${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.offerCorporateAssetsForSale}
                             label="Offer Corporate Assets for Sale"
                             color="blue"
                         />` : ''}
                     ` : ''}
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.viewForSaleItems} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.viewForSaleItems}
                             label="Browse For Sale Items"
                             color="green"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.setDividend} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.setDividend}
                             label="Set Dividend"
                             color="green"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.setProductivity} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.setProductivity}
                             label="Set Productivity"
                             color="brown"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.setGrowthRate} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.setGrowthRate}
                             label="Set Growth Rate"
                             color="orange"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.changeManagers} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.changeManagers}
                             label="Fire Managers"
                             color="red"
                         />
-                </div>
+                </div>` : ''}
                 <br />
                 <div class="flex flex-col flex-[3] justify-center items-center">
                     <div class="flex flex-col items-center w-full">

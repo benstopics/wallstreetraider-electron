@@ -4,7 +4,7 @@ import AssetPriceChart from './AssetPriceChart.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import Tooltip from './Tooltip.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 import Button from './Button.js';
 
 
@@ -44,19 +44,22 @@ function IndexPanel({ title, bondId }) {
 function InterestRateSwapsTab() {
 
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
+    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
     const swapsPortfolio = api.useGameStore(s => s.gameState.swapsPortfolio);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+
+    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
 
     return html`
             <div class="flex flex-col w-full">
                 <div class="flex flex-row items-center justify-start gap-5">
                     <div class="items-center flex flex-row justify-center">
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.interestRateSwaps} 
+                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.interestRateSwaps}
                             label="Create New Swap"
                             color="green"
-                        />
+                        />` : ''}
                     </div>
                 </div>
                 <div class="flex flex-row flex-[1]">
@@ -68,13 +71,13 @@ function InterestRateSwapsTab() {
                     ${renderLines(swapsPortfolio,
                         ({ id }) => id && api.setViewAsset(id),
                         ({ type, id, text }) => html`<div class="flex flex-row">
-                        <${ActingAsRequiredButton}
+                        <${DisabledTooltipButton}
                             disabledMessage=${false}
                             onClick=${() => api.viewSwapDetails(id)}
                             label="Details"
                             color="blue"
                         />
-                        <${ActingAsRequiredButton}
+                        <${DisabledTooltipButton}
                             disabledMessage=${!actingAs ? "Must be acting as this company" : false}
                             onClick=${() => api.terminateSwap(id)}
                             label="Terminate"

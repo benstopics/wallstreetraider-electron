@@ -12,6 +12,7 @@ import NewGameSetupModal from './components/NewGameSetupModal.js';
 import AdvancedOptionsModal from './components/AdvancedOptionsModal.js';
 import InterestRateSwapsModal from './components/InterestRateSwapsModal.js';
 import TextAnnounceModal from './components/TextAnnounceModal.js';
+import CompanySelectModal from './components/CompanySelectModal.js';
 import TutorialModal from './components/TutorialModal.js';
 
 const logos = [
@@ -202,6 +203,14 @@ const AppInner = () => {
             show=${modalType === 8}
             title=${modalTitle}
             text=${modalText}
+            onSubmit=${(value) => { api.modalResult(value); }}
+            onCancel=${hideModal}
+        />
+        <${CompanySelectModal}
+            show=${modalType === 9}
+            title=${modalTitle}
+            text=${modalText}
+            defaultValue=${modalDefault}
             onSubmit=${(value) => { api.modalResult(value); }}
             onCancel=${hideModal}
         />

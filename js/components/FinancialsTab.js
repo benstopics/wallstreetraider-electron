@@ -1,7 +1,7 @@
 import { html } from '../lib/preact.standalone.module.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
-import ActingAsRequiredButton from './ActingAsRequiredButton.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 import CapitalizationChart from './CapitalizationChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
 import Tooltip from './Tooltip.js';
@@ -57,54 +57,74 @@ function FinancialsTab() {
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
+    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
     const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+
+    // ETF Advisor detection
+    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
+    const activeEntity = allCompanies.find(c => c.id === activeEntityNum);
+    const etfAdvisorId = activeEntity?.advisorId || 0;
+    const controlsETFAdvisor = isActiveEntityETF && (controlledCompanies || []).some(c => c.id === etfAdvisorId);
+    const isActingAsETFAdvisor = isActiveEntityETF && controlsETFAdvisor && actingAsId === etfAdvisorId;
+
+    // Disabled message helper for ETF advisor checks
+    const getActingAsDisabledMessage = () => {
+        if (isActiveEntityETF) {
+            if (!controlsETFAdvisor) return "You must control the ETF's investment advisor";
+            if (!isActingAsETFAdvisor) return "Must be acting as the ETF's investment advisor";
+            return false;
+        }
+        return !actingAs ? "Must be acting as this company" : false;
+    };
 
     return html`
             <div class="flex flex-col w-full h-full min-h-0 items-center">
                 <div class="flex flex-row items-center gap-5 mb-2" style="height: 35px;">
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.borrowMoney} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${api.borrowMoney}
                             label="Borrow Money"
                             color="green"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.repayLoan} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${api.repayLoan}
                             label="Repay Loan"
                             color=""
                         />
-                        ${actingAsId >= 10 ? html`<${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.extraordinaryDividend} 
+                        ${actingAsId >= 10 || isActiveEntityETF ? html`<${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${api.extraordinaryDividend}
                             label="Extraordinary Dividend"
                             color="green"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.taxFreeLiquidation} 
+                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.taxFreeLiquidation}
                             label="Tax-Free Liquidation"
                             color="green"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.taxableLiquidation} 
+                        <${DisabledTooltipButton}
+                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                            onClick=${api.taxableLiquidation}
                             label="Taxable Liquidation"
                             color="green"
-                        />` : ''}
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.changeBank} 
+                        />` : ''}` : ''}
+                        <${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${api.changeBank}
                             label="Change Bank"
                             color="blue"
                         />
-                        <${ActingAsRequiredButton} 
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                            onClick=${api.tradeTbills} 
+                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${api.tradeTbills}
                             label="Trade T-Bills"
                             color="brown"
-                        />
+                        />` : ''}
                 </div>
                 <div class="flex flex-row w-full h-full gap-2 min-h-0">
                     ${activeEntityNum < 10 ? html`
