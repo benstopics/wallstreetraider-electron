@@ -1,20 +1,16 @@
 import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
-import CapitalizationChart from './CapitalizationChart.js';
-import AdvisorySummary from './AdvisorySummary.js';
-import ActingAsDropdown from './ActingAsDropdown.js';
 import CommoditiesTab from './CommoditiesTab.js';
 import OptionsTab from './OptionsTab.js';
 import Tooltip from './Tooltip.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
-import CommandPrompt from './CommandPrompt.js';
 import FinancialsTab from './FinancialsTab.js';
-import DisabledTooltipButton from './DisabledTooltipButton.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import Button from './Button.js';
 import OwnershipGraph from './OwnershipGraph.js';
+import ActionBar from './ActionBar.js';
 
 const Tab = Tabs.Tab;
 
@@ -23,7 +19,6 @@ const PlayerView = () => {
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const cashflowProjection = api.useGameStore(s => s.gameState.cashflowProjection);
     const advances = api.useGameStore(s => s.gameState.advances);
-    const myCorporationsReport = api.useGameStore(s => s.gameState.myCorporationsReport);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredPlayerTab);
 
@@ -49,27 +44,13 @@ const PlayerView = () => {
         <div class="flex flex-col h-full">
             <div class="flex flex-row gap-2 flex-1 min-h-0">
                 <div class="flex flex-col w-full gap-2 h-full">
-                    <div class="flex gap-2 items-center" style="height: 35px;">
-                        <div class="btn-container">
-                            <${Button} class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
-                        </div>
-                        <div class="btn-container">
-                            <${Button} class="btn green mx-1" onclick=${api.startup}>Startup</button>
-                        </div>
-                    </div>
+                    <${ActionBar} />
                     <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
                         <${Tab} label="Financials" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
                             <${FinancialsTab} />
                         <//>
                         <${Tab} label="Cashflow" id=${api.UI_PLAYER_CASH_FLOW_PROJECTION}>
                             <div class="flex flex-col items-center">
-                                <${DisabledTooltipButton} 
-                                    disabledMessage=${!actingAs ? "Must be acting as yourself" : false}
-                                    onClick=${api.viewForSaleItems}
-                                    label="Browse For Sale Items"
-                                    color="green"
-                                />
-                                <br/>
                                 ${renderLines(cashflowProjection, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                             </div>
                         <//>
@@ -117,24 +98,6 @@ const PlayerView = () => {
                                 <div class="flex-1 min-h-0 overflow-auto">
                                     <${OwnershipGraph} showOwners=${false} showSubsidiaries=${true} />
                                 </div>
-                                ${/* Old text report - commented out
-                                <div class="flex flex-col items-center overflow-y-auto" style="max-height: 40%;">
-                                    ${renderLines(myCorporationsReport,
-                                        ({ id }) => api.setViewAsset(id),
-                                        ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
-                                            <${Button}
-                                                class="btn red flex-1 mx-1"
-                                                onClick=${() => api.toggleCompanyAutopilot(id)}>
-                                                    AutoPilot
-                                            </button>
-                                            <${Button}
-                                                class="btn brown flex-1 mx-1"
-                                                onClick=${() => api.changeActingAs(id)}>
-                                                    Act As
-                                            </button>
-                                        </div>` : '', hyperlinkRegex)}
-                                </div>
-                                */ ''}
                             </div>
                         <//>
                     <//>

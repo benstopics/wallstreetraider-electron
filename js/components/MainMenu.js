@@ -45,6 +45,9 @@ const CHANGELOG = [
             "Widen info modals to better fit long lines at higher zoom levels",
             "Fix filter lag in Database Search tool and fix Price-to-Book filter and column",
             "Fix navigation history quirks",
+            "Add action bar with submenus for all top-level buttons",
+            "New Shareholder Graph can be toggled back to old text report in Settings menu",
+
         ]
     },
     {

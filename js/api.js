@@ -516,6 +516,7 @@ export async function sweepSelect() { await postNoArg('/sweep_select'); }
 export async function makedeliverySelect() { await postNoArg('/makedelivery_select'); }
 export async function takedeliverySelect() { await postNoArg('/takedelivery_select'); }
 export async function tooltipsSelect() { await postNoArg('/tooltips_select'); }
+export async function shareholderGraphSelect() { await postNoArg('/shareholdergraph_select'); }
 
 // Fullscreen toggle (Electron if available, otherwise browser fullscreen API)
 export function toggleFullscreen() {

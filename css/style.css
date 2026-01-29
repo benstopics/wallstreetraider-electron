@@ -19,6 +19,7 @@
 @import url('components/tabs.css');
 @import url('components/forms.css');
 @import url('components/tables.css');
+@import url('components/dropdown.css');
 
 /* Features */
 @import url('features/calculator.css');

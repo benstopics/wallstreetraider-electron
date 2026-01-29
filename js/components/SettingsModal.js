@@ -21,6 +21,7 @@ function SettingsModal({ children }) {
     const makeDeliverySetting = api.useGameStore(s => s.gameState.makeDeliverySetting);
     const takeDeliverySetting = api.useGameStore(s => s.gameState.takeDeliverySetting);
     const tooltipsSetting = api.useGameStore(s => s.gameState.tooltipsSetting);
+    const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
 
     // Close on outside click
     useEffect(() => {
@@ -70,6 +71,7 @@ function SettingsModal({ children }) {
                     <${SettingItem} label="${insertCurrencySymbols("Make Delivery")}" isOn=${makeDeliverySetting} onToggle=${() => api.makedeliverySelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Take Delivery")}" isOn=${takeDeliverySetting} onToggle=${() => api.takedeliverySelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Tooltips")}" isOn=${tooltipsSetting} onToggle=${() => api.tooltipsSelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("Shareholder Graph")}" isOn=${shareholderGraphSetting} onToggle=${() => api.shareholderGraphSelect()} />
                 </div>
             `}
         </div>

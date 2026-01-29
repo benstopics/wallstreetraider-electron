@@ -25,7 +25,7 @@
   box-shadow: var(--shadow-lg), 0 0 0 1px var(--bg-primary) inset;
   width: min(800px, 92vw);
   max-height: 90vh;
-  overflow-y: auto;
+  overflow-y: hidden;
   padding: 16px;
   position: relative;
   animation: modal-pop .12s ease-out;
@@ -465,6 +465,11 @@
   .iu-cards {
     grid-template-columns: 1fr;
   }
+}
+
+/* Text announce modal - inner content handles scrolling */
+.text-announce-modal {
+  overflow: hidden;
 }
 
 /* Stop modal */

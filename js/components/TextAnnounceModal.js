@@ -13,7 +13,7 @@ export default function TextAnnounceModal({ show, title, text, onSubmit, onCance
 
     const lines = useMemo(() => {
         return show && text ? text?.split('\r') : [];
-    }, [text]);
+    }, [show, text]);
 
     return html`<${Modal} show=${show} class="text-announce-modal modal-card">
         <div class="text-center">
