@@ -40,10 +40,11 @@ const CHANGELOG = [
             "When viewing the company you are acting as, the Buy/Sell/Short buttons in General tab now buy on behalf of that company prompt for company selection with advanced search similar to Command Prompt",
             "Restore window minimize/maximize/close buttons on main window",
             "Fix swaps tab incorrectly showing Acting Entity swaps instead of active entity swaps",
-            "Fix paragraph separation in info modals",
+            "Fix paragraph separation in text reports and info modals",
             "Replace SWAP INFO button with tooltip",
             "Widen info modals to better fit long lines at higher zoom levels",
             "Fix filter lag in Database Search tool and fix Price-to-Book filter and column",
+            "Fix navigation history quirks",
         ]
     },
     {

@@ -294,11 +294,9 @@ export async function stopTicker() {
 }
 export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed', speed); }
 export async function loadGame() {
-    resetNavHistoryRestoration(); // Allow nav history to be restored from new save
     await postNoArg('/loadgame');
 }
 export async function newGame() {
-    resetNavHistoryRestoration(); // Clear nav history for new game
     await postNoArg('/newgame');
 }
 export async function saveGame() { await postNoArg('/savegame'); }
@@ -311,7 +309,6 @@ export async function saveGameAs(filename) {
     });
 }
 export async function exitGame() {
-    resetNavHistoryRestoration(); // Allow nav history to be restored when returning to game
     ipcRenderer.send('restart-wsr');
     await postNoArg('/exit_game');
 }
@@ -567,45 +564,29 @@ export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 
 /* Misc */
 export const navHistory = [];
-export let navPointerIdx = -1; // -1 means "not pointing", reset after setViewAsset
-let navHistoryRestored = false; // Track if we've restored from customData this session
+export const navPointerIdx = { current: -1 }; // -1 means "not pointing", reset after setViewAsset
 
 // Persist navigation history to CustomData (saved with game)
 function persistNavHistory() {
-    setCustomData({
-        navHistory: {
-            entries: navHistory,
-            pointerIndex: navPointerIdx
+    const navData = {
+        entries: [...navHistory],
+        pointerIndex: navPointerIdx.current
+    };
+
+    // Optimistically update local store immediately to prevent race conditions
+    // (useEffect in NavigationControl syncs from store, so store must stay current)
+    const state = gameStore.getState();
+    const gs = state.gameState || {};
+    state.setGameState({
+        ...gs,
+        customData: {
+            ...gs.customData,
+            navHistory: navData
         }
     });
-}
 
-// Restore navigation history from CustomData (on game load)
-export function restoreNavHistory(customData) {
-    if (navHistoryRestored) return; // Only restore once per session
-    if (!customData?.navHistory) return;
-
-    const { entries } = customData.navHistory;
-    if (Array.isArray(entries) && entries.length > 0) {
-        // Clear and repopulate navHistory, filtering out invalid entries
-        navHistory.length = 0;
-        entries.forEach(entry => {
-            if (entry && typeof entry.type === 'string' && entry.id !== undefined) {
-                navHistory.push(entry);
-            }
-        });
-        // Reset pointer to -1 after refresh - user's current view might not match saved state
-        // They can use back/forward to navigate the restored history
-        navPointerIdx = -1;
-        navHistoryRestored = true;
-    }
-}
-
-// Reset restoration flag (call when starting new game or loading different save)
-export function resetNavHistoryRestoration() {
-    navHistoryRestored = false;
-    navHistory.length = 0;
-    navPointerIdx = -1;
+    // Also persist to backend for save games
+    setCustomData({ navHistory: navData });
 }
 
 export async function splashScreenPlayed() { await postNoArg('/splash_screen_played'); }
@@ -688,11 +669,6 @@ export function mergeGameState(newState) {
         }
     }
 
-    // Restore navigation history from customData (once per session/load)
-    if (newState.customData) {
-        restoreNavHistory(newState.customData);
-    }
-
     return newState;
 }
 
@@ -735,8 +711,8 @@ function shiftNavHistory(page) {
     const maxHistory = 30;
 
     // If we are not at the start, remove all "forward" items
-    if (navPointerIdx > 0) {
-        navHistory.splice(0, navPointerIdx);
+    if (navPointerIdx.current > 0) {
+        navHistory.splice(0, navPointerIdx.current);
     }
 
     // Remove if already exists in history
@@ -754,7 +730,7 @@ function shiftNavHistory(page) {
     }
 
     // Reset pointer to start
-    navPointerIdx = 0;
+    navPointerIdx.current = 0;
 
     // Persist to game save
     persistNavHistory();
@@ -771,7 +747,7 @@ export async function viewDbSearch() {
     await postIdArg('/set_view_industry', -2);
     // Also set the active UI report to trigger UpdateDatabase
     await postIdArg('/set_active_ui_report', UI_DB_SEARCH);
-    shiftNavHistory({ id: -2, type: 'dbsearch' });
+    shiftNavHistory({ id: -2, type: 'industry' });
 }
 
 // Open the Market Heat Map (IndustryView -> "Heat Maps" tab) from anywhere (e.g., top Menu).
@@ -806,9 +782,10 @@ export async function setViewAsset(id) {
 }
 
 export function gotoPage(p) {
-    const page = p ?? navHistory[navPointerIdx];
+    const page = p ?? navHistory[navPointerIdx.current];
+    console.log('gotoPage: navPointerIdx:', navPointerIdx.current, 'page:', page);
     if (!page || !page.type) {
-        console.warn('gotoPage: invalid page', page, 'navPointerIdx:', navPointerIdx);
+        console.warn('gotoPage: invalid page', page, 'navPointerIdx:', navPointerIdx.current);
         return;
     }
     if (page.type === 'industry') {
@@ -819,6 +796,7 @@ export function gotoPage(p) {
         }
         return postIdArg('/set_view_industry', page.id);
     } else if (page.type === 'asset') {
+        console.log('gotoPage: navigating to asset id', page.id);
         // Restore preferred tab if stored
         if (page.tab) {
             const state = gameStore.getState();
@@ -830,31 +808,29 @@ export function gotoPage(p) {
             }
         }
         return postIdArg('/set_view_asset', page.id);
-    } else if (page.type === 'dbsearch') {
-        return postIdArg('/set_view_industry', -2);
     }
 }
 
 export async function goBack() {
-    if (navPointerIdx < navHistory.length - 1) {
-        navPointerIdx++;
-        gotoPage();
+    if (navPointerIdx.current < navHistory.length - 1) {
+        navPointerIdx.current++;
+        await gotoPage();
         persistNavHistory();
     }
 }
 
 export async function goForward() {
-    if (navPointerIdx > 0) {
-        navPointerIdx--;
-        gotoPage();
+    if (navPointerIdx.current > 0) {
+        navPointerIdx.current--;
+        await gotoPage();
         persistNavHistory();
     }
 }
 
 // Update the tab on the current navigation entry (called when user changes tabs)
 export function updateCurrentNavTab(tab) {
-    if (navPointerIdx >= 0 && navHistory.length > navPointerIdx) {
-        navHistory[navPointerIdx].tab = tab;
+    if (navPointerIdx.current >= 0 && navHistory.length > navPointerIdx.current) {
+        navHistory[navPointerIdx.current].tab = tab;
         persistNavHistory();
     }
 }
