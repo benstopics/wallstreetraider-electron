@@ -15,6 +15,7 @@ import CashflowTab from './CashflowTab.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import OwnershipGraph from './OwnershipGraph.js';
 import ActionBar from './ActionBar.js';
+import OwnershipViewToggle from './OwnershipViewToggle.js';
 
 const Tab = Tabs.Tab;
 
@@ -53,6 +54,9 @@ const IndustrialView = () => {
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredCompanyTab);
     const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
     const shareholdersList = api.useGameStore(s => s.gameState.shareholdersList);
+
+    // Local state for shareholders view mode (initialized from global setting)
+    const [showShareholdersGraph, setShowShareholdersGraph] = useState(shareholderGraphSetting);
 
     // ETF detection for conditional UI
     const isActiveEntityETF = activeIndustryId === api.ETF_IND;
@@ -197,24 +201,28 @@ const IndustrialView = () => {
                     <${Tab} label="Swaps" id=${api.UI_CORP_SWAPS_PORTFOLIO}>
                         <${InterestRateSwapsTab} />
                     <//>
-                    <${Tab} label="Options" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
+                    ${![api.BANK_IND, api.INSURANCE_IND].includes(activeIndustryId) && html`<${Tab} label="Options" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
                         <${OptionsTab} />
-                    <//>
-                    <${Tab} label="Commodities & Crypto" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
+                    <//>`}
+                    ${activeIndustryId != api.BANK_IND && html`<${Tab} label="Commodities & Crypto" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
                         ${html`<${CommoditiesTab} />`}
-                    <//>
+                    <//>`}
                     <${Tab} label="Shareholders" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
-                        ${shareholderGraphSetting ? html`
-                            <div class="flex flex-col h-full">
+                        <div class="flex flex-col h-full">
+                            <${OwnershipViewToggle}
+                                showGraph=${showShareholdersGraph}
+                                onToggle=${() => setShowShareholdersGraph(!showShareholdersGraph)}
+                            />
+                            ${showShareholdersGraph ? html`
                                 <div class="flex-1 min-h-0 overflow-auto" style="min-height: 280px;">
                                     <${OwnershipGraph} showOwners=${true} showSubsidiaries=${true} />
                                 </div>
-                            </div>
-                        ` : html`
-                            <div class="flex justify-center items-center">
-                                ${renderLines(shareholdersList, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
-                            </div>
-                        `}
+                            ` : html`
+                                <div class="flex justify-center items-center">
+                                    ${renderLines(shareholdersList, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
+                                </div>
+                            `}
+                        </div>
                     <//>
                 <//>
             </div>

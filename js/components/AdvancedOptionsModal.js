@@ -311,7 +311,7 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
         </div>
 
         <div class="col-span-2 text-right">
-          <input type="text" class="modal-input w-full bg-gray-100" value=${mergedState[priceKey]} readOnly />
+          <span class="inline-block w-full px-2 py-1 bg-gray-700 text-white rounded text-sm">${mergedState[priceKey] || '-'}</span>
         </div>
 
         ${errors[bsKey] || errors[strikeKey] || errors[expKey] || errors[numKey]

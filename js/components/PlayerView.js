@@ -11,6 +11,7 @@ import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import Button from './Button.js';
 import OwnershipGraph from './OwnershipGraph.js';
 import ActionBar from './ActionBar.js';
+import OwnershipViewToggle from './OwnershipViewToggle.js';
 
 const Tab = Tabs.Tab;
 
@@ -23,6 +24,9 @@ const PlayerView = () => {
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredPlayerTab);
     const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
     const myCorporationsReport = api.useGameStore(s => s.gameState.myCorporationsReport);
+
+    // Local state for corporations view mode (initialized from global setting)
+    const [showCorporationsGraph, setShowCorporationsGraph] = useState(shareholderGraphSetting);
 
     const [activeTab, setActiveTabInternal] = useState("Financials");
 
@@ -96,30 +100,34 @@ const PlayerView = () => {
                             </div>
                         <//>
                         <${Tab} label="My Corporations" id=${api.UI_PLAYER_CORPORATIONS_LIST}>
-                            ${shareholderGraphSetting ? html`
-                                <div class="flex flex-col h-full overflow-hidden">
+                            <div class="flex flex-col h-full">
+                                <${OwnershipViewToggle}
+                                    showGraph=${showCorporationsGraph}
+                                    onToggle=${() => setShowCorporationsGraph(!showCorporationsGraph)}
+                                />
+                                ${showCorporationsGraph ? html`
                                     <div class="flex-1 min-h-0 overflow-auto">
                                         <${OwnershipGraph} showOwners=${false} showSubsidiaries=${true} />
                                     </div>
-                                </div>
-                            ` : html`
-                                <div class="flex flex-col items-center">
-                                    ${renderLines(myCorporationsReport,
-                                        ({ id }) => api.setViewAsset(id),
-                                        ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
-                                            <${Button}
-                                                class="btn red flex-1 mx-1"
-                                                onClick=${() => api.toggleCompanyAutopilot(id)}>
-                                                    AutoPilot
-                                            </button>
-                                            <${Button}
-                                                class="btn brown flex-1 mx-1"
-                                                onClick=${() => api.changeActingAs(id)}>
-                                                    Act As
-                                            </button>
-                                        </div>` : '', hyperlinkRegex)}
-                                </div>
-                            `}
+                                ` : html`
+                                    <div class="flex flex-col items-center">
+                                        ${renderLines(myCorporationsReport,
+                                            ({ id }) => api.setViewAsset(id),
+                                            ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
+                                                <${Button}
+                                                    class="btn red flex-1 mx-1"
+                                                    onClick=${() => api.toggleCompanyAutopilot(id)}>
+                                                        AutoPilot
+                                                </button>
+                                                <${Button}
+                                                    class="btn brown flex-1 mx-1"
+                                                    onClick=${() => api.changeActingAs(id)}>
+                                                        Act As
+                                                </button>
+                                            </div>` : '', hyperlinkRegex)}
+                                    </div>
+                                `}
+                            </div>
                         <//>
                     <//>
                 </div>

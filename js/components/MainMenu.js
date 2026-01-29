@@ -17,6 +17,17 @@ const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
     {
+        ver: "v10.0.13",
+        items: [
+            "Fix Info modal content not scrolling when too tall",
+            "Hide tabs and buttons if active entity is in industry which does not support them",
+            "Text/Graph toggle button in Shareholders and My Corporations tab",
+            "Advanced Options auto-trade expiration year/month selection is now dropdown of all available expirations",
+            "Fix Advanced Options auto-trade setting target as acting company when target was chosen via company select modal",
+            "Fix blank options price box in Advanced Options due to white text white background",
+        ]
+    },
+    {
         ver: "v10.0.12",
         items: [
             "Can now start game with more than 1 computer player and rename them like normal",

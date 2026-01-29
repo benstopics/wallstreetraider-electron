@@ -49,7 +49,42 @@ function OptionsTab() {
 
     return html`
             <div class="flex flex-col w-full">
-                <br />
+                <div class="flex flex-col items-center mb-2">
+                    <div class="flex flex-row justify-center gap-2 mt-2" style="height:30px">
+                        <${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${() => api.buyCalls(0)}
+                            label="Buy Calls"
+                            color="green"
+                        />
+                        <${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${() => api.sellCalls(0)}
+                            label="Sell Calls"
+                            color="red"
+                        />
+                        <${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${() => api.buyPuts(0)}
+                            label="Buy Puts"
+                            color="green"
+                        />
+                        <${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${() => api.sellPuts(0)}
+                            label="Sell Puts"
+                            color="red"
+                        />
+                    </div>
+                    ${!isActiveEntityETF ? html`<div class="flex flex-row justify-center mt-2" style="height:30px">
+                        <${DisabledTooltipButton}
+                            disabledMessage=${getActingAsDisabledMessage()}
+                            onClick=${api.advancedOptionsTrading}
+                            label="Advanced Options"
+                            color="green"
+                        />
+                    </div>` : ''}
+                </div>
                 <div class="flex flex-col flex-[3] items-center">
                     ${renderLines(
                         optionsList,
