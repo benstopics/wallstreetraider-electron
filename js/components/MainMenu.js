@@ -17,6 +17,14 @@ const DISCORD_WIDGET = 'assets/discord-widget.png';
 
 const CHANGELOG = [
     {
+        ver: "v10.0.14",
+        items: [
+            "Fix scrolling on all modals where footer cutoff when content too tall",
+            "Shift modal over when tutorial tooltip active to avoid overlap",
+            "Make toolbar buttons wrap on higher zoom levels",
+        ]
+    },
+    {
         ver: "v10.0.13",
         items: [
             "Fix Info modal content not scrolling when too tall",

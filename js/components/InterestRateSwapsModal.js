@@ -259,180 +259,175 @@ export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit
     };
 
     return html`
-    <${Modal} show=${show}>
-      <div class="text-lg font-bold">${headerTitle}</div>
+    <${Modal} show=${show} style="display: flex; flex-direction: column;">
+      <div class="flex-1 min-h-0 p-3 overflow-y-auto">
+        <div class="text-lg font-bold">${headerTitle}</div>
 
-      <div class="mt-3 grid grid-cols-12 border-t border-gray-300">
-        <!-- Rate Type -->
-        <div class="col-span-12">
-          <div class="flex mt-2 w-full gap-2 items-start">
-            <div class="w-1/4 text-md">
-              <div class="mb-2">Rate Type:</div>
-            </div>
-            <div class="w-3/4 flex flex-col items-center">
-              <select
-                class="basic text-center w-full"
-                value=${mergedState.rateType}
-                onChange=${(e) => setField('rateType', e.target.value)}
-              >
-                ${Object.entries(rateTypeOptions).map(([key, { description }]) =>
-                    html`<option value=${key}>${description}</option>`
-                )}
-              </select>
-              <div class="flex justify-center mt-2" style="width: 300px; height: 100px">
-                <${AssetPriceChart} chartTitle=${rateTypeOptions[mergedState.rateType]?.description} assetId=${rateTypeOptions[mergedState.rateType]?.bondId} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Position -->
-        <div class="col-span-12">
-          <div class="flex items-center mt-2 w-full gap-2">
-            <div class="w-1/4 text-right">Position:</div>
-            <div class="w-3/4">
-              <select
-                class="basic text-center w-full"
-                value=${mergedState.position}
-                onChange=${(e) => setField('position', e.target.value)}
-              >
-                <option value="LONG">Long Position (Receive fixed rate during term)</option>
-                <option value="SHORT">Short Position (Pay fixed rate during term)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Amount -->
-        <div class="col-span-12">
-          <div class="flex items-center mt-2 w-full gap-2">
-            <div class="w-1/4 text-right text-md">Notional Amount:</div>
-            <div class="w-1/4">
-              <input
-                type="text"
-                class=${inputClass(!!errors.notionalMillions)}
-                value=${mergedState.notionalMillions}
-                onInput=${(e) => {
-            api.formatThousandsPreserveCaret(e);
-            setField('notionalMillions', e.target.value);
-        }}
-              />
-            </div>
-            <div class="w-2/4 text-sm">Notional amount on which interest is to be computed (in millions)</div>
-          </div>
-          <div class="flex items-start w-full gap-2">
-            <div class="w-1/4 text-right text-md"></div>
-            <div class="w-1/4">
-              ${errors.notionalMillions
-            ? html`<div class="text-red-600 text-sm">${errors.notionalMillions.msg}</div>`
-            : null}
-            </div>
-          </div>
-        </div>
-
-        <!-- Dates -->
-        <div class="col-span-12 p-3 border-b border-gray-300">
-          <div class="grid grid-cols-12 gap-3">
-            <div class="col-span-12 md:col-span-6">
-              <div class="mb-2">Beginning Quarter / Year:</div>
-              <div class="grid grid-cols-12 gap-2">
-                <div class="col-span-6">
-                  <input
-                    type="number"
-                    min="1"
-                    max="4"
-                    class=${inputClass(!!errors.beginQuarter)}
-                    value=${mergedState.beginQuarter}
-                    onInput=${(e) => setField('beginQuarter', e.target.value)}
-                    onBlur=${(e) => {
-            const raw = toStr(e.target.value).trim();
-            if (!raw) return;
-            const clamped = clampInt(raw, 1, 4);
-            if (clamped != null) setField('beginQuarter', String(clamped));
-        }}
-                  />
-                  ${errors.beginQuarter ? html`<div class="text-red-600 text-sm mt-1">${errors.beginQuarter.msg}</div>` : null}
-                </div>
-                <div class="col-span-6">
-                  <input
-                    type="number"
-                    class=${inputClass(!!errors.beginYear)}
-                    value=${mergedState.beginYear}
-                    onInput=${(e) => setField('beginYear', e.target.value)}
-                  />
-                  ${errors.beginYear ? html`<div class="text-red-600 text-sm mt-1">${errors.beginYear.msg}</div>` : null}
-                </div>
-              </div>
-            </div>
-
-            <div class="col-span-12 md:col-span-6">
-              <div class="mb-2">Final Quarter / Year:</div>
-              <div class="grid grid-cols-12 gap-2">
-                <div class="col-span-6">
-                  <input
-                    type="number"
-                    min="1"
-                    max="4"
-                    class=${inputClass(!!errors.endQuarter)}
-                    value=${mergedState.endQuarter}
-                    onInput=${(e) => setField('endQuarter', e.target.value)}
-                    onBlur=${(e) => {
-            const raw = toStr(e.target.value).trim();
-            if (!raw) return;
-            const clamped = clampInt(raw, 1, 4);
-            if (clamped != null) setField('endQuarter', String(clamped));
-        }}
-                  />
-                  ${errors.endQuarter ? html`<div class="text-red-600 text-sm mt-1">${errors.endQuarter.msg}</div>` : null}
-                </div>
-                <div class="col-span-6">
-                  <input
-                    type="number"
-                    class=${inputClass(!!errors.endYear)}
-                    value=${mergedState.endYear}
-                    onInput=${(e) => setField('endYear', e.target.value)}
-                  />
-                  ${errors.endYear ? html`<div class="text-red-600 text-sm mt-1">${errors.endYear.msg}</div>` : null}
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      ${mergedState.summaryMessageType > 0 && html`
-        <div class="mt-3 text-sm border border-gray-300 p-2">
-          <div class=${`font-bold ${mergedState.summaryMessageType == 3
-                ? 'negative'
-                : mergedState.summaryMessageType == 2
-                    ? 'text-yellow-600'
-                    : ''
-            }`}>
-            ${renderMultilineText(mergedState.summaryMessage)}
-          </div>
-        </div>
-      `}
-
-          </div> <!-- close grid grid-cols-12 -->
-  
-          <div class="mt-3 text-sm p-2 w-full">
-            Select type of swap and position, notional principal amount, and applicable dates.
-            Click 'OFFER' to find a counter-offer or acceptance of your offer from a counterparty for this proposed interest rate swap
-          </div>
-  
-          <!-- Actions -->
+        <div class="mt-3 grid grid-cols-12 border-t border-gray-300">
+          <!-- Rate Type -->
           <div class="col-span-12">
-          
-        <!-- Actions -->
-        <div class="col-span-12">
-          <div class="mt-3 flex flex-wrap gap-2 justify-end items-center">
-            <div class="flex gap-2">
-              <${Button} class="btn modal green" onClick=${() => submit()} disabled=${hasBlockingErrors}>
-                OFFER
-              </button>
-              <${Button} class="btn modal" onClick=${() => exit()}>EXIT</button>
+            <div class="flex mt-2 w-full gap-2 items-start">
+              <div class="w-1/4 text-md">
+                <div class="mb-2">Rate Type:</div>
+              </div>
+              <div class="w-3/4 flex flex-col items-center">
+                <select
+                  class="basic text-center w-full"
+                  value=${mergedState.rateType}
+                  onChange=${(e) => setField('rateType', e.target.value)}
+                >
+                  ${Object.entries(rateTypeOptions).map(([key, { description }]) =>
+                      html`<option value=${key}>${description}</option>`
+                  )}
+                </select>
+                <div class="flex justify-center mt-2" style="width: 300px; height: 100px">
+                  <${AssetPriceChart} chartTitle=${rateTypeOptions[mergedState.rateType]?.description} assetId=${rateTypeOptions[mergedState.rateType]?.bondId} />
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- Position -->
+          <div class="col-span-12">
+            <div class="flex items-center mt-2 w-full gap-2">
+              <div class="w-1/4 text-right">Position:</div>
+              <div class="w-3/4">
+                <select
+                  class="basic text-center w-full"
+                  value=${mergedState.position}
+                  onChange=${(e) => setField('position', e.target.value)}
+                >
+                  <option value="LONG">Long Position (Receive fixed rate during term)</option>
+                  <option value="SHORT">Short Position (Pay fixed rate during term)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Amount -->
+          <div class="col-span-12">
+            <div class="flex items-center mt-2 w-full gap-2">
+              <div class="w-1/4 text-right text-md">Notional Amount:</div>
+              <div class="w-1/4">
+                <input
+                  type="text"
+                  class=${inputClass(!!errors.notionalMillions)}
+                  value=${mergedState.notionalMillions}
+                  onInput=${(e) => {
+              api.formatThousandsPreserveCaret(e);
+              setField('notionalMillions', e.target.value);
+          }}
+                />
+              </div>
+              <div class="w-2/4 text-sm">Notional amount on which interest is to be computed (in millions)</div>
+            </div>
+            <div class="flex items-start w-full gap-2">
+              <div class="w-1/4 text-right text-md"></div>
+              <div class="w-1/4">
+                ${errors.notionalMillions
+              ? html`<div class="text-red-600 text-sm">${errors.notionalMillions.msg}</div>`
+              : null}
+              </div>
+            </div>
+          </div>
+
+          <!-- Dates -->
+          <div class="col-span-12 p-3 border-b border-gray-300">
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-12 md:col-span-6">
+                <div class="mb-2">Beginning Quarter / Year:</div>
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-6">
+                    <input
+                      type="number"
+                      min="1"
+                      max="4"
+                      class=${inputClass(!!errors.beginQuarter)}
+                      value=${mergedState.beginQuarter}
+                      onInput=${(e) => setField('beginQuarter', e.target.value)}
+                      onBlur=${(e) => {
+              const raw = toStr(e.target.value).trim();
+              if (!raw) return;
+              const clamped = clampInt(raw, 1, 4);
+              if (clamped != null) setField('beginQuarter', String(clamped));
+          }}
+                    />
+                    ${errors.beginQuarter ? html`<div class="text-red-600 text-sm mt-1">${errors.beginQuarter.msg}</div>` : null}
+                  </div>
+                  <div class="col-span-6">
+                    <input
+                      type="number"
+                      class=${inputClass(!!errors.beginYear)}
+                      value=${mergedState.beginYear}
+                      onInput=${(e) => setField('beginYear', e.target.value)}
+                    />
+                    ${errors.beginYear ? html`<div class="text-red-600 text-sm mt-1">${errors.beginYear.msg}</div>` : null}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <div class="mb-2">Final Quarter / Year:</div>
+                <div class="grid grid-cols-12 gap-2">
+                  <div class="col-span-6">
+                    <input
+                      type="number"
+                      min="1"
+                      max="4"
+                      class=${inputClass(!!errors.endQuarter)}
+                      value=${mergedState.endQuarter}
+                      onInput=${(e) => setField('endQuarter', e.target.value)}
+                      onBlur=${(e) => {
+              const raw = toStr(e.target.value).trim();
+              if (!raw) return;
+              const clamped = clampInt(raw, 1, 4);
+              if (clamped != null) setField('endQuarter', String(clamped));
+          }}
+                    />
+                    ${errors.endQuarter ? html`<div class="text-red-600 text-sm mt-1">${errors.endQuarter.msg}</div>` : null}
+                  </div>
+                  <div class="col-span-6">
+                    <input
+                      type="number"
+                      class=${inputClass(!!errors.endYear)}
+                      value=${mergedState.endYear}
+                      onInput=${(e) => setField('endYear', e.target.value)}
+                    />
+                    ${errors.endYear ? html`<div class="text-red-600 text-sm mt-1">${errors.endYear.msg}</div>` : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        ${mergedState.summaryMessageType > 0 ? html`
+          <div class="mt-3 text-sm border border-gray-300 p-2">
+            <div class=${`font-bold ${mergedState.summaryMessageType == 3
+                  ? 'negative'
+                  : mergedState.summaryMessageType == 2
+                      ? 'text-yellow-600'
+                      : ''
+              }`}>
+              ${renderMultilineText(mergedState.summaryMessage)}
+            </div>
+          </div>
+        ` : ''}
+
+        </div> <!-- close grid grid-cols-12 -->
+
+        <div class="mt-3 text-sm p-2 w-full">
+          Select type of swap and position, notional principal amount, and applicable dates.
+          Click 'OFFER' to find a counter-offer or acceptance of your offer from a counterparty for this proposed interest rate swap
+        </div>
+      </div>
+
+      <div class="flex justify-end items-center p-3 flex-shrink-0">
+        <div class="flex gap-2">
+          <${Button} class="btn modal green" onClick=${() => submit()} disabled=${hasBlockingErrors}>
+            OFFER
+          </button>
+          <${Button} class="btn modal" onClick=${() => exit()}>EXIT</button>
         </div>
       </div>
     <//>

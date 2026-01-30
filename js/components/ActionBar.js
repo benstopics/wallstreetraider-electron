@@ -1,5 +1,6 @@
 import { html } from '../lib/preact.standalone.module.js';
 import DropdownMenu from './DropdownMenu.js';
+import { insertCurrencySymbols } from './helpers.js';
 import * as api from '../api.js';
 
 /**
@@ -10,8 +11,10 @@ export default function ActionBar() {
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
+    const actingAsSymbol = api.useGameStore(s => s.gameState.actingAsSymbol);
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
+    const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
     const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
     const chairedCompanyId = api.useGameStore(s => s.gameState.chairedCompanyId);
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
@@ -496,6 +499,14 @@ export default function ActionBar() {
     }
 
     // ==================== HOSTILE DROPDOWN ====================
+    // Helper to build dynamic lawsuit/hostile action labels
+    const buildVsLabel = (action) => actingAsSymbol && activeEntitySymbol
+        ? insertCurrencySymbols(`${action} ${actingAsSymbol} vs ${activeEntitySymbol}`)
+        : action;
+    const buildTargetLabel = (action) => activeEntitySymbol
+        ? insertCurrencySymbols(`${action} ${activeEntitySymbol}`)
+        : action;
+
     const hostileItems = [
         { header: 'Legal' },
         {
@@ -504,7 +515,7 @@ export default function ActionBar() {
             color: 'blue'
         },
         {
-            label: `Antitrust Lawsuit`,
+            label: buildVsLabel('Antitrust Lawsuit'),
             onClick: () => api.antitrustLawsuit(activeEntityNum),
             disabled: isActiveEntityETF || actingAsId === activeEntityNum || actingAsId === api.HUMAN1_ID || actingAsIndustryId !== activeIndustryId || playerControlsActive,
             disabledMessage: isActiveEntityETF ? "Not available for ETFs"
@@ -516,11 +527,12 @@ export default function ActionBar() {
             color: 'red'
         },
         {
-            label: `Harassing Lawsuit`,
+            label: buildVsLabel('Harassing Lawsuit'),
             onClick: () => api.harrassingLawsuit(activeEntityNum),
-            disabled: isActiveEntityETF || !actingAs || playerControlsActive,
+            disabled: isActiveEntityETF || !actingAs || actingAsId === activeEntityNum || playerControlsActive,
             disabledMessage: isActiveEntityETF ? "Not available for ETFs"
                 : !actingAs ? "Must be acting as a company"
+                : actingAsId === activeEntityNum ? "Cannot sue yourself"
                 : playerControlsActive ? "Cannot sue controlled company"
                 : false,
             color: 'red'
@@ -528,11 +540,12 @@ export default function ActionBar() {
         { divider: true },
         { header: 'Reputation' },
         {
-            label: `Spread Rumors`,
+            label: buildTargetLabel('Spread Rumors about'),
             onClick: () => api.spreadRumors(activeEntityNum),
-            disabled: isActiveEntityETF || !actingAs || playerControlsActive,
+            disabled: isActiveEntityETF || !actingAs || actingAsId === activeEntityNum || playerControlsActive,
             disabledMessage: isActiveEntityETF ? "Not available for ETFs"
                 : !actingAs ? "Must be acting as a company"
+                : actingAsId === activeEntityNum ? "Cannot target yourself"
                 : playerControlsActive ? "Cannot target controlled company"
                 : false,
             color: 'red'
@@ -554,10 +567,12 @@ export default function ActionBar() {
             color: 'green'
         },
         {
-            label: 'Merger',
+            label: buildTargetLabel('Merger with'),
             onClick: api.merger,
-            disabled: !!mustActAsCompany || isActiveEntityETF,
-            disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
+            disabled: !!mustActAsCompany || isActiveEntityETF || actingAsId === activeEntityNum,
+            disabledMessage: mustActAsCompany
+                || (isActiveEntityETF ? "Not available for ETFs" : false)
+                || (actingAsId === activeEntityNum ? "Cannot merge with yourself" : false),
             color: 'green'
         },
         { divider: true },

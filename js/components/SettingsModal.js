@@ -58,7 +58,7 @@ function SettingsModal({ children }) {
             <div ref=${triggerRef} onClick=${toggleOpen}>
                 ${children}
             </div>
-            ${isOpen && html`
+            ${isOpen ? html`
                 <div ref=${popoverRef} class="toolbar-menu-popover" style="position: absolute; top: 100%; right: 0; z-index: 1000;">
                     <${Button} class="toolbar-menu-item" data-tutorial="display-button" onClick=${handleDisplayClick}>${insertCurrencySymbols("Display")}</button>
                     <div class="toolbar-menu-sep"></div>
@@ -73,7 +73,7 @@ function SettingsModal({ children }) {
                     <${SettingItem} label="${insertCurrencySymbols("Tooltips")}" isOn=${tooltipsSetting} onToggle=${() => api.tooltipsSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Shareholder Graph")}" isOn=${shareholderGraphSetting} onToggle=${() => api.shareholderGraphSelect()} />
                 </div>
-            `}
+            ` : ''}
         </div>
     `;
 }

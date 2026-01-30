@@ -61,9 +61,9 @@ export default function TutorialOverlay({ selector, enabled }) {
 
     return html`
         <div class="tutorial-overlay">
-            ${spotlightStyle && html`
+            ${spotlightStyle ? html`
                 <div class="tutorial-spotlight" style=${spotlightStyle}></div>
-            `}
+            ` : ''}
         </div>
     `;
 }

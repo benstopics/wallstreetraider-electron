@@ -126,11 +126,11 @@ const IndustrialView = () => {
                                             color="green"
                                             dataTutorial="buy-stock"
                                         />
-                                        ${canShortStock && html`<${DisabledTooltipButton}
+                                        ${canShortStock ? html`<${DisabledTooltipButton}
                                             onClick=${() => api.shortStock(actingAs ? 0 : activeEntityNum)}
                                             label="Short Stock"
                                             color="green"
-                                        />`}
+                                        />` : ''}
                                         ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
                                             disabledMessage=${buyBondDisabledMessage}
                                             onClick=${() => api.buyCorporateBond(actingAs ? 0 : activeEntityNum)}
@@ -170,9 +170,9 @@ const IndustrialView = () => {
                                         />
                                     </div>` : ''}
                                 </div>
-                                ${!isActiveEntityETF && html`<div class="flex flex-[1.75] min-h-0">
+                                ${!isActiveEntityETF ? html`<div class="flex flex-[1.75] min-h-0">
                                     ${html`<${EPSChart} epsData=${extractEPSData(financialProfile)} />`}
-                                </div>`}
+                                </div>` : ''}
                                 <div class="flex flex-[4] min-h-0">
                                     ${html`<${AdvisorySummary} />`}
                                 </div>
@@ -202,12 +202,12 @@ const IndustrialView = () => {
                     <${Tab} label="Swaps" id=${api.UI_CORP_SWAPS_PORTFOLIO}>
                         <${InterestRateSwapsTab} />
                     <//>
-                    ${![api.BANK_IND, api.INSURANCE_IND].includes(activeIndustryId) && html`<${Tab} label="Options" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
+                    ${![api.BANK_IND, api.INSURANCE_IND].includes(activeIndustryId) ? html`<${Tab} label="Options" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
                         <${OptionsTab} />
-                    <//>`}
-                    ${activeIndustryId != api.BANK_IND && html`<${Tab} label="Commodities & Crypto" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
+                    <//>` : ''}
+                    ${activeIndustryId != api.BANK_IND ? html`<${Tab} label="Commodities & Crypto" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
                         ${html`<${CommoditiesTab} />`}
-                    <//>`}
+                    <//>` : ''}
                     <${Tab} label="Shareholders" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
                         <div class="flex flex-col h-full">
                             <${OwnershipViewToggle}

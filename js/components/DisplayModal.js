@@ -51,66 +51,68 @@ function DisplayModal({ show, onClose }) {
     const counterScale = getCounterScale(zoomLevel);
 
     return html`
-        <${Modal} show=${show} onClose=${onClose} style="width: 280px; max-width: 280px; transform: scale(${counterScale}); transform-origin: center center;">
-            <div style="margin-bottom: 16px;">
-                <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Display Settings</h2>
-            </div>
+        <${Modal} show=${show} onClose=${onClose} style="display: flex; flex-direction: column; width: 280px; max-width: 280px; transform: scale(${counterScale}); transform-origin: center center;">
+            <div class="flex-1 min-h-0 p-3 overflow-y-auto">
+                <div style="margin-bottom: 16px;">
+                    <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Display Settings</h2>
+                </div>
 
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 12px; font-size: 13px; color: #ccc;">Zoom Level</label>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 12px; font-size: 13px; color: #ccc;">Zoom Level</label>
 
-                <div style="display: flex; align-items: center; justify-content: center; gap: 16px;">
-                    <${Button}
-                        onClick=${handleZoomOut}
-                        style="
-                            width: 36px;
-                            height: 36px;
-                            border-radius: 50%;
-                            border: 1px solid #555;
-                            background: #333;
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 16px;">
+                        <${Button}
+                            onClick=${handleZoomOut}
+                            style="
+                                width: 36px;
+                                height: 36px;
+                                border-radius: 50%;
+                                border: 1px solid #555;
+                                background: #333;
+                                color: #fff;
+                                font-size: 20px;
+                                cursor: pointer;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            "
+                        >
+                            −
+                        </button>
+
+                        <div style="
+                            min-width: 80px;
+                            text-align: center;
+                            font-size: 24px;
+                            font-weight: 500;
                             color: #fff;
-                            font-size: 20px;
-                            cursor: pointer;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        "
-                    >
-                        −
-                    </button>
+                        ">
+                            ${zoomPercent}%
+                        </div>
 
-                    <div style="
-                        min-width: 80px;
-                        text-align: center;
-                        font-size: 24px;
-                        font-weight: 500;
-                        color: #fff;
-                    ">
-                        ${zoomPercent}%
+                        <${Button}
+                            onClick=${handleZoomIn}
+                            style="
+                                width: 36px;
+                                height: 36px;
+                                border-radius: 50%;
+                                border: 1px solid #555;
+                                background: #333;
+                                color: #fff;
+                                font-size: 20px;
+                                cursor: pointer;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            "
+                        >
+                            +
+                        </button>
                     </div>
-
-                    <${Button}
-                        onClick=${handleZoomIn}
-                        style="
-                            width: 36px;
-                            height: 36px;
-                            border-radius: 50%;
-                            border: 1px solid #555;
-                            background: #333;
-                            color: #fff;
-                            font-size: 20px;
-                            cursor: pointer;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        "
-                    >
-                        +
-                    </button>
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: center; gap: 12px;">
+            <div class="flex justify-center gap-3 p-3 flex-shrink-0">
                 <${Button}
                     onClick=${handleReset}
                     style="

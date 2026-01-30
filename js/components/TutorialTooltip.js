@@ -301,11 +301,11 @@ export default function TutorialTooltip() {
                 class="tutorial-tooltip-content"
                 dangerouslySetInnerHTML=${{ __html: activeTooltip.content }}
             ></div>
-            ${showTutorialAdvice && html`
+            ${showTutorialAdvice ? html`
                 <div class="tutorial-action" style="margin-top: 14px;">
                     <strong>For this tutorial:</strong> <span dangerouslySetInnerHTML=${{ __html: activeTooltip.tutorialAdvice }}></span>
                 </div>
-            `}
+            ` : null}
             <div class="tutorial-tooltip-hint">
                 To disable these tips, go to Settings and turn off "Tooltips"
             </div>

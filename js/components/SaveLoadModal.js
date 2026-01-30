@@ -111,20 +111,20 @@ export default function SaveLoadModal({ show, onClose, mode = 'load' }) {
     const title = mode === 'save' ? 'Save Game' : 'Load Game';
 
     return html`
-        <${Modal} show=${show} onClose=${onClose}>
-            <div style="min-width: 500px; max-width: 700px;">
+        <${Modal} show=${show} onClose=${onClose} style="display: flex; flex-direction: column; min-width: 500px; max-width: 700px;">
+            <div class="flex-1 min-h-0 p-3 overflow-y-auto">
                 <div class="text-lg font-bold text-center mb-4">${insertCurrencySymbols(title)}</div>
 
-                ${error && html`
+                ${error ? html`
                     <div class="bg-red-900 text-white p-2 rounded mb-4">${error}</div>
-                `}
+                ` : ''}
 
                 ${loading ? html`
                     <div class="text-center py-8">Loading saves...</div>
                 ` : saves.length === 0 ? html`
                     <div class="text-center py-8 text-gray-400">No save files found</div>
                 ` : html`
-                    <div class="max-h-80 overflow-y-auto">
+                    <div>
                         <table class="w-full text-sm">
                             <thead class="sticky top-0 bg-gray-800">
                                 <tr>
@@ -161,17 +161,17 @@ export default function SaveLoadModal({ show, onClose, mode = 'load' }) {
                         </table>
                     </div>
                 `}
+            </div>
 
-                <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-600">
-                    ${mode !== 'load' && html`
-                        <${Button} class="btn green" onClick=${() => setShowSaveAs(true)}>
-                            ${insertCurrencySymbols("Save As...")}
-                        <//>
-                    `}
-                    <${Button} class="btn" onClick=${onClose}>
-                        ${insertCurrencySymbols("Close")}
+            <div class="flex justify-between items-center p-3 border-t border-gray-600 flex-shrink-0">
+                ${mode !== 'load' ? html`
+                    <${Button} class="btn green" onClick=${() => setShowSaveAs(true)}>
+                        ${insertCurrencySymbols("Save As...")}
                     <//>
-                </div>
+                ` : ''}
+                <${Button} class="btn" onClick=${onClose}>
+                    ${insertCurrencySymbols("Close")}
+                <//>
             </div>
 
             <!-- Delete Confirmation Modal -->

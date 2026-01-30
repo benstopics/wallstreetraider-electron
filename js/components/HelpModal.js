@@ -1200,7 +1200,7 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
             disabled=${!indexReady}
             onInput=${(e) => setSearchQuery(e.target.value)}
           />
-          ${searchQuery && html`
+          ${searchQuery ? html`
             <${Button}
               type="button"
               class="help-search-clear"
@@ -1212,7 +1212,7 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
             }}
               title="Clear search"
             >×</button>
-          `}
+          ` : ''}
         </div>
         <!--<div class="help-search-mode-toggle">
           <label class="help-search-mode-label">Search Mode:</label>
@@ -1238,11 +1238,11 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
             <small>Using <strong>${searchMode === 'fast' ? 'Fast' : 'Deep'}</strong> search${searchMode === 'fast' && !indexReady ? ' (building index...)' : ''}</small>
           </div>
         `}-->
-        ${searchQuery && searchResults && searchResults.length === 0 && html`
+        ${searchQuery && searchResults && searchResults.length === 0 ? html`
           <div class="help-no-results">
             No results found for "${searchQuery}"
           </div>
-        `}
+        ` : ''}
         ${isSnippetMode ? html`
           <ul class="help-search-results">
             ${displayStructure.map((result, index) => {
@@ -1270,10 +1270,10 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
                 >
                   <div class="search-result-path">
                     <span class="search-result-chapter">${result.chapterLabel}</span>
-                    ${result.sectionLabel !== result.chapterLabel && html`
+                    ${result.sectionLabel !== result.chapterLabel ? html`
                       <span class="search-result-separator">›</span>
                       <span class="search-result-section">${result.sectionLabel}</span>
-                    `}
+                    ` : ''}
                   </div>
                   <div class="search-result-snippet">
                     ${beforeMatch}<mark class="snippet-match">${matchText}</mark>${afterMatch}
@@ -1309,7 +1309,7 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
           and is a work in progress. Some UI descriptions and navigation instructions may differ
           from W$R v10 Remastered.</strong></p>
         </blockquote>
-        ${ContentComponent && html`<${ContentComponent} helpLink=${helpLink} />`}
+        ${ContentComponent ? html`<${ContentComponent} helpLink=${helpLink} />` : ''}
       </div>
     <//>
   `;

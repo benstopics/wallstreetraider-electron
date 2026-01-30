@@ -241,8 +241,9 @@ export default function KeybindsModal({ show, onClose }) {
       show=${show}
       onClose=${close}
       class="modal-card keybinds-modal"
+      style="display: flex; flex-direction: column;"
     >
-      <div class="flex flex-row justify-between items-center mb-2">
+      <div class="flex flex-row justify-between items-center p-3 flex-shrink-0">
         <div>
           <div class="text-lg font-bold">Hotkeys</div>
           <div class="text-xs opacity-70">Set shortcuts for UI tools and for switching <b>Acting As</b>.</div>
@@ -253,9 +254,9 @@ export default function KeybindsModal({ show, onClose }) {
         </div>
       </div>
 
-      <div class="flex flex-row gap-2" style="flex: 1; min-height: 0;">
+      <div class="flex flex-row gap-2 flex-1 min-h-0 px-3 overflow-y-auto">
         <!-- Left: UI hotkeys -->
-        <div class="border keybinds-panel" style="padding:10px; flex: 1; overflow: hidden;">
+        <div class="border keybinds-panel" style="padding:10px; flex: 1; overflow-y: auto;">
           <div class="font-bold mb-2">UI Hotkeys</div>
           <div class="keybinds-grid one">
             <div class="font-bold">Action</div>
@@ -289,7 +290,7 @@ export default function KeybindsModal({ show, onClose }) {
         </div>
 
         <!-- Right: Company hotkeys -->
-        <div class="border keybinds-panel" style="padding:10px; flex: 1; overflow: hidden;">
+        <div class="border keybinds-panel" style="padding:10px; flex: 1; overflow-y: auto;">
           <div class="font-bold mb-2">Company Hotkeys</div>
           <div class="keybinds-grid one">
           <div class="font-bold">Entity</div>
@@ -326,7 +327,7 @@ export default function KeybindsModal({ show, onClose }) {
         </div>
       </div>
 
-      <div class="text-xs opacity-70 mt-2">
+      <div class="text-xs opacity-70 p-3 flex-shrink-0">
         Notes: Space is reserved for the ticker (pause/run). While this window is open, global hotkeys are disabled.
       </div>
     <//>

@@ -56,67 +56,69 @@ function Toolbar() {
                         <${isTickerRunning ? StopIcon : PlayIcon} />
                     </div>
                 </div>
-                <div style="height: 20px" class="btn blue" onClick=${() => {
-                    setShowTickerSpeedModal(true)
-                }}>
-                    <div class="flex w-full items-center justify-center gap-1" style="">
-                        <div class="" style="width: 20px">
-                            <${GaugeIcon} />
-                        </div>
-                        <div>
-                            ${tickSpeed}
-                        </div>
-                    </div>
-                </div>
-                <div style="height: 20px" class="btn" onClick=${() => {
-                    api.runTicker()
-                }}>
-                    <div class="flex w-full items-center justify-center gap-1" style="">
-                        <div class="" style="width: 20px">
-                            <${ForwardIcon} />
+                <div class="flex flex-wrap items-center gap-2">
+                    <div style="height: 20px" class="btn blue" onClick=${() => {
+                        setShowTickerSpeedModal(true)
+                    }}>
+                        <div class="flex w-full items-center justify-center gap-1" style="">
+                            <div class="" style="width: 20px">
+                                <${GaugeIcon} />
+                            </div>
+                            <div>
+                                ${tickSpeed}
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="btn green" onClick=${() => {
-                    api.saveGame()
-                }}>
-                    <!--<div class="mr-1" style="width: 7px">
-                        <${SaveIcon} />
-                    </div>-->
-                    <span style="white-space: nowrap;">
-                        ${insertCurrencySymbols("Save Game")}
-                    </span>
-                </div>
-                <div class="btn green" onClick=${() => {
-                    api.saveGameAs()
-                }}>
-                    <!--<div class="mr-1" style="width: 7px">
-                        <${SaveIcon} />
-                    </div>-->
-                    <span style="white-space: nowrap;">
-                        ${insertCurrencySymbols("Save As")}
-                    </span>
-                </div>
-                <div class="btn" onClick=${() => {
-                    api.exitGame()
-                }}>
-                    <span style="white-space: nowrap;">
-                        ${insertCurrencySymbols("Exit Game")}
-                    </span>
-                </div>
-                <${SettingsModal}>
-                    <div class="btn" data-tutorial="settings-dropdown">
-                        <span style="white-space: nowrap;">${insertCurrencySymbols("Settings")}</span>
+                    <div style="height: 20px" class="btn" onClick=${() => {
+                        api.runTicker()
+                    }}>
+                        <div class="flex w-full items-center justify-center gap-1" style="">
+                            <div class="" style="width: 20px">
+                                <${ForwardIcon} />
+                            </div>
+                        </div>
                     </div>
-                <//>
-                <div class="btn" data-tutorial="fullscreen-button" onClick=${() => api.toggleFullscreen()}>
-                    <span style="white-space: nowrap;">${insertCurrencySymbols("Fullscreen")}</span>
-                </div>
-                <div class="btn" onClick=${() => showTutorial()}>
-                    <span style="white-space: nowrap;">${insertCurrencySymbols("Tutorial")}</span>
-                </div>
-                <div class="btn" onClick=${() => showHelp()}>
-                    <span style="white-space: nowrap;">${insertCurrencySymbols("Help")}</span>
+                    <div class="btn green" onClick=${() => {
+                        api.saveGame()
+                    }}>
+                        <!--<div class="mr-1" style="width: 7px">
+                            <${SaveIcon} />
+                        </div>-->
+                        <span style="white-space: nowrap;">
+                            ${insertCurrencySymbols("Save Game")}
+                        </span>
+                    </div>
+                    <div class="btn green" onClick=${() => {
+                        api.saveGameAs()
+                    }}>
+                        <!--<div class="mr-1" style="width: 7px">
+                            <${SaveIcon} />
+                        </div>-->
+                        <span style="white-space: nowrap;">
+                            ${insertCurrencySymbols("Save As")}
+                        </span>
+                    </div>
+                    <div class="btn" onClick=${() => {
+                        api.exitGame()
+                    }}>
+                        <span style="white-space: nowrap;">
+                            ${insertCurrencySymbols("Exit Game")}
+                        </span>
+                    </div>
+                    <${SettingsModal}>
+                        <div class="btn" data-tutorial="settings-dropdown">
+                            <span style="white-space: nowrap;">${insertCurrencySymbols("Settings")}</span>
+                        </div>
+                    <//>
+                    <div class="btn" data-tutorial="fullscreen-button" onClick=${() => api.toggleFullscreen()}>
+                        <span style="white-space: nowrap;">${insertCurrencySymbols("Fullscreen")}</span>
+                    </div>
+                    <div class="btn" onClick=${() => showTutorial()}>
+                        <span style="white-space: nowrap;">${insertCurrencySymbols("Tutorial")}</span>
+                    </div>
+                    <div class="btn" onClick=${() => showHelp()}>
+                        <span style="white-space: nowrap;">${insertCurrencySymbols("Help")}</span>
+                    </div>
                 </div>
             </div>
             <div class="flex items-center">
@@ -124,7 +126,7 @@ function Toolbar() {
                     <${NavigationControl} />
                 </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <div class="btn" onClick=${() => api.changeLawFirm()}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Change Law Firm")}</span>
                 </div>

@@ -59,8 +59,8 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
         onSubmit(body);
     }
 
-    return html`<${Modal} show=${show}>
-        <div>
+    return html`<${Modal} show=${show} style="display: flex; flex-direction: column;">
+        <div class="flex-1 min-h-0 p-3 overflow-y-auto">
             <div class="text-lg font-bold h-full">${insertCurrencySymbols("Startup Choices")}</div>
             <br/>
             <div class="mb-4">
@@ -136,7 +136,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                         </div>
                         <div class="flex-2 p-2 text-right">${insertCurrencySymbols("(1 to 35 years)")}</div>
                     </div>
-                    <div class="flex mb-12">
+                    <div class="flex">
                         <div class="flex-2 p-2 text-right w-36">${insertCurrencySymbols("Tutorial:")}</div>
                         <div class="flex-1 p-2">
                             <label class="flex items-center gap-2 cursor-pointer">
@@ -154,8 +154,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                 </div>
             </div>
         </div>
-        <br/>
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center p-3 flex-shrink-0">
             <${Button} class="btn modal green" onClick=${submit}>${insertCurrencySymbols("Submit")}</button>
             <${Button} class="btn modal" onClick=${onCancel}>${insertCurrencySymbols("Cancel")}</button>
         </div>

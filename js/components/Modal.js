@@ -1,7 +1,9 @@
 import { useEffect, useRef, html } from '../lib/preact.standalone.module.js';
+import { useActiveTooltip } from './TutorialTooltip.js';
 
 export default function Modal({ show, onClose, enableClickOutsideClose = true, children, class: cls = '', style = '' }) {
     const cardRef = useRef(null);
+    const activeTooltip = useActiveTooltip();
 
     useEffect(() => {
         if (!show) return;
@@ -17,6 +19,10 @@ export default function Modal({ show, onClose, enableClickOutsideClose = true, c
 
     if (!show) return null;
 
+    // Shift modal to the right when tooltip is active
+    const shiftStyle = activeTooltip ? 'transform: translateX(200px);' : '';
+    const combinedStyle = style ? `${style}; ${shiftStyle}` : shiftStyle;
+
     return html`<div
         role="dialog"
         aria-modal="true"
@@ -26,7 +32,7 @@ export default function Modal({ show, onClose, enableClickOutsideClose = true, c
         <div
             ref=${cardRef}
             class=${cls?.length > 0 ? cls : 'modal-card'}
-            style=${style}
+            style=${combinedStyle}
             onClick=${e => e.stopPropagation()}
         >
             ${children}

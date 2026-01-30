@@ -63,7 +63,7 @@ const GameUI = () => {
         <!-- Toolbar -->
         <${Toolbar} />
         <div class="game-view flex flex-column gap-2 p-2">
-            ${!isDbSearch && html`
+            ${!isDbSearch ? html`
             <!-- Left Column -->
             <div class="flex flex-col w-1/6 gap-2">
                 <!-- Date and Time -->
@@ -125,7 +125,7 @@ const GameUI = () => {
                     </div>
                 </div>
             </div>
-            `}
+            ` : ''}
 
             <!-- Right Column -->
             <div class=${`flex flex-col gap-2 h-full ${isDbSearch ? 'w-full' : 'w-4/6'}`}>

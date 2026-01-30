@@ -161,8 +161,8 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
         setSelectedCompany(null);
     };
 
-    return html`<${Modal} show=${show} onClose=${handleCancel}>
-        <div>
+    return html`<${Modal} show=${show} onClose=${handleCancel} style="display: flex; flex-direction: column;">
+        <div class="flex-1 min-h-0 p-3 overflow-y-auto">
             <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
             <br/>
             <div class="mb-4">${insertCurrencySymbols(text)}</div>
@@ -214,8 +214,7 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
                 ` : null}
             </div>
         </div>
-        <br/>
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center p-3 flex-shrink-0">
             <${Button} class="btn modal green" onClick=${handleSubmit}>Submit</button>
             <${Button} class="btn modal" onClick=${handleCancel}>Cancel</button>
         </div>

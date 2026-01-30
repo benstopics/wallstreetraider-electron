@@ -115,7 +115,7 @@ export default function HelpTooltip({ children, helpId, helpLabel }) {
         >
             ${children}
         </span>
-        ${isVisible && html`
+        ${isVisible ? html`
             <div
                 ref=${tooltipRef}
                 class="help-tooltip"
@@ -136,7 +136,7 @@ export default function HelpTooltip({ children, helpId, helpLabel }) {
                     ${helpLabel || 'Learn more'} →
                 </a>
             </div>
-        `}
+        ` : ''}
     `;
 }
 

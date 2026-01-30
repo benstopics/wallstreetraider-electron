@@ -346,100 +346,102 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
     }, [mergedState.startExpRange, mergedState.endExpRange]);
 
     return html`
-    <${Modal} show=${show}>
-      <div class="text-lg font-bold h-full">${title}</div>
-      <br/>
-      <div class="text-lg font-bold mb-2">${headerTitle}</div>
+    <${Modal} show=${show} style="display: flex; flex-direction: column;">
+      <div class="flex-1 min-h-0 p-3 overflow-y-auto">
+        <div class="text-lg font-bold h-full">${title}</div>
+        <br/>
+        <div class="text-lg font-bold mb-2">${headerTitle}</div>
 
-      <${InTheMoneyChart}
-        contracts=${ROWS.flatMap((i) => {
-            const contracts = [];
-            const bsPut = mergedState[`bsPutEntry${i}`]?.trim();
-            const putStrike = parseFloatOrNull(mergedState[`putStrike${i}`]);
-            const putNumOpt = parseInt(mergedState[`putNumOpt${i}`], 10);
-            const putPrice = parseFloatOrNull(mergedState[`putPrice${i}`]);
-            if (bsPut && putStrike != null && putNumOpt != null && putPrice != null) {
-                contracts.push({
-                    type: 'PUT',
-                    bs: bsPut,
-                    strike: putStrike,
-                    pct: putNumOpt,
-                    pricePerPct: putPrice,
-                });
-            }
-            const bsCall = mergedState[`bsCallEntry${i}`]?.trim();
-            const callStrike = parseFloatOrNull(mergedState[`callStrike${i}`]);
-            const callNumOpt = parseInt(mergedState[`callNumOpt${i}`], 10);
-            const callPrice = parseFloatOrNull(mergedState[`callPrice${i}`]);
-            if (bsCall && callStrike != null && callNumOpt != null && callPrice != null) {
-                contracts.push({
-                    type: 'CALL',
-                    bs: bsCall,
-                    strike: callStrike,
-                    pct: callNumOpt,
-                    pricePerPct: callPrice,
-                });
-            }
-            return contracts;
-        })}
-        totalSharesM=${(mergedState.outstandingShares || 1000000) / 1000000}
-        currentPrice=${parseFloatOrNull(mergedState.stockPrice)}
-        theme=${api.DEFAULT_ASSET_PRICE_CHART_THEME}
-        profitColor="#008000"
-        lossColor="#FF0000"
-        breakevenLineColor="#808080"
-        points=${120}
-      />
+        <${InTheMoneyChart}
+          contracts=${ROWS.flatMap((i) => {
+              const contracts = [];
+              const bsPut = mergedState[`bsPutEntry${i}`]?.trim();
+              const putStrike = parseFloatOrNull(mergedState[`putStrike${i}`]);
+              const putNumOpt = parseInt(mergedState[`putNumOpt${i}`], 10);
+              const putPrice = parseFloatOrNull(mergedState[`putPrice${i}`]);
+              if (bsPut && putStrike != null && putNumOpt != null && putPrice != null) {
+                  contracts.push({
+                      type: 'PUT',
+                      bs: bsPut,
+                      strike: putStrike,
+                      pct: putNumOpt,
+                      pricePerPct: putPrice,
+                  });
+              }
+              const bsCall = mergedState[`bsCallEntry${i}`]?.trim();
+              const callStrike = parseFloatOrNull(mergedState[`callStrike${i}`]);
+              const callNumOpt = parseInt(mergedState[`callNumOpt${i}`], 10);
+              const callPrice = parseFloatOrNull(mergedState[`callPrice${i}`]);
+              if (bsCall && callStrike != null && callNumOpt != null && callPrice != null) {
+                  contracts.push({
+                      type: 'CALL',
+                      bs: bsCall,
+                      strike: callStrike,
+                      pct: callNumOpt,
+                      pricePerPct: callPrice,
+                  });
+              }
+              return contracts;
+          })}
+          totalSharesM=${(mergedState.outstandingShares || 1000000) / 1000000}
+          currentPrice=${parseFloatOrNull(mergedState.stockPrice)}
+          theme=${api.DEFAULT_ASSET_PRICE_CHART_THEME}
+          profitColor="#008000"
+          lossColor="#FF0000"
+          breakevenLineColor="#808080"
+          points=${120}
+        />
 
-      <div class="grid grid-cols-12 gap-2 text-sm font-bold mb-2">
-        <div class="col-span-2">Option Type</div>
-        <div class="col-span-2">Buy/Sell<br/><span class="font-normal">(B or S)</span></div>
-        <div class="col-span-2">Strike Price<br/><span class="font-normal">${strikeRangeText}</span></div>
-        <div class="col-span-2">Exp. Date<br/><span class="font-normal">${expRangeText}</span></div>
-        <div class="col-span-2">% Options<br/><span class="font-normal">(1% to 10%)</span></div>
-        <div class="col-span-2">Opt. Price</div>
-      </div>
+        <div class="grid grid-cols-12 gap-2 text-sm font-bold mb-2">
+          <div class="col-span-2">Option Type</div>
+          <div class="col-span-2">Buy/Sell<br/><span class="font-normal">(B or S)</span></div>
+          <div class="col-span-2">Strike Price<br/><span class="font-normal">${strikeRangeText}</span></div>
+          <div class="col-span-2">Exp. Date<br/><span class="font-normal">${expRangeText}</span></div>
+          <div class="col-span-2">% Options<br/><span class="font-normal">(1% to 10%)</span></div>
+          <div class="col-span-2">Opt. Price</div>
+        </div>
 
-      <div class="border-t border-gray-300 pt-2">
-        ${ROWS.map((i) => renderRow('put', i))}
-      </div>
+        <div class="border-t border-gray-300 pt-2">
+          ${ROWS.map((i) => renderRow('put', i))}
+        </div>
 
-      <div class="border-t border-gray-300 pt-2 mt-2">
-        ${ROWS.map((i) => renderRow('call', i))}
-      </div>
+        <div class="border-t border-gray-300 pt-2 mt-2">
+          ${ROWS.map((i) => renderRow('call', i))}
+        </div>
 
-      ${mergedState.summaryMessageType > 0 && html`
-        <div class="mt-3 text-sm border border-gray-300 p-2">
-          <div class=${`font-bold ${
-            mergedState.summaryMessageType == 3
-              ? 'negative'
-              : mergedState.summaryMessageType == 2
-                ? 'text-yellow-600'
-                : ''
-          }`}>
-            ${renderMultilineText(mergedState.summaryMessage)}
+        ${mergedState.summaryMessageType > 0 ? html`
+          <div class="mt-3 text-sm border border-gray-300 p-2">
+            <div class=${`font-bold ${
+              mergedState.summaryMessageType == 3
+                ? 'negative'
+                : mergedState.summaryMessageType == 2
+                  ? 'text-yellow-600'
+                  : ''
+            }`}>
+              ${renderMultilineText(mergedState.summaryMessage)}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="mt-3 text-sm">
+          Enter details for multiple options contracts, then click on SUBMIT to create all of the options at once, such as straddles, strangles, etc..
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <${Button} class="btn modal" onClick=${clearAll}>CLEAR ALL</button>
+          <${Button} class="btn modal" onClick=${onHelp}>HELP</button>
+          <${Button} class="btn modal" onClick=${onShowSizeLimits}>SHOW SIZE LIMITS</button>
+          <${Button} class="btn modal" onClick=${onAutoTrade}>AUTO-TRADE</button>
+        </div>
+
+        <div class="mt-3 flex flex-wrap gap-2">
+          <div class="flex flex-wrap gap-2">
+            <${Button} class="btn modal" onClick=${onCloseAll}>CLOSE ALL OPTIONS</button>
           </div>
         </div>
-      `}
-
-      <div class="mt-3 text-sm">
-        Enter details for multiple options contracts, then click on SUBMIT to create all of the options at once, such as straddles, strangles, etc..
       </div>
 
-      <div class="mt-4 flex flex-wrap gap-2">
-        <${Button} class="btn modal" onClick=${clearAll}>CLEAR ALL</button>
-        <${Button} class="btn modal" onClick=${onHelp}>HELP</button>
-        <${Button} class="btn modal" onClick=${onShowSizeLimits}>SHOW SIZE LIMITS</button>
-        <${Button} class="btn modal" onClick=${onAutoTrade}>AUTO-TRADE</button>
-      </div>
-
-      <div class="mt-3 flex flex-wrap gap-2">
-        <div class="flex flex-wrap gap-2">
-          <${Button} class="btn modal" onClick=${onCloseAll}>CLOSE ALL OPTIONS</button>
-        </div>
-      </div>
-
-      <div class="mt-3 flex justify-end gap-2">
+      <div class="flex justify-end gap-2 p-3 flex-shrink-0">
         <${Button} class="btn modal green" onClick=${submit} disabled=${hasBlockingErrors}>SUBMIT</button>
         <${Button} class="btn modal" onClick=${onCancel}>CLOSE</button>
       </div>

@@ -275,12 +275,12 @@ export default function TutorialModal() {
     const showOverlay = !sidebarMode || !step.sidebarMode;
 
     return html`
-        ${showOverlay && html`
+        ${showOverlay ? html`
             <${TutorialOverlay}
                 selector=${step.highlightSelector}
                 enabled=${tutorialEnabled && !sidebarMode}
             />
-        `}
+        ` : ''}
         <div
             class=${`tutorial-panel ${sidebarMode ? 'tutorial-sidebar' : ''}`}
             style=${panelStyle}
@@ -302,7 +302,7 @@ export default function TutorialModal() {
                 class="tutorial-content"
                 dangerouslySetInnerHTML=${{ __html: step.contentFn ? step.contentFn(gameState) : step.content }}
             ></div>
-            ${step.helpId && html`
+            ${step.helpId ? html`
                 <div class="tutorial-help-links">
                     <${Button}
                         class="tutorial-help-link"
@@ -312,7 +312,7 @@ export default function TutorialModal() {
                         ${insertCurrencySymbols("Learn more in Help")} →
                     </button>
                 </div>
-            `}
+            ` : ''}
             <div class="tutorial-footer">
                 <${Button} class="btn tutorial-skip" tabindex="-1" onClick=${skipTutorial}>
                     ${insertCurrencySymbols("Hide")}

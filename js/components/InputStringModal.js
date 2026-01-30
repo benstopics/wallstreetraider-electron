@@ -18,8 +18,8 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
         const lines = data[0].trim().split('\r');
         const options = data[1].trim().split('|').map(kv => kv.split('=')).map(([k, v]) => ({ value: k.trim(), label: v.trim() }));
 
-        return html`<${Modal} show=${show}>
-            <div>
+        return html`<${Modal} show=${show} style="display: flex; flex-direction: column;">
+            <div class="flex-1 min-h-0 p-3 overflow-y-auto">
                 <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
                 <br/>
                 <div class="mb-4">${renderLines(lines)}</div>
@@ -27,16 +27,15 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
                     ${options.map(opt => html`<option value=${opt.value}>${opt.label}</option>`)}
                 </select>
             </div>
-            <br/>
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center p-3 flex-shrink-0">
                 <${Button} class="btn modal green" onClick=${() => { onSubmit(inputValue); }}>Submit</button>
                 <${Button} class="btn modal" onClick=${onCancel}>Cancel</button>
             </div>
         <//>`;
     }
 
-    return html`<${Modal} show=${show}>
-        <div>
+    return html`<${Modal} show=${show} style="display: flex; flex-direction: column;">
+        <div class="flex-1 min-h-0 p-3 overflow-y-auto">
             <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
             <br/>
             <div class="mb-4">${insertCurrencySymbols(text)}</div>
@@ -52,8 +51,7 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
                 }}
             /><br/>
         </div>
-        <br/>
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center p-3 flex-shrink-0">
             <${Button} class="btn modal green" onClick=${() => { onSubmit(inputValue); }}>Submit</button>
             <${Button} class="btn modal" onClick=${onCancel}>Cancel</button>
         </div>

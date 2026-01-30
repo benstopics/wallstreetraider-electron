@@ -11,15 +11,15 @@ export default function NotesModal({ show, onClose }) {
   }, [value]);
 
   return html`
-    <${Modal} show=${show} onClose=${onClose} class="modal-card notes-modal">
-      <div class="flex flex-col" style="height: 400px;">
-        <div class="flex flex-row justify-between items-center mb-2">
-          <div class="text-lg font-bold">Notes</div>
-          <${Button} class="btn p-2" onClick=${onClose}>Close</button>
-        </div>
+    <${Modal} show=${show} onClose=${onClose} class="modal-card notes-modal" style="display: flex; flex-direction: column;">
+      <div class="flex flex-row justify-between items-center p-3 flex-shrink-0">
+        <div class="text-lg font-bold">Notes</div>
+        <${Button} class="btn p-2" onClick=${onClose}>Close</button>
+      </div>
+      <div class="flex-1 min-h-0 px-3 pb-3 overflow-y-auto">
         <textarea
-          class="flex-1 p-2 border rounded"
-          style="resize: vertical; min-height: 200px; background: var(--main-bg-color); color: var(--main-fg-color); border-color: rgba(255, 255, 255, 0.1);"
+          class="w-full h-full p-2 border rounded"
+          style="resize: none; min-height: 300px; background: var(--main-bg-color); color: var(--main-fg-color); border-color: rgba(255, 255, 255, 0.1);"
           value=${value}
           placeholder="Write here..."
           onInput=${(e) => setValue(e.target.value)}
