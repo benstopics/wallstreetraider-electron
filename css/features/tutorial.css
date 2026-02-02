@@ -64,7 +64,7 @@
 }
 
 .tutorial-step-indicator {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -72,7 +72,7 @@
 
 .tutorial-title {
   margin: 8px 0 0;
-  font-size: 18px;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--fg-primary);
 }
@@ -90,7 +90,7 @@
 
 .tutorial-content {
   padding: 16px 20px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   line-height: 1.6;
   color: var(--fg-primary);
   overflow-y: auto;
@@ -125,7 +125,7 @@
   padding: 10px 12px;
   margin: 12px 0;
   border-radius: 0 4px 4px 0;
-  font-size: 13px;
+  font-size: var(--font-size-md);
 }
 
 .tutorial-warning {
@@ -134,7 +134,7 @@
   padding: 10px 12px;
   margin: 12px 0;
   border-radius: 0 4px 4px 0;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: #fca5a5;
 }
 
@@ -145,7 +145,7 @@
   margin: 12px 0;
   border-radius: 0 4px 4px 0;
   font-family: 'Courier New', monospace;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: #86efac;
 }
 
@@ -155,7 +155,7 @@
   padding: 10px 12px;
   margin: 12px 0;
   border-radius: 0 4px 4px 0;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: #c4b5fd;
 }
 
@@ -171,7 +171,7 @@
   padding: 10px 12px;
   margin: 12px 0;
   border-radius: 0 4px 4px 0;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: #86efac;
 }
 
@@ -182,7 +182,7 @@
 /* Help links */
 .tutorial-help-links {
   padding: 8px 20px;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: #6b7280;
   border-top: 1px solid var(--border-color);
 }
@@ -245,12 +245,12 @@
 }
 
 .tutorial-sidebar .tutorial-title {
-  font-size: 15px;
+  font-size: var(--font-size-lg);
 }
 
 .tutorial-sidebar .tutorial-content {
   padding: 12px 16px;
-  font-size: 13px;
+  font-size: var(--font-size-md);
 }
 
 .tutorial-sidebar .tutorial-footer {
@@ -272,18 +272,18 @@
 }
 
 .tutorial-tooltip-icon {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
 }
 
 .tutorial-tooltip-title {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-warning);
 }
 
 .tutorial-tooltip-content {
-  font-size: 13px;
+  font-size: var(--font-size-md);
   line-height: 1.6;
   color: var(--fg-primary);
 }
@@ -313,7 +313,7 @@
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid var(--border-color);
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   color: #64748b;
   text-align: center;
 }

@@ -4,11 +4,11 @@ import * as api from '../api.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
 import Tooltip from './Tooltip.js';
 import Button from './Button.js';
+import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
-const renderExtras = (actingAs, gameState) => ({ type, id, text }) => {
+const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, handleActAsClick) => ({ type, id, text }) => {
 
     const nodes = [];
-
 
     if (['CONSUMER', 'MORTGAGE', 'SUBPRIME'].includes(type)) {
         const sellable = !text?.includes('   0.0   ');
@@ -22,14 +22,14 @@ const renderExtras = (actingAs, gameState) => ({ type, id, text }) => {
             : type === 'MORTGAGE' ? api.buyPrimeMortgages
                 : type === 'SUBPRIME' ? api.buySubprimeMortgages
                     : () => { };
-        
+
         if (!actingAs) {
-            nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
-                <${Button} class="btn disabled w-full">Sell</button>
+            nodes.push(html`<${Tooltip} text=${actingAsDisabledMessage} containerClass="w-12 mx-1">
+                <${Button} class="btn disabled w-full" onclick=${handleActAsClick}>Sell</button>
             <//>`);
 
-            nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
-                <${Button} class="btn disabled w-full">Buy</button>
+            nodes.push(html`<${Tooltip} text=${actingAsDisabledMessage} containerClass="w-12 mx-1">
+                <${Button} class="btn disabled w-full" onclick=${handleActAsClick}>Buy</button>
             <//>`);
         } else {
             if (!sellable) {
@@ -57,18 +57,18 @@ const renderExtras = (actingAs, gameState) => ({ type, id, text }) => {
     }
 
     if (!actingAs) {
-        return html`<${Tooltip} text="Must be acting as this company">
+        return html`<${Tooltip} text=${actingAsDisabledMessage}>
             <div class="flex justify-center items-center">
-                <${Button} class="btn disabled mx-1 w-12">Sell</button>
-                <${Button} class="btn disabled mx-1 w-12">Freeze</button>
-                <${Button} class="btn disabled mx-1 w-12 whitespace-nowrap">Call In</button>
+                <${Button} class="btn disabled mx-1 w-12" onclick=${handleActAsClick}>Sell</button>
+                <${Button} class="btn disabled mx-1 w-12" onclick=${handleActAsClick}>Freeze</button>
+                <${Button} class="btn disabled mx-1 w-12 whitespace-nowrap" onclick=${handleActAsClick}>Call In</button>
             </div>
         <//>`;
     }
 
     // SELL
     const hasLoans = !text?.includes('   0.0   ');
-    const playerControlled = api.isPlayerControlled(gameState.controlledCompanies, id);
+    const playerControlled = api.isPlayerControlled(controlledCompanies, id);
 
     if (!hasLoans || playerControlled) {
         const tooltipText = playerControlled
@@ -115,41 +115,36 @@ function LoansTab() {
     const gameState = api.useGameStore(s => s.gameState);
     const frozenAllLoans = gameState.frozenAllLoans;
     const loansReport = gameState.loansReport;
-    const actingAs = gameState.actingAs;
     const hyperlinkRegex = gameState.hyperlinkRegex;
 
+    // Get centralized button props
+    const buttonProps = useActionButtonProps();
+
+    // Get disabled message and click handler for dynamic buttons
+    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
+    const handleActAsClick = buttonProps.onMustActAsCompanyClick;
+
     return html`
-        <div class="flex flex-col w-full items-center">
-            <${DisabledTooltipButton} 
-                disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                onClick=${api.buyBusinessLoans} 
-                label="Buy Business Loans"
-                color="green"
+        <div class="flex flex-col w-full items-center h-full min-h-0">
+            <${DisabledTooltipButton} ...${buttonProps.buyBusinessLoans}
                 containerClass="flex flex-row justify-between mt-2 w-full"
                 buttonClass="btn flex-1 mx-1"
             />
-            <${DisabledTooltipButton} 
-                disabledMessage=${!actingAs ? "Must be acting as this company" : false} 
-                onClick=${api.freezeAllLoans} 
+            <${DisabledTooltipButton} ...${buttonProps.freezeAllLoans}
                 label="${frozenAllLoans ? "Unfreeze" : "Freeze"} All Loans"
-                color="blue"
                 containerClass="flex flex-row justify-between mt-2 w-full"
                 buttonClass="btn flex-1 mx-1"
             />
-            <${DisabledTooltipButton}
-                disabledMessage=${!actingAs ? "Must be acting as this company" : false}
-                onClick=${api.setBankAllocation}
-                label="Set Allocation"
-                color="brown"
+            <${DisabledTooltipButton} ...${buttonProps.setBankAllocation}
                 containerClass="flex flex-row justify-between mt-2 w-full"
                 buttonClass="btn flex-1 mx-1"
             />
 
             <br />
 
-            <div class="flex flex-col flex-[3] justify-center items-center">
+            <div class="flex flex-col flex-[3] justify-center items-center overflow-y-auto min-h-0">
                 <div class="flex flex-col items-center w-full">
-                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(actingAs, gameState), hyperlinkRegex)}
+                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, actingAsDisabledMessage, handleActAsClick), hyperlinkRegex)}
                 </div>
             </div>
         </div>

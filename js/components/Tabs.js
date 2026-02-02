@@ -49,7 +49,7 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
         </div>
 
         <!-- Active Tab Content -->
-        <div class="flex-1 overflow-auto h-full panel p-2 min-h-0">
+        <div class="flex-1 overflow-hidden h-full panel p-2 min-h-0">
             ${tabChildren.map(child =>
         child.props.label === activeTab ? html`<div class="h-full">${child.props.children}</div>` : ''
     )}

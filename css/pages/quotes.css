@@ -7,7 +7,7 @@
   display: flex;
   justify-content: space-between;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .quote-line.candidate {
@@ -47,7 +47,7 @@
 /* Quote overlay (main menu) */
 .quote-overlay {
   padding: 16px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   width: 100%;
   max-width: none;
   color: var(--fg-primary);
@@ -63,7 +63,6 @@
 /* News headlines */
 .news-headline {
   border-bottom: 1px solid var(--border-color);
-  font-weight: 800;
 }
 
 /* Reports */

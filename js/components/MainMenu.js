@@ -22,6 +22,13 @@ const CHANGELOG = [
             "Fix scrolling on all modals where footer cutoff when content too tall",
             "Shift modal over when tutorial tooltip active to avoid overlap",
             "Make toolbar buttons wrap on higher zoom levels",
+            "Disabled buttons that say \"Must be acting as this company\" now change Acting Entity when clicked if you control that company",
+            "Fix Business/World News update text insert codes",
+            "Make certain action buttons ETF-aware",
+            "Switch to 64-bit integers to fix overflow issues with large cash amounts",
+            "Standardize font sizes across stylesheets with CSS variables, improve responsiveness on higher zoom levels",
+            "Error popup with stack trace for better bug reporting and improved server disconnect handling",
+
         ]
     },
     {

@@ -3,9 +3,8 @@ import Tabs from './Tabs.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
-import Tooltip from './Tooltip.js';
-import SparkChart from './SparkChart.js';
-import Button from './Button.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
+import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
 
 const Tab = Tabs.Tab;
@@ -15,6 +14,9 @@ function IndexPanel({ title, commodityId }) {
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
     const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
+    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
 
     const isActiveEntityETF = activeIndustryId === api.ETF_IND;
     const isCrypto = [api.BITCOIN_ID, api.ETHEREUM_ID].includes(commodityId);
@@ -23,31 +25,46 @@ function IndexPanel({ title, commodityId }) {
     const buyFutures = isCrypto ? api.buyCryptoFutures : api.buyCommodityFutures;
     const shortFutures = isCrypto ? api.sellCryptoFutures : api.shortCommodityFutures;
 
-    const showBuyButton = commodityId !== api.STOCK_INDEX_ID
-    const buyDisabledMessage = isActiveEntityETF
-        ? (isCrypto ? "ETFs cannot trade cryptocurrencies" : "ETFs cannot trade physical commodities")
-        : !actingAs ? "Must be acting as this company"
-        : actingAsIndustryId === api.BANK_IND
-            ? "Banks cannot trade commodities, indexes or crypto."
-            : false;
+    // Check if user controls the active entity for click-to-act-as functionality
+    const controlsActiveEntity = (controlledCompanies || []).some(c => c.id === activeEntityNum);
+    const handleActAsClick = controlsActiveEntity ? () => api.changeActingAs(activeEntityNum) : null;
 
-    const buyFuturesDisabledMessage = isActiveEntityETF
-        ? (isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot trade commodity futures")
-        : !actingAs
-            ? "Must be acting as this company"
-            : actingAsIndustryId === api.BANK_IND
-                ? "Banks cannot trade futures."
-                : actingAsIndustryId === api.INSURANCE_IND && commodityId !== api.STOCK_INDEX_ID
-                    ? "Insurance companies can only trade stock index futures."
-                    : false;
+    const showBuyButton = commodityId !== api.STOCK_INDEX_ID;
 
-    const shortFuturesDisabledMessage = isActiveEntityETF
-        ? (isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot short futures")
-        : !actingAs
-            ? "Must be acting as this company"
-            : [api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)
-                ? "Banks and insurance companies cannot short futures."
-                : false;
+    // Helper to build disabled message with click-to-act-as when appropriate
+    const getDisabledInfo = (baseMessages) => {
+        for (const check of baseMessages) {
+            if (check.condition) {
+                const isActingAsIssue = check.message === "Must be acting as this company";
+                return {
+                    message: isActingAsIssue && controlsActiveEntity
+                        ? `Must be acting as this company. Click to act as ${activeEntitySymbol}`
+                        : check.message,
+                    onClick: isActingAsIssue ? handleActAsClick : null
+                };
+            }
+        }
+        return { message: false, onClick: null };
+    };
+
+    const buyDisabledInfo = getDisabledInfo([
+        { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrencies" : "ETFs cannot trade physical commodities" },
+        { condition: !actingAs, message: "Must be acting as this company" },
+        { condition: actingAsIndustryId === api.BANK_IND, message: "Banks cannot trade commodities, indexes or crypto." }
+    ]);
+
+    const buyFuturesDisabledInfo = getDisabledInfo([
+        { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot trade commodity futures" },
+        { condition: !actingAs, message: "Must be acting as this company" },
+        { condition: actingAsIndustryId === api.BANK_IND, message: "Banks cannot trade futures." },
+        { condition: actingAsIndustryId === api.INSURANCE_IND && commodityId !== api.STOCK_INDEX_ID, message: "Insurance companies can only trade stock index futures." }
+    ]);
+
+    const shortFuturesDisabledInfo = getDisabledInfo([
+        { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot short futures" },
+        { condition: !actingAs, message: "Must be acting as this company" },
+        { condition: [api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId), message: "Banks and insurance companies cannot short futures." }
+    ]);
 
     return html`
         <div class="flex flex-col w-full">
@@ -55,40 +72,33 @@ function IndexPanel({ title, commodityId }) {
                 ${html`<${AssetPriceChart} chartTitle=${title} assetId=${commodityId} />`}
             </div>
             <div class="flex flex-row justify-around mt-2 w-full" style="height:25px">
-                ${showBuyButton ? (
-            !buyDisabledMessage
-                ? html`
-                            <${Button} class="btn green flex-1 mx-1" onclick=${() => buy(commodityId)}>Buy</button>
-                        `
-                : html`
-                            <${Tooltip} text=${buyDisabledMessage}>
-                                <${Button} class="btn disabled w-full">Buy</button>
-                            <//>
-                        `
-        ) : ''}
-
-                ${!buyFuturesDisabledMessage
-            ? html`
-                        <${Button} class="btn green flex-1 mx-1" onclick=${() => buyFutures(commodityId)}>Buy Futures</button>
-                    `
-            : html`
-                        <${Tooltip} text=${buyFuturesDisabledMessage}>
-                            <${Button} class="btn disabled w-full">Buy Futures</button>
-                        <//>
-                    `
-        }
-
-            ${!shortFuturesDisabledMessage
-            ? html`
-                    <${Button} class="btn red flex-1 mx-1" onclick=${() => shortFutures(commodityId)}>Short Futures</button>
-                `
-            : html`
-                    <${Tooltip} text=${shortFuturesDisabledMessage}>
-                        <div class="flex flex-row justify-between w-full">
-                            <${Button} class="btn disabled w-full">Short Futures</button>
-                        </div>
-                    <//>
-                `}
+                ${showBuyButton ? html`<${DisabledTooltipButton}
+                    disabledMessage=${buyDisabledInfo.message}
+                    onClick=${() => buy(commodityId)}
+                    onDisabledClick=${buyDisabledInfo.onClick}
+                    label="Buy"
+                    color="green"
+                    containerClass="flex-1"
+                    buttonClass="w-full mx-1"
+                />` : ''}
+                <${DisabledTooltipButton}
+                    disabledMessage=${buyFuturesDisabledInfo.message}
+                    onClick=${() => buyFutures(commodityId)}
+                    onDisabledClick=${buyFuturesDisabledInfo.onClick}
+                    label="Buy Futures"
+                    color="green"
+                    containerClass="flex-1"
+                    buttonClass="w-full mx-1"
+                />
+                <${DisabledTooltipButton}
+                    disabledMessage=${shortFuturesDisabledInfo.message}
+                    onClick=${() => shortFutures(commodityId)}
+                    onDisabledClick=${shortFuturesDisabledInfo.onClick}
+                    label="Short Futures"
+                    color="red"
+                    containerClass="flex-1"
+                    buttonClass="w-full mx-1"
+                />
             </div>
         </div>
     `;
@@ -105,11 +115,17 @@ const isContractShort = (line) => {
 function CommoditiesTab() {
 
     const commodityList = api.useGameStore(s => s.gameState.commodityList);
-    const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
+    // Get centralized button props
+    const buttonProps = useActionButtonProps();
+
+    // Get disabled message and click handler from hook for dynamic buttons
+    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
+    const handleActAsClick = buttonProps.onMustActAsCompanyClick;
+
     return html`
-        <div class="flex flex-col flex-[1]">
+        <div class="flex flex-col flex-[1] h-full min-h-0">
             <div class="flex flex-row w-full">
                 <${IndexPanel} title="Gold" commodityId=${api.GOLD_ID} />
                 <${IndexPanel} title="Silver" commodityId=${api.SILVER_ID} />
@@ -122,26 +138,25 @@ function CommoditiesTab() {
                 <${IndexPanel} title="Bitcoin (BTC)" commodityId=${api.BITCOIN_ID} />
                 <${IndexPanel} title="Ethereum (ETH)" commodityId=${api.ETHEREUM_ID} />
             </div>
-            <div class="flex flex-col flex-[3]">
+            <div class="flex flex-col flex-[3] overflow-y-auto min-h-0">
                 <div class="flex flex-row w-full">
                 </div>
                 <div class="flex flex-row justify-center">
                 ${renderLines(commodityList,
                     undefined,
-                    ({ type, id, text }) => actingAs ? html`
-                    <${Button}
-                        class="btn red flex-1 mx-1"
+                    ({ type, id, text }) => html`<${DisabledTooltipButton}
+                        disabledMessage=${actingAsDisabledMessage}
                         onClick=${() => (type === "P" ? api.sellPhysicalCommodity
                                 : type === "PC" ? api.sellPhysicalCrypto
                                 : type === "F" ? isContractShort(text) ? api.coverShortCommodityFutures : api.sellCommodityFutures
                                 : type === "CF" ? isContractShort(text) ? api.buyCryptoFutures : api.sellCryptoFutures
                                 : () => {}
-                            )(id)}>
-                        ${type.includes('F') && isContractShort(text) ? 'Cover' : 'Sell'}
-                    </button>` : html`
-                    <${Tooltip} text="Must be acting as this company">
-                        <${Button} class="btn disabled w-full">Sell</button>
-                    <//>`, hyperlinkRegex)}
+                            )(id)}
+                        onDisabledClick=${handleActAsClick}
+                        label=${type.includes('F') && isContractShort(text) ? 'Cover' : 'Sell'}
+                        color="red"
+                        buttonClass="flex-1 mx-1"
+                    />`, hyperlinkRegex)}
                 </div>
             </div>
         </div>

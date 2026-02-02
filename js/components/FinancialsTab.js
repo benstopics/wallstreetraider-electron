@@ -6,23 +6,28 @@ import CapitalizationChart from './CapitalizationChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
 import Tooltip from './Tooltip.js';
 import Button from './Button.js';
+import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
 
 // For insurance companies
-const renderExtras = (actingAs) => ({ type, id, text }) => {
+const renderExtras = (actingAs, controlsActiveEntity, activeEntityNum, activeEntitySymbol) => ({ type, id, text }) => {
 
     const nodes = [];
 
     if (type === 'SUBPRIME') {
         const sellable = !text?.includes('   0.0');
+        const disabledTooltip = controlsActiveEntity
+            ? `Must be acting as this company. Click to act as ${activeEntitySymbol}`
+            : "Must be acting as this company";
+        const handleActAsClick = controlsActiveEntity ? () => api.changeActingAs(activeEntityNum) : null;
 
         if (!actingAs) {
-            nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
-                <${Button} class="btn disabled w-full">Sell</button>
+            nodes.push(html`<${Tooltip} text=${disabledTooltip} containerClass="w-12 mx-1">
+                <${Button} class="btn disabled w-full" onclick=${handleActAsClick}>Sell</button>
             <//>`);
 
-            nodes.push(html`<${Tooltip} text="Must be acting as this company" containerClass="w-12 mx-1">
-                <${Button} class="btn disabled w-full">Buy</button>
+            nodes.push(html`<${Tooltip} text=${disabledTooltip} containerClass="w-12 mx-1">
+                <${Button} class="btn disabled w-full" onclick=${handleActAsClick}>Buy</button>
             <//>`);
         } else {
             if (!sellable) {
@@ -54,77 +59,31 @@ const renderExtras = (actingAs) => ({ type, id, text }) => {
 
 function FinancialsTab() {
 
-    const actingAs = api.useGameStore(s => s.gameState.actingAs);
-    const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
-    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
     const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
     const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+    const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
 
-    // ETF Advisor detection
-    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
-    const activeEntity = allCompanies.find(c => c.id === activeEntityNum);
-    const etfAdvisorId = activeEntity?.advisorId || 0;
-    const controlsETFAdvisor = isActiveEntityETF && (controlledCompanies || []).some(c => c.id === etfAdvisorId);
-    const isActingAsETFAdvisor = isActiveEntityETF && controlsETFAdvisor && actingAsId === etfAdvisorId;
+    // Get centralized button props
+    const buttonProps = useActionButtonProps();
 
-    // Disabled message helper for ETF advisor checks
-    const getActingAsDisabledMessage = () => {
-        if (isActiveEntityETF) {
-            if (!controlsETFAdvisor) return "You must control the ETF's investment advisor";
-            if (!isActingAsETFAdvisor) return "Must be acting as the ETF's investment advisor";
-            return false;
-        }
-        return !actingAs ? "Must be acting as this company" : false;
-    };
+    // Check if user controls the active entity (for renderExtras)
+    const controlsActiveEntity = (controlledCompanies || []).some(c => c.id === activeEntityNum);
+
+    // Show extra buttons only for companies (not player)
+    const showCorpButtons = buttonProps.actingAsId >= 10 || buttonProps.isActiveEntityETF;
 
     return html`
             <div class="flex flex-col w-full h-full min-h-0 items-center">
                 <div class="flex flex-row items-center gap-5 mb-2" style="height: 35px;">
-                        <${DisabledTooltipButton}
-                            disabledMessage=${getActingAsDisabledMessage()}
-                            onClick=${api.borrowMoney}
-                            label="Borrow Money"
-                            color="green"
-                        />
-                        <${DisabledTooltipButton}
-                            disabledMessage=${getActingAsDisabledMessage()}
-                            onClick=${api.repayLoan}
-                            label="Repay Loan"
-                            color=""
-                        />
-                        ${actingAsId >= 10 || isActiveEntityETF ? html`<${DisabledTooltipButton}
-                            disabledMessage=${getActingAsDisabledMessage()}
-                            onClick=${api.extraordinaryDividend}
-                            label="Extraordinary Dividend"
-                            color="green"
-                        />
-                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
-                            onClick=${api.taxFreeLiquidation}
-                            label="Tax-Free Liquidation"
-                            color="green"
-                        />
-                        <${DisabledTooltipButton}
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
-                            onClick=${api.taxableLiquidation}
-                            label="Taxable Liquidation"
-                            color="green"
-                        />` : ''}` : ''}
-                        <${DisabledTooltipButton}
-                            disabledMessage=${getActingAsDisabledMessage()}
-                            onClick=${api.changeBank}
-                            label="Change Bank"
-                            color="blue"
-                        />
-                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
-                            disabledMessage=${getActingAsDisabledMessage()}
-                            onClick=${api.tradeTbills}
-                            label="Trade T-Bills"
-                            color="brown"
-                        />` : ''}
+                        <${DisabledTooltipButton} ...${buttonProps.borrowMoney} />
+                        <${DisabledTooltipButton} ...${buttonProps.repayLoan} />
+                        ${showCorpButtons ? html`<${DisabledTooltipButton} ...${buttonProps.extraordinaryDividend} />
+                        ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.taxFreeLiquidation} />
+                        <${DisabledTooltipButton} ...${buttonProps.taxableLiquidation} />` : ''}` : ''}
+                        <${DisabledTooltipButton} ...${buttonProps.changeBank} />
+                        ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.tradeTbills} />` : ''}
                 </div>
                 <div class="flex flex-row w-full h-full gap-2 min-h-0">
                     ${activeEntityNum < 10 ? html`
@@ -138,7 +97,7 @@ function FinancialsTab() {
                         </div>` : ''}
                     <div class="flex ${activeEntityNum < 10 ? 'w-3/4' : 'w-full'}">
                         <div class="flex flex-col items-center overflow-y-auto w-full max-h-full">
-                            ${renderLines(financialProfile, ({ id }) => api.setViewAsset(id), renderExtras(actingAs), hyperlinkRegex)}
+                            ${renderLines(financialProfile, ({ id }) => api.setViewAsset(id), renderExtras(buttonProps.actingAs, controlsActiveEntity, activeEntityNum, activeEntitySymbol), hyperlinkRegex)}
                         </div>
                     </div>
                 </div>

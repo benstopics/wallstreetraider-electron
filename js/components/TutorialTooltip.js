@@ -261,7 +261,7 @@ const TUTORIAL_TOOLTIPS = [
         id: 'interest-rate-swaps',
         condition: (gameState) => gameState.modalType === 7,
         title: 'Interest Rate Swaps',
-        content: `<div style="max-height: 400px; overflow-y: auto; font-size: 12px; line-height: 1.4;">${SWAP_INFO_TEXT.replaceAll('\n\n', '<<PARA>>').replaceAll('\n', ' ').replaceAll('<<PARA>>', '<br><br>')}</div>`
+        content: `<div style="max-height: 400px; overflow-y: auto; font-size: var(--font-size-sm); line-height: 1.4;">${SWAP_INFO_TEXT.replaceAll('\n\n', '<<PARA>>').replaceAll('\n', ' ').replaceAll('<<PARA>>', '<br><br>')}</div>`
     }
 ];
 

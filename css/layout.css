@@ -70,7 +70,7 @@
   height: 100vh;
   background-color: var(--overlay-bg);
   color: white;
-  font-size: 24px;
+  font-size: var(--font-size-2xl);
   font-weight: bold;
   z-index: 9999999;
   display: flex;

@@ -7,7 +7,7 @@ const BalanceSheet = ({ cash, otherAssets, totalAssets, totalDebt, netWorth }) =
     <div class="panel" data-tutorial="balance-sheet">
         <div class="panel-header">${insertCurrencySymbols("My Balance Sheet ($ Millions)")}</div>
 
-        <div class="p-1 panel-body">
+        <div class="p-1 panel-body font-text-sm">
             <div class="flex justify-between">
                 <div class="text-gray-400">${insertCurrencySymbols("Cash [DD]")}</div>
                 <div class="fixed-width">$${formatCurrency(cash)}</div>

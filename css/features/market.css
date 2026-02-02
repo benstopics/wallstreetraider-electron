@@ -108,7 +108,7 @@
 
 .heatmap-group-title {
   color: rgba(255, 255, 255, 0.92);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -116,7 +116,7 @@
 
 .heatmap-group-sub {
   color: rgba(255, 255, 255, 0.70);
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   white-space: nowrap;
 }
 
@@ -143,7 +143,7 @@
 
 .heatmap-leaf-label {
   font-weight: 800;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   line-height: 1;
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
@@ -167,19 +167,19 @@
 }
 
 .heatmap-legend-title {
-  font-size: 13px;
+  font-size: var(--font-size-md);
   font-weight: 800;
   color: rgba(255, 255, 255, 0.92);
   margin-bottom: 6px;
 }
 
 .heatmap-legend-row {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.75);
   margin: 2px 0;
 }
 
 .heatmap-legend-hint {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.65);
 }

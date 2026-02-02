@@ -8,6 +8,7 @@ import Tooltip from './Tooltip.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
+import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
 // Stop orders are managed centrally in api.js and checked on each gameState refresh.
 
@@ -28,28 +29,49 @@ function IndexPanel({ title, bondId }) {
 
     const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
+    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
+    const playerName = api.useGameStore(s => s.gameState.playerName) || 'Player';
 
     const buy = bondId === api.TBOND_RATE_ID ? api.buyLongGovtBonds : api.buyShortGovtBonds;
 
-    const disabledMessage = !actingAs
-        ? "Must be acting as this company"
-        : ![api.PLAYER_IND, api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId) ? "Only players, banks, and insurance companies can trade government bonds."
-        : false;
+    const controlsActiveEntity = (controlledCompanies || []).some(c => c.id === activeEntityNum);
+
+    const getDisabledInfo = () => {
+        if (!actingAs) {
+            return {
+                message: controlsActiveEntity
+                    ? `Must be acting as this company. Click to act as ${activeEntitySymbol}`
+                    : "Must be acting as this company",
+                onClick: controlsActiveEntity ? () => api.changeActingAs(activeEntityNum) : null
+            };
+        }
+        if (![api.PLAYER_IND, api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)) {
+            return {
+                message: `Only players, banks, and insurance companies can trade government bonds. Click to act as ${playerName}`,
+                onClick: () => api.changeActingAs(api.HUMAN1_ID)
+            };
+        }
+        return { message: false, onClick: null };
+    };
+
+    const disabledInfo = getDisabledInfo();
 
     return html`
         <div class="flex flex-col w-full">
             <div class="flex flex-col" style="height: 100px">
                 ${html`<${AssetPriceChart} chartTitle=${title} assetId=${bondId} />`}
             </div>
-            ${!disabledMessage
+            ${!disabledInfo.message
                 ? html`
                 <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
                     <${Button} class="btn green flex-1 mx-1" onclick=${() => buy(bondId)}>Buy</button>
                 </div>`
                 : html`
-                <${Tooltip} text=${disabledMessage}>
+                <${Tooltip} text=${disabledInfo.message}>
                     <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
-                        <${Button} class="btn disabled flex-1 mx-1">Buy</button>
+                        <${Button} class="btn disabled flex-1 mx-1" onclick=${disabledInfo.onClick}>Buy</button>
                     </div>
                 <//>
             `}
@@ -59,32 +81,12 @@ function IndexPanel({ title, bondId }) {
 
 function PortfolioTab() {
 
-    const actingAs = api.useGameStore(s => s.gameState.actingAs);
-    const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
-    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
-    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
-    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
     const portfolio = api.useGameStore(s => s.gameState.portfolio);
-    const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
 
-    // ETF Advisor detection
-    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
-    const activeEntity = allCompanies.find(c => c.id === activeEntityNum);
-    const etfAdvisorId = activeEntity?.advisorId || 0;
-    const controlsETFAdvisor = isActiveEntityETF && (controlledCompanies || []).some(c => c.id === etfAdvisorId);
-    const isActingAsETFAdvisor = isActiveEntityETF && controlsETFAdvisor && actingAsId === etfAdvisorId;
-
-    // Disabled message helper for ETF advisor checks
-    const getActingAsDisabledMessage = () => {
-        if (isActiveEntityETF) {
-            if (!controlsETFAdvisor) return "You must control the ETF's investment advisor";
-            if (!isActingAsETFAdvisor) return "Must be acting as the ETF's investment advisor";
-            return false;
-        }
-        return !actingAs ? "Must be acting as this company" : false;
-    };
+    // Get centralized button props
+    const buttonProps = useActionButtonProps();
 
     const companyById = useMemo(() => {
         const m = new Map();
@@ -93,36 +95,32 @@ function PortfolioTab() {
     }, [allCompanies]);
 
     return html`
-            <div class="flex flex-col w-full">
-                <div class="flex flex-row items-center justify-start gap-5">
-                    <div class="items-center flex flex-row justify-center">
-                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
-                            disabledMessage=${actingAs ? "Cannot merge with yourself"
-                                : actingAsIndustryId === api.PLAYER_IND ? "Must be acting as a company"
-                                : false}
-                            onClick=${api.merger}
-                            label="Merge With"
-                            color="green"
-                        />` : ''}
-                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton}
-                            disabledMessage=${!actingAs ? "Must be acting as this company" : false}
-                            onClick=${api.sellSubsidiaryStock}
-                            label="Offer Stock for Sale"
-                            color="red"
-                        />` : ''}
-                    </div>
+            <div class="flex flex-col w-full h-full min-h-0">
+                <div class="flex flex-row items-center justify-start gap-2 mb-2">
+                    <${DisabledTooltipButton} ...${buttonProps.buyStock} />
+                    <${DisabledTooltipButton} ...${buttonProps.shortStock} />
+                    ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.buyCorpBond} label="Buy Bonds" />` : ''}
+                    ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.merger} label="Merge With" />` : ''}
+                    ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.sellSubsidiaryStock} label="Offer Stock for Sale" />` : ''}
                 </div>
                 <div class="flex flex-row flex-[1]">
                     <${IndexPanel} title="Long Bond" bondId=${api.TBOND_RATE_ID} />
                     <${IndexPanel} title="Short Bond" bondId=${api.SBOND_RATE_ID} />
                 </div>
-                <div class="flex flex-col items-center flex-[3]">
+                <div class="flex flex-col items-center flex-[3] overflow-y-auto min-h-0">
                     ${renderLines(portfolio,
                         ({ id }) => id && api.setViewAsset(id),
                         ({ type, id, text }) => {
+                            // Select appropriate button props based on type, override onClick with specific id
+                            const sellButtonBase = type === "S" ? buttonProps.coverShort
+                                : type === "J" ? buttonProps.sellCorpBond
+                                : type === "GS" ? buttonProps.sellShortGovtBonds
+                                : type === "GL" ? buttonProps.sellLongGovtBonds
+                                : buttonProps.sellStock;
+
                             return html`<div class="flex flex-row stop-btn-row">
                                 <${DisabledTooltipButton}
-                                    disabledMessage=${getActingAsDisabledMessage()}
+                                    ...${sellButtonBase}
                                     onClick=${() => (type === "S" ? api.coverShortStock
                                         : type === "J" ? api.sellCorporateBond
                                         : type === "GS" ? api.sellShortGovtBonds
@@ -130,13 +128,10 @@ function PortfolioTab() {
                                         : api.sellStock
                                     )(id)}
                                     label="${type === "S" ? "Cover" : "Sell"}"
-                                    color="red"
                                 />
-                                ${!isActiveEntityETF && !text.includes('GOVERNMENT') ? html`<${DisabledTooltipButton}
-                                    disabledMessage=${!actingAs ? "Must be acting as this company" : false}
+                                ${!buttonProps.isActiveEntityETF && !text.includes('GOVERNMENT') ? html`<${DisabledTooltipButton}
+                                    ...${buttonProps.spinOff}
                                     onClick=${() => api.spinOff(id)}
-                                    label="Spin-Off"
-                                    color="blue"
                                 />` : ''}
                             </div>`
                         }, hyperlinkRegex)}

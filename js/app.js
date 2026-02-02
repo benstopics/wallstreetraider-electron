@@ -14,6 +14,7 @@ import InterestRateSwapsModal from './components/InterestRateSwapsModal.js';
 import TextAnnounceModal from './components/TextAnnounceModal.js';
 import CompanySelectModal from './components/CompanySelectModal.js';
 import TutorialModal from './components/TutorialModal.js';
+import ErrorBoundary from './components/ErrorBoundary.js';
 
 const logos = [
     { src: "assets/roninsoft_logo.png", backgroundColor: "#ffffff" },
@@ -127,7 +128,11 @@ const AppInner = () => {
                 });
 
                 timeoutId = setTimeout(fetchGameState, 50);
-            }).catch(console.error);
+            }).catch((error) => {
+                console.error('Failed to fetch game state:', error);
+                // Continue polling even after errors to recover when WSR.EXE is ready
+                timeoutId = setTimeout(fetchGameState, 200);
+            });
         };
 
         fetchGameState();
@@ -219,8 +224,10 @@ const AppInner = () => {
 }
 
 const App = () => {
-    return html`<${api.WSRProvider}>
-        <${AppInner} />
+    return html`<${ErrorBoundary}>
+        <${api.WSRProvider}>
+            <${AppInner} />
+        <//>
     <//>`;
 };
 

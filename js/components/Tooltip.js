@@ -10,7 +10,7 @@ const Tooltip = ({ text, children, containerClass = '' }) => {
 
     // Create tooltip element
     const tooltip = document.createElement('div');
-    tooltip.className = 'pointer-events-none whitespace-nowrap bg-gray-800 text-white text-xs px-2 py-1 rounded';
+    tooltip.className = 'pointer-events-none whitespace-nowrap bg-gray-700 border border-white text-white text-xs px-2 py-1 rounded';
     tooltip.style.cssText = 'position: fixed; z-index: 9999999999; display: none; transform: translate(-50%, -100%);';
     tooltip.textContent = text;
     document.body.appendChild(tooltip);

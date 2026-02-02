@@ -66,8 +66,19 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
     };
 
     const handleItemClick = (item, e) => {
-        if (item.disabled || item.submenu) {
+        if (item.submenu) {
             e.stopPropagation();
+            return;
+        }
+        if (item.disabled) {
+            // If there's an onDisabledClick handler, call it and close the menu
+            if (item.onDisabledClick) {
+                item.onDisabledClick();
+                setIsOpen(false);
+                setOpenSubmenuIndex(null);
+            } else {
+                e.stopPropagation();
+            }
             return;
         }
         if (item.onClick) {
@@ -122,10 +133,16 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
             return html`<div key=${index} class="dropdown-header">${item.header}</div>`;
         }
 
+        // When disabled with onDisabledClick: show as clickable (use color)
+        // When disabled without onDisabledClick: show as truly disabled
+        const hasClickHandler = !!item.onDisabledClick;
+        const disabledClass = item.disabled ? (hasClickHandler ? '' : 'disabled') : '';
+        const colorClass = item.disabled && hasClickHandler ? (item.color || '') : (item.color || '');
+
         const itemContent = html`
             <div
                 key=${index}
-                class="dropdown-item ${item.disabled ? 'disabled' : ''} ${item.color || ''}"
+                class="dropdown-item ${disabledClass} ${colorClass}"
                 onClick=${(e) => handleItemClick(item, e)}
             >
                 <span class="dropdown-item-label">${item.label}</span>
@@ -155,10 +172,16 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
         const hasSubmenu = item.submenu && item.submenu.length > 0;
         const isSubmenuOpen = openSubmenuIndex === index;
 
+        // When disabled with onDisabledClick: show as clickable (use color)
+        // When disabled without onDisabledClick: show as truly disabled
+        const hasClickHandler = !!item.onDisabledClick;
+        const disabledClass = item.disabled ? (hasClickHandler ? '' : 'disabled') : '';
+        const colorClass = item.disabled && hasClickHandler ? (item.color || '') : (item.color || '');
+
         const itemContent = html`
             <div
                 key=${index}
-                class="dropdown-item ${item.disabled ? 'disabled' : ''} ${item.color || ''} ${hasSubmenu ? 'has-submenu' : ''} ${isSubmenuOpen ? 'submenu-open' : ''}"
+                class="dropdown-item ${disabledClass} ${colorClass} ${hasSubmenu ? 'has-submenu' : ''} ${isSubmenuOpen ? 'submenu-open' : ''}"
                 onClick=${(e) => handleItemClick(item, e)}
                 onMouseEnter=${hasSubmenu ? (e) => handleSubmenuTriggerEnter(index, e) : null}
                 onMouseLeave=${hasSubmenu ? handleSubmenuTriggerLeave : null}

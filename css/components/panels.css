@@ -9,7 +9,7 @@
   color: var(--fg-primary);
   padding: 0;
   box-sizing: border-box;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -20,7 +20,7 @@
 .panel-header {
   background: linear-gradient(90deg, var(--header-grad-start), var(--header-grad-mid), var(--header-grad-end));
   color: var(--header-text);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   padding: 7px 10px;
   font-weight: 800;
   flex-shrink: 0;
@@ -43,7 +43,7 @@
   background: linear-gradient(90deg, rgba(100, 100, 100, 0.3), rgba(80, 80, 80, 0.2));
   padding: 2px 8px;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: var(--font-size-md);
   border: 1px solid rgba(150, 150, 150, 0.3);
   color: #d9d9d9;
   font-weight: bold !important;

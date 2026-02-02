@@ -112,7 +112,7 @@ const GameUI = () => {
                 <div class="panel flex-[4] flex min-h-0 flex-col">
                     <div class="panel-header">Financial News Headlines</div>
                     <div class="p-1 panel-body">
-                        <div class="flex flex-col h-full gap-2 overflow-y-auto">
+                        <div class="flex flex-col h-full overflow-y-auto">
                             ${newsHeadlines.map(h => html`
                                 <div class="news-headline">
                                     ${api.renderHyperlinks(h, ({ id, type }) => {

@@ -56,7 +56,7 @@
   border: 1px solid var(--border-color);
   border-radius: 4px;
   color: var(--fg-primary);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s, background-color 0.2s;
@@ -86,7 +86,7 @@
   background: transparent;
   border: none;
   color: var(--fg-primary);
-  font-size: 24px;
+  font-size: var(--font-size-2xl);
   line-height: 1;
   cursor: pointer;
   padding: 4px 8px;
@@ -104,7 +104,7 @@
   padding: 12px;
   text-align: center;
   color: rgba(195, 211, 229, 0.7);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-style: italic;
   margin-bottom: 8px;
 }
@@ -118,7 +118,7 @@
 }
 
 .help-search-mode-label {
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: rgba(195, 211, 229, 0.6);
   text-transform: uppercase;
@@ -134,7 +134,7 @@
   border: 1px solid var(--border-color);
   border-radius: 4px;
   color: rgba(195, 211, 229, 0.7);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
@@ -159,7 +159,7 @@
 .help-search-status {
   padding: 4px 8px;
   margin-bottom: 8px;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   color: rgba(195, 211, 229, 0.8);
   background: rgba(13, 84, 115, 0.2);
   border-radius: 3px;
@@ -288,7 +288,7 @@ mark.search-highlight.focused-match {
 }
 
 .search-result-path {
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   color: rgba(195, 211, 229, 0.7);
   margin-bottom: 4px;
   display: flex;
@@ -303,7 +303,7 @@ mark.search-highlight.focused-match {
 
 .search-result-separator {
   color: rgba(195, 211, 229, 0.5);
-  font-size: 10px;
+  font-size: var(--font-size-sm);
 }
 
 .search-result-section {
@@ -311,7 +311,7 @@ mark.search-highlight.focused-match {
 }
 
 .search-result-snippet {
-  font-size: 13px;
+  font-size: var(--font-size-md);
   line-height: 1.4;
   color: var(--fg-primary);
   word-break: break-word;
@@ -335,7 +335,7 @@ mark.search-highlight.focused-match {
 }
 
 .help-content *:where(p, li) {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   line-height: 1.5;
   color: var(--fg-primary);
 }
@@ -362,7 +362,7 @@ mark.search-highlight.focused-match {
 .help-content code,
 .help-content pre {
   font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   background: rgba(0,0,0,0.35);
   color: #E9ECEF;
   border: 1px solid rgba(255,255,255,0.08);
@@ -430,7 +430,7 @@ mark.search-highlight.focused-match {
   color: white;
   padding: 8px 14px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   animation: helpTooltipFadeIn 0.15s ease-out;
   pointer-events: auto;

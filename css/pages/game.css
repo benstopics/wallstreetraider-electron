@@ -37,7 +37,7 @@
 /* Date display */
 .date-display {
   color: var(--fg-primary);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 /* Notification badge */
@@ -63,7 +63,7 @@
   background: var(--color-negative);
   color: white;
   border-radius: 9999px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: bold;
   line-height: 1;
   padding: 1px 3px;

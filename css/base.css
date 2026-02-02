@@ -51,7 +51,7 @@ h1, h2, h3, h4, th, .section-title, .panel-title, .title, .header-title {
 /* Labels */
 label, .label, .field-label, .metric-label {
   color: var(--fg-muted);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   white-space: nowrap;
 }
 

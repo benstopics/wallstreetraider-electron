@@ -30,7 +30,7 @@ function ActingAsDropdown() {
     };
 
     return html`
-        <div style="width: 350px;" class="flex flex-col gap-1" data-tutorial="acting-as-dropdown">
+        <div style="" class="flex flex-col gap-1" data-tutorial="acting-as-dropdown">
             <div class="label flex flex-row justify-between h-full items-center" style="height: 20px">
                 ${(activeIndustryId == 71 && controlledAdvisorId > 0)
                     ? (

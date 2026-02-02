@@ -9,12 +9,6 @@ function toStr(v) {
     return v == null ? '' : String(v).trim();
 }
 
-function clampInt(val, min, max) {
-    const n = parseInt(val, 10);
-    if (Number.isNaN(n)) return null;
-    return Math.min(max, Math.max(min, n));
-}
-
 function parseFloatOrNull(val) {
     const s = toStr(val).trim();
     if (!s) return null;
@@ -33,6 +27,34 @@ function qIndex(q, y) {
     const yy = parseInt(y, 10);
     if (Number.isNaN(qq) || Number.isNaN(yy)) return null;
     return yy * 4 + qq; // 1-based quarter works fine for diffs
+}
+
+// Generate quarter/year options for dropdowns
+function generateQuarterOptions(currentQuarter, currentYear, minOffset, maxOffset) {
+    const options = [];
+    const curQ = parseInt(currentQuarter, 10);
+    const curY = parseInt(currentYear, 10);
+    if (Number.isNaN(curQ) || Number.isNaN(curY)) return options;
+
+    for (let offset = minOffset; offset <= maxOffset; offset++) {
+        let q = curQ + offset;
+        let y = curY;
+        while (q > 4) { q -= 4; y++; }
+        while (q < 1) { q += 4; y--; }
+        options.push({ quarter: q, year: y, label: `Q${q} / ${y}` });
+    }
+    return options;
+}
+
+function parseQuarterValue(value) {
+    if (!value) return { quarter: null, year: null };
+    const [q, y] = value.split('/');
+    return { quarter: parseInt(q, 10), year: parseInt(y, 10) };
+}
+
+function formatQuarterValue(quarter, year) {
+    if (!quarter || !year) return '';
+    return `${quarter}/${year}`;
 }
 
 function normalizeState(inState) {
@@ -66,18 +88,10 @@ function normalizeState(inState) {
 function validate(state, currentQuarter, currentYear) {
     const errors = {};
 
-    // Quarter ranges
-    const bqRaw = toStr(state.beginQuarter).trim();
-    const eqRaw = toStr(state.endQuarter).trim();
-    const byRaw = toStr(state.beginYear).trim();
-    const eyRaw = toStr(state.endYear).trim();
-
-    const curQ = parseInt(currentQuarter, 10);
-    const curY = parseInt(currentYear, 10);
-    const curIdx = qIndex(curQ, curY);
-
-    const bq = bqRaw ? clampInt(bqRaw, 1, 4) : null;
-    const eq = eqRaw ? clampInt(eqRaw, 1, 4) : null;
+    const bq = parseInt(state.beginQuarter, 10);
+    const by = parseInt(state.beginYear, 10);
+    const eq = parseInt(state.endQuarter, 10);
+    const ey = parseInt(state.endYear, 10);
 
     // Notional
     const notional = parseFloatOrNull(state.notionalMillions);
@@ -91,65 +105,21 @@ function validate(state, currentQuarter, currentYear) {
         errors.notionalMillions = { msg: 'Notional is required' };
     }
 
-    // Begin Q/Y
-    if (bqRaw) {
-        if (bq == null) errors.beginQuarter = { msg: 'Quarter must be 1 to 4' };
-        else if (String(bq) !== bqRaw) errors.beginQuarter = { msg: 'Quarter must be 1 to 4' };
-    } else {
-        errors.beginQuarter = { msg: 'Beginning quarter is required' };
+    // Begin date required
+    if (Number.isNaN(bq) || Number.isNaN(by)) {
+        errors.beginDate = { msg: 'Beginning date is required' };
     }
 
-    if (byRaw) {
-        const by = parseInt(byRaw, 10);
-        if (Number.isNaN(by) || by < 1) errors.beginYear = { msg: 'Beginning year must be valid' };
-    } else {
-        errors.beginYear = { msg: 'Beginning year is required' };
+    // End date required
+    if (Number.isNaN(eq) || Number.isNaN(ey)) {
+        errors.endDate = { msg: 'Final date is required' };
     }
 
-    // End Q/Y
-    if (eqRaw) {
-        if (eq == null) errors.endQuarter = { msg: 'Quarter must be 1 to 4' };
-        else if (String(eq) !== eqRaw) errors.endQuarter = { msg: 'Quarter must be 1 to 4' };
-    } else {
-        errors.endQuarter = { msg: 'Final quarter is required' };
-    }
-
-    if (eyRaw) {
-        const ey = parseInt(eyRaw, 10);
-        if (Number.isNaN(ey) || ey < 1) errors.endYear = { msg: 'Final year must be valid' };
-    } else {
-        errors.endYear = { msg: 'Final year is required' };
-    }
-
-    // Relative date rules (only if we can compute indices)
-    const beginIdx = bq != null ? qIndex(bq, parseInt(byRaw, 10)) : null;
-    const endIdx = eq != null ? qIndex(eq, parseInt(eyRaw, 10)) : null;
-
-    if (curIdx != null && beginIdx != null) {
-        const beginFromNow = beginIdx - curIdx; // ((InputYear-CurrentYear)*4 + InputQuarter) - CurrentQuarter
-        if (beginFromNow < 1) {
-            errors.beginQuarter = { msg: 'Beginning date must be at least next quarter' };
-            errors.beginYear = errors.beginYear || { msg: 'Beginning date must be at least next quarter' };
-        } else if (beginFromNow > 4) {
-            errors.beginQuarter = { msg: 'Beginning date must be no later than 4 quarters from now' };
-            errors.beginYear = errors.beginYear || { msg: 'Beginning date must be no later than 4 quarters from now' };
-        }
-    }
-
-    if (curIdx != null && endIdx != null) {
-        const endFromNow = endIdx - curIdx;
-        if (endFromNow < 1) {
-            errors.endQuarter = { msg: 'Final date must be at least next quarter' };
-            errors.endYear = errors.endYear || { msg: 'Final date must be at least next quarter' };
-        } else if (endFromNow > 21) {
-            errors.endQuarter = { msg: 'Final date cannot be more than 5 years from next quarter' };
-            errors.endYear = errors.endYear || { msg: 'Final date cannot be more than 5 years from next quarter' };
-        }
-    }
-
+    // End must be >= begin
+    const beginIdx = qIndex(bq, by);
+    const endIdx = qIndex(eq, ey);
     if (beginIdx != null && endIdx != null && endIdx < beginIdx) {
-        errors.endQuarter = { msg: 'Final date must be after beginning date' };
-        errors.endYear = errors.endYear || { msg: 'Final date must be after beginning date' };
+        errors.endDate = { msg: 'Final date must be on or after beginning date' };
     }
 
     const hasBlockingErrors = Object.values(errors).some(Boolean);
@@ -336,66 +306,38 @@ export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit
             <div class="grid grid-cols-12 gap-3">
               <div class="col-span-12 md:col-span-6">
                 <div class="mb-2">Beginning Quarter / Year:</div>
-                <div class="grid grid-cols-12 gap-2">
-                  <div class="col-span-6">
-                    <input
-                      type="number"
-                      min="1"
-                      max="4"
-                      class=${inputClass(!!errors.beginQuarter)}
-                      value=${mergedState.beginQuarter}
-                      onInput=${(e) => setField('beginQuarter', e.target.value)}
-                      onBlur=${(e) => {
-              const raw = toStr(e.target.value).trim();
-              if (!raw) return;
-              const clamped = clampInt(raw, 1, 4);
-              if (clamped != null) setField('beginQuarter', String(clamped));
-          }}
-                    />
-                    ${errors.beginQuarter ? html`<div class="text-red-600 text-sm mt-1">${errors.beginQuarter.msg}</div>` : null}
-                  </div>
-                  <div class="col-span-6">
-                    <input
-                      type="number"
-                      class=${inputClass(!!errors.beginYear)}
-                      value=${mergedState.beginYear}
-                      onInput=${(e) => setField('beginYear', e.target.value)}
-                    />
-                    ${errors.beginYear ? html`<div class="text-red-600 text-sm mt-1">${errors.beginYear.msg}</div>` : null}
-                  </div>
-                </div>
+                <select
+                  class=${`basic w-full ${errors.beginDate ? 'border border-red-500' : ''}`}
+                  value=${formatQuarterValue(mergedState.beginQuarter, mergedState.beginYear)}
+                  onChange=${(e) => {
+                    const { quarter, year } = parseQuarterValue(e.target.value);
+                    setField('beginQuarter', quarter);
+                    setField('beginYear', year);
+                  }}
+                >
+                  ${generateQuarterOptions(currentQuarter, currentYear, 1, 4).map(opt =>
+                    html`<option value=${formatQuarterValue(opt.quarter, opt.year)}>${opt.label}</option>`
+                  )}
+                </select>
+                ${errors.beginDate ? html`<div class="text-red-600 text-sm mt-1">${errors.beginDate.msg}</div>` : null}
               </div>
 
               <div class="col-span-12 md:col-span-6">
                 <div class="mb-2">Final Quarter / Year:</div>
-                <div class="grid grid-cols-12 gap-2">
-                  <div class="col-span-6">
-                    <input
-                      type="number"
-                      min="1"
-                      max="4"
-                      class=${inputClass(!!errors.endQuarter)}
-                      value=${mergedState.endQuarter}
-                      onInput=${(e) => setField('endQuarter', e.target.value)}
-                      onBlur=${(e) => {
-              const raw = toStr(e.target.value).trim();
-              if (!raw) return;
-              const clamped = clampInt(raw, 1, 4);
-              if (clamped != null) setField('endQuarter', String(clamped));
-          }}
-                    />
-                    ${errors.endQuarter ? html`<div class="text-red-600 text-sm mt-1">${errors.endQuarter.msg}</div>` : null}
-                  </div>
-                  <div class="col-span-6">
-                    <input
-                      type="number"
-                      class=${inputClass(!!errors.endYear)}
-                      value=${mergedState.endYear}
-                      onInput=${(e) => setField('endYear', e.target.value)}
-                    />
-                    ${errors.endYear ? html`<div class="text-red-600 text-sm mt-1">${errors.endYear.msg}</div>` : null}
-                  </div>
-                </div>
+                <select
+                  class=${`basic w-full ${errors.endDate ? 'border border-red-500' : ''}`}
+                  value=${formatQuarterValue(mergedState.endQuarter, mergedState.endYear)}
+                  onChange=${(e) => {
+                    const { quarter, year } = parseQuarterValue(e.target.value);
+                    setField('endQuarter', quarter);
+                    setField('endYear', year);
+                  }}
+                >
+                  ${generateQuarterOptions(currentQuarter, currentYear, 1, 21).map(opt =>
+                    html`<option value=${formatQuarterValue(opt.quarter, opt.year)}>${opt.label}</option>`
+                  )}
+                </select>
+                ${errors.endDate ? html`<div class="text-red-600 text-sm mt-1">${errors.endDate.msg}</div>` : null}
               </div>
             </div>
 

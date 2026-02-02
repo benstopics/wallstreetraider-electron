@@ -2,28 +2,31 @@ import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import CommoditiesTab from './CommoditiesTab.js';
 import OptionsTab from './OptionsTab.js';
-import Tooltip from './Tooltip.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
 import FinancialsTab from './FinancialsTab.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import Button from './Button.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 import OwnershipGraph from './OwnershipGraph.js';
 import ActionBar from './ActionBar.js';
 import OwnershipViewToggle from './OwnershipViewToggle.js';
+import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
 const Tab = Tabs.Tab;
 
 const PlayerView = () => {
 
-    const actingAs = api.useGameStore(s => s.gameState.actingAs);
     const cashflowProjection = api.useGameStore(s => s.gameState.cashflowProjection);
     const advances = api.useGameStore(s => s.gameState.advances);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredPlayerTab);
     const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
     const myCorporationsReport = api.useGameStore(s => s.gameState.myCorporationsReport);
+
+    // Get centralized button props
+    const buttonProps = useActionButtonProps();
 
     // Local state for corporations view mode (initialized from global setting)
     const [showCorporationsGraph, setShowCorporationsGraph] = useState(shareholderGraphSetting);
@@ -74,29 +77,18 @@ const PlayerView = () => {
                         <//>
                         <${Tab} label="Advances" id=${api.UI_PLAYER_ADVANCES_LIST}>
                             <div class="flex flex-col items-center">
-                                ${actingAs ? html`
-                                    <${Button}
-                                        class="btn flex-1 mx-1 green"
-                                        onClick=${api.advanceFunds}>
-                                            Advance Funds
-                                    </button>
-                                ` : html`
-                                    <${Tooltip} text="Must be acting as this company">
-                                        <${Button} class="btn disabled flex-1 mx-1">Advance Funds</button>
-                                    <//>
-                                `}
+                                <${DisabledTooltipButton} ...${buttonProps.advanceFunds} buttonClass="flex-1 mx-1" />
                                 ${renderLines(advances,
-        ({ id }) => api.setViewAsset(id),
-        ({ id }) => actingAs ? html`<${Button}
-                                            class="btn flex-1 mx-1"
-                                            onClick=${() => api.callInAdvance(id)}>
-                                                Recall
-                                        </button>`
-            : html`
-                                            <${Tooltip} text="Must be acting as this company">
-                                                <${Button} class="btn disabled w-full">Recall</button>
-                                            <//>`
-    , hyperlinkRegex)}
+                                    ({ id }) => api.setViewAsset(id),
+                                    ({ id }) => html`<${DisabledTooltipButton}
+                                        disabledMessage=${buttonProps.advanceFunds.disabledMessage}
+                                        onClick=${() => api.callInAdvance(id)}
+                                        onDisabledClick=${buttonProps.advanceFunds.onDisabledClick}
+                                        label="Recall"
+                                        color=""
+                                        buttonClass="flex-1 mx-1"
+                                    />`
+                                , hyperlinkRegex)}
                             </div>
                         <//>
                         <${Tab} label="My Corporations" id=${api.UI_PLAYER_CORPORATIONS_LIST}>

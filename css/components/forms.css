@@ -25,7 +25,7 @@ textarea:focus {
   background: var(--bg-secondary);
   color: var(--fg-primary);
   border: 1px solid var(--border-color);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -43,7 +43,7 @@ ul.basic {
   background-color: var(--accent-primary);
   color: black;
   border: 1px solid var(--border-color);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   white-space: nowrap;
 }
 
@@ -102,7 +102,7 @@ select option:focus {
   border: 2px solid var(--accent-secondary);
   color: white;
   font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", "Menlo", "Consolas", "Liberation Mono", monospace;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   height: 100%;
   width: 100%;
 }
@@ -232,7 +232,7 @@ input.command-line {
   border-radius: 4px;
   padding: 4px 8px;
   color: var(--fg-primary);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .db-input:focus {

@@ -32,7 +32,7 @@ tr:hover td {
 .db-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .db-table thead {
@@ -85,5 +85,5 @@ tr:hover td {
   padding: 1px 6px;
   border-radius: 3px;
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
 }

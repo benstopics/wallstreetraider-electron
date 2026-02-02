@@ -73,3 +73,7 @@ input, textarea, select, option, .modal-input, .report, .report-text {
 pre, code {
   color: rgba(230,235,245,0.92);
 }
+
+.font-text-sm {
+    font-size: var(--font-size-sm) !important;
+}

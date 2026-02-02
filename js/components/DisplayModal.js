@@ -54,11 +54,11 @@ function DisplayModal({ show, onClose }) {
         <${Modal} show=${show} onClose=${onClose} style="display: flex; flex-direction: column; width: 280px; max-width: 280px; transform: scale(${counterScale}); transform-origin: center center;">
             <div class="flex-1 min-h-0 p-3 overflow-y-auto">
                 <div style="margin-bottom: 16px;">
-                    <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Display Settings</h2>
+                    <h2 style="margin: 0; font-size: var(--font-size-lg); font-weight: 600;">Display Settings</h2>
                 </div>
 
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 12px; font-size: 13px; color: #ccc;">Zoom Level</label>
+                    <label style="display: block; margin-bottom: 12px; font-size: var(--font-size-md); color: #ccc;">Zoom Level</label>
 
                     <div style="display: flex; align-items: center; justify-content: center; gap: 16px;">
                         <${Button}
@@ -70,7 +70,7 @@ function DisplayModal({ show, onClose }) {
                                 border: 1px solid #555;
                                 background: #333;
                                 color: #fff;
-                                font-size: 20px;
+                                font-size: var(--font-size-xl);
                                 cursor: pointer;
                                 display: flex;
                                 align-items: center;
@@ -83,7 +83,7 @@ function DisplayModal({ show, onClose }) {
                         <div style="
                             min-width: 80px;
                             text-align: center;
-                            font-size: 24px;
+                            font-size: var(--font-size-2xl);
                             font-weight: 500;
                             color: #fff;
                         ">
@@ -99,7 +99,7 @@ function DisplayModal({ show, onClose }) {
                                 border: 1px solid #555;
                                 background: #333;
                                 color: #fff;
-                                font-size: 20px;
+                                font-size: var(--font-size-xl);
                                 cursor: pointer;
                                 display: flex;
                                 align-items: center;
@@ -122,7 +122,7 @@ function DisplayModal({ show, onClose }) {
                         color: #fff;
                         border-radius: 4px;
                         cursor: pointer;
-                        font-size: 13px;
+                        font-size: var(--font-size-md);
                     "
                 >
                     Reset to 100%
@@ -136,7 +136,7 @@ function DisplayModal({ show, onClose }) {
                         color: #fff;
                         border-radius: 4px;
                         cursor: pointer;
-                        font-size: 13px;
+                        font-size: var(--font-size-md);
                     "
                 >
                     Close

@@ -50,7 +50,7 @@
 
 .wsr-version {
   color: #9FB3C8;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 /* Main area */
@@ -127,7 +127,7 @@
   color: #C3D3E5;
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   letter-spacing: .12em;
   margin-bottom: 8px;
 }
@@ -149,7 +149,7 @@
 
 .wsr-ann-date {
   color: #9FB3C8;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .wsr-ann-text {
@@ -165,7 +165,7 @@
   border-radius: 8px;
   padding: 16px 20px;
   color: #E9ECEF;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   line-height: 1.5;
   margin-top: 12px;
 }
@@ -173,7 +173,7 @@
 .wsr-ann-welcome h4 {
   margin-top: 16px;
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: #C3D3E5;
   text-transform: uppercase;
@@ -218,7 +218,7 @@
 }
 
 .wsr-ann-welcome pre {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   background: rgba(0,0,0,0.3);
   padding: 8px;
   border-radius: 4px;
@@ -259,7 +259,7 @@
   align-items: center;
   padding: 8px 16px;
   margin: 12px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: #B6C6D8;
 }
 
@@ -322,7 +322,7 @@
 
 .mb-lock {
   opacity: 0.85;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
 }
 
 .mb-url {
@@ -332,7 +332,7 @@
   border: 1px solid rgba(255,255,255,0.16);
   background: rgba(0,0,0,0.35);
   padding: 0 12px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: #e9eef3;
 }
 
@@ -350,7 +350,7 @@
 }
 
 .mb-langlabel {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: rgba(233,238,243,0.78);
 }
 
@@ -436,7 +436,7 @@
 }
 
 .mb-sub {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: rgba(233,238,243,0.68);
   margin-top: 2px;
 }
@@ -446,12 +446,12 @@
 }
 
 .mb-balance-label {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: rgba(233,238,243,0.68);
 }
 
 .mb-balance-value {
-  font-size: 18px;
+  font-size: var(--font-size-xl);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
@@ -469,7 +469,7 @@
 
 .mb-user {
   font-weight: 900;
-  font-size: 18px;
+  font-size: var(--font-size-xl);
   letter-spacing: 0.02em;
 }
 
@@ -513,7 +513,7 @@
 }
 
 .mb-loginlabel {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   letter-spacing: 0.14em;
   color: rgba(233, 238, 243, 0.88);
   font-weight: 900;
@@ -526,7 +526,7 @@
   background: rgba(0,0,0,0.45);
   color: #e9eef3;
   padding: 0 12px;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   outline: none;
 }
 
@@ -536,7 +536,7 @@
 }
 
 .mb-loginhint {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: rgba(233, 238, 243, 0.70);
 }
 
@@ -548,7 +548,7 @@
   background: linear-gradient(#151b25, #0e121a);
   color: var(--accent-primary);
   font-weight: 900;
-  font-size: 19px;
+  font-size: var(--font-size-xl);
   letter-spacing: 0.02em;
 }
 
@@ -562,7 +562,7 @@
 
 .mb-btn.small {
   height: 42px;
-  font-size: 15px;
+  font-size: var(--font-size-lg);
   border-width: 1px;
 }
 
@@ -582,7 +582,7 @@
 }
 
 .mb-paneltitle {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 900;
@@ -605,13 +605,13 @@
 
 .mb-ver {
   font-weight: 900;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   margin-bottom: 4px;
   color: rgba(233,238,243,0.92);
 }
 
 .mb-chunk {
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: rgba(233,238,243,0.82);
 }
 
@@ -620,13 +620,13 @@
 }
 
 .mb-quote {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: rgba(233,238,243,0.84);
   line-height: 1.35;
 }
 
 .mb-p {
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: rgba(233,238,243,0.82);
   line-height: 1.35;
 }
@@ -661,7 +661,7 @@
 
 .mb-modaltitle {
   font-weight: 900;
-  font-size: 18px;
+  font-size: var(--font-size-xl);
   margin-bottom: 10px;
   color: var(--color-warning);
 }
@@ -704,7 +704,7 @@
 
 .hf-ctrl .btn {
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   line-height: 1;
 }
 
