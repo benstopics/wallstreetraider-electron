@@ -7,6 +7,8 @@ import SettingsModal from './SettingsModal.js';
 import Button from './Button.js';
 import LocalizationDropdown from './LocalizationDropdown.js';
 import localeManager from '../locale/localeManager.js';
+import { bracketLabel } from '../hotkeys.js';
+import { isEditableTarget } from '../keybinds.js';
 
 // TODO: set your actual asset paths/links
 const LOGO_SRC = 'assets/wallstreetraider_logo.png';
@@ -18,17 +20,61 @@ const DISCORD_WIDGET = 'assets/discord-widget.png';
 const CHANGELOG = [
     {
         ver: "v10.0.14",
-        items: [
-            "Fix scrolling on all modals where footer cutoff when content too tall",
-            "Shift modal over when tutorial tooltip active to avoid overlap",
-            "Make toolbar buttons wrap on higher zoom levels",
-            "Disabled buttons that say \"Must be acting as this company\" now change Acting Entity when clicked if you control that company",
-            "Fix Business/World News update text insert codes",
-            "Make certain action buttons ETF-aware",
-            "Switch to 64-bit integers to fix overflow issues with large cash amounts",
-            "Standardize font sizes across stylesheets with CSS variables, improve responsiveness on higher zoom levels",
-            "Error popup with stack trace for better bug reporting and improved server disconnect handling",
-
+        sections: [
+            {
+                heading: "New Features",
+                items: [
+                    "Keyboard hotkey system with 73 bindings — hold Shift to see shortcuts on buttons, tabs, and menus. Reference panel in Settings",
+                    "Line selection: use number keys to select lines in portfolio views, then letter keys for inline actions (S=Sell, E=Exercise, etc.)",
+                    "Cheat Menu accessible from toolbar (Disable Lawsuits, Insider Info, Add/Subtract Cash) — auto-enables Unethical Scenarios",
+                    "Migrate Bank Allocation, Advance Funds, Greenmail, and Planned Tender Offer Premium from Win32 to Electron",
+                    "Picture event popups (Black Swan, Ponzi, etc.) now rendered natively instead of launching external PIX.EXE",
+                    "Delete saves from Load Game menu, load specific save files by name",
+                    "Expanded command prompt with 70+ commands and improved autocomplete",
+                ]
+            },
+            {
+                heading: "Gameplay & AI Fixes",
+                items: [
+                    "AI companies now liquidate T-Bills before borrowing on line of credit",
+                    "Fixed Advanced Options validation allowing free options trading via blank/zero strike prices",
+                    "Improved options premium messaging — distinguishes net-credit trades from pure buys/sells",
+                    "Interest rate swap expiration date selection now uses dropdowns with all valid expirations",
+                    "Confirmation dialog when selling business loans",
+                    "Cash flow projections show inline message instead of blocking popup when unavailable",
+                ]
+            },
+            {
+                heading: "UI/UX Improvements",
+                items: [
+                    "Disabled \"Must be acting as...\" buttons now switch Acting Entity when clicked",
+                    "Action bar reorganized into Trade (3-col), Corporate, Finance, Hostile, and Banking menus",
+                    "Unified navigation panel with back/forward history, Ctrl+J/K to cycle Acting Entity",
+                    "Asset price charts optimized with hover crosshair showing date and price",
+                    "Currency symbols throughout UI now match selected currency instead of hardcoded USD",
+                    "New game modal remembers last used settings; ticker speed saved to config",
+                    "Standardized font sizes with CSS variables, toolbar wraps at higher zoom levels",
+                    "Modals: Enter submits/closes, auto-focus input, scroll fix, tutorial tooltip overlap fix",
+                    "Added Redeem button next to Bonds Due in Financials tab",
+                    "Unethical Scenarios togglable in Settings; updated legacy Win32 menu references",
+                    "Improved error popup with stack trace for better bug reporting",
+                ]
+            },
+            {
+                heading: "Bug Fixes",
+                items: [
+                    "Fix navigation history arrows freezing game",
+                    "Fix startup choices cancel button not working",
+                    "Fix Sell Physical/Sell Crypto showing wrong error when player owns physical commodities",
+                    "Fix Buy/Sell commodity and crypto flows when no specific asset is pre-selected",
+                    "Fix individual autopilot toggle buttons under My Corporations tab",
+                    "Fix Business/World News text insert codes, info modal line breaks",
+                    "Fix textboxes and graphs rendering on top of settings menu",
+                    "Fix notifications bar and market reports scrolling issues",
+                    "Fix large cash amounts overflowing 32-bit integers",
+                    "Fix game exit/restart lifecycle — game process stays alive for clean restart",
+                ]
+            },
         ]
     },
     {
@@ -279,6 +325,24 @@ const MainMenu = () => {
 
     const localeWarning = localeManager.getWarningForLocale(localeManager.getCurrentLocale());
 
+    // Main menu keyboard shortcuts
+    useEffect(() => {
+        const handleKey = (e) => {
+            if (isEditableTarget(e.target)) return;
+            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+            switch (e.key.toLowerCase()) {
+                case 'l': api.loadGame(); break;
+                case 'n': api.newGame(); break;
+                case 'e': api.exitToDesktop(); break;
+                case 'h': showHelp(); break;
+                default: return;
+            }
+            e.preventDefault();
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
+    }, []);
+
     return html`
     <div class="wsr-root">
       <${VideoBackground} />
@@ -287,13 +351,13 @@ const MainMenu = () => {
           <img src=${LOGO_SRC} alt="Wall Street Raider" class="wsr-logo" />
           
             <div class="wsr-buttons" style="margin: 0 auto;">
-              <${Button} class="btn green main-menu" onClick=${api.loadGame}>Load Game</button>
-              <${Button} class="btn green main-menu" onClick=${api.newGame}>New Game</button>
-              <${Button} class="btn main-menu" onClick=${api.exitToDesktop}>Exit to Desktop</button>
+              <${Button} class="btn green main-menu" onClick=${api.loadGame}>${bracketLabel('Load Game', 'L')}</button>
+              <${Button} class="btn green main-menu" onClick=${api.newGame}>${bracketLabel('New Game', 'N')}</button>
+              <${Button} class="btn main-menu" onClick=${api.exitToDesktop}>${bracketLabel('Exit to Desktop', 'E')}</button>
             </div>
 
           <div class="wsr-topbar-right">
-            <${Button} class="btn main-menu" onClick=${() => showHelp()}>Help</button>
+            <${Button} class="btn main-menu" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</button>
             <${SettingsModal}>
               <${Button} class="btn main-menu">Settings</button>
             <//>
@@ -316,24 +380,9 @@ const MainMenu = () => {
             <div class="wsr-block">
                 <div class="wsr-ann-welcome">
               <div class="h-full overflow-y-auto" style="max-height:40vh;">
-              <h3 class="wsr-block-title">Win32 to Electron Conversion Roadmap</h3>
-  <p>As part of our commitment to future-proofing Wall Street Raider and ensuring cross-platform compatibility, we are actively working to replace all legacy Win32 code with modern Electron implementations. This transition is critical for the game's long-term sustainability and feature expansion.</p>
-
-  <h4>Next Steps in the Conversion</h4>
-  <ul>
-    <li>- Swaps</li>
-    <li>- Advanced Options<span>🇦🇫</span></li>
-    <li>- Picklist</li>
-    <li>- Database Search</li>
-    <li>- Settings/Cheats Menu</li>
-    <li>- Change Law Firm</li>
-    <li>- Spread Rumors</li>
-    <li>- Harassing Lawsuit</li>
-    <li>- Capital Contributions</li>
-  </ul>
-
-  <p>We appreciate your patience and support as we undertake this significant upgrade. Stay tuned for updates as we complete each milestone!</p>
-</div>
+              <h3 class="wsr-block-title">Placeholder Title</h3>
+  <p>Hello, World!</p>
+  </div>
                 </div>
             </div>
           </section>
@@ -359,9 +408,16 @@ const MainMenu = () => {
                     ${CHANGELOG.map(c => html`
                     <li class="wsr-change">
                         <div class="wsr-change-ver">${c.ver}</div>
+                        ${c.sections ? c.sections.map(s => html`
+                        <div class="wsr-change-section-heading">${s.heading}</div>
+                        <ul class="wsr-change-list">
+                        ${s.items.map(it => html`<li>• ${it}</li>`)}
+                        </ul>
+                        `) : html`
                         <ul class="wsr-change-list">
                         ${c.items.map(it => html`<li>• ${it}</li>`)}
                         </ul>
+                        `}
                     </li>
                     `)}
                 </ul>

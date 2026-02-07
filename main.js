@@ -1,10 +1,17 @@
 const { app, BrowserWindow, ipcMain, powerMonitor } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { spawn, execSync } = require('child_process');
+
+// Get the save path - matches wsr.bas SavePath$
+function getSavePath() {
+    const localAppData = process.env.LOCALAPPDATA;
+    return path.join(localAppData, 'Wall Street Raider', 'Saves');
+}
 
 let wsrProcess;
 let mainWindow;
-let isRestarting = false; // Flag to prevent app.quit() during intentional restart
+let isQuitting = false; // Flag to prevent WSR restart when Electron is quitting
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -42,16 +49,16 @@ app.whenReady().then(() => {
         wsrProcess.unref();
 
         wsrProcess.on('exit', () => {
-            if (!isRestarting) {
-                app.quit();
-            } else {
-                // Notify renderer that wsr.exe is restarting (show loading)
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.webContents.send('wsr-restarting');
-                }
-                runWSRProcess();
-                isRestarting = false;
+            // Restart WSR unless Electron is quitting
+            if (isQuitting) {
+                console.log('WSR.EXE exited, Electron is quitting...');
+                return;
             }
+            console.log('WSR.EXE exited, restarting...');
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('wsr-restarting');
+            }
+            runWSRProcess();
         });
 
         // Notify renderer that wsr.exe has restarted
@@ -100,6 +107,7 @@ app.whenReady().then(() => {
     });
 
     ipcMain.on('exit-to-desktop', () => {
+        isQuitting = true;
         killWSR();
         app.quit();
     });
@@ -107,7 +115,7 @@ app.whenReady().then(() => {
     // Restart wsr.exe without closing Electron (for "Exit Game" / return to main menu)
     ipcMain.on('restart-wsr', () => {
         console.log('Restarting wsr.exe...');
-        isRestarting = true;
+        killWSR(); // Kill the process to trigger the 'exit' handler which will restart it
     });
 
     // Notify renderer when system resumes from sleep to recover network connections
@@ -115,6 +123,64 @@ app.whenReady().then(() => {
         console.log('System resumed from sleep');
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('system-resumed');
+        }
+    });
+
+    // List available save files
+    ipcMain.handle('list-saves', async () => {
+        const savePath = getSavePath();
+        try {
+            if (!fs.existsSync(savePath)) {
+                return [];
+            }
+            const files = fs.readdirSync(savePath);
+            const saves = [];
+            for (const file of files) {
+                if (file.toUpperCase().endsWith('.DAT') &&
+                    file.toUpperCase() !== 'LASTGAME.DAT' &&
+                    file.toUpperCase() !== 'GTIME.DAT') {
+                    const filePath = path.join(savePath, file);
+                    const stats = fs.statSync(filePath);
+                    // Check if it's a real save file (not @DUMMY)
+                    try {
+                        const content = fs.readFileSync(filePath, 'utf8');
+                        const firstLine = content.split('\n')[0] || '';
+                        if (!firstLine.includes('@DUMMY')) {
+                            saves.push({
+                                filename: file,
+                                size: stats.size,
+                                modifiedDate: stats.mtime.toLocaleString()
+                            });
+                        }
+                    } catch (e) {
+                        // If we can't read the file, skip it
+                    }
+                }
+            }
+            return saves;
+        } catch (err) {
+            console.error('Error listing saves:', err);
+            return [];
+        }
+    });
+
+    // Delete a save file
+    ipcMain.handle('delete-save', async (event, filename) => {
+        const savePath = getSavePath();
+        const filePath = path.join(savePath, filename);
+        try {
+            // Security check - ensure filename doesn't contain path traversal
+            if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+                return { success: false, error: 'Invalid filename' };
+            }
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                return { success: true };
+            }
+            return { success: false, error: 'File not found' };
+        } catch (err) {
+            console.error('Error deleting save:', err);
+            return { success: false, error: err.message };
         }
     });
 });
@@ -128,7 +194,7 @@ function killWSR() {
 }
 
 // Kill first, then quit.
-app.on('window-all-closed', () => { killWSR(); if (process.platform !== 'darwin') app.quit(); });
+app.on('window-all-closed', () => { isQuitting = true; killWSR(); if (process.platform !== 'darwin') app.quit(); });
 app.on('before-quit', killWSR);
 app.on('quit', killWSR);
 

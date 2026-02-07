@@ -12,6 +12,8 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
     const defaultStartingMoney = api.useGameStore(s => s.gameState.startingMoney);
     const defaultGameLength = api.useGameStore(s => s.gameState.gameLength);
     const defaultDifficultyLevel = api.useGameStore(s => s.gameState.difficultyLevel);
+    const defaultTutorialEnabled = api.useGameStore(s => s.gameState.tutorialEnabled);
+    const defaultStartPaused = api.useGameStore(s => s.gameState.startPaused);
     const numPlayers = api.useGameStore(s => s.gameState.numPlayers) || 2;
 
     const playerIdsOrdered = [api.HUMAN1_ID, api.COMPUTER1_ID, api.COMPUTER2_ID, api.COMPUTER3_ID, api.COMPUTER4_ID];
@@ -22,7 +24,9 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
     const [gameLength, setGameLength] = useState("35");
     const [difficultyLevel, setDifficultyLevel] = useState("2");
     const [tutorialEnabled, setTutorialEnabled] = useState(true);
+    const [startPaused, setStartPaused] = useState(false);
     const hasInitialized = useRef(false);
+    const firstInputRef = useRef(null);
 
     // Reset form state only when modal opens (show transitions to true)
     useEffect(() => {
@@ -34,11 +38,22 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                 setMoney(defaultStartingMoney?.toString() || "1000");
                 setGameLength(defaultGameLength?.toString() || "35");
                 setDifficultyLevel(defaultDifficultyLevel?.toString() || "2");
-                setTutorialEnabled(true);
+                setTutorialEnabled(defaultTutorialEnabled === 1 || defaultTutorialEnabled === undefined);
+                setStartPaused(defaultStartPaused === 1);
             }
         } else {
             hasInitialized.current = false; // Reset flag when modal closes
         }
+    }, [show]);
+
+    // Auto-focus first input when modal shows
+    useEffect(() => {
+        if (!show) return;
+        const t = setTimeout(() => {
+            firstInputRef.current?.focus();
+            firstInputRef.current?.select();
+        }, 0);
+        return () => clearTimeout(t);
     }, [show]);
 
     const submit = () => {
@@ -49,7 +64,8 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
             startingMoney: money,
             gameLength,
             difficultyLevel: difficultyLevel,
-            tutorialEnabled: tutorialEnabled ? 1 : 0
+            tutorialEnabled: tutorialEnabled ? 1 : 0,
+            startPaused: startPaused ? 1 : 0
         };
         sanitizeNames.forEach((name, index) => {
             const playerNum = playerIdsOrdered[index];
@@ -73,7 +89,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                     ${playerIdsOrdered.slice(0, numPlayers).map((playerId, index) => html`<div class="flex">
                         <div class="flex-1 p-2 text-right">${playerId === api.HUMAN1_ID ? insertCurrencySymbols("You:") : insertCurrencySymbols("Computer:")}</div>
                         <div class="flex-1 p-2">
-                            <input type="text" maxlength="20" class="modal-input" value=${playerNames[index] || ""} onInput=${(e) => {
+                            <input type="text" maxlength="20" class="modal-input" ref=${index === 0 ? firstInputRef : undefined} value=${playerNames[index] || ""} onInput=${(e) => {
                                 const val = e.target.value;
                                 setPlayerNames(prev => {
                                     const newNames = [...prev];
@@ -147,6 +163,21 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                                     class="w-4 h-4"
                                 />
                                 <span>${insertCurrencySymbols("Enable interactive tutorial")}</span>
+                            </label>
+                        </div>
+                        <div class="flex-2 p-2"></div>
+                    </div>
+                    <div class="flex">
+                        <div class="flex-2 p-2 text-right w-36">${insertCurrencySymbols("Ticker:")}</div>
+                        <div class="flex-1 p-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked=${startPaused}
+                                    onChange=${(e) => setStartPaused(e.target.checked)}
+                                    class="w-4 h-4"
+                                />
+                                <span>${insertCurrencySymbols("Start game paused")}</span>
                             </label>
                         </div>
                         <div class="flex-2 p-2"></div>

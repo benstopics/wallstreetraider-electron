@@ -128,6 +128,7 @@ function validateRows(state, side /* 'put' | 'call' */) {
         const priceStr = toStr(state[priceKey]).trim();
 
         const rowTouched = hasAnyNonEmpty([strikeStr, expStr, numStr, priceStr]);
+        const rowActive = rowTouched || (bs === 'B' || bs === 'S');
 
         // Auto-default Buy/Sell to "B" if user starts filling the row.
         if (rowTouched && !bs) {
@@ -136,7 +137,10 @@ function validateRows(state, side /* 'put' | 'call' */) {
             errors[bsKey] = { type: 'invalid', msg: 'Choose B or S' };
         }
 
-        if (strikeStr) {
+        // Strike is required when row has Buy/Sell selected or other fields filled
+        if (rowActive && !strikeStr) {
+            errors[strikeKey] = { type: 'required', msg: 'Strike price is required' };
+        } else if (strikeStr) {
             const strike = parseFloatOrNull(strikeStr);
             if (strike == null) {
                 errors[strikeKey] = { type: 'invalid', msg: 'Strike must be a number' };
@@ -145,7 +149,10 @@ function validateRows(state, side /* 'put' | 'call' */) {
             }
         }
 
-        if (expStr) {
+        // Expiration is required when row is active
+        if (rowActive && !expStr) {
+            errors[expKey] = { type: 'required', msg: 'Expiration date is required' };
+        } else if (expStr) {
             const parsed = parseExpMMYYYY(expStr);
             if (!parsed) {
                 errors[expKey] = { type: 'invalid', msg: 'Use MM/YYYY (4-digit year)' };
@@ -157,7 +164,10 @@ function validateRows(state, side /* 'put' | 'call' */) {
             }
         }
 
-        if (numStr) {
+        // Number of options is required when row is active
+        if (rowActive && !numStr) {
+            errors[numKey] = { type: 'required', msg: '% options is required' };
+        } else if (numStr) {
             const raw = parseInt(numStr, 10);
             if (Number.isNaN(raw)) {
                 errors[numKey] = { type: 'invalid', msg: 'Must be 1 to 10' };
@@ -182,6 +192,8 @@ function applyAutoDefaults(state, rowErrors) {
 
 export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }) {
     const [state, setState] = useState();
+    const dlrSign = api.useGameStore(s => s.gameState.dlrSign) || '$';
+    const euro = api.useGameStore(s => s.gameState.euro) || '';
 
     useEffect(() => {
         if (!show || !stateStr) {
@@ -220,7 +232,7 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
         setState(valueToSet);
     }, [stateStr, show]);
 
-    const { mergedState, errors, hasBlockingErrors } = useMemo(() => {
+    const { mergedState, errors, hasSyncBlockingErrors, hasSubmitBlockingErrors } = useMemo(() => {
         const st = { ...state };
 
         const putErr = validateRows(st, 'put');
@@ -233,17 +245,20 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
         const callErr2 = validateRows(st2, 'call');
         const allErr2 = { ...putErr2, ...callErr2 };
 
-        const blocking = Object.values(allErr2).some((e) => e);
-        return { mergedState: st2, errors: allErr2, hasBlockingErrors: blocking };
+        // Sync-blocking: only invalid/range errors (not 'required' - user may still be typing)
+        const syncBlocking = Object.values(allErr2).some((e) => e && e.type !== 'required');
+        // Submit-blocking: all errors including required fields
+        const submitBlocking = Object.values(allErr2).some((e) => e);
+        return { mergedState: st2, errors: allErr2, hasSyncBlockingErrors: syncBlocking, hasSubmitBlockingErrors: submitBlocking };
     }, [state]);
 
     useEffect(() => {
         if (!show) return;
         if (!onSubmit) return;
-        if (hasBlockingErrors) return;
+        if (hasSyncBlockingErrors) return;
 
         api.modalResult(api.serialize(mergedState));
-    }, [show, hasBlockingErrors, mergedState]);
+    }, [show, hasSyncBlockingErrors, mergedState]);
 
     const setField = (key, value) => setState((prev) => ({ ...prev, [key]: toStr(value) }));
 
@@ -261,7 +276,7 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
     const onCancel = () => { api.modalResult(api.serialize({ ...state, buttonId: "CLOSE" })); };
 
     const submit = () => {
-        if (!hasBlockingErrors && onSubmit) onSubmit(mergedState);
+        if (!hasSubmitBlockingErrors && onSubmit) onSubmit(mergedState);
     };
 
     const renderRow = (side, i) => {
@@ -334,9 +349,9 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
     const strikeRangeText = useMemo(() => {
         const lo = mergedState.loStrike?.trim();
         const hi = mergedState.hiStrike?.trim();
-        if (lo && hi) return `($${lo} to $${hi})`;
+        if (lo && hi) return `(${dlrSign}${lo}${euro} to ${dlrSign}${hi}${euro})`;
         return '';
-    }, [mergedState.loStrike, mergedState.hiStrike]);
+    }, [mergedState.loStrike, mergedState.hiStrike, dlrSign, euro]);
 
     const expRangeText = useMemo(() => {
         const s = mergedState.startExpRange?.trim();
@@ -392,7 +407,7 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
           points=${120}
         />
 
-        <div class="grid grid-cols-12 gap-2 text-sm font-bold mb-2">
+        <div class="grid grid-cols-12 gap-2 text-sm font-bold mb-2 items-center">
           <div class="col-span-2">Option Type</div>
           <div class="col-span-2">Buy/Sell<br/><span class="font-normal">(B or S)</span></div>
           <div class="col-span-2">Strike Price<br/><span class="font-normal">${strikeRangeText}</span></div>
@@ -401,48 +416,41 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
           <div class="col-span-2">Opt. Price</div>
         </div>
 
-        <div class="border-t border-gray-300 pt-2">
+        <div class="border-t border-gray-600 pt-2">
           ${ROWS.map((i) => renderRow('put', i))}
         </div>
 
-        <div class="border-t border-gray-300 pt-2 mt-2">
+        <div class="border-gray-300 pt-2 mt-3">
           ${ROWS.map((i) => renderRow('call', i))}
         </div>
-
-        ${mergedState.summaryMessageType > 0 ? html`
-          <div class="mt-3 text-sm border border-gray-300 p-2">
-            <div class=${`font-bold ${
-              mergedState.summaryMessageType == 3
-                ? 'negative'
-                : mergedState.summaryMessageType == 2
-                  ? 'text-yellow-600'
+      </div>
+    ${mergedState.summaryMessageType > 0 ? html`
+            <div class="mt-3 text-sm border border-gray-300 p-2">
+                <div class=${`font-bold ${
+                mergedState.summaryMessageType == 3
+                    ? 'negative'
+                    : mergedState.summaryMessageType == 2
+                    ? 'text-yellow-600'
                   : ''
             }`}>
               ${renderMultilineText(mergedState.summaryMessage)}
             </div>
           </div>
-        ` : ''}
+        ` : html`<div class="mt-3 text-sm border border-gray-300 p-2">
+        Enter details for multiple options contracts, then click on SUBMIT to create all of the options at once, such as straddles, strangles, etc..
+    </div>`}
 
-        <div class="mt-3 text-sm">
-          Enter details for multiple options contracts, then click on SUBMIT to create all of the options at once, such as straddles, strangles, etc..
-        </div>
-
-        <div class="mt-4 flex flex-wrap gap-2">
-          <${Button} class="btn modal" onClick=${clearAll}>CLEAR ALL</button>
-          <${Button} class="btn modal" onClick=${onHelp}>HELP</button>
-          <${Button} class="btn modal" onClick=${onShowSizeLimits}>SHOW SIZE LIMITS</button>
-          <${Button} class="btn modal" onClick=${onAutoTrade}>AUTO-TRADE</button>
-        </div>
-
-        <div class="mt-3 flex flex-wrap gap-2">
-          <div class="flex flex-wrap gap-2">
+      <div class="flex justify-end gap-2 p-3 flex-shrink-0 items-center">
+      
+        <div class="my-4 flex flex-wrap gap-2">
+            <${Button} class="btn modal" onClick=${clearAll}>CLEAR ALL</button>
+            <${Button} class="btn modal" onClick=${onHelp}>HELP</button>
+            <${Button} class="btn modal" onClick=${onShowSizeLimits}>SHOW SIZE LIMITS</button>
+            <${Button} class="btn modal" onClick=${onAutoTrade}>AUTO-TRADE</button>
             <${Button} class="btn modal" onClick=${onCloseAll}>CLOSE ALL OPTIONS</button>
-          </div>
         </div>
-      </div>
-
-      <div class="flex justify-end gap-2 p-3 flex-shrink-0">
-        <${Button} class="btn modal green" onClick=${submit} disabled=${hasBlockingErrors}>SUBMIT</button>
+        
+        <${Button} class="btn modal green" onClick=${submit} disabled=${hasSubmitBlockingErrors}>SUBMIT</button>
         <${Button} class="btn modal" onClick=${onCancel}>CLOSE</button>
       </div>
     <//>

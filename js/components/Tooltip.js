@@ -1,7 +1,7 @@
 import { html, useRef, useEffect } from '../lib/preact.standalone.module.js';
 
 // Tooltip component using vanilla DOM for portal-like behavior
-const Tooltip = ({ text, children, containerClass = '' }) => {
+const Tooltip = ({ text, children, containerClass = '', forceShow = false }) => {
   const wrapperRef = useRef(null);
   const tooltipRef = useRef(null);
 
@@ -46,6 +46,21 @@ const Tooltip = ({ text, children, containerClass = '' }) => {
       }
     };
   }, [text]);
+
+  // Force-show tooltip programmatically (e.g. from hotkey on disabled button)
+  useEffect(() => {
+    if (!forceShow || !wrapperRef.current || !tooltipRef.current) return;
+
+    const tip = tooltipRef.current;
+    const rect = wrapperRef.current.getBoundingClientRect();
+    tip.style.left = `${rect.left + rect.width / 2}px`;
+    tip.style.top = `${rect.top - 8}px`;
+    tip.style.display = 'block';
+
+    return () => {
+      if (tooltipRef.current) tooltipRef.current.style.display = 'none';
+    };
+  }, [forceShow]);
 
   return html`
     <span ref=${wrapperRef} class=${containerClass}>

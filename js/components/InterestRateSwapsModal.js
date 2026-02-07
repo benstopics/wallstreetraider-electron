@@ -1,4 +1,4 @@
-import { html, useEffect, useMemo, useState } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useMemo, useState, useRef } from '../lib/preact.standalone.module.js';
 import Modal from './Modal.js';
 import * as api from '../api.js';
 import { renderMultilineText } from './helpers.js';
@@ -158,6 +158,7 @@ const rateTypeOptions = {
  */
 export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit }) {
     const [state, setState] = useState();
+    const notionalInputRef = useRef(null);
 
     const currentQuarter = state?.currentQuarter || 0
     const currentYear = state?.currentYear || 0
@@ -211,6 +212,16 @@ export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit
 
         api.modalResult(api.serialize(mergedState));
     }, [show, hasBlockingErrors, mergedState]);
+
+    // Auto-focus notional input when modal shows
+    useEffect(() => {
+        if (!show) return;
+        const t = setTimeout(() => {
+            notionalInputRef.current?.focus();
+            notionalInputRef.current?.select();
+        }, 0);
+        return () => clearTimeout(t);
+    }, [show]);
 
     const setField = (key, value) => setState((prev) => ({ ...(prev || {}), [key]: toStr(value) }));
 
@@ -280,6 +291,7 @@ export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit
               <div class="w-1/4 text-right text-md">Notional Amount:</div>
               <div class="w-1/4">
                 <input
+                  ref=${notionalInputRef}
                   type="text"
                   class=${inputClass(!!errors.notionalMillions)}
                   value=${mergedState.notionalMillions}

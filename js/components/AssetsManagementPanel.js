@@ -4,6 +4,7 @@ import * as api from '../api.js';
 import Modal from './Modal.js';
 import { parseHyperlink, insertCurrencySymbols } from './helpers.js';
 import Button from './Button.js';
+import Tooltip from './Tooltip.js';
 
 // Throttle re-computation so we don't lock the UI when gamestate refreshes frequently.
 function useThrottledValue(value, ms = 750) {
@@ -75,6 +76,9 @@ export default function AssetsManagementPanel() {
   const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
   const actingAs = api.useGameStore(s => s.gameState.actingAs);
   const actingAsId = api.useGameStore(s => s.gameState.actingAsId);
+  const playerName = api.useGameStore(s => s.gameState.playerName) || 'Player';
+  const disabledTooltip = `Must be acting as an entity. Click to act as ${playerName}`;
+  const handleDisabledClick = () => api.changeActingAs(api.HUMAN1_ID);
 
   // Reduce churn: the backend tends to refresh frequently. We only re-parse at most ~1x/sec.
   const throttledReport = useThrottledValue(portfolio, 800);
@@ -282,25 +286,47 @@ export default function AssetsManagementPanel() {
                 <div class="mono assets-num">${typeof r.heldPct === 'number' ? r.heldPct.toFixed(2) + '%' : '—'}</div>
                 <div class=${`pl-badge ${badgeClass} assets-num`}>${pl == null ? '—' : pl.toFixed(2) + '%'}</div>
                 <div class="assets-actions" style="gap:6px;">
-                  <${Button}
-                    class=${`btn p-2 stop-btn stop-loss ${hasStopLoss != null ? 'is-set' : ''}`}
-                    title=${hasStopLoss != null ? `Stop Loss @ ${hasStopLoss}` : 'Set Stop Loss'}
-                    disabled=${!actingAs}
-                    onClick=${() => openStopModal('loss', r.id)}
-                  >SL</button>
-                  <${Button}
-                    class=${`btn p-2 stop-btn stop-gain ${hasStopGain != null ? 'is-set' : ''}`}
-                    title=${hasStopGain != null ? `Stop Gain @ ${hasStopGain}` : 'Set Stop Gain'}
-                    disabled=${!actingAs}
-                    onClick=${() => openStopModal('gain', r.id)}
-                  >SG</button>
-                  <${Button}
-                    type="button"
-                    class="assets-sell btn red"
-                    disabled=${!actingAs}
-                    title=${!actingAs ? 'Must be acting as an entity' : 'Sell'}
-                    onClick=${() => api.sellStock(r.id)}
-                  >Sell</button>
+                  ${!actingAs ? html`
+                    <${Tooltip} text=${disabledTooltip}>
+                      <${Button}
+                        class=${`btn p-2 stop-btn stop-loss ${hasStopLoss != null ? 'is-set' : ''}`}
+                        style="opacity: 0.55"
+                        onClick=${handleDisabledClick}
+                      >SL</button>
+                    <//>
+                    <${Tooltip} text=${disabledTooltip}>
+                      <${Button}
+                        class=${`btn p-2 stop-btn stop-gain ${hasStopGain != null ? 'is-set' : ''}`}
+                        style="opacity: 0.55"
+                        onClick=${handleDisabledClick}
+                      >SG</button>
+                    <//>
+                    <${Tooltip} text=${disabledTooltip}>
+                      <${Button}
+                        type="button"
+                        class="assets-sell btn red"
+                        style="opacity: 0.55"
+                        onClick=${handleDisabledClick}
+                      >Sell</button>
+                    <//>
+                  ` : html`
+                    <${Button}
+                      class=${`btn p-2 stop-btn stop-loss ${hasStopLoss != null ? 'is-set' : ''}`}
+                      title=${hasStopLoss != null ? `Stop Loss @ ${hasStopLoss}` : 'Set Stop Loss'}
+                      onClick=${() => openStopModal('loss', r.id)}
+                    >SL</button>
+                    <${Button}
+                      class=${`btn p-2 stop-btn stop-gain ${hasStopGain != null ? 'is-set' : ''}`}
+                      title=${hasStopGain != null ? `Stop Gain @ ${hasStopGain}` : 'Set Stop Gain'}
+                      onClick=${() => openStopModal('gain', r.id)}
+                    >SG</button>
+                    <${Button}
+                      type="button"
+                      class="assets-sell btn red"
+                      title="Sell"
+                      onClick=${() => api.sellStock(r.id)}
+                    >Sell</button>
+                  `}
                 </div>
               </div>
             `;

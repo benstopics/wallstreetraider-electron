@@ -1,13 +1,27 @@
 import { useEffect, useRef, html } from '../lib/preact.standalone.module.js';
 import { useActiveTooltip } from './TutorialTooltip.js';
 
-export default function Modal({ show, onClose, enableClickOutsideClose = true, children, class: cls = '', style = '' }) {
+export default function Modal({ show, onClose, onKeyDown, enableClickOutsideClose = true, children, class: cls = '', style = '' }) {
     const cardRef = useRef(null);
     const activeTooltip = useActiveTooltip();
 
     useEffect(() => {
         if (!show) return;
-        const onKey = e => { if (e.key === 'Escape') onClose(); };
+        // Blur any focused editable element so modal hotkeys (C, Y, N) work
+        // immediately without requiring a click on the modal first.
+        const ae = document.activeElement;
+        if (ae && ae !== document.body && ae !== document.documentElement) {
+            ae.blur();
+        }
+    }, [show]);
+
+    useEffect(() => {
+        if (!show) return;
+        const onKey = e => {
+            // Only handle ESC if onClose is defined, otherwise let parent handlers deal with it
+            if (e.key === 'Escape' && !e.defaultPrevented && onClose) { e.preventDefault(); onClose(); }
+            onKeyDown?.(e);
+        };
         const prev = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         document.addEventListener('keydown', onKey);
@@ -15,7 +29,7 @@ export default function Modal({ show, onClose, enableClickOutsideClose = true, c
             document.removeEventListener('keydown', onKey);
             document.body.style.overflow = prev;
         };
-    }, [show, onClose]);
+    }, [show, onClose, onKeyDown]);
 
     if (!show) return null;
 

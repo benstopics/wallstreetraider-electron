@@ -1,38 +1,16 @@
 import { DEFAULT_CAPITALIZATION_CHART_THEME } from '../../css/chart-styles.js';
 import { html } from '../lib/preact.standalone.module.js';
 import AssetPriceChart from './AssetPriceChart.js';
-import { insertCurrencySymbols } from './helpers.js';
 
+// Data from API is in millions, so baseMultiplier = 1e6
+const BASE_MULTIPLIER = 1e6;
 
 function CapitalizationChart({ assetId, chartTitle }) {
-
-    const generateChartTitle = chartData => {
-        const { prices } = chartData;
-        const maxPrice = Math.max(...prices);
-        if (maxPrice > 1e9) {
-            return `${chartTitle} (${insertCurrencySymbols("Quadrillions")})`;
-        } else if (maxPrice > 1e6) {
-            return `${chartTitle} (${insertCurrencySymbols("Trillions")})`;
-        } else if (maxPrice > 1e3) {
-            return `${chartTitle} (${insertCurrencySymbols("Billions")})`;
-        } else {
-            return `${chartTitle} (${insertCurrencySymbols("Millions")})`;
-        }
-    }
-
-    const transformValue = value => {
-        if (value > 1e3) {
-            return value / 1e3; // Convert to billions
-        } else {
-            return value; // Keep in millions
-        }
-    }
-
     return html`<${AssetPriceChart}
         assetId=${assetId}
-        chartTitle=${generateChartTitle}
-        transformValue=${transformValue}
+        chartTitle=${chartTitle}
         theme=${DEFAULT_CAPITALIZATION_CHART_THEME}
+        baseMultiplier=${BASE_MULTIPLIER}
     />`;
 }
 

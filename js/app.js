@@ -1,6 +1,12 @@
 import { html, render, useState, useEffect, useRef } from './lib/preact.standalone.module.js';
 import './lib/tailwind.module.js';
 import * as api from './api.js';
+import { matchHotkey } from './hotkeys.js';
+import { isEditableTarget } from './keybinds.js';
+import { hotkeyManager, PRIORITY } from './hotkeyManager.js';
+import { useHotkey } from './hooks/useHotkey.js';
+
+const { ipcRenderer } = require('electron');
 import GameUI from './components/GameUI.js';
 import MainMenu from './components/MainMenu.js';
 import SplashSequence from './components/SplashSequence.js';
@@ -11,10 +17,16 @@ import InfoModal from './components/InfoModal.js';
 import NewGameSetupModal from './components/NewGameSetupModal.js';
 import AdvancedOptionsModal from './components/AdvancedOptionsModal.js';
 import InterestRateSwapsModal from './components/InterestRateSwapsModal.js';
+import BankAllocationModal from './components/BankAllocationModal.js';
 import TextAnnounceModal from './components/TextAnnounceModal.js';
 import CompanySelectModal from './components/CompanySelectModal.js';
 import TutorialModal from './components/TutorialModal.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
+
+// Initialize the centralized hotkey manager (single capture-phase listener).
+// All hotkey handlers (modal, global, dropdown, tabs, line-selection) register
+// via useHotkey() hook and dispatch through the manager's priority system.
+hotkeyManager.init();
 
 const logos = [
     { src: "assets/roninsoft_logo.png", backgroundColor: "#ffffff" },
@@ -34,6 +46,16 @@ const AppInner = () => {
     const modalTitle = api.useGameStore(s => s.gameState.modalTitle);
     const modalText = api.useGameStore(s => s.gameState.modalText);
     const modalDefault = api.useGameStore(s => s.gameState.modalDefault);
+    const readyToRestart = api.useGameStore(s => s.gameState.readyToRestart);
+
+    // Detect ready to restart signal and restart WSR to return to main menu
+    // This flag is set AFTER all end-game dialogs are closed
+    useEffect(() => {
+        if (readyToRestart === 'Y' && modalType === 0) {
+            console.log('Ready to restart detected, restarting WSR...');
+            ipcRenderer.send('restart-wsr');
+        }
+    }, [readyToRestart, modalType]);
 
     // useEffect(() => {
     //     const connectWebSocket = (retryCount = 0) => {
@@ -81,24 +103,155 @@ const AppInner = () => {
     //     return () => ws.close();
     // }, []);
 
-    useEffect(() => {
-        const handleKey = (e) => {
-            // Don't handle spacebar when help modal is open (user may be typing in search)
-            if (e.key === ' ' && !helpShown) {
-                if (isTickerRunning) {
-                    api.stopTicker();
-                } else {
-                    api.startTicker();
-                }
-            } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
-                api.saveGame()
-                e.stopPropagation();
-            }
-        };
+    const hideModal = () => {
+        api.closeModal();
+    }
 
-        document.addEventListener('keydown', handleKey);
-        return () => document.removeEventListener('keydown', handleKey);
-    }, [isTickerRunning, helpShown]);
+    // Modal keyboard shortcuts (Y/N/C/ESC when modal is open)
+    const modalHotkeyIdRef = useRef(Symbol('app-modal-hotkey'));
+    useHotkey(
+        modalHotkeyIdRef.current,
+        PRIORITY.MODAL,
+        (e) => {
+            if (e.key === 'Escape') return true;
+            if (isEditableTarget(e.target)) return false;
+            const match = matchHotkey(e);
+            // InputStringModal (type 3) handles its own letter shortcuts (C/S/D)
+            if (match?.action === 'MODAL_CANCEL' && modalType === 3) return false;
+            return !!(match && (match.action === 'MODAL_YES' || match.action === 'MODAL_NO' || match.action === 'MODAL_CANCEL'));
+        },
+        (e) => {
+            if (e.key === 'Escape' && !e.defaultPrevented) {
+                e.preventDefault();
+                if (modalType === 2) api.modalResult(3);
+                else hideModal();
+                return true;
+            }
+            const match = matchHotkey(e);
+            if (!match) return false;
+            if (match.action === 'MODAL_CANCEL') {
+                if (modalType === 3) return false; // InputStringModal handles its own shortcuts
+                if (modalType === 2) api.modalResult(3);
+                else hideModal();
+                return true;
+            }
+            if (modalType === 1 || modalType === 2) {
+                if (match.action === 'MODAL_YES') { api.modalResult(1); return true; }
+                if (match.action === 'MODAL_NO') { api.modalResult(2); return true; }
+            }
+            return false;
+        },
+        { active: modalType > 0 },
+        [modalType]
+    );
+
+    // Global game keyboard shortcuts
+    const globalHotkeyIdRef = useRef(Symbol('app-global-hotkey'));
+    useHotkey(
+        globalHotkeyIdRef.current,
+        PRIORITY.GLOBAL,
+        (e) => {
+            // ESC, Enter (digit confirm), Shift (blur) work even with helpShown
+            if (e.key === 'Escape' && !isEditableTarget(e.target)) return true;
+            if (e.key === 'Enter' && hotkeyManager.digitBuffer && !isEditableTarget(e.target)) return true;
+            if (e.key === 'Shift' && isEditableTarget(document.activeElement)) return true;
+            if (isEditableTarget(e.target)) return false;
+            if (helpShown) return false;
+            // Shift+letter for dropdowns
+            if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey) {
+                if (['t', 'c', 'f', 'h', 'b'].includes(e.key.toLowerCase())) return true;
+            }
+            return !!matchHotkey(e);
+        },
+        (e) => {
+            // ESC: clear digit buffer
+            if (e.key === 'Escape' && !isEditableTarget(e.target)) {
+                if (hotkeyManager.digitBuffer) {
+                    hotkeyManager.clearDigitBuffer();
+                    e.preventDefault();
+                    return true;
+                }
+                return false;
+            }
+
+            // Enter: confirm digit buffer if non-empty
+            if (e.key === 'Enter' && hotkeyManager.digitBuffer && !isEditableTarget(e.target)) {
+                e.preventDefault();
+                hotkeyManager.confirmDigitBuffer();
+                return true;
+            }
+
+            // Shift blur: blur editable element so Shift+letter hotkeys work
+            if (e.key === 'Shift' && isEditableTarget(document.activeElement)) {
+                document.activeElement.blur();
+                return true;
+            }
+
+            if (isEditableTarget(e.target)) return false;
+            if (helpShown) return false;
+
+            // Dropdown letter keys (Shift+letter to open action bar dropdowns)
+            if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey) {
+                const dropdownChars = ['t', 'c', 'f', 'h', 'b'];
+                if (dropdownChars.includes(e.key.toLowerCase())) {
+                    document.dispatchEvent(new CustomEvent('hotkey-dropdown', { detail: { char: e.key.toLowerCase() } }));
+                    return true;
+                }
+            }
+
+            const match = matchHotkey(e);
+            if (!match) return false;
+
+            // Ignore key repeat for navigation actions
+            if (e.repeat && (match.action === 'NAV_BACK' || match.action === 'NAV_FORWARD' ||
+                             match.action === 'ACTING_AS_PREV' || match.action === 'ACTING_AS_NEXT')) {
+                e.preventDefault();
+                return true;
+            }
+
+            switch (match.action) {
+                case 'NAV_BACK':      e.preventDefault(); api.goBack(); return true;
+                case 'NAV_FORWARD':   e.preventDefault(); api.goForward(); return true;
+                case 'FOCUS_COMMAND':  e.preventDefault(); document.dispatchEvent(new CustomEvent('hotkey-focus-command')); return true;
+                case 'MARKET_REPORTS':    api.viewIndustry(0); return true;
+                case 'DATABASE_SEARCH':   api.viewDbSearch(); return true;
+                case 'CHANGE_LAW_FIRM':   api.changeLawFirm(); return true;
+                case 'VIEW_ACTING_AS':   api.setViewAsset(api.gameStore.getState().gameState.actingAsId); return true;
+                case 'ACT_AS':           document.dispatchEvent(new CustomEvent('hotkey-act-as')); return true;
+                case 'VIEW_PLAYER':      document.dispatchEvent(new CustomEvent('hotkey-view-player')); return true;
+                case 'ACTING_AS_PREV':   e.preventDefault(); api.cycleActingAs(-1); return true;
+                case 'ACTING_AS_NEXT':   e.preventDefault(); api.cycleActingAs(1); return true;
+
+                // Bar buttons (SHIFT+number)
+                case 'BAR_1': case 'BAR_2': case 'BAR_3': case 'BAR_4': case 'BAR_5':
+                case 'BAR_6': case 'BAR_7': case 'BAR_8': case 'BAR_9': case 'BAR_10': {
+                    const idx = match.action === 'BAR_10' ? 9 : parseInt(match.action.slice(4), 10) - 1;
+                    document.dispatchEvent(new CustomEvent('hotkey-tab', { detail: { index: idx } }));
+                    return true;
+                }
+
+                // Tabs / Line selection (plain number keys) - routed through manager's digit buffer
+                case 'TAB_1': case 'TAB_2': case 'TAB_3': case 'TAB_4': case 'TAB_5':
+                case 'TAB_6': case 'TAB_7': case 'TAB_8': case 'TAB_9': case 'TAB_10': {
+                    const digit = match.action === 'TAB_10' ? '0' : match.action.slice(4);
+                    hotkeyManager.handleDigit(digit);
+                    return true;
+                }
+
+                case 'TOGGLE_TICKER':
+                    if (isTickerRunning) api.stopTicker();
+                    else api.startTicker();
+                    return true;
+                case 'SAVE_GAME':
+                    e.preventDefault();
+                    api.saveGame();
+                    return true;
+            }
+            return false;
+        },
+        { active: gameLoaded },
+        [isTickerRunning, helpShown, gameLoaded]
+    );
 
     // Stop ticker when help modal is shown
     useEffect(() => {
@@ -106,10 +259,6 @@ const AppInner = () => {
             api.stopTicker();
         }
     }, [helpShown]);
-
-    const hideModal = () => {
-        api.closeModal();
-    }
 
     useEffect(() => {
         let timeoutId;
@@ -121,7 +270,6 @@ const AppInner = () => {
                     newGameState.allIndustries
                 );
                 newGameState.hyperlinkRegex = hyperlinkRegex;
-                // Merge with current state to preserve recent local changes (e.g., tutorial step)
                 const mergedState = api.mergeGameState(newGameState);
                 requestAnimationFrame(() => {
                     setGameState(mergedState);
@@ -130,7 +278,6 @@ const AppInner = () => {
                 timeoutId = setTimeout(fetchGameState, 50);
             }).catch((error) => {
                 console.error('Failed to fetch game state:', error);
-                // Continue polling even after errors to recover when WSR.EXE is ready
                 timeoutId = setTimeout(fetchGameState, 200);
             });
         };
@@ -177,14 +324,15 @@ const AppInner = () => {
         />
         <${InfoModal}
             show=${modalType === 4}
+            title=${modalTitle}
             text=${modalText}
             onClose=${hideModal}
         />
         <${NewGameSetupModal}
             show=${modalType === 5}
             onSubmit=${(newSettings) => {
-            api.modalResult(api.serialize(newSettings));
-        }}
+                api.modalResult(api.serialize(newSettings));
+            }}
             onCancel=${hideModal}
         />
         <${AdvancedOptionsModal}
@@ -202,6 +350,14 @@ const AppInner = () => {
             stateStr=${modalType === 7 ? modalText : ''}
             onSubmit=${(newState) => {
                 api.modalResult(api.serialize({...newState, buttonId: "OFFER"}));
+            }}
+        />
+        <${BankAllocationModal}
+            show=${modalType === 10}
+            title=${modalTitle}
+            stateStr=${modalType === 10 ? modalText : ''}
+            onSubmit=${(newState) => {
+                api.modalResult(api.serialize({...newState, buttonId: "APPLY"}));
             }}
         />
         <${TextAnnounceModal}

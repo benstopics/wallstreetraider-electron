@@ -1,5 +1,6 @@
-import { html } from '../lib/preact.standalone.module.js';
+import { html, useRef, useState } from '../lib/preact.standalone.module.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
+import HotkeyButtonBar from './HotkeyButtonBar.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
@@ -29,38 +30,56 @@ function OptionsTab() {
     // Get centralized button props
     const buttonProps = useActionButtonProps();
 
-    // Get disabled message and click handler from hook for dynamic buttons
-    const actingAsDisabledMessage = buttonProps.buyCalls.disabledMessage;
-    const handleActAsClick = buttonProps.handleActAsClick;
+    // ETF check for disabling options in the list
+    const isETF = buttonProps.isActiveEntityETF;
+    const etfDisabledMessage = isETF ? "Not available for ETFs" : false;
+
+    // Acting-as check for line buttons (higher priority than ETF check)
+    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
+    const handleActAsClick = buttonProps.onMustActAsCompanyClick;
+
+    // Extras hotkey refs
+    const extrasContainerRef = useRef(null);
+    const scopeActiveRef = useRef(false);
+    const [, setScopeRenderTick] = useState(0);
+    const barButtons = [
+        buttonProps.buyCalls,
+        buttonProps.sellCalls,
+        buttonProps.buyPuts,
+        buttonProps.sellPuts,
+        !isETF && buttonProps.advancedOptions,
+    ];
+    const extrasStartNumber = barButtons.filter(Boolean).length + 1;
 
     return html`
             <div class="flex flex-col w-full h-full min-h-0">
                 <div class="flex flex-col items-center mb-2">
-                    <div class="flex flex-row justify-center gap-2 mt-2" style="height:30px">
-                        <${DisabledTooltipButton} ...${buttonProps.buyCalls} />
-                        <${DisabledTooltipButton} ...${buttonProps.sellCalls} />
-                        <${DisabledTooltipButton} ...${buttonProps.buyPuts} />
-                        <${DisabledTooltipButton} ...${buttonProps.sellPuts} />
-                    </div>
-                    ${!buttonProps.isActiveEntityETF ? html`<div class="flex flex-row justify-center mt-2" style="height:30px">
-                        <${DisabledTooltipButton} ...${buttonProps.advancedOptions} />
-                    </div>` : ''}
+                    <${HotkeyButtonBar} buttons=${barButtons}
+                        extrasContainerRef=${extrasContainerRef}
+                        scopeActiveRef=${scopeActiveRef}
+                        onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
+                        class="flex flex-row justify-center gap-2 mt-2" style="height:30px" />
                 </div>
-                <div class="flex flex-col flex-[3] items-center overflow-y-auto min-h-0">
+                <div ref=${extrasContainerRef} class="flex flex-col flex-[3] items-center overflow-y-auto min-h-0">
                     ${renderLines(
                         optionsList,
                         ({ id }) => api.setViewAsset(parseInt(id.split('|').pop())),
-                        ({ id, type, text }) => {
+                        ({ id, type, text, extrasCounter, isLineSelected, lineNumber }) => {
                             const contract = parseReportLine(text);
                             const notInTheMoney = (type.includes('LONGCALL') && contract.stockPrice < contract.strikePrice)
                                 || (type.includes('LONGPUT') && contract.stockPrice > contract.strikePrice);
-                            const exerciseDisabledMsg = actingAsDisabledMessage ? actingAsDisabledMessage : (notInTheMoney ? "Option not in the money" : false);
-                            // Only provide click handler if the issue is acting-as related
+                            // Priority: acting-as > ETF > not-in-the-money
+                            const sellDisabledMsg = actingAsDisabledMessage || etfDisabledMessage;
+                            const sellDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
+                            const exerciseDisabledMsg = actingAsDisabledMessage || etfDisabledMessage || (notInTheMoney ? "Option not in the money" : false);
                             const exerciseDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
+                            const sellIdx = extrasCounter ? extrasCounter.current++ : null;
+                            const exerciseIdx = extrasCounter ? extrasCounter.current++ : null;
 
                             return html`
                             <${DisabledTooltipButton}
-                                disabledMessage=${actingAsDisabledMessage}
+                                disabledMessage=${sellDisabledMsg}
+                                onDisabledClick=${sellDisabledClick}
                                 onClick=${() => (
                                     type === 'LONGCALL' ? api.sellCalls
                                     : type === 'LONGPUT' ? api.sellPuts
@@ -68,23 +87,32 @@ function OptionsTab() {
                                     : type === 'SHORTPUT' ? api.buyPuts
                                     : () => { }
                                 )(parseInt(id.split('|')[0]))}
-                                onDisabledClick=${handleActAsClick}
                                 label=${type.includes('LONG') ? 'Sell' : 'Cover'}
                                 color="red"
+                                extrasIndex=${sellIdx}
+                                scopeActive=${scopeActiveRef.current}
+                                hotkeyLetter="s"
+                                isLineSelected=${isLineSelected}
+                                lineNumber=${lineNumber}
                             />
                             <${DisabledTooltipButton}
                                 disabledMessage=${exerciseDisabledMsg}
+                                onDisabledClick=${exerciseDisabledClick}
                                 onClick=${() => (
                                     type.includes('CALL') ? api.exerciseCallOptionsEarly
                                     : type.includes('PUT') ? api.exercisePutOptionsEarly
                                     : () => { }
                                 )(parseInt(id.split('|')[0]))}
-                                onDisabledClick=${exerciseDisabledClick}
                                 label="Exercise Early"
                                 color="blue"
+                                extrasIndex=${exerciseIdx}
+                                scopeActive=${scopeActiveRef.current}
+                                hotkeyLetter="e"
+                                isLineSelected=${isLineSelected}
+                                lineNumber=${lineNumber}
                             />
                         `}
-                    , hyperlinkRegex)}
+                    , hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
                 </div>
             </div>
     `;

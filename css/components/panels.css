@@ -29,6 +29,17 @@
   letter-spacing: 0.25px;
 }
 
+.panel-footer {
+  background: linear-gradient(90deg, var(--header-grad-start), var(--header-grad-mid), var(--header-grad-end));
+  color: var(--header-text);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  flex-shrink: 0;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--border-light);
+  letter-spacing: 0.25px;
+}
+
 .panel-body {
   flex: 1 1 0%;
   overflow-y: auto;

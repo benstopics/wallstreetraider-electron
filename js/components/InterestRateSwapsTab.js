@@ -1,63 +1,31 @@
-import { html } from '../lib/preact.standalone.module.js';
+import { html, useRef, useState } from '../lib/preact.standalone.module.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
-import Tooltip from './Tooltip.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
-import Button from './Button.js';
+import HotkeyButtonBar from './HotkeyButtonBar.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
 
 function IndexPanel({ title, bondId }) {
-
-    const actingAs = api.useGameStore(s => s.gameState.actingAs);
-    const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
-    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
-    const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
-    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
-    const playerName = api.useGameStore(s => s.gameState.playerName) || 'Player';
-
-    const buy = bondId === api.TBOND_RATE_ID ? api.buyLongGovtBonds : api.buyShortGovtBonds;
-
-    const controlsActiveEntity = (controlledCompanies || []).some(c => c.id === activeEntityNum);
-
-    const getDisabledInfo = () => {
-        if (!actingAs) {
-            return {
-                message: controlsActiveEntity
-                    ? `Must be acting as this company. Click to act as ${activeEntitySymbol}`
-                    : "Must be acting as this company",
-                onClick: controlsActiveEntity ? () => api.changeActingAs(activeEntityNum) : null
-            };
-        }
-        if (![api.PLAYER_IND, api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)) {
-            return {
-                message: `Only players, banks, and insurance companies can trade government bonds. Click to act as ${playerName}`,
-                onClick: () => api.changeActingAs(api.HUMAN1_ID)
-            };
-        }
-        return { message: false, onClick: null };
-    };
-
-    const disabledInfo = getDisabledInfo();
+    const buttonProps = useActionButtonProps();
+    const buyProps = bondId === api.TBOND_RATE_ID
+        ? buttonProps.buyLongGovtBonds
+        : buttonProps.buyShortGovtBonds;
 
     return html`
         <div class="flex flex-col w-full">
             <div class="flex flex-col" style="height: 100px">
                 ${html`<${AssetPriceChart} chartTitle=${title} assetId=${bondId} />`}
             </div>
-            ${!disabledInfo.message
-                ? html`
-                <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
-                    <${Button} class="btn green flex-1 mx-1" onclick=${() => buy(bondId)}>Buy</button>
-                </div>`
-                : html`
-                <${Tooltip} text=${disabledInfo.message}>
-                    <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
-                        <${Button} class="btn disabled flex-1 mx-1" onclick=${disabledInfo.onClick}>Buy</button>
-                    </div>
-                <//>`
-            }
+            <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
+                <${DisabledTooltipButton}
+                    ...${buyProps}
+                    label="Buy"
+                    containerClass="flex-1"
+                    buttonClass="mx-1 w-full"
+                />
+            </div>
         </div>
     `;
 }
@@ -74,36 +42,63 @@ function InterestRateSwapsTab() {
     const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
     const handleActAsClick = buttonProps.onMustActAsCompanyClick;
 
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    // Hide company-only buttons when viewing a player (activeEntityNum < 10)
+    const showCorpButtons = activeEntityNum >= 10 || buttonProps.isActiveEntityETF;
+
+    // Extras hotkey refs
+    const extrasContainerRef = useRef(null);
+    const scopeActiveRef = useRef(false);
+    const [, setScopeRenderTick] = useState(0);
+    const barButtons = [
+        showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.interestRateSwaps, label: "Create New Swap" },
+    ];
+    const extrasStartNumber = barButtons.filter(Boolean).length + 1;
+
     return html`
             <div class="flex flex-col w-full h-full min-h-0">
-                <div class="flex flex-row items-center justify-start gap-5">
-                    <div class="items-center flex flex-row justify-center">
-                        ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.interestRateSwaps} label="Create New Swap" />` : ''}
-                    </div>
-                </div>
+                <${HotkeyButtonBar} buttons=${barButtons}
+                    extrasContainerRef=${extrasContainerRef}
+                    scopeActiveRef=${scopeActiveRef}
+                    onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
+                    class="flex flex-row items-center justify-start gap-5" style="" />
                 <div class="flex flex-row flex-[1]">
                     <${IndexPanel} title="Long Bond Rate" bondId=${api.TBOND_RATE_ID} />
                     <${IndexPanel} title="Short Bond Rate" bondId=${api.SBOND_RATE_ID} />
                     <${IndexPanel} title="Prime Rate" bondId=${api.PRIME_RATE_ID} />
                 </div>
-                <div class="flex flex-col items-center flex-[3] overflow-y-auto min-h-0">
+                <div ref=${extrasContainerRef} class="flex flex-col items-center flex-[3] overflow-y-auto min-h-0">
                     ${renderLines(swapsPortfolio,
                         ({ id }) => id && api.setViewAsset(id),
-                        ({ id }) => html`<div class="flex flex-row">
-                        <${DisabledTooltipButton}
-                            disabledMessage=${false}
-                            onClick=${() => api.viewSwapDetails(id)}
-                            label="Details"
-                            color="blue"
-                        />
-                        <${DisabledTooltipButton}
-                            disabledMessage=${actingAsDisabledMessage}
-                            onClick=${() => api.terminateSwap(id)}
-                            onDisabledClick=${handleActAsClick}
-                            label="Terminate"
-                            color="red"
-                        />
-                    </div>`, hyperlinkRegex)}
+                        ({ id, extrasCounter, isLineSelected, lineNumber }) => {
+                            const detailsIdx = extrasCounter ? extrasCounter.current++ : null;
+                            const terminateIdx = extrasCounter ? extrasCounter.current++ : null;
+                            return html`<div class="flex flex-row">
+                            <${DisabledTooltipButton}
+                                disabledMessage=${false}
+                                onClick=${() => api.viewSwapDetails(id)}
+                                label="Details"
+                                color="blue"
+                                extrasIndex=${detailsIdx}
+                                scopeActive=${scopeActiveRef.current}
+                                hotkeyLetter="d"
+                                isLineSelected=${isLineSelected}
+                                lineNumber=${lineNumber}
+                            />
+                            <${DisabledTooltipButton}
+                                disabledMessage=${actingAsDisabledMessage}
+                                onClick=${() => api.terminateSwap(id)}
+                                onDisabledClick=${handleActAsClick}
+                                label="Terminate"
+                                color="red"
+                                extrasIndex=${terminateIdx}
+                                scopeActive=${scopeActiveRef.current}
+                                hotkeyLetter="t"
+                                isLineSelected=${isLineSelected}
+                                lineNumber=${lineNumber}
+                            />
+                        </div>`;
+                        }, hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
                 </div>
             </div>
     `;

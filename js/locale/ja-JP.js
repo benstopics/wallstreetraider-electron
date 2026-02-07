@@ -17805,5 +17805,8 @@ export const jaJP = {
     "es": "",
     " \"": "",
     "CA": "",
-    "NO": ""
+    "NO": "",
+    "Confirm Loan Sale": "ローン売却の確認",
+    "Sell the business loan to": "ビジネスローンを売却",
+    " (face value ": "（額面価格"
 }

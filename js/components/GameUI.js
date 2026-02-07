@@ -132,14 +132,14 @@ const GameUI = () => {
                 ${html`<${View} />`}
             </div>
         </div>
-        <div class="panel-header flex flex-row border items-center justify-between gap-2 px-2 mx-2" style="height: 30px;">
+        <div class="panel-footer flex flex-row border items-center justify-between gap-2 mx-2" style="height: 25px;">
             <div></div>
             <div class="flex flex-[1] items-center gap-2 cursor-pointer justify-between" onClick=${() => setShowNotifications(true)}>
                 <div>${(trendingNews.length > 0 ? insertCurrencySymbols(trendingNews[0]) : "")}</div>
                 ${trendingNews.length > 0 ? html`<div class="notification flex mx-1 flex-row items-center justify-between" style="height: 100%;"
                     onClick=${() => setShowNotifications(true)}>
                     <div class="flex flex-row">
-                        <div style="width: 20px"><${NotificationIcon} /></div>
+                        <div class="mr-1" style="width: 15px"><${NotificationIcon} /></div>
                         ${insertCurrencySymbols("Notifications")}
                     </div>
                     <!--<div class="badge">${trendingNews.length}</div>-->

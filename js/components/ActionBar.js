@@ -1,6 +1,7 @@
 import { html } from '../lib/preact.standalone.module.js';
 import DropdownMenu from './DropdownMenu.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
+import { useShiftHeld } from '../hooks/useHotkey.js';
 import * as api from '../api.js';
 
 /**
@@ -11,6 +12,8 @@ import * as api from '../api.js';
  */
 export default function ActionBar() {
     const props = useActionButtonProps();
+
+    const shiftHeld = useShiftHeld();
 
     // ==================== TRADE DROPDOWN (Multi-Column) ====================
     // Column 1: Stocks, Corporate Bonds, Government Bonds
@@ -32,85 +35,63 @@ export default function ActionBar() {
         props.sellShortGovtBonds,
     ];
 
-    // Column 2: Options, Commodities, Crypto
+    // Column 2: Commodities, Crypto
     const tradeColumn2 = [
+        { header: 'Commodities' },
+        { label: 'Buy Futures', onClick: () => api.buyCommodityFutures(0), color: 'green' },
+        { label: 'Sell Futures', onClick: () => api.sellCommodityFutures(0), color: 'red' },
+        { label: 'Short Futures', onClick: () => api.shortCommodityFutures(0), color: 'red' },
+        { label: 'Cover Futures', onClick: () => api.coverShortCommodityFutures(0), color: 'green' },
+        { divider: true },
+        { label: 'Buy Physical', onClick: () => api.buyPhysicalCommodity(0), color: 'green' },
+        { label: 'Sell Physical', onClick: () => api.sellPhysicalCommodity(0), color: 'red' },
+        { divider: true },
+        { header: 'Crypto' },
+        { label: 'Buy Crypto', onClick: () => api.buyPhysicalCrypto(0), color: 'green' },
+        { label: 'Sell Crypto', onClick: () => api.sellPhysicalCrypto(0), color: 'red' },
+        { label: 'Buy Crypto Futures', onClick: () => api.buyCryptoFutures(0), color: 'green' },
+        { label: 'Sell Crypto Futures', onClick: () => api.sellCryptoFutures(0), color: 'red' },
+    ];
+
+    // Column 3: Options
+    const tradeColumn3 = [
         { header: 'Options' },
         props.buyCalls,
         props.sellCalls,
         props.buyPuts,
         props.sellPuts,
         { ...props.advancedOptions, label: 'Advanced Options...' },
-        { divider: true },
-        { header: 'Commodities' },
-        {
-            label: 'Commodities',
-            submenu: [
-                { label: 'Buy Futures', onClick: () => api.buyCommodityFutures(0), color: 'green' },
-                { label: 'Sell Futures', onClick: () => api.sellCommodityFutures(0), color: 'red' },
-                { label: 'Short Futures', onClick: () => api.shortCommodityFutures(0), color: 'red' },
-                { label: 'Cover Futures', onClick: () => api.coverShortCommodityFutures(0), color: 'green' },
-                { divider: true },
-                { label: 'Buy Physical', onClick: () => api.buyPhysicalCommodity(0), color: 'green' },
-                { label: 'Sell Physical', onClick: () => api.sellPhysicalCommodity(0), color: 'red' },
-            ]
-        },
-        { divider: true },
-        { header: 'Crypto' },
-        {
-            label: 'Crypto',
-            submenu: [
-                { label: 'Buy Crypto', onClick: () => api.buyPhysicalCrypto(0), color: 'green' },
-                { label: 'Sell Crypto', onClick: () => api.sellPhysicalCrypto(0), color: 'red' },
-                { label: 'Buy Crypto Futures', onClick: () => api.buyCryptoFutures(0), color: 'green' },
-                { label: 'Sell Crypto Futures', onClick: () => api.sellCryptoFutures(0), color: 'red' },
-            ]
-        },
     ];
 
-    const tradeColumns = [tradeColumn1, tradeColumn2];
+    const tradeColumns = [tradeColumn1, tradeColumn2, tradeColumn3];
 
     // ==================== CORPORATE DROPDOWN (Multi-Column) ====================
-    // Column 1: Leadership, Strategy, Raise Capital, Return Capital
+    // Column 1: Leadership, Strategy
     const corporateColumn1 = [
         { header: 'Leadership' },
         props.electResignCeo,
         props.changeManagers,
         { divider: true },
         { header: 'Strategy' },
-        props.setDividend,
         props.setProductivity,
         props.setGrowthRate,
         props.rebrand,
         props.restructure,
-        { divider: true },
-        { header: 'Raise Capital' },
-        props.publicStockOffering,
-        props.privateStockOffering,
-        props.issueCorpBonds,
-        { divider: true },
-        { header: 'Return Capital' },
-        props.redeemCorpBonds,
-        props.extraordinaryDividend,
-        props.splitStock,
-        props.reverseSplit,
     ];
 
-    // Column 2: Assets, Liquidation, New Ventures, ETF/Advisory, Autopilot
+    // Column 2: M&A, Assets, ETF/Advisory, Autopilot
     const corporateColumn2 = [
+        { header: 'M&A' },
+        props.merger,
+        props.startup,
+        props.capitalContribution,
+        { divider: true },
         { header: 'Assets' },
         props.buyCorporateAssets,
         props.sellCorporateAssets,
         props.offerAssetsForSale,
         props.sellSubsidiaryStock,
         props.browseForSaleItems,
-        { divider: true },
-        { header: 'Liquidation' },
-        props.taxFreeLiquidation,
-        props.taxableLiquidation,
-        { divider: true },
-        { header: 'New Ventures' },
-        props.startup,
-        props.capitalContribution,
         { divider: true },
         { header: 'ETF / Advisory' },
         props.setAdvisoryFee,
@@ -122,15 +103,32 @@ export default function ActionBar() {
     const corporateColumns = [corporateColumn1, corporateColumn2];
 
     // ==================== FINANCE DROPDOWN (Multi-Column) ====================
-    // Column 1: Loans, Advances, Swaps, Taxes
+    // Column 1: Equity, Debt
     const financeColumn1 = [
-        { header: 'Loans' },
+        { header: 'Equity' },
+        props.publicStockOffering,
+        props.privateStockOffering,
+        props.splitStock,
+        props.reverseSplit,
+        { divider: true },
+        { header: 'Debt' },
+        props.issueCorpBonds,
+        props.redeemCorpBonds,
         props.borrowMoney,
         props.repayLoan,
-        props.changeBank,
         props.tradeTbills,
+    ];
+
+    // Column 2: Returns, Banking, Swaps, Taxes, Accounting
+    const financeColumn2 = [
+        { header: 'Returns' },
+        props.setDividend,
+        props.extraordinaryDividend,
+        props.taxFreeLiquidation,
+        props.taxableLiquidation,
         { divider: true },
-        { header: 'Advances' },
+        { header: 'Banking' },
+        props.changeBank,
         props.advanceFunds,
         { divider: true },
         { header: 'Swaps' },
@@ -138,10 +136,15 @@ export default function ActionBar() {
         { divider: true },
         { header: 'Taxes' },
         props.prepayTaxes,
+        { header: 'Accounting' },
+        props.increaseEarnings,
+        props.decreaseEarnings,
     ];
 
-    // Column 2: Bank Operations (only shown when acting as bank)
-    const financeColumn2 = props.isActingAsBank ? [
+    const financeColumns = [financeColumn1, financeColumn2];
+
+    // ==================== BANKING DROPDOWN (only when acting as bank) ====================
+    const bankingItems = [
         { header: 'Bank Operations' },
         props.setBankAllocation,
         props.listBankLoans,
@@ -155,9 +158,7 @@ export default function ActionBar() {
         props.sellPrimeMortgages,
         props.buySubprimeMortgages,
         props.sellSubprimeMortgages,
-    ] : [];
-
-    const financeColumns = props.isActingAsBank ? [financeColumn1, financeColumn2] : [financeColumn1];
+    ];
 
     // ==================== HOSTILE DROPDOWN ====================
     const hostileItems = [
@@ -172,39 +173,51 @@ export default function ActionBar() {
         { header: 'Takeovers' },
         props.greenmail,
         props.leveragedBuyout,
-        props.merger,
         { divider: true },
-        { header: 'Accounting' },
-        props.increaseEarnings,
-        props.decreaseEarnings,
     ];
 
     return html`
         <div class="action-bar">
             <${DropdownMenu}
                 label="Trade"
+                hotkeyChar="t"
                 icon="📈"
                 columns=${tradeColumns}
                 color="green"
+                shiftHeld=${shiftHeld}
             />
             <${DropdownMenu}
                 label="Corporate"
+                hotkeyChar="c"
                 icon="🏢"
                 columns=${corporateColumns}
                 color="blue"
+                shiftHeld=${shiftHeld}
             />
             <${DropdownMenu}
                 label="Finance"
+                hotkeyChar="f"
                 icon="💰"
                 columns=${financeColumns}
                 color="brown"
+                shiftHeld=${shiftHeld}
             />
             <${DropdownMenu}
                 label="Hostile"
+                hotkeyChar="h"
                 icon="⚔️"
                 items=${hostileItems}
                 color="red"
+                shiftHeld=${shiftHeld}
             />
+            ${props.isActingAsBank ? html`<${DropdownMenu}
+                label="Banking"
+                hotkeyChar="b"
+                icon="🏦"
+                items=${bankingItems}
+                color="blue"
+                shiftHeld=${shiftHeld}
+            />` : ''}
         </div>
     `;
 }

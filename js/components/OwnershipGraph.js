@@ -1,5 +1,8 @@
 import { html, useState, useEffect, useRef } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
+import { useHotkey } from '../hooks/useHotkey.js';
+import { PRIORITY } from '../hotkeyManager.js';
+import { isEditableTarget } from '../keybinds.js';
 
 // Node dimensions
 const NODE_WIDTH = 180;
@@ -16,10 +19,10 @@ const needsTallHeight = (node, isCenter) => {
     return (isCenter && isChair) || (!isCenter && isChair) || (isPlayer && !isCenter && !isChair);
 };
 
-// Format price with dollar sign and 2 decimals
-const formatPrice = (price) => {
+// Format price with currency symbols
+const formatPrice = (price, dlrSign = '$', euro = '') => {
     if (price === 0 || price === undefined) return '';
-    return `$${price.toFixed(2)}`;
+    return `${dlrSign}${price.toFixed(2)}${euro}`;
 };
 
 // Format percentage
@@ -32,7 +35,7 @@ const truncateName = (name, maxLen = 20) => {
 };
 
 // Single node component
-const GraphNode = ({ node, x, y, isCenter, onClick }) => {
+const GraphNode = ({ node, x, y, isCenter, onClick, dlrSign = '$', euro = '', numberLabel = null }) => {
     const isChair = node.isPlayerChair;
     const isPlayer = node.entityId >= 1 && node.entityId <= 5;
     const hasTallContent = needsTallHeight(node, isCenter);
@@ -90,7 +93,7 @@ const GraphNode = ({ node, x, y, isCenter, onClick }) => {
                 text-anchor="start"
                 fill="rgba(230, 235, 245, 0.7)"
                 font-size="11">
-                ${node.symbol}${node.price ? ` \u2022 ${formatPrice(node.price)}` : ''}
+                ${node.symbol}${node.price ? ` \u2022 ${formatPrice(node.price, dlrSign, euro)}` : ''}
             </text>
 
             <!-- Ownership percentage (right, shown for all non-center nodes) -->
@@ -142,6 +145,27 @@ const GraphNode = ({ node, x, y, isCenter, onClick }) => {
                     font-size="10"
                     font-weight="500">
                     PLAYER
+                </text>
+            ` : ''}
+
+            <!-- Number badge for hotkey -->
+            ${numberLabel != null ? html`
+                <circle
+                    cx="-4"
+                    cy="-4"
+                    r="10"
+                    fill="rgba(59, 130, 246, 0.8)"
+                    stroke="rgba(255,255,255,0.3)"
+                    stroke-width="1"
+                />
+                <text
+                    x="-4"
+                    y="0"
+                    text-anchor="middle"
+                    fill="#ffffff"
+                    font-size="11"
+                    font-weight="700">
+                    ${numberLabel}
                 </text>
             ` : ''}
         </g>
@@ -197,6 +221,8 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
     const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
 
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const dlrSign = api.useGameStore(s => s.gameState.dlrSign) || '$';
+    const euro = api.useGameStore(s => s.gameState.euro) || '';
 
     // Fetch data when active entity changes
     useEffect(() => {
@@ -265,6 +291,53 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
     // Get direct owners and subsidiaries
     const owners = showOwners && ownershipData ? getDirectChildren(ownershipData) : [];
     const subsidiaries = showSubsidiaries && subsidiariesData ? getDirectChildren(subsidiariesData) : [];
+
+    // Build numbered node map for hotkeys (only clickable nodes with entityId > 10)
+    const numberedNodesRef = useRef([]);
+    const numberedNodes = [];
+    let nodeNum = 1;
+    for (const owner of owners) {
+        if (owner.entityId > 10) {
+            numberedNodes.push({ num: nodeNum++, entityId: owner.entityId, side: 'owner' });
+        }
+    }
+    for (const sub of subsidiaries) {
+        if (sub.entityId > 10) {
+            numberedNodes.push({ num: nodeNum++, entityId: sub.entityId, side: 'sub' });
+        }
+    }
+    numberedNodesRef.current = numberedNodes;
+
+    // Build lookup: node entityId → number label
+    const nodeNumberMap = new Map();
+    for (const n of numberedNodes) {
+        nodeNumberMap.set(n.entityId, n.num);
+    }
+
+    // Hotkey handler for digit keys → navigate to numbered node
+    const hotkeyIdRef = useRef(Symbol('ownership-graph-hotkey'));
+    useHotkey(
+        hotkeyIdRef.current,
+        PRIORITY.TABS - 1,  // Just below TABS so tabs still work
+        (e) => {
+            if (isEditableTarget(e.target)) return false;
+            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return false;
+            return /^[1-9]$/.test(e.key);
+        },
+        (e) => {
+            const digit = parseInt(e.key, 10);
+            const node = numberedNodesRef.current.find(n => n.num === digit);
+            if (node) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                api.setViewAsset(node.entityId);
+                return true;
+            }
+            return false;
+        },
+        {},
+        [numberedNodes.length]
+    );
 
     // Use ownership data for center node info (it has the root entity)
     const centerEntity = ownershipData || subsidiariesData;
@@ -350,6 +423,9 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
                             y=${ownerY}
                             isCenter=${false}
                             onClick=${handleNodeClick}
+                            dlrSign=${dlrSign}
+                            euro=${euro}
+                            numberLabel=${nodeNumberMap.get(owner.entityId) || null}
                         />
                     `;
                 })}
@@ -361,6 +437,8 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
                     y=${centerY}
                     isCenter=${true}
                     onClick=${null}
+                    dlrSign=${dlrSign}
+                    euro=${euro}
                 />
 
                 <!-- Subsidiary nodes (right) -->
@@ -373,6 +451,9 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
                             y=${subY}
                             isCenter=${false}
                             onClick=${handleNodeClick}
+                            dlrSign=${dlrSign}
+                            euro=${euro}
+                            numberLabel=${nodeNumberMap.get(sub.entityId) || null}
                         />
                     `;
                 })}

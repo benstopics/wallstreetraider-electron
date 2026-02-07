@@ -10,6 +10,7 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
     const [activeIdx, setActiveIdx] = useState(0);
     const [selectedCompany, setSelectedCompany] = useState(null);
     const inputRef = useRef(null);
+    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies) || [];
 
     useEffect(() => {
         if (show && gameState.allCompanies?.length > 0) {
@@ -24,7 +25,9 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
 
     const entities = useMemo(() => {
         return (gameState.allCompanies ?? [])
-            .filter(c => title.includes('Change the Bank') ? c.industryId === api.BANK_IND : true);
+            .filter(c => title.includes('Change the Bank') ? c.industryId === api.BANK_IND
+                : title.includes('A COMPANY YOU CONTROL') ? api.isPlayerControlled(controlledCompanies, c.id)
+                : true);
     }, [gameState.allCompanies, title]);
 
     const suggestions = useMemo(() => {

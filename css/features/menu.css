@@ -5,6 +5,7 @@
 /* Top bar menu fix - overflow visible */
 .top-bar {
   overflow: visible !important;
+  z-index: 99999999 !important;
 }
 
 .menu-wrap,
@@ -79,7 +80,7 @@
 /* Toolbar menu */
 .toolbar-menu {
   position: relative;
-  z-index: 99999;
+  z-index: 99999999 !important;
   overflow: visible !important;
 }
 
@@ -87,7 +88,7 @@
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  z-index: 99999 !important;
+  z-index: 99999999 !important;
   display: flex;
   flex-direction: column;
   gap: 2px;

@@ -252,6 +252,16 @@
   margin: 3px 0;
 }
 
+.wsr-change-section-heading {
+  color: #93C5FD;
+  font-weight: 600;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+
 /* Footer */
 .wsr-footer {
   display: flex;

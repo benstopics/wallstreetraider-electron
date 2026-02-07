@@ -1,4 +1,4 @@
-import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
+import { html, useState, useEffect, useRef } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import CommoditiesTab from './CommoditiesTab.js';
 import OptionsTab from './OptionsTab.js';
@@ -9,10 +9,12 @@ import FinancialsTab from './FinancialsTab.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import Button from './Button.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
+import HotkeyButtonBar from './HotkeyButtonBar.js';
 import OwnershipGraph from './OwnershipGraph.js';
 import ActionBar from './ActionBar.js';
-import OwnershipViewToggle from './OwnershipViewToggle.js';
+
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
+import { useCookie } from '../hooks/useCookie.js';
 
 const Tab = Tabs.Tab;
 
@@ -31,11 +33,31 @@ const PlayerView = () => {
     // Local state for corporations view mode (initialized from global setting)
     const [showCorporationsGraph, setShowCorporationsGraph] = useState(shareholderGraphSetting);
 
-    const [activeTab, setActiveTabInternal] = useState("Financials");
+    // My Corporations tab hotkey refs
+    const corpsExtrasRef = useRef(null);
+    const corpsScopeRef = useRef(false);
+    const [, setCorpsScopeTick] = useState(0);
+    const corpsBarButtons = [
+        { label: showCorporationsGraph ? 'Show Text Report' : 'Show Graph', onClick: () => setShowCorporationsGraph(!showCorporationsGraph), color: '' },
+    ];
+    const corpsExtrasStart = corpsBarButtons.filter(Boolean).length + 1;
+
+    // Advances tab hotkey refs
+    const advancesExtrasRef = useRef(null);
+    const advancesScopeRef = useRef(false);
+    const [, setAdvancesScopeTick] = useState(0);
+    const advancesBarButtons = [
+        { ...buttonProps.advanceFunds, buttonClass: "flex-1 mx-1" },
+    ];
+    const advancesExtrasStart = advancesBarButtons.filter(Boolean).length + 1;
+
+    const [savedTab, setSavedTab] = useCookie('playerViewTab', 'Financials');
+    const [activeTab, setActiveTabInternal] = useState(savedTab);
 
     // Wrapper to also update navigation history when tab changes
     const setActiveTab = (tab) => {
         setActiveTabInternal(tab);
+        setSavedTab(tab);
         api.updateCurrentNavTab(tab);
     };
 
@@ -55,68 +77,92 @@ const PlayerView = () => {
                 <div class="flex flex-col w-full gap-2 h-full">
                     <${ActionBar} />
                     <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
-                        <${Tab} label="Financials" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
+                        <${Tab} label="Financials" hotkey="f" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
                             <${FinancialsTab} />
                         <//>
-                        <${Tab} label="Cashflow" id=${api.UI_PLAYER_CASH_FLOW_PROJECTION}>
+                        <${Tab} label="Cashflow" hotkey="c" id=${api.UI_PLAYER_CASH_FLOW_PROJECTION}>
                             <div class="flex flex-col items-center">
                                 ${renderLines(cashflowProjection, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                             </div>
                         <//>
-                        <${Tab} label="Stocks & Bonds" id=${api.UI_PLAYER_STOCKS_BONDS_PORTFOLIO}>
+                        <${Tab} label="Stocks & Bonds" hotkey="s" id=${api.UI_PLAYER_STOCKS_BONDS_PORTFOLIO}>
                             <${PortfolioTab} />
                         <//>
-                        <${Tab} label="Swaps" id=${api.UI_PLAYER_SWAPS_PORTFOLIO}>
+                        <${Tab} label="Swaps" hotkey="w" id=${api.UI_PLAYER_SWAPS_PORTFOLIO}>
                             <${InterestRateSwapsTab} />
                         <//>
-                        <${Tab} label="Options" id=${api.UI_PLAYER_OPTIONS_PORTFOLIO}>
+                        <${Tab} label="Options" hotkey="o" id=${api.UI_PLAYER_OPTIONS_PORTFOLIO}>
                             ${html`<${OptionsTab} />`}
                         <//>
-                        <${Tab} label="Commodities & Crypto" id=${api.UI_PLAYER_COMMODITY_CONTRACTS_LIST}>
+                        <${Tab} label="Commodities & Crypto" hotkey="m" id=${api.UI_PLAYER_COMMODITY_CONTRACTS_LIST}>
                             ${html`<${CommoditiesTab} />`}
                         <//>
-                        <${Tab} label="Advances" id=${api.UI_PLAYER_ADVANCES_LIST}>
+                        <${Tab} label="Advances" hotkey="d" id=${api.UI_PLAYER_ADVANCES_LIST}>
                             <div class="flex flex-col items-center">
-                                <${DisabledTooltipButton} ...${buttonProps.advanceFunds} buttonClass="flex-1 mx-1" />
-                                ${renderLines(advances,
-                                    ({ id }) => api.setViewAsset(id),
-                                    ({ id }) => html`<${DisabledTooltipButton}
-                                        disabledMessage=${buttonProps.advanceFunds.disabledMessage}
-                                        onClick=${() => api.callInAdvance(id)}
-                                        onDisabledClick=${buttonProps.advanceFunds.onDisabledClick}
-                                        label="Recall"
-                                        color=""
-                                        buttonClass="flex-1 mx-1"
-                                    />`
-                                , hyperlinkRegex)}
+                                <${HotkeyButtonBar} buttons=${advancesBarButtons}
+                                    extrasContainerRef=${advancesExtrasRef}
+                                    scopeActiveRef=${advancesScopeRef}
+                                    onScopeActiveChange=${() => setAdvancesScopeTick(n => n + 1)}
+                                    class="flex flex-row items-center gap-2 mb-2" style="" />
+                                <div ref=${advancesExtrasRef} class="flex flex-col items-center overflow-y-auto min-h-0 w-full">
+                                    ${renderLines(advances,
+                                        ({ id }) => api.setViewAsset(id),
+                                        ({ id, extrasCounter, isLineSelected, lineNumber }) => html`<${DisabledTooltipButton}
+                                            disabledMessage=${buttonProps.advanceFunds.disabledMessage}
+                                            onClick=${() => api.callInAdvance(id)}
+                                            onDisabledClick=${buttonProps.advanceFunds.onDisabledClick}
+                                            label="Recall"
+                                            color="blue"
+                                            buttonClass="flex-1 mx-1"
+                                            extrasIndex=${extrasCounter ? extrasCounter.current++ : null}
+                                            scopeActive=${advancesScopeRef.current}
+                                            hotkeyLetter="r"
+                                            isLineSelected=${isLineSelected}
+                                            lineNumber=${lineNumber}
+                                        />`
+                                    , hyperlinkRegex, undefined, advancesExtrasStart, advancesScopeRef)}
+                                </div>
                             </div>
                         <//>
-                        <${Tab} label="My Corporations" id=${api.UI_PLAYER_CORPORATIONS_LIST}>
+                        <${Tab} label="My Corporations" hotkey="p" id=${api.UI_PLAYER_CORPORATIONS_LIST}>
                             <div class="flex flex-col h-full">
-                                <${OwnershipViewToggle}
-                                    showGraph=${showCorporationsGraph}
-                                    onToggle=${() => setShowCorporationsGraph(!showCorporationsGraph)}
-                                />
+                                <${HotkeyButtonBar} buttons=${corpsBarButtons}
+                                    extrasContainerRef=${corpsExtrasRef}
+                                    scopeActiveRef=${corpsScopeRef}
+                                    onScopeActiveChange=${() => setCorpsScopeTick(n => n + 1)}
+                                    class="flex flex-row items-center gap-2 mb-2" />
                                 ${showCorporationsGraph ? html`
                                     <div class="flex-1 min-h-0 overflow-auto">
                                         <${OwnershipGraph} showOwners=${false} showSubsidiaries=${true} />
                                     </div>
                                 ` : html`
-                                    <div class="flex flex-col items-center">
+                                    <div ref=${corpsExtrasRef} class="flex flex-col items-center overflow-y-auto min-h-0">
                                         ${renderLines(myCorporationsReport,
                                             ({ id }) => api.setViewAsset(id),
-                                            ({ type, id }) => type === 'C' ? html`<div class="flex flex-row">
-                                                <${Button}
-                                                    class="btn red flex-1 mx-1"
-                                                    onClick=${() => api.toggleCompanyAutopilot(id)}>
-                                                        AutoPilot
-                                                </button>
-                                                <${Button}
-                                                    class="btn brown flex-1 mx-1"
-                                                    onClick=${() => api.changeActingAs(id)}>
-                                                        Act As
-                                                </button>
-                                            </div>` : '', hyperlinkRegex)}
+                                            ({ type, id, extrasCounter, isLineSelected, lineNumber }) => type === 'C' ? html`<div class="flex flex-row">
+                                                <${DisabledTooltipButton}
+                                                    disabledMessage=${false}
+                                                    onClick=${() => api.toggleCompanyAutopilot(id)}
+                                                    label="AutoPilot"
+                                                    color="red"
+                                                    extrasIndex=${extrasCounter ? extrasCounter.current++ : null}
+                                                    scopeActive=${corpsScopeRef.current}
+                                                    hotkeyLetter="a"
+                                                    isLineSelected=${isLineSelected}
+                                                    lineNumber=${lineNumber}
+                                                />
+                                                <${DisabledTooltipButton}
+                                                    disabledMessage=${false}
+                                                    onClick=${() => api.changeActingAs(id)}
+                                                    label="Act As"
+                                                    color="brown"
+                                                    extrasIndex=${extrasCounter ? extrasCounter.current++ : null}
+                                                    scopeActive=${corpsScopeRef.current}
+                                                    hotkeyLetter="t"
+                                                    isLineSelected=${isLineSelected}
+                                                    lineNumber=${lineNumber}
+                                                />
+                                            </div>` : '', hyperlinkRegex, undefined, corpsExtrasStart, corpsScopeRef)}
                                     </div>
                                 `}
                             </div>

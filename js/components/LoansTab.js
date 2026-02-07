@@ -1,12 +1,11 @@
-import { html } from '../lib/preact.standalone.module.js';
-import { renderLines } from './helpers.js';
+import { html, useRef, useState } from '../lib/preact.standalone.module.js';
+import { renderLines, LetterHotkeyButton } from './helpers.js';
 import * as api from '../api.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
-import Tooltip from './Tooltip.js';
-import Button from './Button.js';
+import HotkeyButtonBar from './HotkeyButtonBar.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
-const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, handleActAsClick) => ({ type, id, text }) => {
+const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, handleActAsClick, scopeActiveRef) => ({ type, id, text, extrasCounter, isLineSelected, lineNumber }) => {
 
     const nodes = [];
 
@@ -23,32 +22,70 @@ const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, ha
                 : type === 'SUBPRIME' ? api.buySubprimeMortgages
                     : () => { };
 
-        if (!actingAs) {
-            nodes.push(html`<${Tooltip} text=${actingAsDisabledMessage} containerClass="w-12 mx-1">
-                <${Button} class="btn disabled w-full" onclick=${handleActAsClick}>Sell</button>
-            <//>`);
+        const sellIdx = extrasCounter ? extrasCounter.current++ : null;
+        const buyIdx = extrasCounter ? extrasCounter.current++ : null;
 
-            nodes.push(html`<${Tooltip} text=${actingAsDisabledMessage} containerClass="w-12 mx-1">
-                <${Button} class="btn disabled w-full" onclick=${handleActAsClick}>Buy</button>
-            <//>`);
+        if (!actingAs) {
+            nodes.push(html`<${DisabledTooltipButton}
+                disabledMessage=${actingAsDisabledMessage}
+                onDisabledClick=${handleActAsClick}
+                label="Sell"
+                color="red"
+                containerClass="w-12 mx-1"
+                buttonClass="w-full"
+                extrasIndex=${sellIdx}
+                scopeActive=${scopeActiveRef?.current}
+                hotkeyLetter="s"
+                isLineSelected=${isLineSelected}
+                lineNumber=${lineNumber}
+            />`);
+
+            nodes.push(html`<${DisabledTooltipButton}
+                disabledMessage=${actingAsDisabledMessage}
+                onDisabledClick=${handleActAsClick}
+                label="Buy"
+                color="green"
+                containerClass="w-12 mx-1"
+                buttonClass="w-full"
+                extrasIndex=${buyIdx}
+                scopeActive=${scopeActiveRef?.current}
+                hotkeyLetter="b"
+                isLineSelected=${isLineSelected}
+                lineNumber=${lineNumber}
+            />`);
         } else {
             if (!sellable) {
-                nodes.push(html`<${Tooltip} text="No securities to sell" containerClass="w-12 mx-1">
-                    <${Button} class="btn disabled w-full">Sell</button>
-                <//>`);
+                nodes.push(html`<${DisabledTooltipButton}
+                    disabledMessage=${"No securities to sell"}
+                    label="Sell"
+                    color="red"
+                    containerClass="w-12 mx-1"
+                    buttonClass="w-full"
+                    extrasIndex=${sellIdx}
+                    scopeActive=${scopeActiveRef?.current}
+                    hotkeyLetter="s"
+                    isLineSelected=${isLineSelected}
+                    lineNumber=${lineNumber}
+                />`);
             } else {
-                nodes.push(html`<${Button}
+                nodes.push(html`<${LetterHotkeyButton}
                     class="btn red flex-1 mx-1 w-12"
-                    onClick=${() => sell(id)}>
-                    Sell
-                </button>`);
+                    onClick=${() => sell(id)}
+                    label="Sell"
+                    letter="s"
+                    isLineSelected=${isLineSelected}
+                    lineNumber=${lineNumber}
+                />`);
             }
 
-            nodes.push(html`<${Button}
+            nodes.push(html`<${LetterHotkeyButton}
                 class="btn green flex-1 mx-1 w-12"
-                onClick=${() => buy(id)}>
-                Buy
-            </button>`);
+                onClick=${() => buy(id)}
+                label="Buy"
+                letter="b"
+                isLineSelected=${isLineSelected}
+                lineNumber=${lineNumber}
+            />`);
         }
 
         return html`<div class="flex justify-center items-center">
@@ -56,14 +93,52 @@ const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, ha
         </div>`;
     }
 
+    const sellIdx = extrasCounter ? extrasCounter.current++ : null;
+    const freezeIdx = extrasCounter ? extrasCounter.current++ : null;
+    const callInIdx = extrasCounter ? extrasCounter.current++ : null;
+
     if (!actingAs) {
-        return html`<${Tooltip} text=${actingAsDisabledMessage}>
-            <div class="flex justify-center items-center">
-                <${Button} class="btn disabled mx-1 w-12" onclick=${handleActAsClick}>Sell</button>
-                <${Button} class="btn disabled mx-1 w-12" onclick=${handleActAsClick}>Freeze</button>
-                <${Button} class="btn disabled mx-1 w-12 whitespace-nowrap" onclick=${handleActAsClick}>Call In</button>
-            </div>
-        <//>`;
+        return html`<div class="flex justify-center items-center">
+            <${DisabledTooltipButton}
+                disabledMessage=${actingAsDisabledMessage}
+                onDisabledClick=${handleActAsClick}
+                label="Sell"
+                color="red"
+                containerClass="mx-1 w-12"
+                buttonClass="w-full"
+                extrasIndex=${sellIdx}
+                scopeActive=${scopeActiveRef?.current}
+                hotkeyLetter="s"
+                isLineSelected=${isLineSelected}
+                lineNumber=${lineNumber}
+            />
+            <${DisabledTooltipButton}
+                disabledMessage=${actingAsDisabledMessage}
+                onDisabledClick=${handleActAsClick}
+                label="Freeze"
+                color="blue"
+                containerClass="mx-1 w-12"
+                buttonClass="w-full"
+                extrasIndex=${freezeIdx}
+                scopeActive=${scopeActiveRef?.current}
+                hotkeyLetter="f"
+                isLineSelected=${isLineSelected}
+                lineNumber=${lineNumber}
+            />
+            <${DisabledTooltipButton}
+                disabledMessage=${actingAsDisabledMessage}
+                onDisabledClick=${handleActAsClick}
+                label="Call In"
+                color="brown"
+                containerClass="mx-1 w-12"
+                buttonClass="whitespace-nowrap w-full"
+                extrasIndex=${callInIdx}
+                scopeActive=${scopeActiveRef?.current}
+                hotkeyLetter="c"
+                isLineSelected=${isLineSelected}
+                lineNumber=${lineNumber}
+            />
+        </div>`;
     }
 
     // SELL
@@ -74,37 +149,64 @@ const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, ha
         const tooltipText = playerControlled
             ? 'Cannot sell loans of companies you control'
             : 'Depositor has no loans to sell';
-        nodes.push(html`<${Tooltip} containerClass="w-12 mx-1" text=${tooltipText}>
-            <${Button} class="btn disabled w-full">Sell</button>
-        <//>`);
+        nodes.push(html`<${DisabledTooltipButton}
+            disabledMessage=${tooltipText}
+            label="Sell"
+            color="red"
+            containerClass="w-12 mx-1"
+            buttonClass="w-full"
+            extrasIndex=${sellIdx}
+            scopeActive=${scopeActiveRef?.current}
+            hotkeyLetter="s"
+            isLineSelected=${isLineSelected}
+            lineNumber=${lineNumber}
+        />`);
     } else {
-        nodes.push(html`<${Button}
+        nodes.push(html`<${LetterHotkeyButton}
             class="btn red flex-1 mx-1 w-12"
-            onClick=${() => api.sellBusinessLoan(id)}>
-            Sell
-        </button>`);
+            onClick=${() => api.sellBusinessLoan(id)}
+            label="Sell"
+            letter="s"
+            isLineSelected=${isLineSelected}
+            lineNumber=${lineNumber}
+        />`);
     }
 
     // FREEZE / UNFREEZE
     const isFrozen = text?.includes('FROZ');
-    nodes.push(html`<${Button}
+    nodes.push(html`<${LetterHotkeyButton}
         class="btn ${isFrozen ? 'orange' : 'blue'} flex-1 mx-1 w-12"
-        onClick=${() => api.freezeLoan(id)}>
-        ${isFrozen ? 'Unfreeze' : 'Freeze'}
-    </button>`);
+        onClick=${() => api.freezeLoan(id)}
+        label=${isFrozen ? 'Unfreeze' : 'Freeze'}
+        letter="f"
+        isLineSelected=${isLineSelected}
+        lineNumber=${lineNumber}
+    />`);
 
     // CALL IN (below investment grade only - BB or worse)
     const isBBBOrBetter = ['   AAA   ', '   AA   ', '   A   ', '   BBB   '].some(s => text?.includes(s));
     if (!isBBBOrBetter) {
-        nodes.push(html`<${Button}
+        nodes.push(html`<${LetterHotkeyButton}
             class="btn brown flex-1 mx-1 whitespace-nowrap w-12"
-            onClick=${() => api.callInLoan(id)}>
-            Call In
-        </button>`);
+            onClick=${() => api.callInLoan(id)}
+            label="Call In"
+            letter="c"
+            isLineSelected=${isLineSelected}
+            lineNumber=${lineNumber}
+        />`);
     } else {
-        nodes.push(html`<${Tooltip} text="Can only call in loans below investment grade (BB or worse)">
-            <${Button} class="btn disabled mx-1 whitespace-nowrap">Call In</button>
-        <//>`);
+        nodes.push(html`<${DisabledTooltipButton}
+            disabledMessage=${"Can only call in loans below investment grade (BB or worse)"}
+            label="Call In"
+            color="brown"
+            containerClass="mx-1"
+            buttonClass="whitespace-nowrap"
+            extrasIndex=${callInIdx}
+            scopeActive=${scopeActiveRef?.current}
+            hotkeyLetter="c"
+            isLineSelected=${isLineSelected}
+            lineNumber=${lineNumber}
+        />`);
     }
 
     return html`<div class="flex justify-center items-center">${nodes}</div>`;
@@ -124,27 +226,30 @@ function LoansTab() {
     const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
     const handleActAsClick = buttonProps.onMustActAsCompanyClick;
 
+    // Extras hotkey refs
+    const extrasContainerRef = useRef(null);
+    const scopeActiveRef = useRef(false);
+    const [, setScopeRenderTick] = useState(0);
+    const barButtons = [
+        { ...buttonProps.buyBusinessLoans, containerClass: "flex flex-row justify-between w-full", buttonClass: "btn flex-1 mx-1" },
+        { ...buttonProps.freezeAllLoans, label: `${frozenAllLoans ? "Unfreeze" : "Freeze"} All Loans`, containerClass: "flex flex-row justify-between w-full", buttonClass: "btn flex-1 mx-1" },
+        { ...buttonProps.setBankAllocation, containerClass: "flex flex-row justify-between w-full", buttonClass: "btn flex-1 mx-1" },
+    ];
+    const extrasStartNumber = barButtons.filter(Boolean).length + 1;
+
     return html`
         <div class="flex flex-col w-full items-center h-full min-h-0">
-            <${DisabledTooltipButton} ...${buttonProps.buyBusinessLoans}
-                containerClass="flex flex-row justify-between mt-2 w-full"
-                buttonClass="btn flex-1 mx-1"
-            />
-            <${DisabledTooltipButton} ...${buttonProps.freezeAllLoans}
-                label="${frozenAllLoans ? "Unfreeze" : "Freeze"} All Loans"
-                containerClass="flex flex-row justify-between mt-2 w-full"
-                buttonClass="btn flex-1 mx-1"
-            />
-            <${DisabledTooltipButton} ...${buttonProps.setBankAllocation}
-                containerClass="flex flex-row justify-between mt-2 w-full"
-                buttonClass="btn flex-1 mx-1"
-            />
+            <${HotkeyButtonBar} buttons=${barButtons}
+                extrasContainerRef=${extrasContainerRef}
+                scopeActiveRef=${scopeActiveRef}
+                onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
+                class="flex flex-col items-center mt-2 w-full" style="" />
 
             <br />
 
             <div class="flex flex-col flex-[3] justify-center items-center overflow-y-auto min-h-0">
-                <div class="flex flex-col items-center w-full">
-                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, actingAsDisabledMessage, handleActAsClick), hyperlinkRegex)}
+                <div ref=${extrasContainerRef} class="flex flex-col items-center w-full">
+                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, actingAsDisabledMessage, handleActAsClick, scopeActiveRef), hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
                 </div>
             </div>
         </div>

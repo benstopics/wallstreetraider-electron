@@ -24,7 +24,7 @@
   border-radius: 6px;
   box-shadow: var(--shadow-lg), 0 0 0 1px var(--bg-primary) inset;
   width: min(800px, 92vw);
-  max-height: 90vh;
+  max-height: 85vh;
   overflow-y: hidden;
   padding: 16px;
   position: relative;

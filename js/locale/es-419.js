@@ -17805,5 +17805,8 @@ export const es419 = {
     "es": "",
     " \"": "",
     "CA": "",
-    "NO": ""
+    "NO": "",
+    "Confirm Loan Sale": "Confirmar venta de préstamo",
+    "Sell the business loan to": "Vender el préstamo comercial a",
+    " (face value ": " (valor nominal "
 }

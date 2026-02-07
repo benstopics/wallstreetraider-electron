@@ -1,5 +1,30 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
+import Modal from './Modal.js';
+import Button from './Button.js';
+
+const COMMAND_CATEGORIES = [
+    { label: 'Navigation',               keys: ['ACT'] },
+    { label: 'Trading - Stocks',          keys: ['BUY','SELL','SHORT','COVER'] },
+    { label: 'Trading - Corp Bonds',      keys: ['BUYBOND','SELLBOND'] },
+    { label: 'Trading - Govt Bonds',      keys: ['BUYLGOV','SELLLGOV','BUYSGOV','SELLSGOV'] },
+    { label: 'Trading - Options',         keys: ['CALLS','SELLCALLS','PUTS','SELLPUTS','ADVOPTS'] },
+    { label: 'Trading - Commodity Futures',keys: ['BUYFUT','SELLFUT','SHORTFUT','COVERFUT'] },
+    { label: 'Trading - Physical Commodities', keys: ['BUYCOMM','SELLCOMM'] },
+    { label: 'Trading - Crypto',          keys: ['BUYCRYPTO','SELLCRYPTO','BUYCFUT','SELLCFUT'] },
+    { label: 'Finance',                   keys: ['BORROW','REPAY','PREPAY','ADVANCE','SWAPS','TBILLS','CHGBANK'] },
+    { label: 'Corporate - Leadership',    keys: ['ELECT','RESIGN','MANAGERS'] },
+    { label: 'Corporate - Strategy',      keys: ['DIVIDEND','PRODUCTIVITY','GROWTH','REBRAND','RESTRUCTURE'] },
+    { label: 'Corporate - Equity',        keys: ['PSO','PPO','SPLIT','RSPLIT'] },
+    { label: 'Corporate - Debt',          keys: ['ISSUEBOND','REDEEMBOND'] },
+    { label: 'Corporate - Returns',       keys: ['EXTDIV','TAXFREE','TAXLIQ'] },
+    { label: 'Corporate - Assets',        keys: ['BUYASSET','SELLASSET','OFFERASSET','SELLSUB','SPINOFF','BROWSE'] },
+    { label: 'Corporate - M&A',           keys: ['MERGER','GREENMAIL','LBO','STARTUP','CONTRIB'] },
+    { label: 'Hostile Actions',           keys: ['HARASS','RUMORS','ANTITRUST','LAWFIRM'] },
+    { label: 'Accounting',               keys: ['INCREARN','DECREARN'] },
+    { label: 'ETF / Advisory',           keys: ['FEE','AUTOPILOT'] },
+    { label: 'Bank Operations',          keys: ['ALLOC','LISTLOANS','FREEZE','BUYBIZ','BUYCONS','SELLCONS','BUYMORT','SELLMORT','BUYSUBMORT','SELLSUBMORT'] },
+];
 
 export default function CommandPrompt() {
     const gameState = api.useGameStore(s => s.gameState);
@@ -9,6 +34,7 @@ export default function CommandPrompt() {
     const caretRef = useRef(null);
     const [open, setOpen] = useState(false);
     const [activeIdx, setActiveIdx] = useState(0);
+    const [showHelp, setShowHelp] = useState(false);
 
     const tokens = useMemo(() => command.trimStart().split(/\s+/), [command]);
     const lastPart = useMemo(() => (tokens.length ? tokens[tokens.length - 1] : ''), [tokens]);
@@ -16,11 +42,14 @@ export default function CommandPrompt() {
     const commands = Object.entries(api.commandMap).map(([key, { description }]) => ({
         symbol: key,
         name: description,
-        id: 0
+        id: 0,
+        isCommand: true
     }));
 
-    const entities = [{ id: api.HUMAN1_ID, symbol: '', name: 'Player (You)' }]
-        .concat(gameState.allCompanies ?? []);
+    const entities = [
+        { id: api.HUMAN1_ID, symbol: 'ME', name: 'Player (You)' },
+        { id: api.HUMAN1_ID, symbol: 'PLAYER', name: gameState?.playerName || 'Player' },
+    ].concat(gameState.allCompanies ?? []);
 
     const suggestions = useMemo(() => {
 
@@ -75,10 +104,17 @@ export default function CommandPrompt() {
     }, [entities, lastPart]);
 
     const parts = (command ?? '').trim().toUpperCase().split(/\s+/);
+    const cmdKey = parts[0];
+    const operandStr = parts.length > 1 ? parts[parts.length - 1] : null;
+    const cmdEntry = api.commandMap[cmdKey];
 
-    const cmdFn = api.commandMap[parts[0]]?.fn;
-    const operand = parts.length === 1 ? parts[0] : parts[-1];
-    const cmdId = api.getCompanyBySymbol(gameState.allCompanies, operand)?.id ?? (operand == 'ME' ? HUMAN1_ID : undefined);
+    const resolvedId = useMemo(() => {
+        if (!operandStr) return 0;
+        if (operandStr === 'ME' || operandStr === 'PLAYER') return api.HUMAN1_ID;
+        if (/^P(\d+)$/.test(operandStr)) return parseInt(operandStr.slice(1));
+        if (gameState?.playerName && operandStr === gameState.playerName.toUpperCase()) return api.HUMAN1_ID;
+        return api.getCompanyBySymbol(gameState?.allCompanies, operandStr)?.id ?? undefined;
+    }, [operandStr, gameState?.allCompanies, gameState?.playerName]);
 
     // --- overlay/hint computation ------------------------------------------------
     function getOverlayAndHint() {
@@ -121,11 +157,30 @@ export default function CommandPrompt() {
     // Build the overlay text once
     const overlayText = html`${command}${tail ? html`${tail}` : ''}${hint ? html`  ${' '} ${hint}` : ''}`;
 
-    const replaceLastPart = (sym) => {
-        const before = command.slice(0, command.length - lastPart.length);
-        const next = (before + sym + ' ').toUpperCase();
-        setCommand(next);
-        caretRef.current = (before + sym + ' ').length;
+    const completeSuggestion = (suggestion) => {
+        // Determine replacement symbol
+        let sym;
+        if (suggestion.isCommand) {
+            sym = suggestion.symbol.toUpperCase();
+        } else if (suggestion.id > 0 && suggestion.id <= 5) {
+            sym = `P${suggestion.id}`;
+        } else {
+            sym = suggestion.symbol.toUpperCase();
+        }
+
+        // If first token is a recognized command and there's an operand,
+        // replace just the last token. Otherwise replace entire input
+        // (handles both command completion and multi-word company name searches).
+        if (cmdEntry && tokens.length > 1) {
+            const before = command.slice(0, command.length - lastPart.length);
+            const next = (before + sym + ' ').toUpperCase();
+            setCommand(next);
+            caretRef.current = next.length;
+        } else {
+            const next = (sym + ' ').toUpperCase();
+            setCommand(next);
+            caretRef.current = next.length;
+        }
         setOpen(false);
         setActiveIdx(0);
     };
@@ -149,16 +204,20 @@ export default function CommandPrompt() {
 
     const onKeyDown = (e) => {
         if (e.key === 'Enter' && command.trim()) {
-
-            if ((cmdId ?? false) && !cmdFn) {
-                api.setViewAsset(cmdId);
-            } else if (command) {
-                cmdFn(cmdId, gameState);
+            if (cmdEntry) {
+                if (cmdEntry.takesId) {
+                    if (resolvedId !== undefined) cmdEntry.fn(resolvedId);
+                } else {
+                    cmdEntry.fn();
+                }
+            } else if (resolvedId && resolvedId !== 0) {
+                api.setViewAsset(resolvedId);
             }
 
             setCommand('');
             caretRef.current = 0;
             setOpen(false);
+            inputRef.current?.blur();
             return;
         }
         if (e.key === ' ') {
@@ -166,10 +225,9 @@ export default function CommandPrompt() {
             return;
         }
         if (e.key === 'Escape') {
-            if (open)
-                setOpen(false);
-            else
-                inputRef.current?.blur();
+            setOpen(false);
+            inputRef.current?.blur();
+            return;
         }
         if (!open || !suggestions.length) return;
         if (e.key === 'ArrowDown') {
@@ -180,11 +238,7 @@ export default function CommandPrompt() {
             setActiveIdx((activeIdx - 1 + suggestions.length) % suggestions.length);
         } else if (e.key === 'Tab') {
             e.preventDefault();
-            const suggestion = suggestions[activeIdx];
-            if (suggestion.id <= 5)
-                replaceLastPart(`P${suggestion.id}`);
-            else
-                replaceLastPart(suggestion.symbol.toUpperCase());
+            completeSuggestion(suggestions[activeIdx]);
         }
     };
 
@@ -194,10 +248,23 @@ export default function CommandPrompt() {
         }
     }, []);
 
+    // Listen for hotkey-focus-command events
+    useEffect(() => {
+        const handler = () => inputRef.current?.focus();
+        document.addEventListener('hotkey-focus-command', handler);
+        return () => document.removeEventListener('hotkey-focus-command', handler);
+    }, []);
+
     return html`
-    <div style="position:relative; width:100%;">
-      <div style="position:relative; width:100%;">
-        <div class="command-line suggestion-overlay" aria-hidden="true">
+    <div style="position:relative; width:100%; display:flex; align-items:stretch; gap:0;">
+      <${Button}
+        class="btn"
+        style="flex-shrink:0; padding:0 7px; font-weight:bold; font-size:14px; border-right:none; border-radius:0;"
+        onClick=${() => setShowHelp(true)}
+        title="Show all commands"
+      >?<//>
+      <div style="position:relative; flex:1; min-width:0;">
+        <div class="command-line suggestion-overlay whitespace-nowrap" aria-hidden="true">
             ${overlayText}
         </div>
         <input
@@ -214,31 +281,60 @@ export default function CommandPrompt() {
           spellcheck="false"
           style="background:transparent; position:relative; z-index:1;"
         />
+        ${open && suggestions.length ? html`
+          <ul
+            class="command-suggestions"
+            style="
+              position:absolute; left:0; right:0; top:100%; z-index:50;
+              max-height:180px; overflow:auto; border:1px solid #444; background:#111; padding:4px 0; margin:4px 0 0 0;
+            "
+          >
+            ${suggestions.map((c, i) => html`
+              <li
+                key=${c.id}
+                class="${i === activeIdx ? 'active' : ''}"
+                style="
+                  padding:6px 10px; cursor:pointer;
+                  display:flex; justify-content:space-between; gap:8px;
+                "
+                onMouseDown=${(e) => { e.preventDefault(); }}
+                onClick=${() => completeSuggestion(c)}
+              >
+                <span>${c.symbol.toUpperCase()}</span>
+                <span style="opacity:0.7">${c.id ? c.name : html`<i>${c.name}</i>`}</span>
+              </li>
+            `)}
+          </ul>
+        ` : null}
       </div>
-      ${open && suggestions.length ? html`
-        <ul
-          class="command-suggestions"
-          style="
-            position:absolute; left:0; right:0; top:100%; z-index:50;
-            max-height:180px; overflow:auto; border:1px solid #444; background:#111; padding:4px 0; margin:4px 0 0 0;
-          "
-        >
-          ${suggestions.map((c, i) => html`
-            <li
-              key=${c.id}
-              class="${i === activeIdx ? 'active' : ''}"
-              style="
-                padding:6px 10px; cursor:pointer;
-                display:flex; justify-content:space-between; gap:8px;
-              "
-              onMouseDown=${(e) => { e.preventDefault(); }} 
-              onClick=${() => replaceLastPart(c.symbol.toUpperCase())}
-            >
-              <span>${c.symbol.toUpperCase()}</span>
-              <span style="opacity:0.7">${c.id ? c.name : html`<i>${c.name}</i>`}</span>
-            </li>
-          `)}
-        </ul>
+
+      ${showHelp ? html`
+        <${Modal} show=${true} onClose=${() => setShowHelp(false)} class="modal-card" style="max-width:720px; max-height:80vh; display:flex; flex-direction:column;">
+          <div class="flex justify-between items-center p-3 flex-shrink-0">
+            <div class="text-lg font-bold">Command Reference</div>
+            <${Button} class="btn p-2" onClick=${() => setShowHelp(false)}>Close<//>
+          </div>
+          <div class="px-3 pb-1 text-xs opacity-70 flex-shrink-0">
+            Type a command in the prompt followed by a company symbol. e.g. <b>BUY AAPL</b>
+          </div>
+          <div style="overflow-y:auto; flex:1; min-height:0; padding:0 12px 12px;">
+            ${COMMAND_CATEGORIES.map(cat => html`
+              <div style="margin-top:10px;">
+                <div class="text-sm font-bold opacity-80" style="margin-bottom:4px; border-bottom:1px solid #333; padding-bottom:2px;">${cat.label}</div>
+                <div style="display:grid; grid-template-columns:auto 1fr; gap:2px 12px;">
+                  ${cat.keys.map(k => {
+                    const entry = api.commandMap[k];
+                    if (!entry) return null;
+                    return html`
+                      <span class="font-mono text-sm" style="color:var(--accent-secondary);">${k}</span>
+                      <span class="text-sm opacity-70">${entry.description}${entry.takesId ? html` <span style="opacity:0.5">[symbol]</span>` : ''}</span>
+                    `;
+                  })}
+                </div>
+              </div>
+            `)}
+          </div>
+        <//>
       ` : null}
     </div>
   `;

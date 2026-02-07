@@ -1,14 +1,14 @@
-import { html, useMemo, useState } from '../lib/preact.standalone.module.js';
+import { html, useMemo, useRef, useState } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 // Hedge Fund UI removed in this build (UI-only).
-import Tooltip from './Tooltip.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
+import HotkeyButtonBar from './HotkeyButtonBar.js';
 import Modal from './Modal.js';
-import Button from './Button.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
+import { usePanelSelection } from '../hooks/usePanelSelection.js';
 
 // Stop orders are managed centrally in api.js and checked on each gameState refresh.
 
@@ -25,56 +25,37 @@ function getCompanyPrice(company) {
 
 const Tab = Tabs.Tab;
 
-function IndexPanel({ title, bondId }) {
+function IndexPanel({ title, bondId, panelNumber, isSelected = false, shiftHeld = false }) {
+    const buttonProps = useActionButtonProps();
+    const buyProps = bondId === api.TBOND_RATE_ID
+        ? buttonProps.buyLongGovtBonds
+        : buttonProps.buyShortGovtBonds;
 
-    const actingAs = api.useGameStore(s => s.gameState.actingAs);
-    const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
-    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
-    const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
-    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
-    const playerName = api.useGameStore(s => s.gameState.playerName) || 'Player';
+    const borderStyle = isSelected
+        ? 'outline: 2px solid rgba(96, 165, 250, 0.7); border-radius: 4px;'
+        : '';
 
-    const buy = bondId === api.TBOND_RATE_ID ? api.buyLongGovtBonds : api.buyShortGovtBonds;
-
-    const controlsActiveEntity = (controlledCompanies || []).some(c => c.id === activeEntityNum);
-
-    const getDisabledInfo = () => {
-        if (!actingAs) {
-            return {
-                message: controlsActiveEntity
-                    ? `Must be acting as this company. Click to act as ${activeEntitySymbol}`
-                    : "Must be acting as this company",
-                onClick: controlsActiveEntity ? () => api.changeActingAs(activeEntityNum) : null
-            };
-        }
-        if (![api.PLAYER_IND, api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId)) {
-            return {
-                message: `Only players, banks, and insurance companies can trade government bonds. Click to act as ${playerName}`,
-                onClick: () => api.changeActingAs(api.HUMAN1_ID)
-            };
-        }
-        return { message: false, onClick: null };
-    };
-
-    const disabledInfo = getDisabledInfo();
+    const shiftBadge = shiftHeld && panelNumber != null
+        ? html`<span style="position:absolute;top:2px;left:4px;opacity:0.7;font-size:11px;z-index:1;">${panelNumber})</span>`
+        : '';
 
     return html`
-        <div class="flex flex-col w-full">
+        <div class="flex flex-col w-full" style="position:relative;${borderStyle}">
+            ${shiftBadge}
             <div class="flex flex-col" style="height: 100px">
-                ${html`<${AssetPriceChart} chartTitle=${title} assetId=${bondId} />`}
+                <${AssetPriceChart} chartTitle=${title} assetId=${bondId} />
             </div>
-            ${!disabledInfo.message
-                ? html`
-                <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
-                    <${Button} class="btn green flex-1 mx-1" onclick=${() => buy(bondId)}>Buy</button>
-                </div>`
-                : html`
-                <${Tooltip} text=${disabledInfo.message}>
-                    <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
-                        <${Button} class="btn disabled flex-1 mx-1" onclick=${disabledInfo.onClick}>Buy</button>
-                    </div>
-                <//>
-            `}
+            <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
+                <${DisabledTooltipButton}
+                    ...${buyProps}
+                    label="Buy"
+                    containerClass="flex-1"
+                    buttonClass="mx-1 w-full"
+                    hotkeyLetter="b"
+                    isLineSelected=${isSelected}
+                    lineNumber=${panelNumber}
+                />
+            </div>
         </div>
     `;
 }
@@ -84,6 +65,7 @@ function PortfolioTab() {
     const portfolio = api.useGameStore(s => s.gameState.portfolio);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
 
     // Get centralized button props
     const buttonProps = useActionButtonProps();
@@ -94,29 +76,58 @@ function PortfolioTab() {
         return m;
     }, [allCompanies]);
 
+    // Extras hotkey refs
+    const extrasContainerRef = useRef(null);
+    const scopeActiveRef = useRef(false);
+    const [, setScopeRenderTick] = useState(0);
+    // Hide company-only buttons when viewing a player (activeEntityNum < 10)
+    const showCorpButtons = activeEntityNum >= 10 || buttonProps.isActiveEntityETF;
+    const barButtons = [
+        buttonProps.buyStock,
+        buttonProps.shortStock,
+        showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.buyCorpBond, label: "Buy Bonds" },
+        showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.merger, label: "Merge With" },
+        showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.sellSubsidiaryStock, label: "Offer Stock for Sale" },
+    ];
+    const barCount = barButtons.filter(Boolean).length;
+
+    // Panel selection: 2 bond panels after bar buttons
+    const PANEL_COUNT = 2;
+    const panelStartNumber = barCount + 1;
+    const { selectedPanelNumber, shiftHeld, panelNumbers } =
+        usePanelSelection({ panelCount: PANEL_COUNT, startNumber: panelStartNumber });
+
+    // Holdings lines start after bar buttons + panels
+    const extrasStartNumber = barCount + PANEL_COUNT + 1;
+
     return html`
             <div class="flex flex-col w-full h-full min-h-0">
-                <div class="flex flex-row items-center justify-start gap-2 mb-2">
-                    <${DisabledTooltipButton} ...${buttonProps.buyStock} />
-                    <${DisabledTooltipButton} ...${buttonProps.shortStock} />
-                    ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.buyCorpBond} label="Buy Bonds" />` : ''}
-                    ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.merger} label="Merge With" />` : ''}
-                    ${!buttonProps.isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.sellSubsidiaryStock} label="Offer Stock for Sale" />` : ''}
-                </div>
+                <${HotkeyButtonBar} buttons=${barButtons}
+                    extrasContainerRef=${extrasContainerRef}
+                    scopeActiveRef=${scopeActiveRef}
+                    onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
+                    panelCount=${PANEL_COUNT}
+                    class="flex flex-row items-center justify-start gap-2 mb-2" />
                 <div class="flex flex-row flex-[1]">
-                    <${IndexPanel} title="Long Bond" bondId=${api.TBOND_RATE_ID} />
-                    <${IndexPanel} title="Short Bond" bondId=${api.SBOND_RATE_ID} />
+                    <${IndexPanel} title="Long Bond" bondId=${api.TBOND_RATE_ID}
+                        panelNumber=${panelStartNumber} isSelected=${selectedPanelNumber === panelStartNumber} shiftHeld=${shiftHeld} />
+                    <${IndexPanel} title="Short Bond" bondId=${api.SBOND_RATE_ID}
+                        panelNumber=${panelStartNumber + 1} isSelected=${selectedPanelNumber === panelStartNumber + 1} shiftHeld=${shiftHeld} />
                 </div>
-                <div class="flex flex-col items-center flex-[3] overflow-y-auto min-h-0">
+                <div ref=${extrasContainerRef} class="flex flex-col items-center flex-[3] overflow-y-auto min-h-0">
                     ${renderLines(portfolio,
                         ({ id }) => id && api.setViewAsset(id),
-                        ({ type, id, text }) => {
+                        ({ type, id, text, extrasCounter, isLineSelected, lineNumber }) => {
                             // Select appropriate button props based on type, override onClick with specific id
                             const sellButtonBase = type === "S" ? buttonProps.coverShort
                                 : type === "J" ? buttonProps.sellCorpBond
                                 : type === "GS" ? buttonProps.sellShortGovtBonds
                                 : type === "GL" ? buttonProps.sellLongGovtBonds
                                 : buttonProps.sellStock;
+
+                            const sellIdx = extrasCounter ? extrasCounter.current++ : null;
+                            const showSpinOff = showCorpButtons && !buttonProps.isActiveEntityETF && !text.includes('GOVERNMENT');
+                            const spinOffIdx = showSpinOff && extrasCounter ? extrasCounter.current++ : null;
 
                             return html`<div class="flex flex-row stop-btn-row">
                                 <${DisabledTooltipButton}
@@ -128,13 +139,23 @@ function PortfolioTab() {
                                         : api.sellStock
                                     )(id)}
                                     label="${type === "S" ? "Cover" : "Sell"}"
+                                    extrasIndex=${sellIdx}
+                                    scopeActive=${scopeActiveRef.current}
+                                    hotkeyLetter="s"
+                                    isLineSelected=${isLineSelected}
+                                    lineNumber=${lineNumber}
                                 />
-                                ${!buttonProps.isActiveEntityETF && !text.includes('GOVERNMENT') ? html`<${DisabledTooltipButton}
+                                ${showSpinOff ? html`<${DisabledTooltipButton}
                                     ...${buttonProps.spinOff}
                                     onClick=${() => api.spinOff(id)}
+                                    extrasIndex=${spinOffIdx}
+                                    scopeActive=${scopeActiveRef.current}
+                                    hotkeyLetter="o"
+                                    isLineSelected=${isLineSelected}
+                                    lineNumber=${lineNumber}
                                 />` : ''}
                             </div>`
-                        }, hyperlinkRegex)}
+                        }, hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef, panelNumbers)}
                 </div>
             </div>
     `;

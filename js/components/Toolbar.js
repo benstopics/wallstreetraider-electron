@@ -1,15 +1,56 @@
-import { html, useState } from '../lib/preact.standalone.module.js';
+import { html, useState, useEffect, useRef } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import { PauseIcon, StopIcon, SaveIcon, GaugeIcon, ForwardIcon, PlayIcon } from '../icons.js';
-import NavigationControl from './NavigationControl.js';
-import ActingAsDropdown from './ActingAsDropdown.js';
+import NavigationPanel from './NavigationPanel.js';
 import InputStringModal from './InputStringModal.js';
 import NotesModal from './NotesModal.js';
 import CalculatorModal from './CalculatorModal.js';
 import KeybindsModal from './KeybindsModal.js';
 import SettingsModal from './SettingsModal.js';
+import Button from './Button.js';
 import { insertCurrencySymbols } from './helpers.js';
+import { bracketLabel } from '../hotkeys.js';
+import { useShiftHeld } from '../hooks/useHotkey.js';
+
+function CheatsMenu() {
+    const [isOpen, setIsOpen] = useState(false);
+    const popoverRef = useRef(null);
+    const triggerRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const onDocMouseDown = (e) => {
+            if (!popoverRef.current) return;
+            if (popoverRef.current.contains(e.target)) return;
+            if (triggerRef.current && triggerRef.current.contains(e.target)) return;
+            setIsOpen(false);
+        };
+        document.addEventListener('mousedown', onDocMouseDown);
+        return () => document.removeEventListener('mousedown', onDocMouseDown);
+    }, [isOpen]);
+
+    const handleCheat = (fn) => {
+        setIsOpen(false);
+        fn();
+    };
+
+    return html`
+        <div style="position: relative; display: inline-block;">
+            <div ref=${triggerRef} class="btn" onClick=${() => setIsOpen(prev => !prev)}>
+                <span style="white-space: nowrap;">${insertCurrencySymbols("Cheats")}</span>
+            </div>
+            ${isOpen ? html`
+                <div ref=${popoverRef} class="toolbar-menu-popover" style="position: absolute; top: 100%; left: 0; z-index: 99999999 !important; display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--panel-border); border-radius: 4px; padding: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                    <${Button} class="toolbar-menu-item" onClick=${() => handleCheat(api.cheatDisableLawsuits)}>${insertCurrencySymbols("Disable Lawsuits")}<//>
+                    <${Button} class="toolbar-menu-item" onClick=${() => handleCheat(api.cheatMergerInfo)}>${insertCurrencySymbols("Inside Info: Merger")}<//>
+                    <${Button} class="toolbar-menu-item" onClick=${() => handleCheat(api.cheatEarningsInfo)}>${insertCurrencySymbols("Inside Info: Earnings")}<//>
+                    <${Button} class="toolbar-menu-item" onClick=${() => handleCheat(api.cheatAddCash)}>${insertCurrencySymbols("Add/Subtract Cash")}<//>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
 
 function Toolbar() {
     const { showTutorial, showHelp } = api.useWSRContext();
@@ -19,6 +60,7 @@ function Toolbar() {
     const [showKeybinds, setShowKeybinds] = useState(false);
 
     const [showTickerSpeedModal, setShowTickerSpeedModal] = useState(false);
+    const shiftHeld = useShiftHeld();
 
     const tickSpeed = api.useGameStore(s => s.gameState.tickSpeed);
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
@@ -47,7 +89,7 @@ function Toolbar() {
                 }}
                 onCancel=${() => setShowTickerSpeedModal(false)}
             />
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" style="flex-shrink: 1; min-width: 0;">
                 <div style="width: 25px; height: 20px"
                 data-tutorial="pause-button"
                 class="btn ${isTickerRunning ? 'stop' : 'play'}"
@@ -121,26 +163,22 @@ function Toolbar() {
                     </div>
                 </div>
             </div>
-            <div class="flex items-center">
-                <div class="w-60">
-                    <${NavigationControl} />
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2" style="flex-shrink: 1; min-width: 0;">
                 <div class="btn" onClick=${() => api.changeLawFirm()}>
-                    <span style="white-space: nowrap;">${insertCurrencySymbols("Change Law Firm")}</span>
+                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Change Law Firm", "L") : insertCurrencySymbols("Change Law Firm")}</span>
                 </div>
                 <div class="btn" onClick=${() => api.toggleGlobalAutopilot()}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Toggle Global Autopilot")}</span>
                 </div>
+                <${CheatsMenu} />
                 <div class="btn" data-tutorial="market-reports" onClick=${() => api.viewIndustry(0)}>
-                    <span style="white-space: nowrap;">${insertCurrencySymbols("Market Reports")}</span>
+                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Market Reports", "M") : insertCurrencySymbols("Market Reports")}</span>
                 </div>
                 <div class="btn" data-tutorial="database-search" onClick=${() => api.viewDbSearch()}>
-                    <span style="white-space: nowrap;">${insertCurrencySymbols("Database Search")}</span>
+                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Database Search", "D") : insertCurrencySymbols("Database Search")}</span>
                 </div>
             </div>
-            <${ActingAsDropdown} />
+            <${NavigationPanel} />
         </div>
     `;
 }

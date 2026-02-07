@@ -182,7 +182,28 @@ function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 let lookup = {};
 
+// Memoization cache for buildDictRegex - avoids rebuilding on every 50ms poll
+let _cachedRegex = null;
+let _cachedFingerprint = '';
+
+function _dictFingerprint(allCompanies, allIndustries) {
+    // Fast fingerprint: count + first/last IDs. Lists only change on mergers/new companies.
+    const cl = (allCompanies || []).length;
+    const il = (allIndustries || []).length;
+    const c0 = cl > 0 ? allCompanies[0].id : 0;
+    const cN = cl > 0 ? allCompanies[cl - 1].id : 0;
+    const i0 = il > 0 ? allIndustries[0].id : 0;
+    const iN = il > 0 ? allIndustries[il - 1].id : 0;
+    return `${cl}:${c0}:${cN}:${il}:${i0}:${iN}`;
+}
+
 export function buildDictRegex(allCompanies, allIndustries) {
+    // Return cached regex if the company/industry lists haven't changed
+    const fp = _dictFingerprint(allCompanies, allIndustries);
+    if (_cachedRegex && fp === _cachedFingerprint) {
+        return _cachedRegex;
+    }
+    _cachedFingerprint = fp;
 
     lookup = Object.create(null); // key: lowercased token -> {id, type}
 
@@ -224,7 +245,8 @@ export function buildDictRegex(allCompanies, allIndustries) {
     const pattern =
         `(?<![./_])${allowed}(?![/$_])(?!-(?=[A-Za-z0-9]))(?!/(?=[A-Za-z0-9]))`;
 
-    return new RegExp(pattern, "g");
+    _cachedRegex = new RegExp(pattern, "g");
+    return _cachedRegex;
 }
 
 function toTitleCase(str) {
@@ -308,8 +330,38 @@ export async function saveGameAs(filename) {
         body: JSON.stringify({ filename })
     });
 }
+
+// List available save files (via IPC to main process)
+export async function listSaves() {
+    return ipcRenderer.invoke('list-saves');
+}
+
+// Delete a save file (via IPC to main process)
+export async function deleteSave(filename) {
+    return ipcRenderer.invoke('delete-save', filename);
+}
+
+// Load a specific save file by triggering the backend load event
+export async function loadSpecificSave(filename) {
+    // First set the filename, then trigger load
+    const url = `${apiBase}/load_specific_save`;
+    await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+    });
+}
+
+// Validate Windows filename (no invalid characters)
+export function isValidWindowsFilename(filename) {
+    if (!filename || filename.length === 0) return false;
+    // Invalid Windows filename characters: \ / : * ? " < > |
+    const invalidChars = /[\\/:*?"<>|]/;
+    return !invalidChars.test(filename);
+}
 export async function exitGame() {
-    ipcRenderer.send('restart-wsr');
+    // Just send the exit_game request - WSR will show save dialog,
+    // and if user confirms, WSR will exit and Electron will restart it automatically
     await postNoArg('/exit_game');
 }
 export async function exitToDesktop() {
@@ -517,6 +569,13 @@ export async function makedeliverySelect() { await postNoArg('/makedelivery_sele
 export async function takedeliverySelect() { await postNoArg('/takedelivery_select'); }
 export async function tooltipsSelect() { await postNoArg('/tooltips_select'); }
 export async function shareholderGraphSelect() { await postNoArg('/shareholdergraph_select'); }
+export async function unethicalSelect() { await postNoArg('/unethical_select'); }
+
+// Cheat Menu
+export async function cheatDisableLawsuits() { await postNoArg('/cheat_disable_lawsuits'); }
+export async function cheatMergerInfo() { await postNoArg('/cheat_merger_info'); }
+export async function cheatEarningsInfo() { await postNoArg('/cheat_earnings_info'); }
+export async function cheatAddCash() { await postNoArg('/cheat_add_cash'); }
 
 // Fullscreen toggle (Electron if available, otherwise browser fullscreen API)
 export function toggleFullscreen() {
@@ -563,32 +622,139 @@ export async function whoOwnsStocks() { await postNoArg('/who_owns_stocks'); }
 export async function whoAreAdvisors() { await postNoArg('/who_are_advisors'); }
 export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 
-/* Misc */
-export const navHistory = [];
-export const navPointerIdx = { current: -1 }; // -1 means "not pointing", reset after setViewAsset
+/*
+ * Navigation Manager – purely local state.
+ *
+ * History lives in-memory on this instance.  The UI reads from
+ * store.navState (separate from gameState, never overwritten by polling).
+ * CustomData is only used for save/restore persistence (debounced).
+ */
+class NavigationManager {
+    constructor() {
+        this.history = [];
+        this.pointerIndex = 0;
+        this.maxHistory = 30;
+        this.initialized = false;
+        this._persistTimer = null;
+    }
 
-// Persist navigation history to CustomData (saved with game)
-function persistNavHistory() {
-    const navData = {
-        entries: [...navHistory],
-        pointerIndex: navPointerIdx.current
-    };
-
-    // Optimistically update local store immediately to prevent race conditions
-    // (useEffect in NavigationControl syncs from store, so store must stay current)
-    const state = gameStore.getState();
-    const gs = state.gameState || {};
-    state.setGameState({
-        ...gs,
-        customData: {
-            ...gs.customData,
-            navHistory: navData
+    // Restore from CustomData on app load (called once)
+    init(savedData) {
+        if (savedData?.entries && this.history.length === 0) {
+            this.history = savedData.entries.slice();
+            this.pointerIndex = Math.max(0, Math.min(
+                savedData.pointerIndex ?? 0, this.history.length - 1));
         }
-    });
+        this.initialized = true;
+        this._notifyUI();
+    }
 
-    // Also persist to backend for save games
-    setCustomData({ navHistory: navData });
+    // Push local state to the store so reactive components re-render.
+    // This ONLY touches navState, never gameState.
+    _notifyUI() {
+        gameStore.getState().setNavState({
+            entries: this.history.slice(),
+            pointerIndex: this.pointerIndex,
+        });
+    }
+
+    // Debounced save to CustomData for cross-session persistence only.
+    // Does NOT touch gameState or the store.
+    _schedulePersist() {
+        clearTimeout(this._persistTimer);
+        this._persistTimer = setTimeout(() => {
+            setCustomData({
+                navHistory: { entries: this.history, pointerIndex: this.pointerIndex }
+            }).catch(() => {});
+        }, 1000);
+    }
+
+    _navigateToCurrentPage() {
+        const page = this.history[this.pointerIndex];
+        if (!page) return;
+
+        // Tab restoration (instant local state on gameState – fine, it's a pref)
+        if (page.tab) {
+            const state = gameStore.getState();
+            const gs = state.gameState || {};
+            if (page.type === 'industry') {
+                state.setGameState({ ...gs, uiPreferredIndustryTab: page.tab });
+            } else if (page.id === HUMAN1_ID) {
+                state.setGameState({ ...gs, uiPreferredPlayerTab: page.tab });
+            } else {
+                state.setGameState({ ...gs, uiPreferredCompanyTab: page.tab });
+            }
+        }
+
+        // Fire the POST to switch the viewed entity
+        const endpoint = page.type === 'industry' ? '/set_view_industry' : '/set_view_asset';
+        postIdArg(endpoint, page.id).catch(() => {});
+    }
+
+    push(page) {
+        if (!page || !page.type) return;
+        if (this.pointerIndex > 0) {
+            this.history.splice(0, this.pointerIndex);
+            this.pointerIndex = 0;
+        }
+        const index = this.history.findIndex(p => p.id === page.id && p.type === page.type);
+        if (index !== -1) this.history.splice(index, 1);
+        this.history.unshift(page);
+        if (this.history.length > this.maxHistory) this.history.pop();
+        this._notifyUI();
+        this._schedulePersist();
+    }
+
+    goBack() {
+        if (this.pointerIndex >= this.history.length - 1) return false;
+        this.pointerIndex++;
+        this._navigateToCurrentPage();
+        this._notifyUI();
+        this._schedulePersist();
+        return true;
+    }
+
+    goForward() {
+        if (this.pointerIndex <= 0) return false;
+        this.pointerIndex--;
+        this._navigateToCurrentPage();
+        this._notifyUI();
+        this._schedulePersist();
+        return true;
+    }
+
+    gotoIndex(index) {
+        if (index < 0 || index >= this.history.length) return false;
+        this.pointerIndex = index;
+        this._navigateToCurrentPage();
+        this._notifyUI();
+        this._schedulePersist();
+        return true;
+    }
+
+    gotoPage(page) {
+        if (!page || !page.type) return false;
+        const index = this.history.findIndex(p => p.id === page.id && p.type === page.type);
+        if (index !== -1) return this.gotoIndex(index);
+        // Not in history – navigate directly
+        if (page.type === 'industry') {
+            postIdArg('/set_view_industry', page.id).catch(() => {});
+        } else if (page.type === 'asset') {
+            postIdArg('/set_view_asset', page.id).catch(() => {});
+        }
+        this.push(page);
+        return true;
+    }
+
+    updateCurrentTab(tab) {
+        if (this.pointerIndex >= 0 && this.pointerIndex < this.history.length) {
+            this.history[this.pointerIndex].tab = tab;
+            this._schedulePersist();
+        }
+    }
 }
+
+export const navManager = new NavigationManager();
 
 export async function splashScreenPlayed() { await postNoArg('/splash_screen_played'); }
 
@@ -708,33 +874,7 @@ export function serialize(obj) {
 }
 
 function shiftNavHistory(page) {
-
-    const maxHistory = 30;
-
-    // If we are not at the start, remove all "forward" items
-    if (navPointerIdx.current > 0) {
-        navHistory.splice(0, navPointerIdx.current);
-    }
-
-    // Remove if already exists in history
-    const index = navHistory.findIndex(p => p.id === page.id && p.type === page.type);
-    if (index !== -1) {
-        navHistory.splice(index, 1);
-    }
-
-    // Insert new id at front
-    navHistory.unshift(page);
-
-    // Trim if too long
-    if (navHistory.length > maxHistory) {
-        navHistory.pop();
-    }
-
-    // Reset pointer to start
-    navPointerIdx.current = 0;
-
-    // Persist to game save
-    persistNavHistory();
+    navManager.push(page);
 }
 
 export async function viewIndustry(id) {
@@ -783,119 +923,166 @@ export async function setViewAsset(id) {
 }
 
 export function gotoPage(p) {
-    const page = p ?? navHistory[navPointerIdx.current];
-    console.log('gotoPage: navPointerIdx:', navPointerIdx.current, 'page:', page);
-    if (!page || !page.type) {
-        console.warn('gotoPage: invalid page', page, 'navPointerIdx:', navPointerIdx.current);
-        return;
-    }
-    if (page.type === 'industry') {
-        // Restore preferred tab if stored
-        if (page.tab) {
-            const state = gameStore.getState();
-            state.setGameState({ ...state.gameState, uiPreferredIndustryTab: page.tab });
-        }
-        return postIdArg('/set_view_industry', page.id);
-    } else if (page.type === 'asset') {
-        console.log('gotoPage: navigating to asset id', page.id);
-        // Restore preferred tab if stored
-        if (page.tab) {
-            const state = gameStore.getState();
-            const gs = state.gameState || {};
-            if (page.id === HUMAN1_ID) {
-                state.setGameState({ ...gs, uiPreferredPlayerTab: page.tab });
-            } else {
-                state.setGameState({ ...gs, uiPreferredCompanyTab: page.tab });
-            }
-        }
-        return postIdArg('/set_view_asset', page.id);
-    }
+    return navManager.gotoPage(p);
 }
 
-export async function goBack() {
-    if (navPointerIdx.current < navHistory.length - 1) {
-        navPointerIdx.current++;
-        await gotoPage();
-        persistNavHistory();
-    }
+export function goBack() {
+    return navManager.goBack();
 }
 
-export async function goForward() {
-    if (navPointerIdx.current > 0) {
-        navPointerIdx.current--;
-        await gotoPage();
-        persistNavHistory();
-    }
+export function goForward() {
+    return navManager.goForward();
 }
 
 // Update the tab on the current navigation entry (called when user changes tabs)
 export function updateCurrentNavTab(tab) {
-    if (navPointerIdx.current >= 0 && navHistory.length > navPointerIdx.current) {
-        navHistory[navPointerIdx.current].tab = tab;
-        persistNavHistory();
-    }
+    navManager.updateCurrentTab(tab);
 }
 
 export async function changeActingAs(id) { await postIdArg('/change_acting_as', id); }
+
+// Cycle acting-as to next/previous controlled company
+export function cycleActingAs(direction) {
+    const state = gameStore.getState();
+    const gs = state.gameState || {};
+    const playerId = gs.playerId;
+    const controlledCompanies = gs.controlledCompanies || [];
+    const actingAsId = gs.actingAsId;
+
+    // Build the full options list: player + controlled companies
+    const options = [playerId, ...controlledCompanies.map(c => c.id)];
+    if (options.length <= 1) return; // Nothing to cycle
+
+    const currentIndex = options.indexOf(actingAsId);
+    let nextIndex;
+    if (direction > 0) {
+        nextIndex = (currentIndex + 1) % options.length;
+    } else {
+        nextIndex = (currentIndex - 1 + options.length) % options.length;
+    }
+    changeActingAs(options[nextIndex]);
+}
 export async function toggleStreamingQuote(id) { await postIdArg('/toggle_streaming_quote', id); }
 
 export const commandMap = {
-    'ACT': {
-        description: 'Act as company/player',
-        fn: changeActingAs,
-    },
-    'BUY': {
-        description: 'Buy stock',
-        fn: buyStock,
-    },
-    'SELL': {
-        description: 'Sell stock',
-        fn: sellStock,
-    },
-    'SHORT': {
-        description: 'Short stock',
-        fn: shortStock,
-    },
-    'COVER': {
-        description: 'Cover short stock',
-        fn: coverShortStock,
-    },
-    'BORROW': {
-        description: 'Borrow money',
-        fn: borrowMoney,
-    },
-    'REPAY': {
-        description: 'Repay loan',
-        fn: repayLoan,
-    },
-    'PREPAY': {
-        description: 'Prepay taxes',
-        fn: prepayTaxes,
-    },
-    'ELECT': {
-        description: 'Elect yourself as CEO',
-        fn: electCeo,
-    },
-    'RESIGN': {
-        description: 'Resign as CEO',
-        fn: resignAsCeo,
-    },
-    'HARASS': {
-        description: 'File a harassing lawsuit',
-        fn: harrassingLawsuit,
-    },
-    'RUMORS': {
-        description: 'Spread rumors about a company',
-        fn: spreadRumors,
-    },
-    'STARTUP': {
-        description: 'Start a new company',
-        fn: startup,
-    },
-    'FEE': {
-        description: 'Set advisory fee (for insurers and securities brokers)',
-        fn: setAdvisoryFee,
-    },
+    // === Navigation / Acting As ===
+    'ACT':          { description: 'Act as company/player',           fn: changeActingAs,              takesId: true },
+
+    // === Trading - Stocks ===
+    'BUY':          { description: 'Buy stock',                       fn: buyStock,                    takesId: true },
+    'SELL':         { description: 'Sell stock',                      fn: sellStock,                   takesId: true },
+    'SHORT':        { description: 'Short stock',                     fn: shortStock,                  takesId: true },
+    'COVER':        { description: 'Cover short',                     fn: coverShortStock,             takesId: true },
+
+    // === Trading - Corporate Bonds ===
+    'BUYBOND':      { description: 'Buy corporate bond',              fn: buyCorporateBond,            takesId: true },
+    'SELLBOND':     { description: 'Sell corporate bond',             fn: sellCorporateBond,           takesId: true },
+
+    // === Trading - Government Bonds ===
+    'BUYLGOV':      { description: 'Buy long govt bonds',             fn: buyLongGovtBonds,            takesId: false },
+    'SELLLGOV':     { description: 'Sell long govt bonds',            fn: sellLongGovtBonds,           takesId: false },
+    'BUYSGOV':      { description: 'Buy short govt bonds',            fn: buyShortGovtBonds,           takesId: false },
+    'SELLSGOV':     { description: 'Sell short govt bonds',           fn: sellShortGovtBonds,          takesId: false },
+
+    // === Trading - Options ===
+    'CALLS':        { description: 'Buy calls',                       fn: buyCalls,                    takesId: true },
+    'SELLCALLS':    { description: 'Sell calls',                      fn: sellCalls,                   takesId: true },
+    'PUTS':         { description: 'Buy puts',                        fn: buyPuts,                     takesId: true },
+    'SELLPUTS':     { description: 'Sell puts',                       fn: sellPuts,                    takesId: true },
+    'ADVOPTS':      { description: 'Advanced options trading',        fn: advancedOptionsTrading,      takesId: false },
+
+    // === Trading - Commodity Futures ===
+    'BUYFUT':       { description: 'Buy commodity futures',           fn: buyCommodityFutures,         takesId: true },
+    'SELLFUT':      { description: 'Sell commodity futures',          fn: sellCommodityFutures,        takesId: true },
+    'SHORTFUT':     { description: 'Short commodity futures',         fn: shortCommodityFutures,       takesId: true },
+    'COVERFUT':     { description: 'Cover short commodity futures',   fn: coverShortCommodityFutures,  takesId: true },
+
+    // === Trading - Physical Commodities ===
+    'BUYCOMM':      { description: 'Buy physical commodity',          fn: buyPhysicalCommodity,        takesId: true },
+    'SELLCOMM':     { description: 'Sell physical commodity',         fn: sellPhysicalCommodity,       takesId: true },
+
+    // === Trading - Crypto ===
+    'BUYCRYPTO':    { description: 'Buy physical crypto',             fn: buyPhysicalCrypto,           takesId: true },
+    'SELLCRYPTO':   { description: 'Sell physical crypto',            fn: sellPhysicalCrypto,          takesId: true },
+    'BUYCFUT':      { description: 'Buy crypto futures',              fn: buyCryptoFutures,            takesId: true },
+    'SELLCFUT':     { description: 'Sell crypto futures',             fn: sellCryptoFutures,           takesId: true },
+
+    // === Finance ===
+    'BORROW':       { description: 'Borrow money',                    fn: borrowMoney,                 takesId: false },
+    'REPAY':        { description: 'Repay loan',                      fn: repayLoan,                   takesId: false },
+    'PREPAY':       { description: 'Prepay taxes',                    fn: prepayTaxes,                 takesId: false },
+    'ADVANCE':      { description: 'Advance funds',                   fn: advanceFunds,                takesId: false },
+    'SWAPS':        { description: 'Interest rate swaps',             fn: interestRateSwaps,           takesId: false },
+    'TBILLS':       { description: 'Trade T-Bills',                   fn: tradeTbills,                 takesId: false },
+    'CHGBANK':      { description: 'Change bank',                     fn: changeBank,                  takesId: false },
+
+    // === Corporate - Leadership ===
+    'ELECT':        { description: 'Elect yourself as CEO',           fn: electCeo,                    takesId: false },
+    'RESIGN':       { description: 'Resign as CEO',                   fn: resignAsCeo,                 takesId: false },
+    'MANAGERS':     { description: 'Change managers',                 fn: changeManagers,              takesId: false },
+
+    // === Corporate - Strategy ===
+    'DIVIDEND':     { description: 'Set dividend',                    fn: setDividend,                 takesId: false },
+    'PRODUCTIVITY': { description: 'Set productivity',                fn: setProductivity,             takesId: false },
+    'GROWTH':       { description: 'Set growth rate',                 fn: setGrowthRate,               takesId: false },
+    'REBRAND':      { description: 'Rebrand company',                 fn: rebrand,                     takesId: false },
+    'RESTRUCTURE':  { description: 'Restructure company',             fn: restructure,                 takesId: false },
+
+    // === Corporate - Equity ===
+    'PSO':          { description: 'Public stock offering',           fn: publicStockOffering,         takesId: false },
+    'PPO':          { description: 'Private stock offering',          fn: privateStockOffering,        takesId: false },
+    'SPLIT':        { description: 'Split stock',                     fn: splitStock,                  takesId: false },
+    'RSPLIT':       { description: 'Reverse split stock',             fn: reverseSplitStock,           takesId: false },
+
+    // === Corporate - Debt ===
+    'ISSUEBOND':    { description: 'Issue new corp bonds',            fn: issueNewCorpBonds,           takesId: false },
+    'REDEEMBOND':   { description: 'Redeem corp bonds',               fn: redeemCorpBonds,             takesId: false },
+
+    // === Corporate - Returns / Liquidation ===
+    'EXTDIV':       { description: 'Extraordinary dividend',          fn: extraordinaryDividend,       takesId: false },
+    'TAXFREE':      { description: 'Tax-free liquidation',            fn: taxFreeLiquidation,          takesId: false },
+    'TAXLIQ':       { description: 'Taxable liquidation',             fn: taxableLiquidation,          takesId: false },
+
+    // === Corporate - Assets ===
+    'BUYASSET':     { description: 'Buy corporate assets',            fn: buyCorporateAssets,          takesId: false },
+    'SELLASSET':    { description: 'Sell corporate assets',           fn: sellCorporateAssets,         takesId: false },
+    'OFFERASSET':   { description: 'Offer assets for sale',           fn: offerCorporateAssetsForSale, takesId: false },
+    'SELLSUB':      { description: 'Sell subsidiary stock',           fn: sellSubsidiaryStock,         takesId: false },
+    'SPINOFF':      { description: 'Spin off a subsidiary',           fn: spinOff,                     takesId: true },
+    'BROWSE':       { description: 'Browse for-sale items',           fn: viewForSaleItems,            takesId: false },
+
+    // === Corporate - M&A ===
+    'MERGER':       { description: 'Merge with viewed company',       fn: merger,                      takesId: false },
+    'GREENMAIL':    { description: 'Greenmail',                        fn: greenmail,                   takesId: false },
+    'LBO':          { description: 'Leveraged buyout',                 fn: lbo,                         takesId: false },
+    'STARTUP':      { description: 'Start a new company',             fn: startup,                     takesId: false },
+    'CONTRIB':      { description: 'Capital contribution',            fn: capitalContribution,         takesId: false },
+
+    // === Hostile Actions ===
+    'HARASS':       { description: 'Harassing lawsuit',               fn: harrassingLawsuit,           takesId: true },
+    'RUMORS':       { description: 'Spread rumors',                   fn: spreadRumors,                takesId: true },
+    'ANTITRUST':    { description: 'Antitrust lawsuit',               fn: antitrustLawsuit,            takesId: true },
+    'LAWFIRM':      { description: 'Change law firm',                 fn: changeLawFirm,               takesId: false },
+
+    // === Accounting ===
+    'INCREARN':     { description: 'Increase earnings',               fn: increaseEarnings,            takesId: false },
+    'DECREARN':     { description: 'Decrease earnings',               fn: decreaseEarnings,            takesId: false },
+
+    // === ETF / Advisory ===
+    'FEE':          { description: 'Set advisory fee',                fn: setAdvisoryFee,              takesId: false },
+    'AUTOPILOT':    { description: 'Toggle global autopilot',         fn: toggleGlobalAutopilot,       takesId: false },
+
+    // === Bank Operations ===
+    'ALLOC':        { description: 'Set bank allocation',             fn: setBankAllocation,           takesId: false },
+    'LISTLOANS':    { description: 'List bank loans',                 fn: listBankLoans,               takesId: false },
+    'FREEZE':       { description: 'Freeze all loans',                fn: freezeAllLoans,              takesId: false },
+    'BUYBIZ':       { description: 'Buy business loans',              fn: buyBusinessLoans,            takesId: false },
+    'BUYCONS':      { description: 'Buy consumer loans',              fn: buyConsumerLoans,            takesId: false },
+    'SELLCONS':     { description: 'Sell consumer loans',             fn: sellConsumerLoans,           takesId: false },
+    'BUYMORT':      { description: 'Buy prime mortgages',             fn: buyPrimeMortgages,           takesId: false },
+    'SELLMORT':     { description: 'Sell prime mortgages',            fn: sellPrimeMortgages,          takesId: false },
+    'BUYSUBMORT':   { description: 'Buy subprime mortgages',          fn: buySubprimeMortgages,        takesId: false },
+    'SELLSUBMORT':  { description: 'Sell subprime mortgages',         fn: sellSubprimeMortgages,       takesId: false },
 }
 
 export const WSRContext = createContext();
@@ -903,6 +1090,8 @@ export const WSRContext = createContext();
 export const gameStore = createStore((set, get) => ({
     gameState: {},
     setGameState: (next) => set({ gameState: next }),
+    navState: { entries: [], pointerIndex: 0 },
+    setNavState: (next) => set({ navState: next }),
 }));
 
 const shallow = (a, b) => {

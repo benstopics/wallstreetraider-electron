@@ -34,7 +34,7 @@
 
 /* Sidebar */
 .help-sidebar {
-  width: 550px;
+  width: 350px;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border-right: 1px solid var(--border-color);

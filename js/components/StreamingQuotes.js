@@ -11,6 +11,8 @@ const StreamingQuotes = () => {
     const quotes = api.useGameStore(s => s.gameState.streamingQuotesList) || [];
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const activeEntityName = api.useGameStore(s => s.gameState.activeEntityName);
+    const dlrSign = api.useGameStore(s => s.gameState.dlrSign) || '$';
+    const euro = api.useGameStore(s => s.gameState.euro) || '';
 
     // Persist direction (up/down) per quote so the UI stays green until price drops,
     // and stays red until price rises. This avoids "flicker" when backend only
@@ -67,7 +69,7 @@ const StreamingQuotes = () => {
                     <span class="quote-symbol text-gray-400">${quote.symbol}</span>
                     <span class="quote-name">${quote.name}</span>
                     <span class=${`fixed-width quote-price ${getDirClass(quote)}`}>
-                        $${formatCurrency(quote.price)}
+                        ${dlrSign}${formatCurrency(quote.price)}${euro}
                     </span>
                     <span class="ml-2">
                         <${Button} class="btn red w-full" style="width: 30px" onClick=${(e) => {

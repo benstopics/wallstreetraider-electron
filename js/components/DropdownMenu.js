@@ -1,5 +1,9 @@
-import { html, useState, useEffect, useRef } from '../lib/preact.standalone.module.js';
+import { html, useState, useEffect, useRef, useMemo } from '../lib/preact.standalone.module.js';
 import Tooltip from './Tooltip.js';
+import { bracketLabel } from '../hotkeys.js';
+import { insertCurrencySymbols } from './helpers.js';
+import { useHotkey } from '../hooks/useHotkey.js';
+import { PRIORITY } from '../hotkeyManager.js';
 
 /**
  * A dropdown menu component with support for nested submenus and multi-column layouts
@@ -11,13 +15,136 @@ import Tooltip from './Tooltip.js';
  * @param {string} color - Button color variant
  * @param {boolean} disabled - Whether the dropdown is disabled
  */
-export default function DropdownMenu({ label, icon, items = [], columns = null, color = '', disabled = false, dataTutorial = null }) {
+export default function DropdownMenu({ label, icon, items = [], columns = null, color = '', disabled = false, dataTutorial = null, hotkeyChar = null, shiftHeld = false }) {
     const [isOpen, setIsOpen] = useState(false);
     const [openSubmenuIndex, setOpenSubmenuIndex] = useState(null);
     const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
     const containerRef = useRef(null);
     const menuRef = useRef(null);
     const closeTimeoutRef = useRef(null);
+    const keyBufferRef = useRef('');
+    const [focusedNumber, setFocusedNumber] = useState(null);
+    const focusedNumberRef = useRef(null);
+    const [bufferDisplay, setBufferDisplay] = useState('');
+    const keyDebounceRef = useRef(null);
+
+    // Compute actionable items (non-header, non-divider, non-submenu) with sequential numbers
+    const allItemsFlat = useMemo(() => columns ? columns.flat() : items, [columns, items]);
+    const actionableItems = useMemo(() => {
+        const result = [];
+        allItemsFlat.forEach((item, idx) => {
+            if (!item.header && !item.divider && !item.submenu) {
+                result.push({ item, globalIndex: idx, number: result.length + 1 });
+            }
+        });
+        return result;
+    }, [allItemsFlat]);
+
+    // Map from global item index to display number
+    const numberMap = useMemo(() => {
+        const map = new Map();
+        actionableItems.forEach(({ globalIndex, number }) => {
+            map.set(globalIndex, number);
+        });
+        return map;
+    }, [actionableItems]);
+
+    // Get currently focused item for tooltip display
+    const focusedItem = focusedNumber !== null ? actionableItems.find(a => a.number === focusedNumber)?.item : null;
+
+    // Listen for hotkey-dropdown events to open/close via keyboard
+    useEffect(() => {
+        if (!hotkeyChar) return;
+        const handler = (e) => {
+            if (e.detail?.char === hotkeyChar) {
+                setIsOpen(prev => !prev);
+            } else {
+                setIsOpen(false);
+            }
+            setOpenSubmenuIndex(null);
+        };
+        document.addEventListener('hotkey-dropdown', handler);
+        return () => document.removeEventListener('hotkey-dropdown', handler);
+    }, [hotkeyChar]);
+
+    // Reset key buffer and focus when dropdown closes
+    useEffect(() => {
+        if (!isOpen) {
+            keyBufferRef.current = '';
+            setFocusedNumber(null);
+            focusedNumberRef.current = null;
+            setBufferDisplay('');
+            if (keyDebounceRef.current) clearTimeout(keyDebounceRef.current);
+        }
+    }, [isOpen]);
+
+    // Stable ID for hotkey registration
+    const hotkeyIdRef = useRef(Symbol('dropdown-hotkey'));
+
+    // Centralized hotkey handler for digit selection, Enter, and ESC when dropdown is open.
+    // Registered at PRIORITY.DROPDOWN so it takes precedence over tabs/bar/global handlers.
+    useHotkey(
+        hotkeyIdRef.current,
+        PRIORITY.DROPDOWN,
+        (e) => {
+            if (!isOpen) return false;
+            if (e.key === 'Escape') return true;
+            if (e.key === 'Enter') return true;
+            if (!isNaN(parseInt(e.key, 10))) return true;
+            return false;
+        },
+        (e) => {
+            if (e.key === 'Escape') {
+                setIsOpen(false);
+                setOpenSubmenuIndex(null);
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return true;
+            }
+
+            if (e.key === 'Enter' && focusedNumberRef.current !== null) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                const target = actionableItems.find(a => a.number === focusedNumberRef.current);
+                if (target) handleItemClick(target.item, e);
+                return true;
+            }
+
+            const digit = parseInt(e.key, 10);
+            if (!isNaN(digit)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                if (keyDebounceRef.current) clearTimeout(keyDebounceRef.current);
+
+                const newBuffer = keyBufferRef.current + e.key;
+                keyBufferRef.current = newBuffer;
+                setBufferDisplay(newBuffer);
+                const num = parseInt(newBuffer, 10);
+
+                const target = actionableItems.find(a => a.number === num);
+                if (target) {
+                    setFocusedNumber(num);
+                    focusedNumberRef.current = num;
+                }
+
+                keyDebounceRef.current = setTimeout(() => {
+                    keyBufferRef.current = '';
+                    setBufferDisplay('');
+                }, 500);
+                return true;
+            }
+
+            return false;
+        },
+        { active: isOpen },
+        [isOpen, actionableItems]
+    );
+
+    // Cleanup debounce on unmount
+    useEffect(() => {
+        return () => { if (keyDebounceRef.current) clearTimeout(keyDebounceRef.current); };
+    }, []);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -31,21 +158,6 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
             return () => document.removeEventListener('mousedown', handleClickOutside);
-        }
-    }, [isOpen]);
-
-    // Close on escape key
-    useEffect(() => {
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                setIsOpen(false);
-                setOpenSubmenuIndex(null);
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
-            return () => document.removeEventListener('keydown', handleEscape);
         }
     }, [isOpen]);
 
@@ -130,7 +242,7 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
         }
 
         if (item.header) {
-            return html`<div key=${index} class="dropdown-header">${item.header}</div>`;
+            return html`<div key=${index} class="dropdown-header">${insertCurrencySymbols(item.header)}</div>`;
         }
 
         // When disabled with onDisabledClick: show as clickable (use color)
@@ -145,7 +257,7 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
                 class="dropdown-item ${disabledClass} ${colorClass}"
                 onClick=${(e) => handleItemClick(item, e)}
             >
-                <span class="dropdown-item-label">${item.label}</span>
+                <span class="dropdown-item-label">${insertCurrencySymbols(item.label)}</span>
             </div>
         `;
 
@@ -166,7 +278,7 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
         }
 
         if (item.header) {
-            return html`<div key=${index} class="dropdown-header">${item.header}</div>`;
+            return html`<div key=${index} class="dropdown-header">${insertCurrencySymbols(item.header)}</div>`;
         }
 
         const hasSubmenu = item.submenu && item.submenu.length > 0;
@@ -178,15 +290,18 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
         const disabledClass = item.disabled ? (hasClickHandler ? '' : 'disabled') : '';
         const colorClass = item.disabled && hasClickHandler ? (item.color || '') : (item.color || '');
 
+        const isFocused = focusedNumber !== null && numberMap.get(index) === focusedNumber;
+
         const itemContent = html`
             <div
                 key=${index}
                 class="dropdown-item ${disabledClass} ${colorClass} ${hasSubmenu ? 'has-submenu' : ''} ${isSubmenuOpen ? 'submenu-open' : ''}"
+                style="${isFocused ? 'background:rgba(255,255,255,0.15);outline:1px solid rgba(255,255,255,0.3);' : ''}"
                 onClick=${(e) => handleItemClick(item, e)}
                 onMouseEnter=${hasSubmenu ? (e) => handleSubmenuTriggerEnter(index, e) : null}
                 onMouseLeave=${hasSubmenu ? handleSubmenuTriggerLeave : null}
             >
-                <span class="dropdown-item-label">${item.label}</span>
+                <span class="dropdown-item-label">${numberMap.has(index) ? html`<span style="opacity:0.45;min-width:18px;display:inline-block;text-align:right;margin-right:4px;font-size:0.85em">${numberMap.get(index)}) </span>` : ''}${insertCurrencySymbols(item.label)}</span>
                 ${hasSubmenu ? html`<span class="dropdown-arrow">▶</span>` : ''}
             </div>
         `;
@@ -237,7 +352,7 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
                 onClick=${() => !disabled && setIsOpen(!isOpen)}
             >
                 ${icon ? html`<span class="dropdown-icon">${icon}</span>` : ''}
-                <span>${label}</span>
+                <span>${hotkeyChar && shiftHeld ? bracketLabel(insertCurrencySymbols(label), hotkeyChar) : insertCurrencySymbols(label)}</span>
                 <span class="dropdown-caret">${isOpen ? '▲' : '▼'}</span>
             </button>
 
@@ -254,6 +369,17 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
                     ` : html`
                         ${items.map((item, index) => renderMenuItem(item, index))}
                     `}
+                    ${(focusedItem || bufferDisplay) ? html`
+                        <div style="border-top:1px solid #444;padding:4px 8px;font-size:0.8em;color:#999">
+                            ${focusedItem ? html`
+                                <div style="display:flex;justify-content:space-between;align-items:center">
+                                    <span>${focusedNumber}. ${insertCurrencySymbols(focusedItem.label)}</span>
+                                    <span style="opacity:0.6">↵ select</span>
+                                </div>
+                                ${focusedItem.disabledMessage ? html`<div style="color:#f88;margin-top:2px;font-size:0.9em">${focusedItem.disabledMessage}</div>` : ''}
+                            ` : html`<div>→ ${bufferDisplay}_ (no match)</div>`}
+                        </div>
+                    ` : ''}
                 </div>
                 ${openSubmenuItems ? html`
                     <div

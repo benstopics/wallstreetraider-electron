@@ -7,6 +7,7 @@ import AssetPriceChart from './AssetPriceChart.js';
 import MarketHeatMapTab from './MarketHeatMapTab.js';
 import SectorHeatMapTab from './SectorHeatMapTab.js';
 import Button from './Button.js';
+import { useCookie } from '../hooks/useCookie.js';
 
 const Tab = Tabs.Tab;
 
@@ -33,7 +34,8 @@ const IndustryView = () => {
     const whosAheadReport = api.useGameStore(s => s.gameState.whosAheadReport);
 
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredIndustryTab);
-    const [activeTab, setActiveTabInternal] = useState(preferredTab || 'Heat Map');
+    const [savedTab, setSavedTab] = useCookie('industryViewTab', 'Heat Maps');
+    const [activeTab, setActiveTabInternal] = useState(preferredTab || savedTab);
 
     const activeIndustryName = api.getIndustry(allIndustries, activeIndustryNum)?.name
 
@@ -42,6 +44,7 @@ const IndustryView = () => {
     // Wrapper to also update navigation history when tab changes
     const setActiveTab = (tab) => {
         setActiveTabInternal(tab);
+        setSavedTab(tab);
         api.updateCurrentNavTab(tab);
     };
 
@@ -81,7 +84,7 @@ const IndustryView = () => {
                     </div>-->
                 </div>
                 <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
-                    ${activeIndustryName ? html`<${Tab} label="${activeIndustryName}">
+                    ${activeIndustryName ? html`<${Tab} label="${activeIndustryName}" hotkey="i">
                         <div class="flex justify-center items-center w-full h-full">
                             <${Tabs}>
                                 <${Tab} label="Summary" id=${api.UI_INDUSTRY_SUMMARY_REPORT}>
@@ -103,31 +106,31 @@ const IndustryView = () => {
                             <//>
                         </div>
                     <//>` : ''}
-                    <${Tab} label="Heat Maps" id=${api.UI_MARKET_HEATMAP}>
+                    <${Tab} label="Heat Maps" hotkey="h" id=${api.UI_MARKET_HEATMAP}>
                         <${MarketHeatMapTab} />
                     <//>
-                    <${Tab} label="Industry Growth Rates" id=${api.UI_MARKET_REPORTS_INDUSTRY_GROWTH_RATES_REPORT}>
+                    <${Tab} label="Industry Growth Rates" hotkey="g" id=${api.UI_MARKET_REPORTS_INDUSTRY_GROWTH_RATES_REPORT}>
                         <div class="flex justify-center items-center">
                             ${renderLines(industryGrowthRatesReport, ({ id }) => {
                                 api.viewIndustry(id)
                             }, null, hyperlinkRegex)}
                         </div>
                     <//>
-                    <${Tab} label="Economic Data" id=${api.UI_MARKET_REPORTS_ECON_STATS_REPORT}>
+                    <${Tab} label="Economic Data" hotkey="e" id=${api.UI_MARKET_REPORTS_ECON_STATS_REPORT}>
                         <div class="flex justify-center items-center">
                             ${renderLines(economicDataReport, ({ id }) => {
                                 api.viewIndustry(id)
                             }, null, hyperlinkRegex)}
                         </div>
                     <//>
-                    <${Tab} label="Interest Rates" id=${api.UI_MARKET_REPORTS_INTEREST_RATES_REPORT}>
+                    <${Tab} label="Interest Rates" hotkey="r" id=${api.UI_MARKET_REPORTS_INTEREST_RATES_REPORT}>
                         <div class="flex justify-center items-center">
                             ${renderLines(interestRatesReport, ({ id }) => {
                                 api.viewIndustry(id)
                             }, null, hyperlinkRegex)}
                         </div>
                     <//>
-                    <${Tab} label="Companies With Most...">
+                    <${Tab} label="Companies With Most..." hotkey="m">
                         <div class="flex justify-center items-center w-full h-full">
                             <${Tabs}>
                                 <${Tab} label="Market Share" id=${api.UI_MARKET_REPORTS_LARGEST_MARKET_SHARE_REPORT}>
@@ -153,7 +156,7 @@ const IndustryView = () => {
                             <//>
                         </div>
                     <//>
-                    <${Tab} label="Who Owns What?">
+                    <${Tab} label="Who Owns What?" hotkey="o">
                         <div class="flex justify-center items-center w-full h-full">
                             <${Tabs}>
                                 <${Tab} label="Futures" id=${api.UI_MARKET_REPORTS_COMMOD_FUTURES_REPORT}>
@@ -189,7 +192,7 @@ const IndustryView = () => {
                             <//>
                         </div>
                     <//>
-                    <${Tab} label="Who's Ahead?" id=${api.UI_MARKET_REPORTS_WHO_AHEAD_REPORT}>
+                    <${Tab} label="Who's Ahead?" hotkey="w" id=${api.UI_MARKET_REPORTS_WHO_AHEAD_REPORT}>
                         <div class="flex justify-center items-center">
                             ${renderLines(whosAheadReport, ({ id }) => {
                                 api.setViewAsset(id)

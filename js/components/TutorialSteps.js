@@ -16,12 +16,12 @@
 // - sidebarMode: boolean - if true, tutorial shows in sidebar mode (for transaction flows)
 
 // Helper to format currency amounts nicely (values are in millions)
-function formatAmount(millions) {
+function formatAmount(millions, dlrSign = '$', euro = '') {
     if (millions >= 1000) {
         const billions = millions / 1000;
-        return `$${billions.toLocaleString('en-US', { maximumFractionDigits: 1 })} billion`;
+        return `${dlrSign}${billions.toLocaleString('en-US', { maximumFractionDigits: 1 })} billion${euro}`;
     }
-    return `$${millions.toLocaleString('en-US', { maximumFractionDigits: 0 })} million`;
+    return `${dlrSign}${millions.toLocaleString('en-US', { maximumFractionDigits: 0 })} million${euro}`;
 }
 
 export const TUTORIAL_STEPS = [
@@ -110,16 +110,18 @@ export const TUTORIAL_STEPS = [
             const otherAssets = gameState.otherAssets || 0;
             const totalAssets = cash + otherAssets;
             const sweepEnabled = gameState.sweepSetting;
+            const dlrSign = gameState.dlrSign || '$';
+            const euro = gameState.euro || '';
 
             let holdingsText;
             if (cash > 0 && otherAssets === 0) {
-                holdingsText = `You currently have <strong>${formatAmount(cash)}</strong> in cash.`;
+                holdingsText = `You currently have <strong>${formatAmount(cash, dlrSign, euro)}</strong> in cash.`;
             } else if (otherAssets > 0 && cash === 0) {
-                holdingsText = `You currently have <strong>${formatAmount(otherAssets)}</strong> in Treasury Bills (T-bills).`;
+                holdingsText = `You currently have <strong>${formatAmount(otherAssets, dlrSign, euro)}</strong> in Treasury Bills (T-bills).`;
             } else if (cash > 0 && otherAssets > 0) {
-                holdingsText = `You currently have <strong>${formatAmount(cash)}</strong> in cash and <strong>${formatAmount(otherAssets)}</strong> in other assets.`;
+                holdingsText = `You currently have <strong>${formatAmount(cash, dlrSign, euro)}</strong> in cash and <strong>${formatAmount(otherAssets, dlrSign, euro)}</strong> in other assets.`;
             } else {
-                holdingsText = `You currently have <strong>${formatAmount(totalAssets)}</strong> to invest.`;
+                holdingsText = `You currently have <strong>${formatAmount(totalAssets, dlrSign, euro)}</strong> to invest.`;
             }
 
             const sweepText = sweepEnabled
@@ -283,9 +285,11 @@ export const TUTORIAL_STEPS = [
             }
 
             const marketCapMillions = recommended.marketCap;
+            const dlrSign = gameState.dlrSign || '$';
+            const euro = gameState.euro || '';
             const formattedCap = marketCapMillions >= 1000
-                ? `$${(marketCapMillions / 1000).toFixed(1)}B`
-                : `$${marketCapMillions.toFixed(0)}M`;
+                ? `${dlrSign}${(marketCapMillions / 1000).toFixed(1)}B${euro}`
+                : `${dlrSign}${marketCapMillions.toFixed(0)}M${euro}`;
 
             return `
                 <p>You're now viewing companies in an industry. For this tutorial, we're looking for a company you can <strong>take control of</strong>.</p>
@@ -359,6 +363,10 @@ export const TUTORIAL_STEPS = [
         id: 'buy-recommendation',
         title: 'Evaluating This Company',
         contentFn: (gameState) => {
+            // Currency symbols from game state
+            const dlrSign = gameState.dlrSign || '$';
+            const euro = gameState.euro || '';
+
             // Parse data from financialProfile (string array from Financials tab)
             const financialProfile = gameState.financialProfile || [];
             const playerFunds = ((gameState.cash || 0) + (gameState.otherAssets || 0)) * 1000000;
@@ -435,8 +443,8 @@ export const TUTORIAL_STEPS = [
 
             // If player can't afford 20% control, show warning and skip other analysis
             if (!canAfford20Percent) {
-                const cost20Formatted = costFor20PercentMillions > 0 ? formatAmount(costFor20PercentMillions) : 'unknown';
-                const yourFunds = formatAmount((playerFunds / 1000000));
+                const cost20Formatted = costFor20PercentMillions > 0 ? formatAmount(costFor20PercentMillions, dlrSign, euro) : 'unknown';
+                const yourFunds = formatAmount((playerFunds / 1000000), dlrSign, euro);
                 return `
                     <p><strong>This company is not ideal for this tutorial.</strong></p>
                     <p>To learn about taking control, you need a company where you can afford a 20% stake.</p>
@@ -513,9 +521,9 @@ export const TUTORIAL_STEPS = [
                 pros.push(`You can afford 20% control`);
 
                 if (marketCapMillions < 500) {
-                    pros.push(`Small cap (${formatAmount(marketCapMillions)}) - easier to control`);
+                    pros.push(`Small cap (${formatAmount(marketCapMillions, dlrSign, euro)}) - easier to control`);
                 } else if (marketCapMillions >= 5000) {
-                    cons.push(`Large cap (${formatAmount(marketCapMillions)}) - expensive to control`);
+                    cons.push(`Large cap (${formatAmount(marketCapMillions, dlrSign, euro)}) - expensive to control`);
                 }
             }
 

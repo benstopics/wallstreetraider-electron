@@ -72,8 +72,20 @@ export default function SaveLoadModal({ show, onClose, mode = 'load' }) {
             if (result && result.success === false) {
                 setError('Failed to delete: ' + (result.error || 'Unknown error'));
             } else {
-                // Refresh the list
-                await fetchSaves();
+                // Refresh the list and check if any saves remain
+                const data = await api.listSaves();
+                const sorted = (data || []).sort((a, b) => {
+                    return new Date(b.modifiedDate) - new Date(a.modifiedDate);
+                });
+
+                if (sorted.length === 0) {
+                    // No saves left - close modal and start new game
+                    onClose();
+                    await api.newGame();
+                } else {
+                    // Update the saves list
+                    setSaves(sorted);
+                }
             }
         } catch (err) {
             setError('Failed to delete: ' + err.message);

@@ -1,4 +1,4 @@
-import { html, useEffect, useState } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useState, useRef } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
@@ -10,13 +10,15 @@ import * as api from '../api.js';
 import EPSChart from './EPSChart.js';
 import FinancialsTab from './FinancialsTab.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
+import HotkeyButtonBar from './HotkeyButtonBar.js';
 import LoansTab from './LoansTab.js';
 import CashflowTab from './CashflowTab.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import OwnershipGraph from './OwnershipGraph.js';
 import ActionBar from './ActionBar.js';
-import OwnershipViewToggle from './OwnershipViewToggle.js';
+
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
+import { useCookie } from '../hooks/useCookie.js';
 
 const Tab = Tabs.Tab;
 
@@ -58,14 +60,25 @@ const IndustrialView = () => {
     // Local state for shareholders view mode (initialized from global setting)
     const [showShareholdersGraph, setShowShareholdersGraph] = useState(shareholderGraphSetting);
 
+    // Shareholders tab hotkey refs
+    const shareholdersExtrasRef = useRef(null);
+    const shareholdersScopeRef = useRef(false);
+    const [, setShareholdersScopeTick] = useState(0);
+    const shareholdersBarButtons = [
+        { label: showShareholdersGraph ? 'Show Text Report' : 'Show Graph', onClick: () => setShowShareholdersGraph(!showShareholdersGraph), color: '' },
+    ];
+    const shareholdersExtrasStart = shareholdersBarButtons.filter(Boolean).length + 1;
+
     // ETF detection for conditional UI
     const isActiveEntityETF = activeIndustryId === api.ETF_IND;
 
-    const [activeTab, setActiveTabInternal] = useState("General");
+    const [savedTab, setSavedTab] = useCookie('industrialViewTab', 'General');
+    const [activeTab, setActiveTabInternal] = useState(savedTab);
 
     // Wrapper to also update navigation history when tab changes
     const setActiveTab = (tab) => {
         setActiveTabInternal(tab);
+        setSavedTab(tab);
         api.updateCurrentNavTab(tab);
     };
 
@@ -77,7 +90,7 @@ const IndustrialView = () => {
             const gs = api.gameStore.getState().gameState || {};
             api.gameStore.getState().setGameState({ ...gs, uiPreferredCompanyTab: null });
         } else {
-            setActiveTabInternal("General");
+            setActiveTabInternal(savedTab);
         }
     }, [activeEntityNum, preferredTab]);
 
@@ -97,7 +110,7 @@ const IndustrialView = () => {
             <div class="flex flex-col w-full gap-2 h-full">
                 <${ActionBar} />
                 <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
-                    <${Tab} label="General" id=${api.UI_CORP_RESEARCH_REPORT}>
+                    <${Tab} label="General" hotkey="g" id=${api.UI_CORP_RESEARCH_REPORT}>
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0 overflow-hidden">
                                 <div class="earnings-date-badge mb-1 font-text-sm text-center">
@@ -114,61 +127,62 @@ const IndustrialView = () => {
                                 </div>
                             </div>
                             <div class="flex w-3/4 flex-col h-full min-h-0">
-                                <div class="flex flex-row items-center gap-2 mb-2">
-                                    <${DisabledTooltipButton} ...${buttonProps.buyStock} />
-                                    <${DisabledTooltipButton} ...${buttonProps.shortStock} />
-                                    ${!isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.buyCorpBond} label="Buy Bonds" />` : ''}
-                                    <${DisabledTooltipButton} ...${buttonProps.buyCalls} />
-                                    <${DisabledTooltipButton} ...${buttonProps.sellCalls} />
-                                    <${DisabledTooltipButton} ...${buttonProps.buyPuts} />
-                                    <${DisabledTooltipButton} ...${buttonProps.sellPuts} />
-                                    ${!isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.advancedOptions} />` : ''}
-                                </div>
+                                <${HotkeyButtonBar} buttons=${[
+                                    buttonProps.buyStock,
+                                    buttonProps.shortStock,
+                                    !isActiveEntityETF && { ...buttonProps.buyCorpBond, label: "Buy Bonds" },
+                                    buttonProps.buyCalls,
+                                    buttonProps.sellCalls,
+                                    buttonProps.buyPuts,
+                                    buttonProps.sellPuts,
+                                    !isActiveEntityETF && buttonProps.advancedOptions,
+                                ]} />
                                 <div class="flex flex-col items-center overflow-y-auto flex-1 min-h-0">
                                     ${renderLines(researchReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                                 </div>
                             </div>
                         </div>
                     <//>
-                    <${Tab} label="Earnings" id=${api.UI_CORP_EARNINGS_REPORT}>
+                    <${Tab} label="Earnings" hotkey="e" id=${api.UI_CORP_EARNINGS_REPORT}>
                         <div class="flex flex-col justify-center items-center">
                             ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                         </div>
                     <//>
-                    <${Tab} label="Financials" id=${api.UI_CORP_FINANCIAL_PROFILE}>
+                    <${Tab} label="Financials" hotkey="f" id=${api.UI_CORP_FINANCIAL_PROFILE}>
                         <${FinancialsTab} />
                     <//>
-                    <${Tab} label="Cashflow" id=${api.UI_CORP_CASH_FLOW_PROJECTION}>
+                    <${Tab} label="Cashflow" hotkey="c" id=${api.UI_CORP_CASH_FLOW_PROJECTION}>
                         ${html`<${CashflowTab} />`}
                     <//>
-                    ${activeIndustryId === api.BANK_IND ? html`<${Tab} label="Loans" id=${api.UI_BANK_LOANS_LIST}>
+                    ${activeIndustryId === api.BANK_IND ? html`<${Tab} label="Loans" hotkey="l" id=${api.UI_BANK_LOANS_LIST}>
                         ${html`<${LoansTab} />`}
                     <//>` : ''}
-                    <${Tab} label="Stocks & Bonds" id=${api.UI_CORP_STOCKS_BONDS_PORTFOLIO}>
+                    <${Tab} label="Stocks & Bonds" hotkey="s" id=${api.UI_CORP_STOCKS_BONDS_PORTFOLIO}>
                         <${PortfolioTab} />
                     <//>
-                    <${Tab} label="Swaps" id=${api.UI_CORP_SWAPS_PORTFOLIO}>
+                    <${Tab} label="Swaps" hotkey="w" id=${api.UI_CORP_SWAPS_PORTFOLIO}>
                         <${InterestRateSwapsTab} />
                     <//>
-                    ${![api.BANK_IND, api.INSURANCE_IND].includes(activeIndustryId) ? html`<${Tab} label="Options" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
+                    ${![api.BANK_IND, api.INSURANCE_IND].includes(activeIndustryId) ? html`<${Tab} label="Options" hotkey="o" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
                         <${OptionsTab} />
                     <//>` : ''}
-                    ${activeIndustryId != api.BANK_IND ? html`<${Tab} label="Commodities & Crypto" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
+                    ${activeIndustryId != api.BANK_IND ? html`<${Tab} label="Commodities & Crypto" hotkey="m" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
                         ${html`<${CommoditiesTab} />`}
                     <//>` : ''}
-                    <${Tab} label="Shareholders" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
+                    <${Tab} label="Shareholders" hotkey="r" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
                         <div class="flex flex-col h-full">
-                            <${OwnershipViewToggle}
-                                showGraph=${showShareholdersGraph}
-                                onToggle=${() => setShowShareholdersGraph(!showShareholdersGraph)}
-                            />
+                            <${HotkeyButtonBar} buttons=${shareholdersBarButtons}
+                                extrasContainerRef=${shareholdersExtrasRef}
+                                scopeActiveRef=${shareholdersScopeRef}
+                                onScopeActiveChange=${() => setShareholdersScopeTick(n => n + 1)}
+                                class="flex flex-row items-center gap-2 mb-2" />
                             ${showShareholdersGraph ? html`
                                 <div class="flex-1 min-h-0 overflow-auto" style="min-height: 280px;">
                                     <${OwnershipGraph} showOwners=${true} showSubsidiaries=${true} />
                                 </div>
                             ` : html`
-                                <div class="flex justify-center items-center">
-                                    ${renderLines(shareholdersList, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
+                                <div ref=${shareholdersExtrasRef} class="flex flex-col items-center overflow-y-auto min-h-0">
+                                    ${renderLines(shareholdersList, ({ id }) => api.setViewAsset(id), () => '', hyperlinkRegex, undefined, shareholdersExtrasStart, shareholdersScopeRef)}
                                 </div>
                             `}
                         </div>

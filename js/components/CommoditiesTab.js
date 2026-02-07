@@ -1,33 +1,30 @@
-import { html } from '../lib/preact.standalone.module.js';
+import { html, useRef, useState } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
+import HotkeyButtonBar from './HotkeyButtonBar.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
+import { usePanelSelection } from '../hooks/usePanelSelection.js';
 
 
 const Tab = Tabs.Tab;
 
-function IndexPanel({ title, commodityId }) {
-
-    const actingAs = api.useGameStore(s => s.gameState.actingAs);
+function IndexPanel({ title, commodityId, panelNumber, isSelected = false, shiftHeld = false }) {
+    const buttonProps = useActionButtonProps();
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
-    const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
-    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
-    const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
-    const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies);
 
-    const isActiveEntityETF = activeIndustryId === api.ETF_IND;
+    const isActiveEntityETF = buttonProps.isActiveEntityETF;
     const isCrypto = [api.BITCOIN_ID, api.ETHEREUM_ID].includes(commodityId);
 
     const buy = isCrypto ? api.buyPhysicalCrypto : api.buyPhysicalCommodity;
     const buyFutures = isCrypto ? api.buyCryptoFutures : api.buyCommodityFutures;
     const shortFutures = isCrypto ? api.sellCryptoFutures : api.shortCommodityFutures;
 
-    // Check if user controls the active entity for click-to-act-as functionality
-    const controlsActiveEntity = (controlledCompanies || []).some(c => c.id === activeEntityNum);
-    const handleActAsClick = controlsActiveEntity ? () => api.changeActingAs(activeEntityNum) : null;
+    // Use hook's viewed-entity-aware acting-as check
+    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
+    const actingAsDisabledClick = buttonProps.onMustActAsCompanyClick;
 
     const showBuyButton = commodityId !== api.STOCK_INDEX_ID;
 
@@ -35,12 +32,9 @@ function IndexPanel({ title, commodityId }) {
     const getDisabledInfo = (baseMessages) => {
         for (const check of baseMessages) {
             if (check.condition) {
-                const isActingAsIssue = check.message === "Must be acting as this company";
                 return {
-                    message: isActingAsIssue && controlsActiveEntity
-                        ? `Must be acting as this company. Click to act as ${activeEntitySymbol}`
-                        : check.message,
-                    onClick: isActingAsIssue ? handleActAsClick : null
+                    message: check.actingAs ? actingAsDisabledMessage : check.message,
+                    onClick: check.actingAs ? actingAsDisabledClick : null
                 };
             }
         }
@@ -49,27 +43,36 @@ function IndexPanel({ title, commodityId }) {
 
     const buyDisabledInfo = getDisabledInfo([
         { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrencies" : "ETFs cannot trade physical commodities" },
-        { condition: !actingAs, message: "Must be acting as this company" },
+        { condition: !!actingAsDisabledMessage, actingAs: true },
         { condition: actingAsIndustryId === api.BANK_IND, message: "Banks cannot trade commodities, indexes or crypto." }
     ]);
 
     const buyFuturesDisabledInfo = getDisabledInfo([
         { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot trade commodity futures" },
-        { condition: !actingAs, message: "Must be acting as this company" },
+        { condition: !!actingAsDisabledMessage, actingAs: true },
         { condition: actingAsIndustryId === api.BANK_IND, message: "Banks cannot trade futures." },
         { condition: actingAsIndustryId === api.INSURANCE_IND && commodityId !== api.STOCK_INDEX_ID, message: "Insurance companies can only trade stock index futures." }
     ]);
 
     const shortFuturesDisabledInfo = getDisabledInfo([
         { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot short futures" },
-        { condition: !actingAs, message: "Must be acting as this company" },
+        { condition: !!actingAsDisabledMessage, actingAs: true },
         { condition: [api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId), message: "Banks and insurance companies cannot short futures." }
     ]);
 
+    const borderStyle = isSelected
+        ? 'outline: 2px solid rgba(96, 165, 250, 0.7); border-radius: 4px;'
+        : '';
+
+    const shiftBadge = shiftHeld && panelNumber != null
+        ? html`<span style="position:absolute;top:2px;left:4px;opacity:0.7;font-size:11px;z-index:1;">${panelNumber})</span>`
+        : '';
+
     return html`
-        <div class="flex flex-col w-full">
+        <div class="flex flex-col w-full" style="position:relative;${borderStyle}">
+            ${shiftBadge}
             <div class="flex flex-col" style="height: 100px">
-                ${html`<${AssetPriceChart} chartTitle=${title} assetId=${commodityId} />`}
+                <${AssetPriceChart} chartTitle=${title} assetId=${commodityId} />
             </div>
             <div class="flex flex-row justify-around mt-2 w-full" style="height:25px">
                 ${showBuyButton ? html`<${DisabledTooltipButton}
@@ -80,6 +83,9 @@ function IndexPanel({ title, commodityId }) {
                     color="green"
                     containerClass="flex-1"
                     buttonClass="w-full mx-1"
+                    hotkeyLetter="b"
+                    isLineSelected=${isSelected}
+                    lineNumber=${panelNumber}
                 />` : ''}
                 <${DisabledTooltipButton}
                     disabledMessage=${buyFuturesDisabledInfo.message}
@@ -89,6 +95,9 @@ function IndexPanel({ title, commodityId }) {
                     color="green"
                     containerClass="flex-1"
                     buttonClass="w-full mx-1"
+                    hotkeyLetter="f"
+                    isLineSelected=${isSelected}
+                    lineNumber=${panelNumber}
                 />
                 <${DisabledTooltipButton}
                     disabledMessage=${shortFuturesDisabledInfo.message}
@@ -98,6 +107,9 @@ function IndexPanel({ title, commodityId }) {
                     color="red"
                     containerClass="flex-1"
                     buttonClass="w-full mx-1"
+                    hotkeyLetter="s"
+                    isLineSelected=${isSelected}
+                    lineNumber=${panelNumber}
                 />
             </div>
         </div>
@@ -124,39 +136,66 @@ function CommoditiesTab() {
     const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
     const handleActAsClick = buttonProps.onMustActAsCompanyClick;
 
+    // Extras hotkey refs
+    const extrasContainerRef = useRef(null);
+    const scopeActiveRef = useRef(false);
+    const [, setScopeRenderTick] = useState(0);
+
+    // Panel selection: 8 panels starting at number 1
+    const PANEL_COUNT = 8;
+    const { selectedPanelNumber, shiftHeld, panelNumbers } =
+        usePanelSelection({ panelCount: PANEL_COUNT, startNumber: 1 });
+
+    // Holdings lines start after panels
+    const extrasStartNumber = PANEL_COUNT + 1;
+
     return html`
         <div class="flex flex-col flex-[1] h-full min-h-0">
+            <${HotkeyButtonBar} buttons=${[]}
+                extrasContainerRef=${extrasContainerRef}
+                scopeActiveRef=${scopeActiveRef}
+                onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
+                panelCount=${PANEL_COUNT}
+                class="" style="height:0;overflow:hidden" />
             <div class="flex flex-row w-full">
-                <${IndexPanel} title="Gold" commodityId=${api.GOLD_ID} />
-                <${IndexPanel} title="Silver" commodityId=${api.SILVER_ID} />
-                <${IndexPanel} title="Oil" commodityId=${api.OIL_ID} />
-                <${IndexPanel} title="Corn" commodityId=${api.CORN_ID} />
-                <${IndexPanel} title="Wheat" commodityId=${api.WHEAT_ID} />
+                <${IndexPanel} title="Gold" commodityId=${api.GOLD_ID} panelNumber=${1} isSelected=${selectedPanelNumber === 1} shiftHeld=${shiftHeld} />
+                <${IndexPanel} title="Silver" commodityId=${api.SILVER_ID} panelNumber=${2} isSelected=${selectedPanelNumber === 2} shiftHeld=${shiftHeld} />
+                <${IndexPanel} title="Oil" commodityId=${api.OIL_ID} panelNumber=${3} isSelected=${selectedPanelNumber === 3} shiftHeld=${shiftHeld} />
+                <${IndexPanel} title="Corn" commodityId=${api.CORN_ID} panelNumber=${4} isSelected=${selectedPanelNumber === 4} shiftHeld=${shiftHeld} />
+                <${IndexPanel} title="Wheat" commodityId=${api.WHEAT_ID} panelNumber=${5} isSelected=${selectedPanelNumber === 5} shiftHeld=${shiftHeld} />
             </div>
             <div class="flex flex-row w-full">
-                <${IndexPanel} title="Stock Index" commodityId=${api.STOCK_INDEX_ID} />
-                <${IndexPanel} title="Bitcoin (BTC)" commodityId=${api.BITCOIN_ID} />
-                <${IndexPanel} title="Ethereum (ETH)" commodityId=${api.ETHEREUM_ID} />
+                <${IndexPanel} title="Stock Index" commodityId=${api.STOCK_INDEX_ID} panelNumber=${6} isSelected=${selectedPanelNumber === 6} shiftHeld=${shiftHeld} />
+                <${IndexPanel} title="Bitcoin (BTC)" commodityId=${api.BITCOIN_ID} panelNumber=${7} isSelected=${selectedPanelNumber === 7} shiftHeld=${shiftHeld} />
+                <${IndexPanel} title="Ethereum (ETH)" commodityId=${api.ETHEREUM_ID} panelNumber=${8} isSelected=${selectedPanelNumber === 8} shiftHeld=${shiftHeld} />
             </div>
             <div class="flex flex-col flex-[3] overflow-y-auto min-h-0">
                 <div class="flex flex-row w-full">
                 </div>
-                <div class="flex flex-row justify-center">
+                <div ref=${extrasContainerRef} class="flex flex-row justify-center">
                 ${renderLines(commodityList,
                     undefined,
-                    ({ type, id, text }) => html`<${DisabledTooltipButton}
-                        disabledMessage=${actingAsDisabledMessage}
-                        onClick=${() => (type === "P" ? api.sellPhysicalCommodity
-                                : type === "PC" ? api.sellPhysicalCrypto
-                                : type === "F" ? isContractShort(text) ? api.coverShortCommodityFutures : api.sellCommodityFutures
-                                : type === "CF" ? isContractShort(text) ? api.buyCryptoFutures : api.sellCryptoFutures
-                                : () => {}
-                            )(id)}
-                        onDisabledClick=${handleActAsClick}
-                        label=${type.includes('F') && isContractShort(text) ? 'Cover' : 'Sell'}
-                        color="red"
-                        buttonClass="flex-1 mx-1"
-                    />`, hyperlinkRegex)}
+                    ({ type, id, text, extrasCounter, isLineSelected, lineNumber }) => {
+                        const idx = extrasCounter ? extrasCounter.current++ : null;
+                        return html`<${DisabledTooltipButton}
+                            disabledMessage=${actingAsDisabledMessage}
+                            onClick=${() => (type === "P" ? api.sellPhysicalCommodity
+                                    : type === "PC" ? api.sellPhysicalCrypto
+                                    : type === "F" ? isContractShort(text) ? api.coverShortCommodityFutures : api.sellCommodityFutures
+                                    : type === "CF" ? isContractShort(text) ? api.buyCryptoFutures : api.sellCryptoFutures
+                                    : () => {}
+                                )(id)}
+                            onDisabledClick=${handleActAsClick}
+                            label=${type.includes('F') && isContractShort(text) ? 'Cover' : 'Sell'}
+                            color="red"
+                            buttonClass="flex-1 mx-1"
+                            extrasIndex=${idx}
+                            scopeActive=${scopeActiveRef.current}
+                            hotkeyLetter="s"
+                            isLineSelected=${isLineSelected}
+                            lineNumber=${lineNumber}
+                        />`;
+                    }, hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef, panelNumbers)}
                 </div>
             </div>
         </div>

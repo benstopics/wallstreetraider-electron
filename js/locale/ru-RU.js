@@ -17805,5 +17805,8 @@ export const ruRU = {
     "es": "",
     " \"": "",
     "CA": "",
-    "NO": ""
+    "NO": "",
+    "Confirm Loan Sale": "Подтвердить продажу кредита",
+    "Sell the business loan to": "Продать бизнес-кредит",
+    " (face value ": " (номинальная стоимость "
 }

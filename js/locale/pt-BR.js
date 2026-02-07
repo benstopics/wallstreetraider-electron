@@ -17805,5 +17805,8 @@ export const ptBR = {
     "es": "",
     " \"": "",
     "CA": "",
-    "NO": ""
+    "NO": "",
+    "Confirm Loan Sale": "Confirmar venda de empréstimo",
+    "Sell the business loan to": "Vender o empréstimo comercial para",
+    " (face value ": " (valor nominal "
 }
