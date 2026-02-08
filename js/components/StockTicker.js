@@ -9,7 +9,8 @@ const SCROLL_INTERVAL = 20; // ms between scroll steps
 
 // --- Inline SVG spark chart ---
 
-// Cache for self-fetched spark data (keyed by company id)
+// Cache for self-fetched spark data (keyed by company id), bounded to prevent unbounded growth
+const SPARK_CACHE_MAX = 200;
 const sparkCache = new Map();
 
 function MiniSpark({ prices, assetId, isUp }) {
@@ -28,6 +29,10 @@ function MiniSpark({ prices, assetId, isUp }) {
             if (!active) return;
             const p = data && data.prices;
             if (p && p.length >= 2) {
+                if (sparkCache.size >= SPARK_CACHE_MAX) {
+                    const oldest = sparkCache.keys().next().value;
+                    sparkCache.delete(oldest);
+                }
                 sparkCache.set(assetId, p);
                 setFetched(p);
             }
@@ -116,9 +121,9 @@ export default function StockTicker() {
 
     const tickerQueue = hasBackend ? backendQueue : (fallbackRef.current || []);
 
-    const [scrollPx, setScrollPx] = useState(0);
     const [showSpeedModal, setShowSpeedModal] = useState(false);
     const scrollRef = useRef(0);
+    const trackRef = useRef(null);
     const runningRef = useRef(isTickerRunning);
     const modalRef = useRef(modalType);
     const hoveredRef = useRef(false);
@@ -130,7 +135,7 @@ export default function StockTicker() {
     modalRef.current = modalType;
     hasBackendRef.current = hasBackend;
 
-    // Smooth pixel scrolling
+    // Smooth pixel scrolling — manipulate DOM directly to avoid 50fps re-renders
     useEffect(() => {
         // Pixels per step: tickSpeed 1 -> 0.5px, tickSpeed 100 -> 3px
         const pxPerStep = 0.5 + (tickSpeed - 1) * (2.5 / 99);
@@ -143,7 +148,6 @@ export default function StockTicker() {
             // When a full card has scrolled off, advance
             if (scrollRef.current >= CARD_WIDTH && !advancingRef.current) {
                 scrollRef.current -= CARD_WIDTH;
-                setScrollPx(scrollRef.current);
                 if (hasBackendRef.current) {
                     // Backend mode: pop front, push new to back via API
                     advancingRef.current = true;
@@ -155,10 +159,12 @@ export default function StockTicker() {
                     fallbackRef.current.push(fallbackRef.current.shift());
                     setFallbackVer(v => v + 1);
                 }
-                return;
             }
 
-            setScrollPx(scrollRef.current);
+            // Update DOM directly — no setState, no re-render
+            if (trackRef.current) {
+                trackRef.current.style.transform = `translateX(-${scrollRef.current}px)`;
+            }
         }, SCROLL_INTERVAL);
 
         return () => clearInterval(id);
@@ -206,7 +212,7 @@ export default function StockTicker() {
                  onMouseEnter=${() => { hoveredRef.current = true; }}
                  onMouseLeave=${() => { hoveredRef.current = false; }}>
                 <div class="stock-ticker-track"
-                     style=${`transform: translateX(-${scrollPx}px)`}>
+                     ref=${trackRef}>
                     ${tickerQueue.map(item => html`
                         <${TickerItem} key=${item.id} item=${item} />
                     `)}

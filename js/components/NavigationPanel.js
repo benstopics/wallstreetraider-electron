@@ -125,39 +125,7 @@ function NavigationPanel() {
 
     return html`
         <div class="flex flex-col gap-1" data-tutorial="navigation-panel" style="min-width: 360px; flex-shrink: 0;">
-            <!-- Row 1: Viewing / Navigation -->
-            <div class="flex flex-row items-center gap-2">
-                <small class="whitespace-nowrap" style="width: 70px;">Viewing:</small>
-                <${Button}
-                    class="btn px-2 py-1 ${!hasNavHistory || !canGoBack ? 'invisible' : ''}"
-                    onClick=${() => api.goBack()}>
-                    <b>←</b>
-                </button>
-                <select
-                    class="basic text-center"
-                    style="width: 180px;"
-                    value=${activePage}
-                    onChange=${onNavChange}
-                    disabled=${!hasNavHistory}
-                >
-                    ${hasNavHistory
-                        ? navOptions.map(opt => html`<option value="${opt.type}-${opt.id}">${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)
-                        : html`<option>-</option>`
-                    }
-                </select>
-                <${Button}
-                    class="btn px-2 py-1 ${!hasNavHistory || !canGoForward ? 'invisible' : ''}"
-                    onClick=${() => api.goForward()}>
-                    <b>→</b>
-                </button>
-                <div class="flex items-center gap-1">
-                    ${activeEntityNum !== api.HUMAN1_ID
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${bracketLabel(insertCurrencySymbols('Player'), 'P')}</button>`
-                        : ''}
-                </div>
-            </div>
-
-            <!-- Row 2: Acting As -->
+            <!-- Row 1: Acting As -->
             <div class="flex flex-row items-center gap-2" data-tutorial="acting-as-dropdown">
                 <small class="whitespace-nowrap" style="width: 70px;">${insertCurrencySymbols('Acting As')}:</small>
                 <${Button}
@@ -196,6 +164,38 @@ function NavigationPanel() {
                         ? (actingAsId === controlledAdvisorId
                             ? html`<span class="badge badge-primary px-2 py-1 text-xs whitespace-nowrap">${insertCurrencySymbols('Advisor')}</span>`
                             : html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(controlledAdvisorId)}>${bracketLabel(insertCurrencySymbols('Advisor'), 'D')}</button>`)
+                        : ''}
+                </div>
+            </div>
+
+            <!-- Row 2: Viewing / Navigation -->
+            <div class="flex flex-row items-center gap-2">
+                <small class="whitespace-nowrap" style="width: 70px;">Viewing:</small>
+                <${Button}
+                    class="btn px-2 py-1 ${!hasNavHistory || !canGoBack ? 'invisible' : ''}"
+                    onClick=${() => api.goBack()}>
+                    <b>←</b>
+                </button>
+                <select
+                    class="basic text-center"
+                    style="width: 180px;"
+                    value=${activePage}
+                    onChange=${onNavChange}
+                    disabled=${!hasNavHistory}
+                >
+                    ${hasNavHistory
+                        ? navOptions.map(opt => html`<option value="${opt.type}-${opt.id}">${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)
+                        : html`<option>-</option>`
+                    }
+                </select>
+                <${Button}
+                    class="btn px-2 py-1 ${!hasNavHistory || !canGoForward ? 'invisible' : ''}"
+                    onClick=${() => api.goForward()}>
+                    <b>→</b>
+                </button>
+                <div class="flex items-center gap-1">
+                    ${activeEntityNum !== api.HUMAN1_ID
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${bracketLabel(insertCurrencySymbols('Player'), 'P')}</button>`
                         : ''}
                 </div>
             </div>

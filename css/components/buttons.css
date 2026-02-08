@@ -71,7 +71,6 @@
   cursor: pointer;
   border-style: dashed;
   border-width: 2px;
-  animation: pulsingBorder 1s ease-in-out infinite;
 }
 
 .btn.disabled.red:not([disabled]) {
@@ -99,12 +98,6 @@
 .btn.disabled:not([disabled]):hover {
   opacity: 1;
   background: linear-gradient(to bottom, #666666, #444444);
-  animation: none;
-}
-
-@keyframes pulsingBorder {
-  0%, 100% { opacity: 0.85; }
-  50% { opacity: 0.5; }
 }
 
 /* Color variants */

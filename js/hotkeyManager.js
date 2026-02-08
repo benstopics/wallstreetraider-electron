@@ -54,11 +54,21 @@ class HotkeyManager {
         this._changeListeners = new Set();
 
         this._initialized = false;
+        this.disabled = false;
     }
 
     // ------------------------------------------------------------------
     // Lifecycle
     // ------------------------------------------------------------------
+
+    /** Enable/disable all hotkey dispatch (except modal-priority handlers). */
+    setDisabled(disabled) {
+        this.disabled = disabled;
+        if (disabled) {
+            this._setShift(false);
+            this.clearDigitBuffer();
+        }
+    }
 
     /** Call once at app startup to attach the global listener. */
     init() {
@@ -283,6 +293,19 @@ class HotkeyManager {
     // ------------------------------------------------------------------
 
     _onKeyDown = (e) => {
+        // When hotkeys are disabled, only allow MODAL-priority handlers (dialog Y/N/C/Esc)
+        // and spacebar (ticker toggle)
+        if (this.disabled) {
+            for (const h of this.handlers) {
+                if (!h.active) continue;
+                if (h.priority < PRIORITY.MODAL) break; // sorted desc, stop at non-modal
+                if (!h.keyTest(e)) continue;
+                const result = h.handler(e);
+                if (result !== false) return;
+            }
+            if (e.key !== ' ' && e.key !== '/') return; // allow spacebar and / to fall through
+        }
+
         // SHIFT tracking
         if (e.key === 'Shift') {
             this._setShift(true);

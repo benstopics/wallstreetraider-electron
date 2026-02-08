@@ -1,5 +1,12 @@
 import { html } from './lib/preact.standalone.module.js';
 
+let _hotkeysDisabled = false;
+
+/** Called by app.js when the disable-hotkeys setting changes. */
+export function setHotkeysVisualDisabled(disabled) {
+    _hotkeysDisabled = disabled;
+}
+
 /**
  * Centralized hotkey map.
  *
@@ -112,6 +119,7 @@ export function matchHotkey(e) {
  * If the key letter is not found in the label, renders as "K) Label"
  */
 export function bracketLabel(label, key, skipWords = 0) {
+    if (_hotkeysDisabled) return label;
     let startFrom = 0;
     if (skipWords > 0) {
         let wordsSkipped = 0;
@@ -141,6 +149,7 @@ export function bracketLabel(label, key, skipWords = 0) {
  * e.g., tabNumberLabel(1) → html`<span style="...">1.</span>`
  */
 export function tabNumberLabel(number) {
+    if (_hotkeysDisabled) return '';
     const numStr = String(number);
     const minWidth = numStr.length > 1 ? '1.4em' : '';
     const widthStyle = minWidth ? `min-width:${minWidth};display:inline-block;text-align:right;` : '';

@@ -108,13 +108,21 @@ export default function CommandPrompt() {
     const operandStr = parts.length > 1 ? parts[parts.length - 1] : null;
     const cmdEntry = api.commandMap[cmdKey];
 
+    const resolveEntityId = (str) => {
+        if (!str) return undefined;
+        if (str === 'ME' || str === 'PLAYER') return api.HUMAN1_ID;
+        if (/^P(\d+)$/.test(str)) return parseInt(str.slice(1));
+        if (gameState?.playerName && str === gameState.playerName.toUpperCase()) return api.HUMAN1_ID;
+        return api.getCompanyBySymbol(gameState?.allCompanies, str)?.id ?? undefined;
+    };
+
     const resolvedId = useMemo(() => {
-        if (!operandStr) return 0;
-        if (operandStr === 'ME' || operandStr === 'PLAYER') return api.HUMAN1_ID;
-        if (/^P(\d+)$/.test(operandStr)) return parseInt(operandStr.slice(1));
-        if (gameState?.playerName && operandStr === gameState.playerName.toUpperCase()) return api.HUMAN1_ID;
-        return api.getCompanyBySymbol(gameState?.allCompanies, operandStr)?.id ?? undefined;
-    }, [operandStr, gameState?.allCompanies, gameState?.playerName]);
+        // Resolve operand (second token) for commands like "BUY AAPL"
+        if (operandStr) return resolveEntityId(operandStr);
+        // Resolve single token as entity when it's not a recognized command
+        if (!cmdEntry && cmdKey) return resolveEntityId(cmdKey);
+        return 0;
+    }, [operandStr, cmdKey, cmdEntry, gameState?.allCompanies, gameState?.playerName]);
 
     // --- overlay/hint computation ------------------------------------------------
     function getOverlayAndHint() {

@@ -571,6 +571,7 @@ export async function takedeliverySelect() { await postNoArg('/takedelivery_sele
 export async function tooltipsSelect() { await postNoArg('/tooltips_select'); }
 export async function shareholderGraphSelect() { await postNoArg('/shareholdergraph_select'); }
 export async function unethicalSelect() { await postNoArg('/unethical_select'); }
+export async function disableHotkeysSelect() { await postNoArg('/disablehotkeys_select'); }
 
 // Cheat Menu
 export async function cheatDisableLawsuits() { await postNoArg('/cheat_disable_lawsuits'); }
@@ -1112,22 +1113,20 @@ const shallow = (a, b) => {
 export function useGameStore(selector = s => s, isEqual = Object.is) {
     const selRef = useRef(selector);
     selRef.current = selector;
+    const isEqualRef = useRef(isEqual);
+    isEqualRef.current = isEqual;
 
     const [val, setVal] = useState(() => selRef.current(gameStore.getState()));
     const valRef = useRef(val);
     valRef.current = val;
 
     useEffect(() => {
-        // sync immediately in case selector changed
-        const immediate = selRef.current(gameStore.getState());
-        if (!isEqual(immediate, valRef.current)) setVal(immediate);
-
         const unsub = gameStore.subscribe((state) => {
             const next = selRef.current(state);
-            if (!isEqual(next, valRef.current)) setVal(next);
+            if (!isEqualRef.current(next, valRef.current)) setVal(next);
         });
         return unsub;
-    }, [selector, isEqual]);
+    }, []); // stable subscription — selRef/valRef always point to latest values
 
     return val;
 }

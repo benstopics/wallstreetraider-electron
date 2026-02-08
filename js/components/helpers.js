@@ -113,9 +113,20 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
 
     const idFound = link?.id > 0 || (link?.id && link?.id.includes('|'));
 
-    // Selection mode for hyperlink lines
-    if (selOpts && selOpts.lineNumber != null) {
-        const { lineNumber, isSelected, anySelected, onSelect, scopeActive } = selOpts;
+    // Selection mode — all lines inside SelectableLines get selOpts for consistent alignment
+    if (selOpts) {
+        const { lineNumber, isSelected, anySelected, onSelect, scopeActive, prefixWidth } = selOpts;
+        const prefixStyle = `display:inline-block;min-width:${prefixWidth};text-align:right;margin-right:2px;`;
+        const gutterStyle = 'border-left: 2px solid transparent; padding-left: 4px;';
+
+        // Non-selectable line (no lineNumber) — just render with blank gutter for alignment
+        if (lineNumber == null) {
+            return html`<div class="flex flex-row">
+                <div class="fixed-width" style="${gutterStyle}">
+                    <span style="${prefixStyle}"></span>${text}
+                </div>
+            </div>`;
+        }
 
         if (isSelected) {
             // Selected line - highlighted, extras shown, click navigates
@@ -128,28 +139,31 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
             } : null;
             const padded = text.padEnd(maxLength, ' ');
             const prefix = scopeActive
-                ? html`<span style="opacity:0.7;margin-right:2px;">${lineNumber})</span>`
-                : '';
+                ? html`<span style="${prefixStyle};opacity:0.7;">${lineNumber})</span>`
+                : html`<span style="${prefixStyle}"></span>`;
 
             return html`<div class="flex flex-row" style="background:rgba(255,255,255,0.15);outline:1px solid rgba(255,255,255,0.3);border-radius:2px;">
-                <div class=${classes} onClick=${handler}>
+                <div class=${classes} style="${gutterStyle}" onClick=${handler}>
                     ${prefix}${padded}
                 </div>
                 ${renderExtras && link && renderExtras({ ...link, text, extrasCounter, isLineSelected: true, lineNumber })}
             </div>`;
         } else {
             // Not selected - clickable to select, show number prefix
-            // Add subtle left border to indicate clickable
-            const prefix = scopeActive ? tabNumberLabel(lineNumber) : '';
+            const prefix = scopeActive
+                ? html`<span style="${prefixStyle};opacity:0.45;">${lineNumber})</span>`
+                : html`<span style="${prefixStyle}"></span>`;
             const extrasIdx = !anySelected ? lineNumber : null;
             const handler = () => onSelect(lineNumber);
+            const padded = (renderExtras && link) ? text.padEnd(maxLength, ' ') : text;
 
             return html`<div class="flex flex-row">
                 <div class="fixed-width cursor-pointer hover:bg-blue-900"
                      style="border-left: 2px solid rgba(96, 165, 250, 0.3); padding-left: 4px;"
                      onClick=${handler} data-extras-idx=${extrasIdx}>
-                    ${prefix}${text}
+                    ${prefix}${padded}
                 </div>
+                ${renderExtras && link && renderExtras({ ...link, text, extrasCounter, isLineSelected: false, lineNumber })}
             </div>`;
         }
     }
@@ -309,20 +323,25 @@ function SelectableLines({ cleanedLines, maxLength, onLink, renderExtras, hyperl
     // Always show active state (line numbers, prefixes) when mounted
     const showActive = true;
 
+    // Compute consistent prefix width based on the max line number
+    const maxLineNum = lineCounter - 1;
+    const prefixWidth = (String(maxLineNum).length + 1) + 'ch'; // digits + paren
+
     return html`<div class="whitespace-pre-wrap flex flex-col">
         ${numberedLines.map(line => {
             const isLineSelected = line.lineNumber === effectiveSelected;
-            const selOpts = line.lineNumber != null ? {
+            const selOpts = {
                 lineNumber: line.lineNumber,
                 isSelected: isLineSelected,
                 anySelected,
                 onSelect,
-                scopeActive: showActive
-            } : null;
+                scopeActive: showActive,
+                prefixWidth
+            };
 
             return renderLine(
                 line, maxLength, onLink,
-                isLineSelected ? renderExtras : null,
+                renderExtras,
                 hyperlinkRegex,
                 isLineSelected ? extrasCounter : null,
                 selOpts

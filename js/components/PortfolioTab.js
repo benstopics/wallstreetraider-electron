@@ -76,6 +76,35 @@ function PortfolioTab() {
         return m;
     }, [allCompanies]);
 
+    // Synthetic link matching for portfolio lines without @hyperlink markers.
+    // Stock lines: known symbol followed by integer percentage (e.g. "ACME  10%")
+    // Bond lines: "N.NN% of YYYY" pattern with issuer name at start
+    const portfolioTextMatch = useMemo(() => {
+        if (!allCompanies?.length) return undefined;
+        const bySymbol = new Map();
+        const byName = new Map();
+        for (const c of allCompanies) {
+            if (c?.symbol) bySymbol.set(c.symbol.trim(), c.id);
+            if (c?.name) byName.set(c.name.trim(), c.id);
+        }
+        return (text) => {
+            const stockMatch = text.match(/\b([A-Z]{1,5})\s+(-?\d+)%\s/);
+            if (stockMatch) {
+                const id = bySymbol.get(stockMatch[1]);
+                if (id != null) return { type: parseInt(stockMatch[2]) < 0 ? 'S' : 'C', id };
+            }
+            if (/\d+\.\d+%\s+of\s+\d{4}/.test(text)) {
+                const nameSection = text.substring(0, 26).trimEnd();
+                const id = byName.get(nameSection);
+                if (id != null) return { type: 'J', id };
+                for (const [name, cId] of byName) {
+                    if (nameSection.startsWith(name) || name.startsWith(nameSection)) return { type: 'J', id: cId };
+                }
+            }
+            return null;
+        };
+    }, [allCompanies]);
+
     // Extras hotkey refs
     const extrasContainerRef = useRef(null);
     const scopeActiveRef = useRef(false);
@@ -155,7 +184,7 @@ function PortfolioTab() {
                                     lineNumber=${lineNumber}
                                 />` : ''}
                             </div>`
-                        }, hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef, panelNumbers)}
+                        }, hyperlinkRegex, portfolioTextMatch, extrasStartNumber, scopeActiveRef, panelNumbers)}
                 </div>
             </div>
     `;

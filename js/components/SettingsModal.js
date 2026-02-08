@@ -7,14 +7,23 @@ import Button from './Button.js';
 import { insertCurrencySymbols } from './helpers.js';
 import { HOTKEY_MAP, HOTKEY_CATEGORIES, formatHotkeyKey } from '../hotkeys.js';
 
-function HotkeysModal({ show, onClose }) {
+function HotkeysModal({ show, onClose, disableHotkeysSetting }) {
     if (!show) return null;
     return html`<${Modal} show=${show} onClose=${onClose}>
         <div class="flex justify-between items-center mb-4">
             <div class="text-lg font-bold">Keyboard Shortcuts</div>
             <${Button} class="btn red" onClick=${onClose}>Close</button>
         </div>
-        <div class="flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-3 p-2" style="background: rgba(255,255,255,0.05); border-radius: 4px;">
+            <span>Hotkeys</span>
+            <${Button}
+                class="btn ${disableHotkeysSetting ? 'red' : 'green'}"
+                onClick=${() => api.disableHotkeysSelect()}
+            >
+                ${disableHotkeysSetting ? 'DISABLED' : 'ENABLED'}
+            </button>
+        </div>
+        <div class="flex flex-col gap-4 max-h-[60vh] overflow-y-auto" style="${disableHotkeysSetting ? 'opacity: 0.4; pointer-events: none;' : ''}">
             ${HOTKEY_CATEGORIES.map(cat => {
                 const entries = HOTKEY_MAP.filter(h => h.category === cat);
                 if (!entries.length) return '';
@@ -66,6 +75,7 @@ function SettingsModal({ children }) {
     const takeDeliverySetting = api.useGameStore(s => s.gameState.takeDeliverySetting);
     const tooltipsSetting = api.useGameStore(s => s.gameState.tooltipsSetting);
     const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
+    const disableHotkeysSetting = api.useGameStore(s => s.gameState.disableHotkeysSetting);
 
     // Close on outside click
     useEffect(() => {
@@ -104,7 +114,7 @@ function SettingsModal({ children }) {
     return html`
         <div class="settings-modal-container" style="position: relative; display: inline-block;">
             <${DisplayModal} show=${showDisplayModal} onClose=${() => setShowDisplayModal(false)} />
-            <${HotkeysModal} show=${showHotkeysModal} onClose=${() => setShowHotkeysModal(false)} />
+            <${HotkeysModal} show=${showHotkeysModal} onClose=${() => setShowHotkeysModal(false)} disableHotkeysSetting=${disableHotkeysSetting} />
             <div ref=${triggerRef} onClick=${toggleOpen}>
                 ${children}
             </div>

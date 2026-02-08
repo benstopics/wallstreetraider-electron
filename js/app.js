@@ -1,7 +1,7 @@
 import { html, render, useState, useEffect, useRef } from './lib/preact.standalone.module.js';
 import './lib/tailwind.module.js';
 import * as api from './api.js';
-import { matchHotkey } from './hotkeys.js';
+import { matchHotkey, setHotkeysVisualDisabled } from './hotkeys.js';
 import { isEditableTarget } from './keybinds.js';
 import { hotkeyManager, PRIORITY } from './hotkeyManager.js';
 import { useHotkey } from './hooks/useHotkey.js';
@@ -47,6 +47,13 @@ const AppInner = () => {
     const modalText = api.useGameStore(s => s.gameState.modalText);
     const modalDefault = api.useGameStore(s => s.gameState.modalDefault);
     const readyToRestart = api.useGameStore(s => s.gameState.readyToRestart);
+    const disableHotkeysSetting = api.useGameStore(s => s.gameState.disableHotkeysSetting);
+
+    // Sync "Disable Hotkeys" setting from game state to hotkeyManager
+    useEffect(() => {
+        hotkeyManager.setDisabled(!!disableHotkeysSetting);
+        setHotkeysVisualDisabled(!!disableHotkeysSetting);
+    }, [disableHotkeysSetting]);
 
     // Detect ready to restart signal and restart WSR to return to main menu
     // This flag is set AFTER all end-game dialogs are closed

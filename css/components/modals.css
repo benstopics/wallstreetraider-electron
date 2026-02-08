@@ -467,9 +467,17 @@
   }
 }
 
-/* Text announce modal - inner content handles scrolling */
+/* Text announce modal - fixed-width text reports that should not wrap */
 .text-announce-modal {
   overflow: hidden;
+  width: auto;
+  min-width: 420px;
+  max-width: min(92vw, 1200px);
+}
+
+.text-announce-modal .text-report-content {
+  white-space: pre;
+  overflow-x: auto;
 }
 
 /* Stop modal */
