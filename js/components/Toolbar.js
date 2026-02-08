@@ -52,6 +52,48 @@ function CheatsMenu() {
     `;
 }
 
+function HamburgerMenu() {
+    const [isOpen, setIsOpen] = useState(false);
+    const popoverRef = useRef(null);
+    const triggerRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const onDocMouseDown = (e) => {
+            if (!popoverRef.current) return;
+            if (popoverRef.current.contains(e.target)) return;
+            if (triggerRef.current && triggerRef.current.contains(e.target)) return;
+            setIsOpen(false);
+        };
+        document.addEventListener('mousedown', onDocMouseDown);
+        return () => document.removeEventListener('mousedown', onDocMouseDown);
+    }, [isOpen]);
+
+    const handleAction = (fn) => {
+        setIsOpen(false);
+        fn();
+    };
+
+    return html`
+        <div style="position: relative; display: inline-block;">
+            <div ref=${triggerRef} class="btn" onClick=${() => setIsOpen(prev => !prev)}
+                 style="font-size: 18px; line-height: 1; padding: 0 8px;">
+                \u2630
+            </div>
+            ${isOpen ? html`
+                <div ref=${popoverRef} class="toolbar-menu-popover" style="position: absolute; top: 100%; left: 0; z-index: 99999999 !important; display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--panel-border); border-radius: 4px; padding: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                    <${Button} class="toolbar-menu-item" onClick=${() => handleAction(api.saveGame)}>${insertCurrencySymbols("Save Game")}<//>
+                    <${Button} class="toolbar-menu-item" onClick=${() => handleAction(api.saveGameAs)}>${insertCurrencySymbols("Save As")}<//>
+                    <${Button} class="toolbar-menu-item" onClick=${() => handleAction(api.exitGame)}>${insertCurrencySymbols("Exit Game")}<//>
+                    <${SettingsModal}>
+                        <${Button} class="toolbar-menu-item" data-tutorial="settings-dropdown">${insertCurrencySymbols("Settings")}<//>
+                    <//>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
 function Toolbar() {
     const { showTutorial, showHelp } = api.useWSRContext();
 
@@ -59,99 +101,16 @@ function Toolbar() {
     const [showCalculator, setShowCalculator] = useState(false);
     const [showKeybinds, setShowKeybinds] = useState(false);
 
-    const [showTickerSpeedModal, setShowTickerSpeedModal] = useState(false);
     const shiftHeld = useShiftHeld();
-
-    const tickSpeed = api.useGameStore(s => s.gameState.tickSpeed);
-    const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
-
-    const toggleTicker = () => {
-        if (isTickerRunning) {
-            api.stopTicker();
-        } else {
-            api.startTicker();
-        }
-    }
 
     return html`
         <div class="top-bar items-center justify-between" style="height: 60px; flex-shrink: 0;">
             <${NotesModal} show=${showNotepad} onClose=${() => setShowNotepad(false)} />
             <${CalculatorModal} show=${showCalculator} onClose=${() => setShowCalculator(false)} />
             <${KeybindsModal} show=${showKeybinds} onClose=${() => setShowKeybinds(false)} />
-            <${InputStringModal}
-                show=${showTickerSpeedModal}
-                title="Set Ticker Speed"
-                text="Enter the desired ticker speed (1-100):"
-                defaultValue=${tickSpeed.toString()}
-                onSubmit=${(value) => {
-                api.setTickSpeed(Math.min(100, Math.max(1, parseInt(value))))
-                    setShowTickerSpeedModal(false);
-                }}
-                onCancel=${() => setShowTickerSpeedModal(false)}
-            />
             <div class="flex items-center gap-2" style="flex-shrink: 1; min-width: 0;">
-                <div style="width: 25px; height: 20px"
-                data-tutorial="pause-button"
-                class="btn ${isTickerRunning ? 'stop' : 'play'}"
-                onClick=${toggleTicker}>
-                    <div class="" style="width: 20px">
-                        <${isTickerRunning ? StopIcon : PlayIcon} />
-                    </div>
-                </div>
+                <${HamburgerMenu} />
                 <div class="flex flex-wrap items-center gap-2">
-                    <div style="height: 20px" class="btn blue" onClick=${() => {
-                        setShowTickerSpeedModal(true)
-                    }}>
-                        <div class="flex w-full items-center justify-center gap-1" style="">
-                            <div class="" style="width: 20px">
-                                <${GaugeIcon} />
-                            </div>
-                            <div>
-                                ${tickSpeed}
-                            </div>
-                        </div>
-                    </div>
-                    <div style="height: 20px" class="btn" onClick=${() => {
-                        api.runTicker()
-                    }}>
-                        <div class="flex w-full items-center justify-center gap-1" style="">
-                            <div class="" style="width: 20px">
-                                <${ForwardIcon} />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="btn green" onClick=${() => {
-                        api.saveGame()
-                    }}>
-                        <!--<div class="mr-1" style="width: 7px">
-                            <${SaveIcon} />
-                        </div>-->
-                        <span style="white-space: nowrap;">
-                            ${insertCurrencySymbols("Save Game")}
-                        </span>
-                    </div>
-                    <div class="btn green" onClick=${() => {
-                        api.saveGameAs()
-                    }}>
-                        <!--<div class="mr-1" style="width: 7px">
-                            <${SaveIcon} />
-                        </div>-->
-                        <span style="white-space: nowrap;">
-                            ${insertCurrencySymbols("Save As")}
-                        </span>
-                    </div>
-                    <div class="btn" onClick=${() => {
-                        api.exitGame()
-                    }}>
-                        <span style="white-space: nowrap;">
-                            ${insertCurrencySymbols("Exit Game")}
-                        </span>
-                    </div>
-                    <${SettingsModal}>
-                        <div class="btn" data-tutorial="settings-dropdown">
-                            <span style="white-space: nowrap;">${insertCurrencySymbols("Settings")}</span>
-                        </div>
-                    <//>
                     <div class="btn" data-tutorial="fullscreen-button" onClick=${() => api.toggleFullscreen()}>
                         <span style="white-space: nowrap;">${insertCurrencySymbols("Fullscreen")}</span>
                     </div>

@@ -23,11 +23,11 @@ const getMgmtRating = (r) => {
 
 const getAnalystRating = (r) => {
     if (r == null || r === 0) return '-';
-    if (r === 1) return 'Strong Sell';
-    if (r === 2) return 'Sell';
+    if (r === 1) return 'Strong Buy';
+    if (r === 2) return 'Buy';
     if (r === 3) return 'Hold';
-    if (r === 4) return 'Buy';
-    if (r === 5) return 'Strong Buy';
+    if (r === 4) return 'Sell';
+    if (r === 5) return 'Strong Sell';
     return r;
 };
 

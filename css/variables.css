@@ -79,6 +79,9 @@
   --scrollbar-track: #222;
   --scrollbar-thumb-hover: #888;
 
+  /* === Ticker === */
+  --ticker-height: 32px;
+
   /* === Surface Layers (for depth) === */
   --surface-0: #0b0f15;
   --surface-1: #0f141c;

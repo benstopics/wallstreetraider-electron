@@ -22,7 +22,7 @@
 
 /* Game view container */
 .game-view {
-  height: calc(100% - 40px - 40px);
+  height: calc(100% - 40px - 40px - var(--ticker-height, 0px));
 }
 
 /* Footer */

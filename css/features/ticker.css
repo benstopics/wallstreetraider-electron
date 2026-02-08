@@ -1,0 +1,103 @@
+/* =========================================================
+   Stock Ticker - Scrolling LED-style ticker bar
+   ========================================================= */
+
+.stock-ticker {
+  height: var(--ticker-height, 32px);
+  background: #0a0a0a;
+  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Play/pause + speed + forward controls pinned left */
+.stock-ticker-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-color);
+  height: 100%;
+}
+
+/* Marquee area - clips overflow, track scrolls inside */
+.stock-ticker-marquee {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Inner track that slides via translateX */
+.stock-ticker-track {
+  display: flex;
+  align-items: center;
+  will-change: transform;
+}
+
+.stock-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  cursor: pointer;
+  height: 100%;
+  color: var(--fg-muted);
+  transition: background 0.15s;
+  flex-shrink: 0;
+  width: 180px;
+  box-sizing: border-box;
+}
+
+.stock-ticker-item:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.stock-ticker-symbol {
+  color: var(--color-warning);
+  font-weight: 700;
+}
+
+.stock-ticker-price {
+  color: var(--fg-primary);
+}
+
+.stock-ticker-change {
+  font-weight: 800;
+}
+
+.stock-ticker-change.positive {
+  color: var(--color-positive);
+}
+
+.stock-ticker-change.negative {
+  color: var(--color-negative);
+}
+
+.stock-ticker-change.neutral {
+  color: var(--fg-muted);
+}
+
+.stock-ticker-item.owned .stock-ticker-symbol {
+  color: var(--color-warning);
+  text-shadow: 0 0 4px rgba(255,193,7,0.3);
+}
+
+.stock-ticker-spark {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+/* Thin vertical divider between cards */
+.stock-ticker-item + .stock-ticker-item {
+  border-left: 1px solid rgba(255,255,255,0.08);
+}

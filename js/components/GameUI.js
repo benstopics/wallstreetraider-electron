@@ -11,6 +11,7 @@ import Modal from './Modal.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import CommandPrompt from './CommandPrompt.js';
 import Button from './Button.js';
+import StockTicker from './StockTicker.js';
 import { insertCurrencySymbols } from './helpers.js';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -62,6 +63,7 @@ const GameUI = () => {
     <div class="flex flex-col h-full">
         <!-- Toolbar -->
         <${Toolbar} />
+        <${StockTicker} />
         <div class="game-view flex flex-column gap-2 p-2">
             ${!isDbSearch ? html`
             <!-- Left Column -->

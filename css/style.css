@@ -29,6 +29,7 @@
 @import url('features/help.css');
 @import url('features/menu.css');
 @import url('features/tutorial.css');
+@import url('features/ticker.css');
 
 /* Pages */
 @import url('pages/main-menu.css');

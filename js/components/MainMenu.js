@@ -1,4 +1,4 @@
-import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
+import { html, useState, useEffect, useMemo } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import VideoBackground from './VideoBackground.js';
@@ -10,13 +10,25 @@ import localeManager from '../locale/localeManager.js';
 import { bracketLabel } from '../hotkeys.js';
 import { isEditableTarget } from '../keybinds.js';
 
-// TODO: set your actual asset paths/links
 const LOGO_SRC = 'assets/wallstreetraider_logo.png';
+const WEBSITE_URL = 'https://wallstreetraider.com';
 const REDDIT_URL = 'https://www.reddit.com/r/WallStreetRaider/';
 const DISCORD_URL = 'https://discord.com/invite/5ujV5Cp9Ej';
-const REDDIT_WIDGET = 'assets/reddit-widget.png';
-const DISCORD_WIDGET = 'assets/discord-widget.png';
+const STEAM_URL = 'https://store.steampowered.com/app/4080310/Wall_Street_Raider/';
 
+// ── Lore snippets from the origin story ──
+const LORE_SNIPPETS = [
+    "In 1967, a Harvard Law student began filling notebooks with ideas for a board game simulating all of American capitalism. It took 16 years for personal computers to catch up with his vision.",
+    "JP Morgan developers failed. A Disney game studio tried for over a year with a team in Armenia. Commodore mailed the source code back after three months. For 40 years, the code was indecipherable to anyone but its creator.",
+    'A hedge fund manager wrote: "I played Wall Street Raider for years and started doing what I\'d been doing in the game with my real clients." His Price Waterhouse audited 10-year return: 44% compounded annually.',
+    "At 3 AM, Jenkins would race to encode financial logic before understanding slipped away. The result: code that worked perfectly for decades, yet even he no longer fully comprehended.",
+    "Over 200 CEOs and investment bankers have credited Wall Street Raider with shaping their careers \u2014 from a teenager in the Philippines playing the free demo to a forex trader at Morgan Stanley in Shanghai.",
+    '115,000 lines of code written by forty distinct versions of Michael Jenkins, competing across four decades, governed by what one developer described as "laws written on top of laws that were interpreted wrong."',
+    "A player from the Philippines: \"I've been playing since I was 13, living in a third world country. Couldn't even afford the full version. I played the two-year demo for years. It taught me so much that now I'm working for Morgan Stanley.\"",
+    'In 1983, Jenkins sat at a Kaypro computer with a five-inch screen, typed 10 PRINT "HELLO", and realized: "This isn\'t that complicated." He stayed up until 5 AM writing code. Four decades later, he still hadn\'t stopped.',
+];
+
+// ── Changelog data ──
 const CHANGELOG = [
     {
         ver: "v10.0.14",
@@ -24,13 +36,14 @@ const CHANGELOG = [
             {
                 heading: "New Features",
                 items: [
-                    "Keyboard hotkey system with 73 bindings — hold Shift to see shortcuts on buttons, tabs, and menus. Reference panel in Settings",
+                    "Keyboard hotkey system with 73 bindings \u2014 hold Shift to see shortcuts on buttons, tabs, and menus. Reference panel in Settings",
                     "Line selection: use number keys to select lines in portfolio views, then letter keys for inline actions (S=Sell, E=Exercise, etc.)",
-                    "Cheat Menu accessible from toolbar (Disable Lawsuits, Insider Info, Add/Subtract Cash) — auto-enables Unethical Scenarios",
+                    "Cheat Menu accessible from toolbar (Disable Lawsuits, Insider Info, Add/Subtract Cash) \u2014 auto-enables Unethical Scenarios",
                     "Migrate Bank Allocation, Advance Funds, Greenmail, and Planned Tender Offer Premium from Win32 to Electron",
                     "Picture event popups (Black Swan, Ponzi, etc.) now rendered natively instead of launching external PIX.EXE",
                     "Delete saves from Load Game menu, load specific save files by name",
                     "Expanded command prompt with 70+ commands and improved autocomplete",
+                    "Smart stock ticker with hover-to-pause",
                 ]
             },
             {
@@ -38,7 +51,7 @@ const CHANGELOG = [
                 items: [
                     "AI companies now liquidate T-Bills before borrowing on line of credit",
                     "Fixed Advanced Options validation allowing free options trading via blank/zero strike prices",
-                    "Improved options premium messaging — distinguishes net-credit trades from pure buys/sells",
+                    "Improved options premium messaging \u2014 distinguishes net-credit trades from pure buys/sells",
                     "Interest rate swap expiration date selection now uses dropdowns with all valid expirations",
                     "Confirmation dialog when selling business loans",
                     "Cash flow projections show inline message instead of blocking popup when unavailable",
@@ -72,7 +85,8 @@ const CHANGELOG = [
                     "Fix textboxes and graphs rendering on top of settings menu",
                     "Fix notifications bar and market reports scrolling issues",
                     "Fix large cash amounts overflowing 32-bit integers",
-                    "Fix game exit/restart lifecycle — game process stays alive for clean restart",
+                    "Fix game exit/restart lifecycle \u2014 game process stays alive for clean restart",
+                    "Fixed database search tool analyst rating was reversed"
                 ]
             },
         ]
@@ -124,7 +138,6 @@ const CHANGELOG = [
             "Fix navigation history quirks",
             "Add action bar with submenus for all top-level buttons",
             "New Shareholder Graph can be toggled back to old text report in Settings menu",
-
         ]
     },
     {
@@ -272,7 +285,7 @@ const CHANGELOG = [
         items: [
             "Speed up ticker as much as I can",
             "Add Prime Rate and GDP graphs",
-            "“Complex options strategies on low-priced stocks” has lots of whitespace for some reason",
+            "\u201CComplex options strategies on low-priced stocks\u201D has lots of whitespace for some reason",
             "Spacebar as pause/unpause",
             "Simplify info popup to have green OK button instead of red Close button at top right",
             "Fix acting as dropdown and view player buttons not showing when viewing market reports"
@@ -304,9 +317,15 @@ const CHANGELOG = [
     }
 ];
 
+// ── Inline SVG icons for social links ──
+const RedditIcon = () => html`<svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12c0 3.314 1.343 6.314 3.515 8.485l-2.286 2.286C.775 23.225 1.097 24 1.768 24H12c6.627 0 12-5.373 12-12S18.627 0 12 0zm6.67 13.95c-.165 1.098-1.01 1.985-2.108 2.149-1.098.165-2.168-.353-2.706-1.227-.538-.873-.455-2.01.206-2.798.66-.787 1.748-1.073 2.746-.72.998.353 1.694 1.263 1.762 2.296.033.1.05.2.05.3h.05zm-12.34 0c.165 1.098 1.01 1.985 2.108 2.149 1.098.165 2.168-.353 2.706-1.227.538-.873.455-2.01-.206-2.798-.66-.787-1.748-1.073-2.746-.72-.998.353-1.694 1.263-1.762 2.296-.033.1-.05.2-.05.3h-.05zm10.92 3.55c-.66.66-2.04 1.5-5.25 1.5s-4.59-.84-5.25-1.5c-.22-.22-.22-.58 0-.8.22-.22.58-.22.8 0 .44.44 1.68 1.17 4.45 1.17s4.01-.73 4.45-1.17c.22-.22.58-.22.8 0 .22.22.22.58 0 .8zM17.5 10c-.83 0-1.5-.67-1.5-1.5S16.67 7 17.5 7s1.5.67 1.5 1.5S18.33 10 17.5 10zm-11 0c-.83 0-1.5-.67-1.5-1.5S5.67 7 6.5 7 8 7.67 8 8.5 7.33 10 6.5 10z"/></svg>`;
+const DiscordIcon = () => html`<svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>`;
+const SteamIcon = () => html`<svg viewBox="0 0 24 24"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 12-5.373 12-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.985 1.3 1.215 1.27.496 2.702-.136 3.199-1.406.241-.616.246-1.289.012-1.908-.233-.618-.688-1.098-1.28-1.332-.59-.232-1.213-.23-1.77-.03l1.523.63c.936.367 1.4 1.43 1.036 2.368-.367.94-1.43 1.403-2.368 1.036l-.18-.073zm11.81-9.3c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></svg>`;
+const GlobeIcon = () => html`<svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 1.5c.827 0 1.74.85 2.444 2.542.273.656.503 1.41.68 2.24H8.876c.177-.83.407-1.584.68-2.24C10.26 4.35 11.173 3.5 12 3.5zm-3.635 1.14c-.322.668-.594 1.42-.804 2.242H4.767a8.527 8.527 0 0 1 3.598-2.242zm7.27 0a8.527 8.527 0 0 1 3.598 2.242h-2.794c-.21-.822-.482-1.574-.804-2.242zM4.253 8.382h3.08A20.372 20.372 0 0 0 7.1 11.25H3.564a8.437 8.437 0 0 1 .689-2.868zm4.592 0h6.31c.165.9.26 1.86.283 2.868H8.562c.023-1.009.118-1.968.283-2.868zm7.822 0h3.08a8.437 8.437 0 0 1 .689 2.868H16.9a20.372 20.372 0 0 0-.233-2.868zM3.564 12.75H7.1c.028 1.013.113 1.984.233 2.868h-3.08a8.437 8.437 0 0 1-.689-2.868zm5.002 0h6.868c-.023 1.009-.118 1.968-.283 2.868h-6.302a19.38 19.38 0 0 1-.283-2.868zm8.434 0h3.436a8.437 8.437 0 0 1-.689 2.868h-3.08c.12-.884.205-1.855.233-2.868zm-9.876 4.368h5.752a12.13 12.13 0 0 1-.68 2.24C11.74 21.15 10.827 22 12 22c-1.173 0-2.26-.85-2.444-2.542 0 0-.273-.656-.68-2.24h.248zm-2.56 0h2.794c.21.822.482 1.574.804 2.242A8.527 8.527 0 0 1 4.564 17.118zm10.078 0h2.794a8.527 8.527 0 0 1-3.598 2.242c.322-.668.594-1.42.804-2.242z"/></svg>`;
 
 const MainMenu = () => {
     const [quote, setQuote] = useState('');
+    const loreSnippet = useMemo(() => LORE_SNIPPETS[Math.floor(Math.random() * LORE_SNIPPETS.length)], []);
 
     useEffect(() => {
         (async () => {
@@ -322,10 +341,9 @@ const MainMenu = () => {
     }, []);
 
     const { showHelp } = api.useWSRContext();
-
     const localeWarning = localeManager.getWarningForLocale(localeManager.getCurrentLocale());
 
-    // Main menu keyboard shortcuts
+    // Main menu keyboard shortcuts: L=Load, N=New, E=Exit, H=Help
     useEffect(() => {
         const handleKey = (e) => {
             if (isEditableTarget(e.target)) return;
@@ -347,90 +365,130 @@ const MainMenu = () => {
     <div class="wsr-root">
       <${VideoBackground} />
       <div class="wsr-overlay">
-        <header class="wsr-topbar glass">
-          <img src=${LOGO_SRC} alt="Wall Street Raider" class="wsr-logo" />
-          
-            <div class="wsr-buttons" style="margin: 0 auto;">
-              <${Button} class="btn green main-menu" onClick=${api.loadGame}>${bracketLabel('Load Game', 'L')}</button>
-              <${Button} class="btn green main-menu" onClick=${api.newGame}>${bracketLabel('New Game', 'N')}</button>
-              <${Button} class="btn main-menu" onClick=${api.exitToDesktop}>${bracketLabel('Exit to Desktop', 'E')}</button>
-            </div>
 
+        <!-- ── Header ── -->
+        <header class="wsr-topbar glass">
+          <div class="wsr-topbar-brand">
+            <img src=${LOGO_SRC} alt="Wall Street Raider" class="wsr-logo-sm" />
+            <span class="wsr-terminal-title">Jenkins Terminal v10.0.14</span>
+          </div>
           <div class="wsr-topbar-right">
-            <${Button} class="btn main-menu" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</button>
+            <${Button} class="btn main-menu" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</${Button}>
             <${SettingsModal}>
-              <${Button} class="btn main-menu">Settings</button>
+              <${Button} class="btn main-menu">Settings</${Button}>
             <//>
             <${LocalizationDropdown} />
-            <div class="wsr-version">Early Access</div>
+            <span class="wsr-version">Early Access</span>
           </div>
         </header>
 
-        <main class="wsr-main">
-          <section class="">
-          
-            <div class="wsr-block">
-                <div class="quote-overlay glass">
-              <h3 class="wsr-block-title">Quote of the Day</h3>
-                    <blockquote class="flex flex-col">
-                        ${renderMultilineText(quote.trim(), { additionalDelimiters: [] })}
-                    </blockquote>
-                </div>
-            </div>
-            <div class="wsr-block">
-                <div class="wsr-ann-welcome">
-              <div class="h-full overflow-y-auto" style="max-height:40vh;">
-              <h3 class="wsr-block-title">Placeholder Title</h3>
-  <p>Hello, World!</p>
-  </div>
-                </div>
-            </div>
-          </section>
+        <!-- ── Hero ── -->
+        <div class="wsr-hero-wrap">
+          <div class="wsr-hero">
+            <img src=${LOGO_SRC} alt="Wall Street Raider" class="wsr-hero-logo" />
 
-          <!-- Right: community + changelog -->
-          <aside class="wsr-rail">
-            <div class="flex flex-row gap-4">
-                <a class="flex-[1] glass wsr-widget" href=${REDDIT_URL} target="_blank" rel="noopener">
-                <img src=${REDDIT_WIDGET} alt="Reddit: r/WallStreetRaider" style="width: auto; height: 40px" />
-                <div class="wsr-widget-label">Join r/WallStreetRaider</div>
-                </a>
+            <div class="wsr-divider"></div>
 
-                <a class="flex-[1] glass wsr-widget" href=${DISCORD_URL} target="_blank" rel="noopener">
-                <img src=${DISCORD_WIDGET} alt="Discord server" style="width: auto; height: 40px" />
-                <div class="wsr-widget-label">Join the Discord</div>
-                </a>
+            <div class="wsr-tagline">The most realistic Wall Street simulation ever created</div>
+
+            <div class="wsr-stats">
+              <span class="wsr-stat">
+                <span class="wsr-stat-value">1,600</span>
+                <span class="wsr-stat-label">Companies</span>
+              </span>
+              <span class="wsr-stat-sep">\u00b7</span>
+              <span class="wsr-stat">
+                <span class="wsr-stat-value">124</span>
+                <span class="wsr-stat-label">Countries</span>
+              </span>
+              <span class="wsr-stat-sep">\u00b7</span>
+              <span class="wsr-stat">
+                <span class="wsr-stat-value">40</span>
+                <span class="wsr-stat-label">Years in Development</span>
+              </span>
             </div>
 
-            <section class="flex-[1] glass wsr-card wsr-changelog">
-              <div class="h-full overflow-y-auto">
-                <h3 class="wsr-block-title">Changelog</h3>
-                <ul>
-                    ${CHANGELOG.map(c => html`
-                    <li class="wsr-change">
-                        <div class="wsr-change-ver">${c.ver}</div>
-                        ${c.sections ? c.sections.map(s => html`
-                        <div class="wsr-change-section-heading">${s.heading}</div>
-                        <ul class="wsr-change-list">
-                        ${s.items.map(it => html`<li>• ${it}</li>`)}
-                        </ul>
-                        `) : html`
-                        <ul class="wsr-change-list">
-                        ${c.items.map(it => html`<li>• ${it}</li>`)}
-                        </ul>
-                        `}
-                    </li>
-                    `)}
-                </ul>
+            <div class="wsr-divider"></div>
+
+            <div class="wsr-hero-buttons">
+              <${Button} class="btn green main-menu" onClick=${api.loadGame}>${bracketLabel('Load Game', 'L')}</${Button}>
+              <${Button} class="btn green main-menu" onClick=${api.newGame}>${bracketLabel('New Game', 'N')}</${Button}>
+              <${Button} class="btn main-menu" onClick=${api.exitToDesktop}>${bracketLabel('Exit', 'E')}</${Button}>
+            </div>
+
+            ${quote && html`
+              <div class="wsr-quote-wrap">
+                <blockquote class="wsr-quote">
+                  ${renderMultilineText(quote.trim(), { additionalDelimiters: [] })}
+                </blockquote>
               </div>
-            </section>
-          </aside>
-        </main>
+            `}
+          </div>
+        </div>
 
+        <!-- ── Bottom panels ── -->
+        <div class="wsr-panels">
+          <!-- The Story -->
+          <div class="wsr-panel">
+            <div class="wsr-panel-header">
+              <span class="wsr-panel-title">The Story</span>
+            </div>
+            <div class="wsr-panel-body">
+              <p class="wsr-lore-text">${loreSnippet}</p>
+              <a class="wsr-lore-link" href=${WEBSITE_URL} target="_blank" rel="noopener">
+                Read the full story at wallstreetraider.com \u2192
+              </a>
+            </div>
+          </div>
+
+          <!-- Changelog -->
+          <div class="wsr-panel">
+            <div class="wsr-panel-header">
+              <span class="wsr-panel-title">Changelog</span>
+            </div>
+            <div class="wsr-panel-body">
+              <ul class="wsr-changelog-list">
+                ${CHANGELOG.map(c => html`
+                  <li class="wsr-change">
+                    <div class="wsr-change-ver">${c.ver}</div>
+                    ${c.sections ? c.sections.map(s => html`
+                      <div class="wsr-change-section-heading">${s.heading}</div>
+                      <ul class="wsr-change-list">
+                        ${s.items.map(it => html`<li>\u2022 ${it}</li>`)}
+                      </ul>
+                    `) : html`
+                      <ul class="wsr-change-list">
+                        ${c.items.map(it => html`<li>\u2022 ${it}</li>`)}
+                      </ul>
+                    `}
+                  </li>
+                `)}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Footer ── -->
         <footer class="wsr-footer glass">
-          <div>© 1986 - ${new Date().getFullYear()} Hackjack Games • Roninsoft</div>
-      ${localeWarning}
-          <div class="wsr-legal">Simulated markets. Not investment advice.</div>
+          <span class="wsr-footer-copy">\u00a9 1986\u2013${new Date().getFullYear()} Ronin Software & HackJack Games</span>
+          ${localeWarning}
+          <div class="wsr-social-bar">
+            <a class="wsr-social-link" href=${REDDIT_URL} target="_blank" rel="noopener">
+              <${RedditIcon} /> Reddit
+            </a>
+            <a class="wsr-social-link" href=${DISCORD_URL} target="_blank" rel="noopener">
+              <${DiscordIcon} /> Discord
+            </a>
+            <a class="wsr-social-link" href=${STEAM_URL} target="_blank" rel="noopener">
+              <${SteamIcon} /> Steam
+            </a>
+            <a class="wsr-social-link" href=${WEBSITE_URL} target="_blank" rel="noopener">
+              <${GlobeIcon} /> Website
+            </a>
+          </div>
+          <span class="wsr-legal">Simulated markets. Not investment advice.</span>
         </footer>
+
       </div>
     </div>
   `;

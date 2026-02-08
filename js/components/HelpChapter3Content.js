@@ -345,7 +345,94 @@ subsidiary or amortization of "goodwill" from asset purchases, and may exclude
 cash income items such as dividends a company receives from subsidiaries from
 reported income and all or partly from taxable income.</p>
             <br/>
-            <p><em>[Additional detailed sections about realism in trading limits, accounting methods, tax rules, and stock pricing algorithms...]</em></p>
+            <p>Over several years, we became aware that some players were able to amass
+hundreds of trillions of net worth (or more), mainly by doing gigantic profitable
+trades of derivatives, such as options, futures, and interest rate swaps, and
+that the limitations imposed by the simulation were unrealistically high. Thus,
+for example, a player might buy options on many times more than 100% of the
+total amount of stock issued by a company, which never happens in the real
+world. We fixed that by limiting the total options positions of a particular
+type by all entities on a stock, such as shorted puts, to 100% of the stock
+(20% for long calls).</p>
+            <br/>
+            <p>More recently, it became apparent that some players were able to manipulate
+the entire stock index by accumulating massive positions in stock index
+futures, and then taking hugely profitable positions in commodity futures or
+interest rate swaps, such as buying up futures on thousands of times as much
+silver as is produced in the entire world in a year, which then drove
+up the stock index, increasing the value of the index futures.... and you get
+the picture.</p>
+            <br/>
+            <p>Thus, we have now put in some more rational limits on swaps and futures,
+limiting a player's (and his companies') combined positions in futures on
+a particular commodity to 10% of that commodity's real world annual production
+as of 2017 (or 5% of oil production). Similar, more realistic limits have also
+been put in place on buying physical commodities, based on estimated real-world
+storage of grain, oil, etc., and on the size of interest rate swaps positions.</p>
+            <br/>
+            <p>Wall $treet Raider even provides a somewhat simplified version of some
+of the most complex accounting known to man -- consolidated tax return
+reporting, where all 80% subsidiaries (and their 80% or greater subsidiaries)
+pay income tax on a consolidated basis. Of course, this isn't <em>totally</em>
+realistic, since U.S. tax law doesn't generally let a U.S. company file
+consolidated tax returns with foreign subsidiaries, and vice versa, and not
+all countries allow any such consolidated tax reporting. But Wall $treet Raider
+does allow it, as long as a single company owns at least 80% of the stock of
+any other company, regardless of nationalities.</p>
+            <br/>
+            <p>In Wall $treet Raider, we have chosen to include a proportional share of the
+earnings or losses of any (20% or greater) subsidiary in the earnings of the parent
+corporation. This is similar to real-world "equity method" accounting, except
+that we do the same even with a 100% subsidiary -- in the real world, all the
+financial data of a 100% sub would be combined with the parent's data, which
+Wall $treet Raider does not attempt to do, as that gets to be far too complex
+where companies are constantly being gobbled up and spun off. Wall $treet Raider
+just combines the reported income of the parent and its subs for the parent's
+reporting of earnings (and shows a sub's earnings separately for it, something
+not usually done for a consolidated subsidiary in the real accounting world).</p>
+            <br/>
+            <p>Also, in our "financial profile" balance sheets in Wall $treet Raider, we
+had long shown investments in stocks and bonds at their current market value, rather
+than at cost, which is a departure from generally accepted accounting practices,
+but is an approach which we felt made the "profiles" more useful to players.
+However, we have re-thought that in recent releases, and now show bonds (but
+not stocks) at their adjusted cost, rather than market value, except for bonds
+that are in danger of not being paid off. We found that calculating banks' net
+worth based on the market value of the bonds, which could fluctuate violently
+with major changes in interest rates, was unrealistically causing banks to
+frequently go bankrupt, as well as insurance companies, though much less
+often for the latter. Adopting the real world valuation rules (for bonds,
+at least) for banks and insurance companies has made the performance of those
+types of companies more stable while also being more realistic.</p>
+            <br/>
+            <p>However, as in real world personal financial statements for individuals,
+we show a player's stocks and bonds at their current market value on the
+player's Financial Profile.</p>
+            <br/>
+            <p>We think the stock pricing algorithm in this version of Wall $treet
+Raider comes as close to real world price behavior as we are likely to get --
+it takes into account a huge number of factors, including general market
+conditions, economic trends, interest rates, company history and future
+prospects, credit worthiness of the company, numerous random factors, and much
+more. The latest releases even "remember" recent large purchases or sales of
+any stock, which will tend to hold up or depress the price for a while, although
+the effects of the buying or selling that moved the stock eventually wears off.
+The source code for updating a stock's price takes up about 15 pages when printed
+out, and is so complex, even WE don't really understand it any more -- but after
+endless tweaking, it generates stock prices that seem to closely mimic the
+mostly unpredictable behavior of stock prices in real world markets. In our
+humble opinion, at least.... You may disagree.</p>
+            <br/>
+            <p>Finally, while the tax rules in Wall $treet Raider are generally similar
+to U.S. tax laws, we have treated capital losses of corporations as fully
+deductible for tax purposes (under U.S. tax laws, corporate capital losses
+can only be deducted against capital gains). For individual players, their
+income tax rate on capital gains is always lower than their "regular" income
+tax rate on dividends, interest, CEO salary, profits on interest rate swaps,
+etc. Capital losses on stocks, bonds, options, and commodities don't distinguish
+between "long-term" and "short-term" in this simulation, and are only deductible
+against capital gains, but can be carried over indefinitely, until the player
+can use them (if ever) to offset capital gains.</p>
         </div>
         <br/>
 
@@ -421,7 +508,256 @@ TBills (first), bonds (second) or stocks or commodities (if you have no
 bonds) until you have raised enough cash to eliminate your "overdraft"
 (negative cash balance) at the bank.</p>
             <br/>
-            <p><em>[Additional detailed sections about margin requirements, adjusted net worth, options margin, commodities margin, etc...]</em></p>
+            <p>Of course, any such forced sale of stocks you own will tend to further
+depress the market price of that stock you are selling.... Which may
+often trigger another margin call, as your net worth falls to less than
+33 1/3% of your margin debt again.... Requiring more stock to be sold....
+Get the picture? That's why it is very risky to buy stocks on margin,
+using a lot of borrowed money, either in the real world or in this
+simulation. You can be wiped out by a temporary dip in the stock, even
+if the company is quite solid, since stock prices do tend to fluctuate.</p>
+            <br/>
+            <p>The program will first sell any T-bills you own, then any bonds you
+own, if you have a margin call, in order to raise cash. Then, if you
+only have one stock, it will begin selling off that stock, 1% at a time,
+until enough cash is raised to eliminate your negative cash balance. Or,
+if you still have commodity futures or physical commodities, or options,
+you may first be forced to sell those, or buy back shorted stocks,
+options or futures.</p>
+            <br/>
+            <p>When you received a margin call in early versions of W$R, the
+program would randomly select a stock to sell, if you owned more than
+one stock directly. In the more recent versions, if you own more than
+one stock and you receive a margin call, and will be forced to sell
+stock to raise cash, you are given a choice of selecting which stock to
+sell, or else you can let the program decide on which stock or stocks
+will be sold, randomly. This courtesy is extended only if the margin
+call comes when it is your turn -- otherwise, if it is another player's
+turn at the time, the program will sell your stocks for you, without
+bothering to ask which ones are to be sold. Tough luck.</p>
+            <br/>
+            <p>Note that in Wall $treet Raider, you can usually only borrow an
+amount equal to one times your "adjusted net worth," and have to only
+maintain an "adjusted net worth" equal to one-third of the debt. So
+if you start a game with $100 million of cash, and use it to buy $200
+million of stock, by borrowing $100 million from the bank, you will
+get a margin call if the stock's value falls by more than one-third,
+so that your stock is worth less than $133.3 million (in which case
+you would still have debt of $100 million, but net worth of $33.3
+million or less).</p>
+            <br/>
+            <p><strong>"Adjusted net worth,"</strong> which is what the simulation uses when
+computing lines of credit, credit ratings, and whether a margin
+call is required, is the same as net worth, except when you own
+put or call options. In that case, the options are assumed to have
+no value if they are "out-of-the-money," for purposes of calculating
+your "adjusted net worth." If they are "in-the-money," only their
+intrinsic value (the difference between the stock's price and the
+strike price) is counted as part of your adjusted net worth. Thus,
+for a $30 (strike price) call option that has a market value of $9
+when the stock is at $35, only $5 (the intrinsic value) is counted
+as part of your adjusted net worth -- the $4 of time value is not
+counted unless or until you actually turn it into cash by selling
+the option. However, if you are short puts or calls (other than
+puts covered by a short position in the underlying stock or calls
+that are covered by a long position in the stock), the entire
+market value of the shorted "naked" options is counted as a
+liability, decreasing your net worth or adjusted net worth.</p>
+            <br/>
+            <p>In addition to margin requirements on any bank loans you owe,
+Wall Street Raider over the years has added additional, separate
+margin requirements, for short sales of "naked" options, for a
+separate short sale margin account for any short sales of stocks
+that you make, and a separate commodity broker's margin account
+you must maintain, if you trade commodity futures or stock index
+futures.</p>
+            <br/>
+            <p>As you might guess, if you are buying stocks or bonds
+on margin, doing short sales of stocks and naked options, and
+taking futures positions, accounting for all of that is rather
+complex, and you may be blind-sided by margin calls from your
+banker, your short-sale brokerage account, or your commodities
+broker account. In all cases, you are only going to get in
+trouble if your net worth or "adjusted net worth" is declining,
+however.</p>
+            <br/>
+            <p>These other margin requirements are discussed below.</p>
+            <br/>
+            <p>If you have naked puts and naked calls outstanding on the
+same stock, only the greater of the put liability or the call
+liability is counted for option margin purposes, to determine if
+you can sell more puts or calls short, or if you meet the option
+maintenance margin position -- to have adjusted net worth of at
+least 30% of the options liability so computed. If your adjusted
+net worth falls below the 30% maintenance margin for naked
+options, you will be forced to buy back some or all of the
+shorted options that are not covered calls or covered puts.</p>
+            <br/>
+            <p>The computation of your options liability for net worth
+calculations is fairly simple -- the market value of the
+shorted options is your options liability. However, a much
+more complex calculation is done when determining your
+"naked options" liability for margin requirement purposes,
+involving several steps, so that your naked options
+liability, used for computing options margin requirements,
+may be somewhat less than merely the sum of the value of
+all the options you are short:</p>
+            <br/>
+            <ul style="list-style-type: disc; padding-left: 24px;">
+            <li>First the total short liability for puts is
+computed for each stock on which you or a company
+has sold puts short.</li>
+            <br/>
+            <li>Next, that amount is reduced to the extent you,
+as a player, have a short position in the underlying
+stock (corporations can't short stocks in W$R). If
+the shorted puts on a given stock are fully "covered"
+by a shorted stock position, the shorted put liability
+for that stock is reduced to zero.</li>
+            <br/>
+            <li>Then the total call liability for "naked" calls
+you or your company have sold short is determined,
+and is then reduced to the extent of any "covered
+calls" (where you or the company in question own
+the stock that is being hedged by the shorted calls).</li>
+            <br/>
+            <li>Next, the short calls liability for each
+stock that is subject to shorted calls (if any)
+is compared to the short puts liability (if any)
+on that stock. If you have both naked calls and
+naked puts on a given stock, only the higher of
+the naked call liability or the naked put liability
+is taken into account and added to the total
+naked options liability, to arrive at your total
+naked options liability for option margin purposes.</li>
+            </ul>
+            <br/>
+            <p>(These are some hairy calculations, but the software does
+them all in a few nano-seconds.) The initial margin requirement
+to sell a naked option is that your adjusted net worth must
+exceed 50% of your naked option liability immediately after
+completion of the sale, in the case of a player.</p>
+            <br/>
+            <p>Different initial and maintenance margin requirements
+for options apply to corporations. Corporations may not
+sell naked options that would create a naked options
+liability, computed as described in the preceding paragraph,
+more than 25% of the corporation's adjusted net worth, which
+is the initial margin requirement for options sale transactions.</p>
+            <br/>
+            <p>The maintenance margin for naked options shorted by a
+corporation is that the naked options liability must not exceed
+50% of the corporation's adjusted net worth. If it does, the
+corporation will be forced to buy back some of the naked
+options until the liability is 50% or less of adjusted
+net worth. In addition, if a corporation's credit rating
+falls below "B," such as to "CCC" or lower, it will have
+to buy back all naked options -- but not covered calls.
+For example, if XYZ Corp. owns 10% of the stock of ABC,
+and is short ABC call options on 10% or less of ABC's
+stock, the calls are fully "covered calls" and wouldn't
+have to be bought back to satisfy options margin rules.</p>
+            <br/>
+            <p>In Wall $treet Raider, if you have control of the lending bank,
+you can initially borrow up to 2 times your adjusted net worth if
+playing at Difficulty Level 2, or 3 times net worth if playing at
+Difficulty Level 3 or 4, which gives you more rope with which to
+hang yourself, essentially. While you might find the additional
+borrowing power can be helpful, it is also MUCH riskier than if
+you could only borrow up to 1 times net worth. (For example, if
+you borrow fully up to 3 times your net worth, then ANY DECLINE
+WHATSOEVER in the market price of your investments will immediately
+result in a margin call.)</p>
+            <br/>
+            <p>There is an additional kind of stock margin call -- where
+you have sold stock short, and your adjusted net worth falls to
+less than 1/3 of the value of the shorted stocks. In that case,
+money in the restricted "short margin account" will be used to
+buy back enough stock, so that your adjusted net worth once again
+exceeds the value of the shorted stocks. Of course, this will
+drive up the value of the stocks you are forced to buy back, so
+it will be necessary to contribute more cash to the short margin
+account. (And, by the way -- your net worth will fall as you
+drive up the price of the shorted stocks by buying some of them
+back -- another vicious circle, which may trigger more short
+maintenance margin calls of this type, or even may force the
+other kind of margin calls described in the preceding paragraphs,
+which force you to sell stocks or bonds you own.)</p>
+            <br/>
+            <p>When W$R implemented options trading, we also introduced
+yet another kind of margin call and additional margin rules.
+First, you should note that if you buy options (puts or
+calls) and hold them "long," they may be quite valuable, but
+are not counted as part of your net worth for purposes of the
+margin requirements discussed above, unless they have some intrinsic
+value -- meaning that options you own must be "in-the-money" to be
+counted as having any value, and then only the intrinsic value is
+counted, not any additional "time value." In other words, such
+options are treated as having a reduced value, limited to their
+intrinsic value (zero value if they are "out-of-the-money"), until
+you actually turn them into cash by selling them. Thus, buying
+puts or calls generally reduces your "marginable" net worth until
+you sell the options, at which time your <em>adjusted</em> net worth
+for margin purposes is increased to some extent by the sales proceeds
+you receive.</p>
+            <br/>
+            <p>When you are buying options, it is assumed that the options will
+have no initial "marginable" value. But to the extent the option is
+"in-the-money" (<em>i.e.,</em> has intrinsic value, as opposed to
+time value), its intrinsic value is counted <em>after</em> you buy
+it for maintenance margin purposes (that is, for determining when you
+will receive a margin call) and for computing your line of credit or
+credit rating. Thus, you must generally be able to buy options for
+cash, or by borrowing against the value of other assets you own.
+However, when you view your portfolio after the purchase, it will
+include the full value of any options you own, showing your "real"
+net worth, and at the end of the game, any options you own will
+count as part of your net worth in determining who won the game.</p>
+            <br/>
+            <p>The reason options are not "marginable" in the real world or in
+this simulation is that they are very volatile assets, which can
+become worthless in a heartbeat, based on a fairly small fluctuation
+in the underlying stock. Thus, banks or other lenders, such as
+stockbrokers, don't like to lend people money based on such ephemeral
+"security." (But in this simulation, lenders do give you credit for
+the intrinsic value (if any) of options you have purchased, for purposes
+of computing your available line of credit and your credit rating,
+and for deciding when you will receive a "margin call." In the real
+world, your stockbrokers will treat any options you own as having
+ZERO value for margin purposes.)</p>
+            <br/>
+            <p>If you own long option positions, and receive a margin call
+that puts you in a cash deficit with no line of credit to borrow
+against, your banker (the software program, in this case) will
+immediately force you to sell off some or all of the options, if
+the only assets you have left to sell are stocks and options.
+It won't ask your permission -- it will just sell the options,
+immediately. Selling off options will increase your adjusted net
+worth, which will tend to prevent further margin calls by your
+bank lender and options margin calls by your options broker.</p>
+            <br/>
+            <p>With the addition of futures trading on commodities and stock
+index futures, you can now have a commodities margin account as
+well, which involves MASSIVE and dangerous leverage. To buy or
+short a futures contract, you only have to put up cash equal
+to a 1% commission and deposit 5% of the "notional value" of the
+contract with the commodities broker. For example, the notional
+value of a futures contract on 1 million barrels of oil at $70
+a barrel is 70 million dollars, so you would need to deposit
+5% of that initially, or $3.5 million, plus the $0.7 million
+broker's commission on the trade.</p>
+            <br/>
+            <p>The value of your futures contract is constantly "marked to
+market," and if you begin to show a loss, you must deposit
+more cash so that you cover the accrued loss in value and still
+maintain the 5% margin requirement. On the other hand, if the
+commodity moves in the direction you were betting (and hoping),
+the accrued "profit" is added to your deposit, and immediately
+is transferred to your bank account. Thus, as the value of a
+futures contract fluctuates, money is constantly being added
+to or taken from your bank account, to maintain the 5% of
+value margin requirement with respect to your futures contract
+positions.</p>
         </div>
         <br/>
 
@@ -516,7 +852,33 @@ only if the game length was no more than 35 years. (An experimental,
 any registered user, upon request to Ronin Software in case you were
 wondering how you can play a game of longer than 35 years.)</p>
             <br/>
-            <p><em>[Additional sections about CHEAT MENU options, insider trading cheats, and antitrust options...]</em></p>
+            <p>A "CHEAT MENU" pops up when you double-click on the W$R logo (or in
+the newest versions, the Cheat Menu is also accessible from a CHEAT MENU button
+on the main screen). The CHEAT MENU that will pop up has 3 items, the first one
+being the "add cash" option, similar to prior releases. Using the "add cash"
+option to add money to your bank account (up to $1 trillion U.S. or the
+equivalent) will disqualify you as possible winner of the current game and your
+final "score" will not qualify as an all-time record score.</p>
+            <br/>
+            <p>Three other cheats, two of which involve inside information, are now available on this menu
+-- receiving advance notice of upcoming mergers or information on a surprising upcoming major
+change in a company's earnings -- either for the better or for the worse. Buying (or shorting)
+the stock after receiving the "leaked" insider information is usually quite profitable. In
+addition we have also added another "cheat" that allows you to turn off the simulation's
+civil antitrust lawsuits or government antitrust restrictions and criminal fines, or both
+the civil lawsuits and government enforcement, to thus create a "no-holds-barred" competitive
+environment, not unlike the "robber baron" days of the late 19th century.</p>
+            <br/>
+            <p>Your "record high score" possibilities will not be disqualified if you use either of the two
+insider trading cheats and you will not be disqualified as the possible winner of the current
+game due to using such inside information -- but you will risk massive fines for trading on
+illegal inside "information." (The more often you trade on such inside information, the greater
+the odds that you will be caught and fined heavily by the authorities, of course.)</p>
+            <br/>
+            <p>Turning off the antitrust lawsuits and restrictions WILL disqualify your game as a possible
+record high score, but will not disqualify you as the possible winner of the current game,
+since the relaxed (repealed) antitrust rules can be used for the benefit of the other players,
+as well as for your companies.</p>
         </div>
         <br/>
 
@@ -530,7 +892,123 @@ bonuses and possibly granting you executive stock options, by clicking on
 the ${helpLink('chap08_VIII(B)(1)', '"Elect Me As CEO"')} button on the
 Management Menu.</p>
             <br/>
-            <p><em>[Detailed sections about salary formula, bonus calculations, and stock option grants...]</em></p>
+            <p>Once you become the CEO of a company, you will receive an
+annual salary, based on a formula that is based in part on how
+large the company is (but not counting non-operating assets, such
+as cash, bonds, or stock investments of the company). Salary
+payments are paid to you in quarterly increments. The minimum
+annual salary is $200,000 U.S. (0.2 million).</p>
+            <br/>
+            <p>You may also receive a year-end bonus at the end of each year.
+The formerly simple rules for executive bonuses have been made
+more complicated and bonuses are now more difficult to earn,
+generally, but if you can generate more than 15% earnings growth
+each year for several years, you may now earn bonuses of 3, 6 or
+even 10 times your annual base salary, instead of the old maximum
+bonus limit of 3 times salary in earlier versions of the game.</p>
+            <br/>
+            <p>Under the new compensation formula, if the company's operating
+earnings for the current year are negative, or are no greater than
+115% of the earnings in the previous year, you receive no bonus,
+(unless you control 51% of the company). Also, the program now
+keeps track of when you were hired as CEO, and you only receive
+bonuses (generally) if you were hired before the current year, or
+before any year that is taken into account in computing your bonus,
+where you have managed to put together a string of annual earnings
+increases of more than 15% each year.</p>
+            <br/>
+            <p>For example, if a company's earnings increased each year in
+the years 2023, 2024, and 2025 by over 15% a year over the prior
+year, you could earn a maximum bonus of 5 times base salary in
+2025. However, to get credit for the increased earnings in those
+3 years, you would need to have become the company's CEO in 2022
+or earlier (and have remained as its CEO the whole time). In short,
+you can't pick out a company that has a great earnings growth
+record, take control, elect yourself as CEO, and begin receiving
+huge bonuses based on what the company has already done. For the
+company in the above example, you would receive no bonus in 2025
+if you became its CEO in that year (except for a 100% bonus if
+you own or control 51% of the company).</p>
+            <br/>
+            <p>Thus, if you become CEO of a company in Year 1, and increase
+its earnings by over 15% (and show a profit) in Year 2, you
+will receive a bonus of 150% of base salary in Year 2. If you
+increase its earnings again by over 15% in Year 3, your bonus
+for that year will be 3 times salary, and if you increase its
+earnings by over 15% again in Year 4, your bonus will be 5
+times your salary in Year 4.</p>
+            <br/>
+            <p>However, if you control 51% of the stock of the company, your
+board of directors will be more generous (since you have absolute
+control) and your bonuses will be twice the amounts noted above:
+3, 6, or 10 times salary. In addition, where you control 51% of
+the company's stock, you will always receive a bonus of at least
+100% of your base salary, no matter how badly the company performs
+under your mismanagement and regardless of when you became its CEO.</p>
+            <br/>
+            <p>If you are the CEO of a publicly-traded company, you may also
+receive a grant of executive stock options on that company's stock
+at the start of each quarter, but only if the company's stock is
+publicly traded. The amount of the options you are granted will
+depend on your ability to increase the company's earnings.</p>
+            <br/>
+            <p>For example, if you are the CEO of XYZ Company and it
+had an operating loss in its most recent quarterly earnings
+report, you will not receive any stock options. Even if XYZ
+earns a profit, if its earnings are down from the same quarter
+in the previous year, you will also not be granted any stock
+options following that quarter's report. However, if XYZ's
+per-share profits show an increase compared to the last year,
+you will be granted options on at least 1% of the stock of
+XYZ. If you are able to increase XYZ's earnings by 15% or
+more for the quarter, you will instead be granted options on
+2% of XYZ's stock, or 3% if you also happen to control more
+than 50% of XYZ's stock, through direct or indirect holdings.</p>
+            <br/>
+            <p>Thus, in short, as CEO you have to perform, by increasing
+a company's earnings, in order to be granted stock options.
+If you are able to keep a company's earnings growing steadily,
+you will not only receive more options (and bigger cash
+bonuses), but the stock should rise, making your options
+worth more and more.</p>
+            <br/>
+            <p>The granting of the options is a non-taxable event,
+with the strike price on each grant set at the current
+market price. The cost of such options is not an expense
+for the company at the date of grant and you are not taxed
+on receipt of the options. The options are "restricted," in
+that you may not (voluntarily) sell them until one year later.
+Then, if you do sell them, they will be sold back to the company
+at market value (with no commissions charged) and the amount you
+receive will be taxable, but at favorable capital gains tax rates.
+The amount the company pays you to cancel the options is an
+expense to the company at that time. If you hold the options
+until they expire, and either exercise them or receive cash
+settlement at expiration, any bargain element is an expense
+item for the company, which either buys back the options from
+you at their intrinsic value (excess of stock price over option
+exercise price) or, if you are exercising the option, the
+company issues new stock to you at the exercise price and buys
+stock on the open market in an equal amount at the market price,
+so that there is no dilution of the company's stock.</p>
+            <br/>
+            <p>If you allow the option to be settled (bought from you) at
+expiration, the amount you receive is income (capital gain). If
+you instead allow the calls to be exercised, you will not incur
+any taxable income, but your cost basis for the stock you receive
+will be the exercise price. If options expire worthless, there
+is no expense for the company and no income taxable to you, the
+executive.</p>
+            <br/>
+            <p>A company will save money (improving its earnings) if it does not pay
+a CEO salary or bonuses, or grant stock options. Thus, you may sometimes
+choose not to receive CEO compensation, if you prefer not to clobber
+your company's earnings. If you are already the CEO of a company and
+wish to resign (without becoming CEO of a different company), click on
+the ${helpLink('chap08_VIII(B)(2)', '"Resign as CEO"')} button on the
+Management Menu. If you are CEO of Company A and choose to become CEO
+of Company B, you will automatically resign as CEO of Company A. You
+can only be CEO of one company at a time in Wall Street Raider.</p>
         </div>
         <br/>
 
@@ -581,7 +1059,136 @@ on Wall Street, there was a famous saying about short selling:</p>
             <p><strong>"He who sells what isn't his'n, must buy it back, or go to prison."</strong></p>
             </blockquote>
             <br/>
-            <p><em>[Detailed sections about short margin accounts, marking to market, limits, and margin requirements...]</em></p>
+            <p>In W$R, the proceeds of the sale, when you sell stock short,
+do not go into your regular cash account. Instead, the money
+must be kept on deposit in a "short margin account." You must
+maintain an amount on deposit in the short margin account at
+all times that is equal to the value of all the stock you have
+sold short (since you will have to buy it back at some time).
+Thus, any time the value of the stocks you have sold short goes
+up, cash must be added to the short margin account, from your
+regular cash balance. Or, if (as you hoped) the stock or stocks
+you have sold short decline in value, you will have excess funds
+in your short margin account, which are immediately distributed
+to you.</p>
+            <br/>
+            <p>Accordingly, when you have sold any stocks short, money
+will be transferred back and forth between your cash account
+(bank account) and the short margin account, as the stocks you
+have shorted fluctuate in value, and you will notice that your
+cash balance fluctuates up and down every few seconds, when the
+stock ticker is running. This is because the software "marks
+to market" your short positions every few seconds -- that is,
+it compares the value of the negative (short) positions with
+the amount on deposit in the short margin account, and transfers
+cash back and forth to keep the short margin account balance
+equal to the (negative) value of the shorted stocks, a liability.</p>
+            <br/>
+            <p>The amount you have on deposit in the short margin account
+is one of your assets, but is restricted. You don't earn any
+interest on it, and you can only use the money in the short
+margin account to buy back one or more of the stocks in which
+you have a short position. This is one way, in the real world,
+that brokers make money: they lend you shares of stock that
+belong to another customer, and the proceeds of the short sale
+that are kept in the short sale margin account can be invested
+by the broker in money market instruments like T-bills or
+commercial paper, so the broker earns interest on the money
+which you have to keep on deposit with them, until you close
+out the short sale by buying back the stock (which the broker
+then returns to the account of their other customer they let
+you borrow it from).</p>
+            <br/>
+            <p>If your short positions are all closed out (such as where
+your only shorted stock becomes worthless in bankruptcy), any
+funds remaining in your short account are distributed to you,
+since you won't have to buy back stock that has become worthless.</p>
+            <br/>
+            <p>Note that if you are short a stock when it pays a dividend,
+you have to pay an amount equal to the dividend on the shorted
+shares. (Payable, in theory, to the person who loaned you
+the borrowed shares, since the dividend paid by the company
+goes to the person who owns the shares now, to whom you sold
+them.) In W$R, such "short dividends" you have to pay are not
+deductible, except as capital losses. (Which is only fair,
+since, for example, a large extraordinary dividend of $40 a
+share that reduces a stock's value from $50 to about $10 would
+give you an instant $40 a share capital gain if you covered
+your short position right away after incurring the cost of
+paying the "short dividend" on such a distribution.)</p>
+            <br/>
+            <p>There are limits on how much stock you can sell short:</p>
+            <br/>
+            <ul style="list-style-type: disc; padding-left: 24px;">
+            <li>You cannot "sell short against the box" (sell a stock
+short in which you retain a "long" position in the stock),
+a tax avoidance gimmick sometimes used in the real world,
+since a gain on "long" stock isn't recognized when you
+lock it in by selling an offsetting and equal amount of
+the stock short);</li>
+            <br/>
+            <li>You cannot sell short more than 20% of the total
+stock of any one company;</li>
+            <br/>
+            <li>Stock of a particular company can only be sold short
+if there are enough "public" shares of the stock that
+can be borrowed, and the maximum amount that can be borrowed
+(by all players, total) is 50% of the publicly-traded
+shares. This means that if the amount of "public" stock
+is reduced, such as by purchases by other players or
+companies, by mergers, or LBO buybacks, the total stock
+shorted may exceed the 50% of publicly-traded stock
+limit (or the 20% of the company individual limit),
+in which case the players who are short the stock will
+be forced to buy back some of the shorted stock (or will
+have to buy back all of the short position if all of the
+public stock is bought up or acquired otherwise, such as
+in a merger).</li>
+            <br/>
+            <li>You cannot sell short a stock of a company that you
+control. Doing so would be a severe conflict of interest
+for you, as an "insider," betting against your own
+company's stock, so it is not permitted. Also, if you
+or a company you control take control of a company whose
+stock you have sold short, you will be forced to cover
+your short position. If you try to take control of
+another company that controls the company you have
+shorted, you will sometimes be warned before you buy that
+you will be forced to cover the short position -- but
+in some cases, where control of the shorted company is
+through a long chain of companies and you buy control
+of a company near the top of the chain, you may not be
+warned, if there is a complex ownership structure.</li>
+            </ul>
+            <br/>
+            <p>There are also margin limits that may prevent you from
+selling stock short, or may force you to immediately cover
+(buy back) existing shorted stock positions if you cease
+to meet the "maintenance margin" requirements for your
+short sales positions:</p>
+            <br/>
+            <ul style="list-style-type: disc; padding-left: 24px;">
+            <li>When making a short sale, you must have a net worth equal
+to at least 50% of the value of the short margin account
+when the sale is completed; otherwise, the short sale is
+not permitted; and</li>
+            <br/>
+            <li>You must maintain (maintenance margin) a net worth equal
+to at least 1/3 (33 1/3%) of the value of your shorted stock.
+If your net worth falls below 1/3 of the value of your short
+account, you will be forced to buy back enough shorted stock
+so that your net worth once again exceeds 1/3 of the value
+of the shorted stocks. (Naturally, your forced buying will
+tend to drive the stock price up further, reducing your
+net worth, which may trigger more forced covering.)</li>
+            <br/>
+            <li>You will also be forced to cover a short position
+(eventually) if you have a short position in a stock
+and later acquire control of the company, through another
+company you control. Within one month or less (of game time)
+you will be automatically forced to cover the short position
+in the controlled company.</li>
+            </ul>
         </div>
         <br/>
 
@@ -598,7 +1205,49 @@ ETF may also pay its manager a (potentially very large) performance
 bonus after each 2-year measurement period that ends in odd years for
 some ETFs or in even-numbered years for others.</p>
             <br/>
-            <p><em>[Additional sections about acquiring ETF management rights, fees, and restrictions...]</em></p>
+            <p>If you acquire control of an insurance company or securities broker
+that manages one or more ETFs, you will be able to direct the ETF to do a
+number of different transactions, including buying or selling stocks or
+options, doing public offerings of stock, issuance of bonds, buying back
+or calling part or all of an existing bond issue, and borrowing cash or
+making bank loan repayments.</p>
+            <br/>
+            <p>In order to obtain the rights to manage/advise a particular ETF, you
+can either acquire control of the company that is its advisor, or, if
+you control an insurer or securities broker that does not already manage
+any ETFs, you can have your company purchase the rights to manage an
+ETF from its current advisor, for 10 times the annual base fee the
+current advisor is being paid by the ETF (5 times the annual base fee,
+in the case of a bond fund), unless the current advisor is managed by
+another player (human or computer player), in which case it is not
+available for sale.</p>
+            <br/>
+            <p>To make such a purchase for your controlled insurance company
+or securities broker, go to the Management Menu and click on the
+"Become ETF Advisor" button to initiate the transaction. (That button
+will only appear if the "Active Entity" or "Transacting Entity" is an
+insurance company or securities broker that you control and if it does
+not already manage any ETFs.)</p>
+            <br/>
+            <p>Version 9.0 added 5 new ETFs, bond funds and index funds, to the
+previously existing 15 ETFs. These 5 new ETFs are subject to some
+different rules that apply even if one of your controlled companies
+manages a bond fund or index fund. For example, no performance bonuses
+are paid to managers of index funds or bond funds, and fees for both
+those types of ETFs are limited to a flat 0.2% of net assets, annually.
+These funds operate automatically according to certain investment
+algorithms, so even if your company manages a bond or index fund, you
+cannot have the fund trade stocks, bonds, or options. (Bond funds only
+hold certain types of bonds, and index funds only hold or short
+specified amounts of stock index futures.) If you are managing a bond
+fund or index fund, the only transactions you can have it engage in
+are to issue stock or issue bonds, buy back bonds the fund has
+previously issued, borrow or repay bank loans, or distribute an
+"extraordinary dividend." (And you are very unlikely to want to have
+a fund you manage pay an "extraordinary dividend," since that will
+reduce the amount of assets you are managing, and thus reduce the
+management fees you (your brokerage or insurance company, actually)
+earn.</p>
         </div>
         <br/>
 

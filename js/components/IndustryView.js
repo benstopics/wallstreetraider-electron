@@ -75,14 +75,6 @@ const IndustryView = () => {
                 </div>
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
-                <div class="flex gap-2 items-center" style="height: 35px;">
-                    <!--<div class="btn-container">
-                        <${Button} class="btn green mx-1" onclick=${api.prepayTaxes}>Prepay Taxes</button>
-                    </div>
-                    <div class="btn-container">
-                        <${Button} class="btn green mx-1" onclick=${api.startup}>Startup</button>
-                    </div>-->
-                </div>
                 <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
                     ${activeIndustryName ? html`<${Tab} label="${activeIndustryName}" hotkey="i">
                         <div class="flex justify-center items-center w-full h-full">

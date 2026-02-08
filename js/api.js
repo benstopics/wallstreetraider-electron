@@ -315,6 +315,7 @@ export async function stopTicker() {
     advanceTutorialOnAction('stopTicker');
 }
 export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed', speed); }
+export async function advanceTicker() { return postNoArg('/ticker_advance'); }
 export async function loadGame() {
     await postNoArg('/loadgame');
 }
