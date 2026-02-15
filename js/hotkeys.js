@@ -7,6 +7,10 @@ export function setHotkeysVisualDisabled(disabled) {
     _hotkeysDisabled = disabled;
 }
 
+export function isHotkeysVisualDisabled() {
+    return _hotkeysDisabled;
+}
+
 /**
  * Centralized hotkey map.
  *

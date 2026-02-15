@@ -155,7 +155,7 @@ function PortfolioTab() {
                                 : buttonProps.sellStock;
 
                             const sellIdx = extrasCounter ? extrasCounter.current++ : null;
-                            const showSpinOff = showCorpButtons && !buttonProps.isActiveEntityETF && !text.includes('GOVERNMENT');
+                            const showSpinOff = showCorpButtons && !buttonProps.isActiveEntityETF && !['J', 'GL', 'GS'].includes(type);
                             const spinOffIdx = showSpinOff && extrasCounter ? extrasCounter.current++ : null;
 
                             return html`<div class="flex flex-row stop-btn-row">
