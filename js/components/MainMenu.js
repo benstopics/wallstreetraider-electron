@@ -19,7 +19,7 @@ const STEAM_URL = 'https://store.steampowered.com/app/4080310/Wall_Street_Raider
 // ── Lore snippets from the origin story ──
 const LORE_SNIPPETS = [
     "In 1967, a Harvard Law student began filling notebooks with ideas for a board game simulating all of American capitalism. It took 16 years for personal computers to catch up with his vision.",
-    "JP Morgan developers failed. A Disney game studio tried for over a year with a team in Armenia. Commodore mailed the source code back after three months. For 40 years, the code was indecipherable to anyone but its creator.",
+    "A Disney game studio tried for over a year with a team in Armenia. Commodore mailed the source code back after three months. For 40 years, the code was indecipherable to anyone but its creator.",
     'A hedge fund manager wrote: "I played Wall Street Raider for years and started doing what I\'d been doing in the game with my real clients." His Price Waterhouse audited 10-year return: 44% compounded annually.',
     "At 3 AM, Jenkins would race to encode financial logic before understanding slipped away. The result: code that worked perfectly for decades, yet even he no longer fully comprehended.",
     "Over 200 CEOs and investment bankers have credited Wall Street Raider with shaping their careers \u2014 from a teenager in the Philippines playing the free demo to a forex trader at Morgan Stanley in Shanghai.",
@@ -30,6 +30,37 @@ const LORE_SNIPPETS = [
 
 // ── Changelog data ──
 const CHANGELOG = [
+    {
+        ver: "v10.0.14.1",
+        sections: [
+            {
+                heading: "New Features",
+                items: [
+                    "Disable Hotkeys toggle in Settings \u2192 Keyboard Shortcuts panel",
+                    "Portfolio lines are now clickable \u2014 stock and bond rows link to the issuing company without needing explicit hyperlink markers",
+                    "Command prompt resolves single-token symbols directly (e.g., type \"AAPL\" to navigate)",
+                ]
+            },
+            {
+                heading: "UI/UX Improvements",
+                items: [
+                    "Swapped Acting As and Viewing rows \u2014 Acting As is now the top row for quicker access",
+                    "Text report modals (e.g., Research Report) now use fixed-width pre-formatted layout with horizontal scroll instead of wrapping",
+                    "Consistent line-number gutter alignment in selectable portfolio and report views",
+                    "Removed pulsing border animation on disabled action buttons",
+                ]
+            },
+            {
+                heading: "Performance & Fixes",
+                items: [
+                    "Stock ticker scrolling now updates DOM directly instead of re-rendering at 50fps",
+                    "Spark chart cache bounded to 200 entries to prevent unbounded memory growth",
+                    "Fixed useGameStore re-subscribing on every render when using custom selectors",
+                    "Cash flow projection content now aligns to top instead of centering vertically",
+                ]
+            },
+        ]
+    },
     {
         ver: "v10.0.14",
         sections: [
@@ -370,7 +401,7 @@ const MainMenu = () => {
         <header class="wsr-topbar glass">
           <div class="wsr-topbar-brand">
             <img src=${LOGO_SRC} alt="Wall Street Raider" class="wsr-logo-sm" />
-            <span class="wsr-terminal-title">Jenkins Terminal v10.0.14</span>
+            <span class="wsr-terminal-title">Jenkins Terminal v10.0.14.1</span>
           </div>
           <div class="wsr-topbar-right">
             <${Button} class="btn main-menu" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</${Button}>

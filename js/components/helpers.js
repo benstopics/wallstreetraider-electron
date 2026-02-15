@@ -3,7 +3,7 @@ import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import { gameStore } from '../api.js';
 import localeManager from '../locale/localeManager.js';
-import { tabNumberLabel, bracketLabel } from '../hotkeys.js';
+import { tabNumberLabel, bracketLabel, isHotkeysVisualDisabled } from '../hotkeys.js';
 import { isEditableTarget } from '../keybinds.js';
 import { useHotkey } from '../hooks/useHotkey.js';
 import { PRIORITY, hotkeyManager } from '../hotkeyManager.js';
@@ -116,7 +116,10 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
     // Selection mode — all lines inside SelectableLines get selOpts for consistent alignment
     if (selOpts) {
         const { lineNumber, isSelected, anySelected, onSelect, scopeActive, prefixWidth } = selOpts;
-        const prefixStyle = `display:inline-block;min-width:${prefixWidth};text-align:right;margin-right:2px;`;
+        const showNumbers = scopeActive && !isHotkeysVisualDisabled();
+        const prefixStyle = showNumbers
+            ? `display:inline-block;min-width:${prefixWidth};text-align:right;margin-right:2px;`
+            : '';
         const gutterStyle = 'border-left: 2px solid transparent; padding-left: 4px;';
 
         // Non-selectable line (no lineNumber) — just render with blank gutter for alignment
@@ -138,9 +141,9 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
                 onSelect(null);
             } : null;
             const padded = text.padEnd(maxLength, ' ');
-            const prefix = scopeActive
+            const prefix = showNumbers
                 ? html`<span style="${prefixStyle};opacity:0.7;">${lineNumber})</span>`
-                : html`<span style="${prefixStyle}"></span>`;
+                : '';
 
             return html`<div class="flex flex-row" style="background:rgba(255,255,255,0.15);outline:1px solid rgba(255,255,255,0.3);border-radius:2px;">
                 <div class=${classes} style="${gutterStyle}" onClick=${handler}>
@@ -150,9 +153,9 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
             </div>`;
         } else {
             // Not selected - clickable to select, show number prefix
-            const prefix = scopeActive
+            const prefix = showNumbers
                 ? html`<span style="${prefixStyle};opacity:0.45;">${lineNumber})</span>`
-                : html`<span style="${prefixStyle}"></span>`;
+                : '';
             const extrasIdx = !anySelected ? lineNumber : null;
             const handler = () => onSelect(lineNumber);
             const padded = (renderExtras && link) ? text.padEnd(maxLength, ' ') : text;
