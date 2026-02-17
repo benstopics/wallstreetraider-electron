@@ -71,7 +71,8 @@ function OptionsTab() {
                             // Priority: acting-as > ETF > not-in-the-money
                             const sellDisabledMsg = actingAsDisabledMessage || etfDisabledMessage;
                             const sellDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
-                            const exerciseDisabledMsg = actingAsDisabledMessage || etfDisabledMessage || (notInTheMoney ? "Option not in the money" : false);
+                            const isShort = type.includes('SHORT');
+                            const exerciseDisabledMsg = actingAsDisabledMessage || etfDisabledMessage || (isShort ? "Cannot exercise shorted options" : false) || (notInTheMoney ? "Option not in the money" : false);
                             const exerciseDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
                             const sellIdx = extrasCounter ? extrasCounter.current++ : null;
                             const exerciseIdx = extrasCounter ? extrasCounter.current++ : null;
