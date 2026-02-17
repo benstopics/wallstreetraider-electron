@@ -109,10 +109,11 @@ function PortfolioTab() {
     const extrasContainerRef = useRef(null);
     const scopeActiveRef = useRef(false);
     const [, setScopeRenderTick] = useState(0);
-    // Hide company-only buttons when viewing a player (activeEntityNum < 10)
-    const showCorpButtons = activeEntityNum >= 10 || buttonProps.isActiveEntityETF;
+    // Hide company-only buttons when viewing a player (players are IDs 1-10, companies are 11-1600)
+    const showCorpButtons = activeEntityNum > 10 || buttonProps.isActiveEntityETF;
     const barButtons = [
         buttonProps.buyStock,
+        buttonProps.sellStock,
         buttonProps.shortStock,
         showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.buyCorpBond, label: "Buy Bonds" },
         showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.merger, label: "Merge With" },
@@ -155,7 +156,7 @@ function PortfolioTab() {
                                 : buttonProps.sellStock;
 
                             const sellIdx = extrasCounter ? extrasCounter.current++ : null;
-                            const showSpinOff = showCorpButtons && !buttonProps.isActiveEntityETF && !['J', 'GL', 'GS'].includes(type);
+                            const showSpinOff = showCorpButtons && !buttonProps.isActiveEntityETF && !['J', 'GL', 'GS', 'S'].includes(type);
                             const spinOffIdx = showSpinOff && extrasCounter ? extrasCounter.current++ : null;
 
                             return html`<div class="flex flex-row stop-btn-row">
