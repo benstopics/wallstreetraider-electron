@@ -244,39 +244,33 @@ export function useActionButtonProps() {
 
     // ==================== OPTIONS BUTTONS ====================
 
-    // Options trading is available to everyone (players and companies)
-    // Only ETFs have restrictions on options
-    const optionsETFDisabledMessage = isActiveEntityETF ? "Not available for ETFs" : false;
+    // Options trading is available to everyone (players, companies, banks, insurers).
+    // ETFs can trade options through their advisor — the PB code handles ETF routing
+    // internally via IsETFActive, so these buttons should not be disabled for ETFs.
+    // The Advanced Options Trading Station is the only exception (ETFs cannot use it
+    // per W$R rules, and the PB code enforces this in CASE 330).
 
     const buyCalls = {
         label: 'Buy Calls',
         onClick: () => api.buyCalls(0),
-        disabled: !!optionsETFDisabledMessage,
-        disabledMessage: optionsETFDisabledMessage,
         color: 'green'
     };
 
     const sellCalls = {
         label: 'Sell Calls',
         onClick: () => api.sellCalls(0),
-        disabled: !!optionsETFDisabledMessage,
-        disabledMessage: optionsETFDisabledMessage,
         color: 'red'
     };
 
     const buyPuts = {
         label: 'Buy Puts',
         onClick: () => api.buyPuts(0),
-        disabled: !!optionsETFDisabledMessage,
-        disabledMessage: optionsETFDisabledMessage,
         color: 'green'
     };
 
     const sellPuts = {
         label: 'Sell Puts',
         onClick: () => api.sellPuts(0),
-        disabled: !!optionsETFDisabledMessage,
-        disabledMessage: optionsETFDisabledMessage,
         color: 'red'
     };
 

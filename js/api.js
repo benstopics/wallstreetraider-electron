@@ -408,6 +408,8 @@ ipcRenderer.on('wsr-restarting', () => {
 ipcRenderer.on('wsr-restarted', () => {
     console.log('wsr.exe restarted, returning to main menu...');
     gameStore.setState({ gameState: { gameLoaded: false, isLoading: false } });
+    // Reset navigation manager so it can re-init from customData on next game load
+    navManager.reset();
 });
 export async function checkScoreboard() { await postNoArg('/check_scoreboard'); }
 export async function getQuoteOfTheDay() { return getJSON('/quote'); }
@@ -672,6 +674,15 @@ class NavigationManager {
                 savedData.pointerIndex ?? 0, this.history.length - 1));
         }
         this.initialized = true;
+        this._notifyUI();
+    }
+
+    // Reset navigation state (called on wsr restart / exit game)
+    reset() {
+        this.history = [];
+        this.pointerIndex = 0;
+        this.initialized = false;
+        clearTimeout(this._persistTimer);
         this._notifyUI();
     }
 
@@ -980,7 +991,13 @@ export function updateCurrentNavTab(tab) {
     navManager.updateCurrentTab(tab);
 }
 
-export async function changeActingAs(id) { await postIdArg('/change_acting_as', id); }
+export async function changeActingAs(id) {
+    await postIdArg('/change_acting_as', id);
+    // BUG-079: Add the acting-as entity to navigation history
+    if (id && id !== HUMAN1_ID) {
+        shiftNavHistory({ id, type: 'asset' });
+    }
+}
 
 // Cycle acting-as to next/previous controlled company
 export function cycleActingAs(direction) {

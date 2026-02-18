@@ -30,11 +30,11 @@ function OptionsTab() {
     // Get centralized button props
     const buttonProps = useActionButtonProps();
 
-    // ETF check for disabling options in the list
+    // ETF check — only used for Advanced Options Trading Station, not for per-line buttons.
+    // ETFs can trade options through their advisor; the PB code handles ETF routing internally.
     const isETF = buttonProps.isActiveEntityETF;
-    const etfDisabledMessage = isETF ? "Not available for ETFs" : false;
 
-    // Acting-as check for line buttons (higher priority than ETF check)
+    // Acting-as check for line buttons
     const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
     const handleActAsClick = buttonProps.onMustActAsCompanyClick;
 
@@ -68,11 +68,12 @@ function OptionsTab() {
                             const contract = parseReportLine(text);
                             const notInTheMoney = (type.includes('LONGCALL') && contract.stockPrice < contract.strikePrice)
                                 || (type.includes('LONGPUT') && contract.stockPrice > contract.strikePrice);
-                            // Priority: acting-as > ETF > not-in-the-money
-                            const sellDisabledMsg = actingAsDisabledMessage || etfDisabledMessage;
+                            // Priority: acting-as > not-in-the-money
+                            // ETF per-line buttons are NOT disabled — PB code handles ETF routing internally
+                            const sellDisabledMsg = actingAsDisabledMessage;
                             const sellDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
                             const isShort = type.includes('SHORT');
-                            const exerciseDisabledMsg = actingAsDisabledMessage || etfDisabledMessage || (isShort ? "Cannot exercise shorted options" : false) || (notInTheMoney ? "Option not in the money" : false);
+                            const exerciseDisabledMsg = actingAsDisabledMessage || (isShort ? "Cannot exercise shorted options" : false) || (notInTheMoney ? "Option not in the money" : false);
                             const exerciseDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
                             const sellIdx = extrasCounter ? extrasCounter.current++ : null;
                             const exerciseIdx = extrasCounter ? extrasCounter.current++ : null;

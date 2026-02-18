@@ -36,6 +36,38 @@ function NavigationPanel() {
         }
     }, [savedNavData]);
 
+    // BUG-030/BUG-115/BUG-096/BUG-049: Auto-track the current viewed entity/industry
+    // in navigation history. This ensures navigation is populated after game load,
+    // after startup creates a new company, when ETFs are viewed, etc.
+    const prevEntityRef = useRef(null);
+    const prevIndustryRef = useRef(null);
+    useEffect(() => {
+        if (!activeEntityNum && activeIndustryNum === undefined) return;
+        if (activeIndustryNum >= 0 || activeIndustryNum === -2) {
+            // Viewing an industry or DB Search
+            if (prevIndustryRef.current !== activeIndustryNum) {
+                prevIndustryRef.current = activeIndustryNum;
+                prevEntityRef.current = null;
+                // Push to nav if not already the current entry
+                const current = navHistory[navPointerIdx];
+                if (!current || current.type !== 'industry' || current.id !== activeIndustryNum) {
+                    api.navManager.push({ id: activeIndustryNum, type: 'industry' });
+                }
+            }
+        } else if (activeEntityNum && activeEntityNum > 0) {
+            // Viewing an asset (company or player)
+            if (prevEntityRef.current !== activeEntityNum) {
+                prevEntityRef.current = activeEntityNum;
+                prevIndustryRef.current = null;
+                // Push to nav if not already the current entry
+                const current = navHistory[navPointerIdx];
+                if (!current || current.type !== 'asset' || current.id !== activeEntityNum) {
+                    api.navManager.push({ id: activeEntityNum, type: 'asset' });
+                }
+            }
+        }
+    }, [activeEntityNum, activeIndustryNum]);
+
     // Get the advisorId for the active entity (for ETFs with industry 71)
     const activeEntity = (allCompanies || []).find(c => c.id === activeEntityNum);
     const advisorId = activeEntity?.advisorId || 0;
@@ -82,9 +114,14 @@ function NavigationPanel() {
     );
 
     const navOptions = navHistory
-        .map(page => page.type === 'industry' ? ({ id: page.id, type: 'industry', ...industryMap.get(page.id) })
-            : ({ id: page.id, type: 'asset', ...companyMap.get(page.id) }))
-        .filter(c => c.name);
+        .map(page => {
+            if (page.type === 'industry') {
+                const info = industryMap.get(page.id);
+                return { id: page.id, type: 'industry', name: info?.name || `Industry #${page.id}` };
+            }
+            const info = companyMap.get(page.id);
+            return { id: page.id, type: 'asset', name: info?.name || `Entity #${page.id}`, symbol: info?.symbol || '' };
+        });
 
     const onNavChange = (e) => {
         const [type, idStr, idStr2] = e.target.value.split('-');
@@ -177,7 +214,7 @@ function NavigationPanel() {
                     <b>←</b>
                 </button>
                 <select
-                    class="basic text-center"
+                    class="basic text-left"
                     style="width: 180px;"
                     value=${activePage}
                     onChange=${onNavChange}
