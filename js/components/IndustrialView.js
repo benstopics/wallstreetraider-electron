@@ -163,9 +163,9 @@ const IndustrialView = () => {
                     <${Tab} label="Swaps" hotkey="w" id=${api.UI_CORP_SWAPS_PORTFOLIO}>
                         <${InterestRateSwapsTab} />
                     <//>
-                    ${![api.BANK_IND, api.INSURANCE_IND].includes(activeIndustryId) ? html`<${Tab} label="Options" hotkey="o" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
+                    <${Tab} label="Options" hotkey="o" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
                         <${OptionsTab} />
-                    <//>` : ''}
+                    <//>
                     ${activeIndustryId != api.BANK_IND ? html`<${Tab} label="Commodities & Crypto" hotkey="m" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
                         ${html`<${CommoditiesTab} />`}
                     <//>` : ''}
