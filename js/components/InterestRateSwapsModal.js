@@ -1,7 +1,7 @@
 import { html, useEffect, useMemo, useState, useRef } from '../lib/preact.standalone.module.js';
 import Modal from './Modal.js';
 import * as api from '../api.js';
-import { renderMultilineText } from './helpers.js';
+import { renderMultilineText, insertCurrencySymbols } from './helpers.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import Button from './Button.js';
 
@@ -301,7 +301,7 @@ export default function InterestRateSwapsModal({ show, title, stateStr, onSubmit
           }}
                 />
               </div>
-              <div class="w-2/4 text-sm">Notional amount on which interest is to be computed (in millions)</div>
+              <div class="w-2/4 text-sm">${insertCurrencySymbols("Notional amount on which interest is to be computed (in @DENOMINATION)")}</div>
             </div>
             <div class="flex items-start w-full gap-2">
               <div class="w-1/4 text-right text-md"></div>

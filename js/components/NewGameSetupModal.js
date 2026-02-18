@@ -26,6 +26,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
     const [tutorialEnabled, setTutorialEnabled] = useState(true);
     const [startPaused, setStartPaused] = useState(false);
     const hasInitialized = useRef(false);
+    const hasNamesInitialized = useRef(false);
     const firstInputRef = useRef(null);
 
     // Reset form state only when modal opens (show transitions to true)
@@ -33,6 +34,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
         if (show) {
             if (!hasInitialized.current) {
                 hasInitialized.current = true;
+                hasNamesInitialized.current = false;
                 // Initialize with current values from game state
                 setPlayerNames(defaultPlayerNames || ["", "", "", "", ""]);
                 setMoney(defaultStartingMoney?.toString() || "1000");
@@ -40,11 +42,27 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                 setDifficultyLevel(defaultDifficultyLevel?.toString() || "2");
                 setTutorialEnabled(defaultTutorialEnabled === 1 || defaultTutorialEnabled === undefined);
                 setStartPaused(defaultStartPaused === 1);
+                // Check if we got real names (not empty defaults)
+                if (defaultPlayerNames?.some(n => n && n.length > 0)) {
+                    hasNamesInitialized.current = true;
+                }
             }
         } else {
             hasInitialized.current = false; // Reset flag when modal closes
+            hasNamesInitialized.current = false;
         }
     }, [show]);
+
+    // BUG-075 fix: If the modal opened before allPlayers was populated (names were empty),
+    // re-initialize names once they become available from game state polling.
+    useEffect(() => {
+        if (show && hasInitialized.current && !hasNamesInitialized.current) {
+            if (defaultPlayerNames?.some(n => n && n.length > 0)) {
+                setPlayerNames(defaultPlayerNames);
+                hasNamesInitialized.current = true;
+            }
+        }
+    }, [show, allPlayers]);
 
     // Auto-focus first input when modal shows
     useEffect(() => {
@@ -89,7 +107,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                     ${playerIdsOrdered.slice(0, numPlayers).map((playerId, index) => html`<div class="flex">
                         <div class="flex-1 p-2 text-right">${playerId === api.HUMAN1_ID ? insertCurrencySymbols("You:") : insertCurrencySymbols("Computer:")}</div>
                         <div class="flex-1 p-2">
-                            <input type="text" maxlength="20" class="modal-input" ref=${index === 0 ? firstInputRef : undefined} value=${playerNames[index] || ""} onInput=${(e) => {
+                            <input type="text" maxlength="20" class="modal-input" data-testid=${`input-player-name-${index}`} ref=${index === 0 ? firstInputRef : undefined} value=${playerNames[index] || ""} onInput=${(e) => {
                                 const val = e.target.value;
                                 setPlayerNames(prev => {
                                     const newNames = [...prev];
@@ -115,7 +133,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                     <div class="flex">
                         <div class="flex-2 p-2 text-right w-36">${insertCurrencySymbols("Starting Money")}<br/>${insertCurrencySymbols("per Player:")}</div>
                         <div class="flex-1 p-2">
-                            <input type="number" min="100" max="1000" class="modal-input w-full" value=${money} onInput=${(e) => {
+                            <input type="number" min="100" max="1000" class="modal-input w-full" data-testid="input-starting-money" value=${money} onInput=${(e) => {
                                 setMoney(String(e.target.value));
                             }} onBlur=${(e) => {
                                 let val = parseInt(e.target.value);
@@ -186,8 +204,8 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
             </div>
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
-            <${Button} class="btn modal green" onClick=${submit}>${insertCurrencySymbols("Submit")}</button>
-            <${Button} class="btn modal" onClick=${onCancel}>${insertCurrencySymbols("Cancel")}</button>
+            <${Button} class="btn modal green" data-testid="btn-submit" onClick=${submit}>${insertCurrencySymbols("Submit")}</button>
+            <${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>${insertCurrencySymbols("Cancel")}</button>
         </div>
     <//>`;
 }

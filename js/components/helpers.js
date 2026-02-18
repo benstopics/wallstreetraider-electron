@@ -96,10 +96,14 @@ export const insertCurrencySymbols = (text) => {
     const gameState = gameStore.getState()?.gameState || {};
     const dlrSign = gameState.dlrSign || '$';
     const euro = gameState.euro || '';
+    const mil = gameState.mil || 'M';
 
     // Replace dynamic currency markers with actual values
     result = result.replaceAll('@DLRSIGN', dlrSign);
     result = result.replaceAll('@EURO', euro);
+    result = result.replaceAll('@MIL', mil);
+    // @DENOMINATION maps "M" -> "Millions", "B" -> "Billions"
+    result = result.replaceAll('@DENOMINATION', mil === 'B' ? 'Billions' : 'Millions');
 
     // Replace static currency symbols (legacy support)
     Object.entries(CURRENCY_SYMBOLS).forEach(([key, symbol]) => {
