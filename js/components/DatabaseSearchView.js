@@ -1,6 +1,7 @@
 import { html, useState, useEffect, useMemo, useCallback, useRef } from '../lib/preact.standalone.module.js';
 // useCallback still used for getIndustryName
 import * as api from '../api.js';
+import { insertCurrencySymbols } from './helpers.js';
 
 const DEBOUNCE_DELAY = 500;
 
@@ -382,11 +383,11 @@ const DatabaseSearchView = () => {
                         <input ref=${maxPctBookRef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMaxPctBook(e.target.value)} />
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Min Cap ($ millions)</div>
+                        <div class="text-xs text-gray-400 mb-1">${insertCurrencySymbols("Min Cap (@DLRSIGN@DENOMINATION@EURO)")}</div>
                         <input ref=${minMarketCapRef} class="db-input" style="width:100px" type="number" onInput=${e => debouncedSetMinMarketCap(e.target.value)} />
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Max Cap ($ millions)</div>
+                        <div class="text-xs text-gray-400 mb-1">${insertCurrencySymbols("Max Cap (@DLRSIGN@DENOMINATION@EURO)")}</div>
                         <input ref=${maxMarketCapRef} class="db-input" style="width:100px" type="number" onInput=${e => debouncedSetMaxMarketCap(e.target.value)} />
                     </div>
                     <div>

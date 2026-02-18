@@ -719,19 +719,19 @@ export function useActionButtonProps() {
     const merger = {
         label: `Merger with${activeEntitySymbol ? ` ${activeEntitySymbol}` : ''}`,
         onClick: api.merger,
-        disabled: !!mustActAsCompany || isActiveEntityETF || actingAsId === activeEntityNum,
-        disabledMessage: mustActAsCompany
-            || (isActiveEntityETF ? "Not available for ETFs" : false)
-            || (actingAsId === activeEntityNum ? "Cannot merge with yourself" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: isActiveEntityETF || !actingAs || actingAsId === activeEntityNum,
+        disabledMessage: isActiveEntityETF ? "Not available for ETFs"
+            : !actingAs ? "Must be acting as a company"
+            : actingAsId === activeEntityNum ? "Cannot merge with yourself"
+            : false,
         color: 'green'
     };
 
     const increaseEarnings = {
         label: 'Increase Earnings',
         onClick: api.increaseEarnings,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
+        disabled: !!mustActAsCompany || isActiveEntityETF || isActingAsBank,
+        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : (isActingAsBank ? "Banks cannot draw from bad debt reserves" : false)),
         onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
         color: 'green'
     };

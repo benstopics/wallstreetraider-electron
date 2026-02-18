@@ -1,6 +1,7 @@
 import { insertCurrencySymbols } from './components/helpers.js';
 import { html, render, useRef, useState, useEffect, useContext, createContext } from './lib/preact.standalone.module.js';
 import zustand from './lib/zustand.module.js';
+import { debugLog } from './debug-log.js';
 const { createStore } = zustand;
 
 const { ipcRenderer } = require('electron');
@@ -9,10 +10,21 @@ export const apiBase = 'http://127.0.0.1:9631';
 
 // Network error handling - refresh browser on network errors (e.g., sleep/wake scenarios)
 async function fetchWithRetry(url, options = {}) {
+    const method = options.method || 'GET';
+    const pathOnly = url.replace(apiBase, '');
+    const t0 = performance.now();
     try {
         const response = await fetch(url, options);
+        if (debugLog.enabled) {
+            const ms = (performance.now() - t0).toFixed(1);
+            const bodySnippet = options.body ? ` body=${String(options.body).slice(0, 100)}` : '';
+            debugLog.log('REST', `${method} ${pathOnly}${bodySnippet} -> ${response.status} (${ms}ms)`);
+        }
         return response;
     } catch (error) {
+        const ms = (performance.now() - t0).toFixed(1);
+        debugLog.error('REST', `${method} ${pathOnly} FAILED (${ms}ms): ${error.message}`);
+
         const isNetworkError =
             error.message?.includes('ERR_NETWORK_IO_SUSPENDED') ||
             error.message?.includes('Failed to fetch') ||
@@ -308,9 +320,21 @@ export function renderHyperlinks(headline, onClick, regex) {
 /* General */
 export function getGameState() { return getJSON('/gamestate'); }
 export async function clearEventString() { await postNoArg('/clear_event_string'); }
-export async function startTicker() { await postNoArg('/start_ticker'); }
+export async function startTicker() {
+    // Optimistically update UI immediately so ticker starts without waiting for backend round-trip
+    localTickerRunning = true;
+    gameStore.setState(state => ({
+        gameState: { ...state.gameState, isTickerRunning: true }
+    }));
+    await postNoArg('/start_ticker');
+}
 export async function runTicker() { await postNoArg('/run_ticker'); }
 export async function stopTicker() {
+    // Optimistically update UI immediately so ticker stops without waiting for backend round-trip
+    localTickerRunning = false;
+    gameStore.setState(state => ({
+        gameState: { ...state.gameState, isTickerRunning: false }
+    }));
     await postNoArg('/stop_ticker');
     advanceTutorialOnAction('stopTicker');
 }
@@ -789,6 +813,10 @@ export async function setCustomData(blob) {
     return response.text();
 }
 
+/* Ticker optimistic state */
+// Track locally set ticker running state - preserve until backend catches up
+let localTickerRunning = null; // null means use backend value
+
 /* Tutorial API */
 // Track locally set tutorial values - preserve until backend catches up
 let localTutorialStep = null; // null means use backend value
@@ -835,6 +863,17 @@ export function mergeGameState(newState) {
         } else {
             // Backend hasn't caught up, use local value
             newState.tutorialEnabled = currentState.tutorialEnabled;
+        }
+    }
+
+    // For isTickerRunning: keep local value until backend matches
+    if (localTickerRunning !== null) {
+        if (newState.isTickerRunning === localTickerRunning) {
+            // Backend caught up, clear local override
+            localTickerRunning = null;
+        } else {
+            // Backend hasn't caught up, use local value
+            newState.isTickerRunning = currentState.isTickerRunning;
         }
     }
 
@@ -1095,6 +1134,31 @@ export const gameStore = createStore((set, get) => ({
     navState: { entries: [], pointerIndex: 0 },
     setNavState: (next) => set({ navState: next }),
 }));
+
+// Debug: log Zustand store mutations when WSR_DEBUG_VERBOSE=1
+if (debugLog.enabled) {
+    let prevModalType = 0;
+    let prevIsLoading = false;
+    let prevGameLoaded = false;
+    gameStore.subscribe((state) => {
+        const gs = state.gameState || {};
+        // Log modal type changes
+        if (gs.modalType !== undefined && gs.modalType !== prevModalType) {
+            debugLog.log('STORE', `modalType ${prevModalType} -> ${gs.modalType} title="${gs.modalTitle || ''}" text="${(gs.modalText || '').slice(0, 100)}"`);
+            prevModalType = gs.modalType;
+        }
+        // Log loading state changes
+        if (gs.isLoading !== prevIsLoading) {
+            debugLog.log('STORE', `isLoading ${prevIsLoading} -> ${gs.isLoading}`);
+            prevIsLoading = gs.isLoading;
+        }
+        // Log game loaded changes
+        if (gs.gameLoaded !== prevGameLoaded) {
+            debugLog.log('STORE', `gameLoaded ${prevGameLoaded} -> ${gs.gameLoaded}`);
+            prevGameLoaded = gs.gameLoaded;
+        }
+    });
+}
 
 const shallow = (a, b) => {
     if (Object.is(a, b)) return true;
