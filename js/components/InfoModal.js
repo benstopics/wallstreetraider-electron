@@ -60,7 +60,7 @@ export default function InfoModal({ show, title, text, onClose }) {
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
             <div></div>
-            <button ref=${okButtonRef} class="btn modal green" onClick=${onClose}>${bracketLabel('Close', 'C')}</button>
+            <button ref=${okButtonRef} class="btn modal green" data-testid="btn-close" onClick=${onClose}>${bracketLabel('Close', 'C')}</button>
         </div>
     <//>`;
 }

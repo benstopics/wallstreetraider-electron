@@ -76,6 +76,7 @@ function SettingsModal({ children }) {
     const tooltipsSetting = api.useGameStore(s => s.gameState.tooltipsSetting);
     const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
     const disableHotkeysSetting = api.useGameStore(s => s.gameState.disableHotkeysSetting);
+    const autoAddSetting = api.useGameStore(s => s.gameState.autoAddSetting);
 
     // Close on outside click
     useEffect(() => {
@@ -133,6 +134,7 @@ function SettingsModal({ children }) {
                     <${SettingItem} label="${insertCurrencySymbols("Take Delivery")}" isOn=${takeDeliverySetting} onToggle=${() => api.takedeliverySelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Tooltips")}" isOn=${tooltipsSetting} onToggle=${() => api.tooltipsSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Shareholder Graph")}" isOn=${shareholderGraphSetting} onToggle=${() => api.shareholderGraphSelect()} />
+                    <${SettingItem} label="${insertCurrencySymbols("AutoAdd to Quotes")}" isOn=${autoAddSetting} onToggle=${() => api.autoAddSelect()} />
                 </div>
             ` : ''}
         </div>

@@ -73,7 +73,8 @@ export function useActionButtonProps() {
     };
 
     // Must be acting as company (non-ETF, simpler check)
-    const mustActAsCompany = !actingAs
+    // actingAsId <= 10 means acting as a player (IDs 1-10), not a company (IDs 11+)
+    const mustActAsCompany = (!actingAs || actingAsId <= 10)
         ? (controlsActiveEntity
             ? `Must be acting as this company. Click to act as ${activeEntitySymbol}`
             : "Must be acting as this company")
@@ -317,8 +318,8 @@ export function useActionButtonProps() {
     const tradeTbills = {
         label: 'Trade T-Bills',
         onClick: api.tradeTbills,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
         onDisabledClick: onActAsViewedClick,
         color: 'brown'
     };
@@ -355,63 +356,69 @@ export function useActionButtonProps() {
     const electResignCeo = {
         label: playerIsCEO ? 'Resign as CEO' : 'Elect as CEO',
         onClick: playerIsCEO ? api.resignAsCeo : api.electCeo,
-        disabled: !!mustActAsCompany || isActiveEntityETF || !playerControlsActive,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : (!playerControlsActive ? "Must control this company" : false)),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF || !playerControlsActive,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : (!playerControlsActive ? "Must control this company" : false)),
+        onDisabledClick: onActAsClick,
         color: playerIsCEO ? 'red' : 'green'
     };
 
     const changeManagers = {
         label: 'Change Managers',
         onClick: api.changeManagers,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'red'
     };
 
     const setDividend = {
         label: 'Set Dividend',
         onClick: api.setDividend,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'green'
     };
 
     const setProductivity = {
         label: 'Set Productivity',
         onClick: api.setProductivity,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'brown'
     };
 
     const setGrowthRate = {
         label: 'Set Growth Rate',
         onClick: api.setGrowthRate,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
+        color: 'orange'
+    };
+
+    const growthThrottle = {
+        label: 'Growth Throttle',
+        onClick: api.growthThrottle,
         color: 'orange'
     };
 
     const rebrand = {
         label: 'Rebrand',
         onClick: api.rebrand,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'blue'
     };
 
     const restructure = {
         label: 'Restructure',
         onClick: api.restructure,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'blue'
     };
 
@@ -427,9 +434,9 @@ export function useActionButtonProps() {
     const privateStockOffering = {
         label: 'Private Stock Offering',
         onClick: api.privateStockOffering,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'brown'
     };
 
@@ -481,36 +488,36 @@ export function useActionButtonProps() {
     const buyCorporateAssets = {
         label: 'Buy Corporate Assets',
         onClick: api.buyCorporateAssets,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'green'
     };
 
     const sellCorporateAssets = {
         label: 'Sell Corporate Assets',
         onClick: api.sellCorporateAssets,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'red'
     };
 
     const offerAssetsForSale = {
         label: 'Offer Assets For Sale',
         onClick: api.offerCorporateAssetsForSale,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'blue'
     };
 
     const sellSubsidiaryStock = {
         label: 'Offer to Sell Subsidiary Stock',
         onClick: api.sellSubsidiaryStock,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'red'
     };
 
@@ -532,18 +539,18 @@ export function useActionButtonProps() {
     const taxFreeLiquidation = {
         label: 'Tax-Free Liquidation',
         onClick: api.taxFreeLiquidation,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'green'
     };
 
     const taxableLiquidation = {
         label: 'Taxable Liquidation',
         onClick: api.taxableLiquidation,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
+        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
+        onDisabledClick: onActAsClick,
         color: 'green'
     };
 
@@ -556,8 +563,8 @@ export function useActionButtonProps() {
     const capitalContribution = {
         label: 'Capital Contribution',
         onClick: api.capitalContribution,
-        disabled: !!cannotActAsSelf || isActiveEntityETF,
-        disabledMessage: cannotActAsSelf || (isActiveEntityETF ? "Not available for ETFs" : false),
+        disabled: !!cannotActAsSelf || (isActiveEntityETF && isActingAsETFAdvisor),
+        disabledMessage: cannotActAsSelf || (isActiveEntityETF && isActingAsETFAdvisor ? "Not available for ETFs" : false),
         color: 'green'
     };
 
@@ -695,8 +702,10 @@ export function useActionButtonProps() {
     const greenmail = {
         label: 'Greenmail',
         onClick: api.greenmail,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
+        disabled: !!mustActAsCompany || isActiveEntityETF || actingAsId === activeEntityNum,
+        disabledMessage: isActiveEntityETF ? "Not available for ETFs"
+            : mustActAsCompany
+            || (actingAsId === activeEntityNum ? "Cannot do Greenmail against yourself" : false),
         onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
         color: 'green'
     };
@@ -704,21 +713,31 @@ export function useActionButtonProps() {
     const leveragedBuyout = {
         label: 'Leveraged Buyout',
         onClick: api.lbo,
-        disabled: !!mustActAsCompany || isActiveEntityETF,
-        disabledMessage: mustActAsCompany || (isActiveEntityETF ? "Not available for ETFs" : false),
+        disabled: !!mustActAsCompany || isActiveEntityETF || actingAsId === activeEntityNum,
+        disabledMessage: isActiveEntityETF ? "Not available for ETFs"
+            : mustActAsCompany
+            || (actingAsId === activeEntityNum ? "Cannot do an LBO against yourself" : false),
         onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
         color: 'green'
     };
 
+    const mergerNeedsCompany = !actingAsId || actingAsId <= 10;
+    const mergerIsSelf = !mergerNeedsCompany && actingAsId === activeEntityNum;
     const merger = {
         label: `Merger with${activeEntitySymbol ? ` ${activeEntitySymbol}` : ''}`,
         onClick: api.merger,
-        disabled: isActiveEntityETF || !actingAs || actingAsId === activeEntityNum,
+        disabled: isActiveEntityETF || mergerNeedsCompany || mergerIsSelf,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs"
-            : !actingAs ? "Must be acting as a company"
-            : actingAsId === activeEntityNum ? "Cannot merge with yourself"
+            : mergerNeedsCompany ? "Must be acting as a company"
+            : mergerIsSelf ? "Cannot merge with yourself"
             : false,
         color: 'green'
+    };
+
+    const creditInfo = {
+        label: 'Credit Info',
+        onClick: api.creditInfo,
+        color: 'blue'
     };
 
     const increaseEarnings = {
@@ -794,6 +813,7 @@ export function useActionButtonProps() {
         setDividend,
         setProductivity,
         setGrowthRate,
+        growthThrottle,
         rebrand,
         restructure,
 
@@ -841,6 +861,9 @@ export function useActionButtonProps() {
         sellPrimeMortgages,
         buySubprimeMortgages,
         sellSubprimeMortgages,
+
+        // Info
+        creditInfo,
 
         // Hostile Actions
         changeLawFirm,

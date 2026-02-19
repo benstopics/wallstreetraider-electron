@@ -61,6 +61,9 @@ export default function ActionBar() {
         props.buyPuts,
         props.sellPuts,
         { ...props.advancedOptions, label: 'Advanced Options...' },
+        { divider: true },
+        { header: 'Alerts' },
+        { label: 'Price Alerts...', onClick: () => window.__showPriceAlerts?.(), color: 'blue', 'data-testid': 'btn-price-alerts' },
     ];
 
     const tradeColumns = [tradeColumn1, tradeColumn2, tradeColumn3];
@@ -75,6 +78,7 @@ export default function ActionBar() {
         { header: 'Strategy' },
         props.setProductivity,
         props.setGrowthRate,
+        props.growthThrottle,
         props.rebrand,
         props.restructure,
     ];
@@ -129,6 +133,7 @@ export default function ActionBar() {
         { divider: true },
         { header: 'Banking' },
         props.changeBank,
+        props.creditInfo,
         props.advanceFunds,
         { divider: true },
         { header: 'Swaps' },

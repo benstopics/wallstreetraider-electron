@@ -13,8 +13,8 @@ export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', '
 export const DEFAULT_LAYOUT_CONFIG = {
     padding: {
         left: 20,
-        right: 50,           // Base right padding
-        rightWithTitle: 70,  // When yAxisTitle is present
+        right: 60,           // Base right padding (room for Y-axis labels)
+        rightWithTitle: 80,  // When yAxisTitle is present
         top: 20,
         topWithTitle: 40,    // When chartTitle is present
         bottom: 20,

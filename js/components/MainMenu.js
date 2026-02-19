@@ -393,8 +393,8 @@ const MainMenu = () => {
     }, []);
 
     return html`
-    <div class="wsr-root">
-      <${VideoBackground} />
+    <div class="wsr-root" data-testid="main-menu">
+      ${!window.__WSR_E2E && html`<${VideoBackground} />`}
       <div class="wsr-overlay">
 
         <!-- ── Header ── -->
@@ -404,7 +404,7 @@ const MainMenu = () => {
             <span class="wsr-terminal-title">Jenkins Terminal v10.0.14.1</span>
           </div>
           <div class="wsr-topbar-right">
-            <${Button} class="btn main-menu" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</${Button}>
+            <${Button} class="btn main-menu" data-testid="btn-help" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</${Button}>
             <${SettingsModal}>
               <${Button} class="btn main-menu">Settings</${Button}>
             <//>
@@ -442,9 +442,9 @@ const MainMenu = () => {
             <div class="wsr-divider"></div>
 
             <div class="wsr-hero-buttons">
-              <${Button} class="btn green main-menu" onClick=${api.loadGame}>${bracketLabel('Load Game', 'L')}</${Button}>
-              <${Button} class="btn green main-menu" onClick=${api.newGame}>${bracketLabel('New Game', 'N')}</${Button}>
-              <${Button} class="btn main-menu" onClick=${api.exitToDesktop}>${bracketLabel('Exit', 'E')}</${Button}>
+              <${Button} class="btn green main-menu" data-testid="btn-load-game" onClick=${api.loadGame}>${bracketLabel('Load Game', 'L')}</${Button}>
+              <${Button} class="btn green main-menu" data-testid="btn-new-game" onClick=${api.newGame}>${bracketLabel('New Game', 'N')}</${Button}>
+              <${Button} class="btn main-menu" data-testid="btn-exit" onClick=${api.exitToDesktop}>${bracketLabel('Exit', 'E')}</${Button}>
             </div>
 
             ${quote && html`
@@ -501,7 +501,7 @@ const MainMenu = () => {
 
         <!-- ── Footer ── -->
         <footer class="wsr-footer glass">
-          <span class="wsr-footer-copy">\u00a9 1986\u2013${new Date().getFullYear()} Ronin Software & HackJack Games</span>
+          <span class="wsr-footer-copy">Copyright \u00a9 ${new Date().getFullYear()}, All Rights Reserved, Ben Ward and HackJack Games</span>
           ${localeWarning}
           <div class="wsr-social-bar">
             <a class="wsr-social-link" href=${REDDIT_URL} target="_blank" rel="noopener">

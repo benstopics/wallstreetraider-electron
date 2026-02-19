@@ -11,14 +11,14 @@ export default function ConfirmModal({ show, title, text, onYes, onNo, onCancel 
 
     return html`<${Modal} show=${show} onClose=${onCancel} style="display: flex; flex-direction: column;">
         <div class="flex-1 min-h-0 p-3 overflow-y-auto">
-            <div class="text-lg font-bold h-full text-center">${insertCurrencySymbols(title)}</div>
+            <div class="text-lg font-bold text-center">${insertCurrencySymbols(title)}</div>
             <br/>
             <div class="mb-4">${renderLines(lines)}</div>
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
-            <${Button} class="btn modal green" onClick=${onYes}>${bracketLabel('Yes', 'Y')}</button>
-            <${Button} class="btn modal red" onClick=${onNo}>${bracketLabel('No', 'N')}</button>
-            ${onCancel ? html`<${Button} class="btn modal" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>` : ''}
+            <${Button} class="btn modal green" data-testid="btn-yes" onClick=${onYes}>${bracketLabel('Yes', 'Y')}</button>
+            <${Button} class="btn modal red" data-testid="btn-no" onClick=${onNo}>${bracketLabel('No', 'N')}</button>
+            ${onCancel ? html`<${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>` : ''}
         </div>
     <//>`;
 }

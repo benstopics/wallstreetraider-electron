@@ -219,18 +219,34 @@ export function buildDictRegex(allCompanies, allIndustries) {
 
     lookup = Object.create(null); // key: lowercased token -> {id, type}
 
-    // Companies: match by symbol and name
+    // Companies: match by symbol (2+ chars only to avoid false hyperlinks) and name
+    // BUG-027/082/103: Single-letter symbols (N, X, T, E, M, H, L) trigger on common words
     for (const c of allCompanies || []) {
-        if (c.symbol) lookup[c.symbol] = { id: c.id, type: 'C' };
+        if (c.symbol && c.symbol.length >= 2) lookup[c.symbol] = { id: c.id, type: 'C' };
         if (c.name) lookup[c.name] = { id: c.id, type: 'C' };
     }
 
-    // Industries: names can be multi-word
+    // Industries: names can be multi-word, add common informal aliases (BUG-088)
+    const INDUSTRY_ALIASES = {
+        'BIOTECHNOLOGY': ['BioTech', 'Biotech', 'BIOTECH'],
+        'MEDICAL EQUIP. / SUPPLIES': ['Medical Supplies', 'Medical Equipment'],
+        'ENTERTAIN. & BROADCAST': ['Entertainment', 'Broadcasting'],
+        'HOUSEHOLD & PERS. PRODS.': ['Household Products'],
+        'INTERNET SERV. / CONTENT': ['Internet Services', 'Internet'],
+        'NETWORK & TELECOM EQUIP.': ['Telecom Equipment'],
+    };
     for (const ind of allIndustries || []) {
         if (ind.name) {
             lookup[ind.name] = { id: ind.id, type: 'I' };
-            lookup[toTitleCase(ind.name)] = { id: ind.id, type: 'I' }; // also title case
-            lookup[toTitleCase(ind.name).toUpperCase()] = { id: ind.id, type: 'I' }; // also title case
+            lookup[toTitleCase(ind.name)] = { id: ind.id, type: 'I' };
+            lookup[toTitleCase(ind.name).toUpperCase()] = { id: ind.id, type: 'I' };
+            // Add aliases for industry names that appear informally in game text
+            const aliases = INDUSTRY_ALIASES[ind.name];
+            if (aliases) {
+                for (const alias of aliases) {
+                    lookup[alias] = { id: ind.id, type: 'I' };
+                }
+            }
         }
     }
 
@@ -452,7 +468,19 @@ export async function getAssetChart(id) {
 
     try {
         const data = await postIdArg('/asset_chart', id);
-        if (data && Array.isArray(data.prices) && data.prices.length >= 1) return data;
+        if (data && Array.isArray(data.prices) && data.prices.length >= 3) {
+            // Filter out leading zeros — matching PB's charTEST.inc behavior.
+            // Zero values compress the chart scale, making it look like only
+            // the current price is shown.
+            const firstNonZero = data.prices.findIndex(p => p !== 0);
+            if (firstNonZero > 0) {
+                const fillValue = data.prices[firstNonZero];
+                for (let i = 0; i < firstNonZero; i++) {
+                    data.prices[i] = fillValue;
+                }
+            }
+            return data;
+        }
         return buildFallback();
     } catch (e) {
         console.error(e);
@@ -579,6 +607,19 @@ export async function increaseEarnings() { await postNoArg('/increase_earnings')
 
 /* Legal */
 export async function changeLawFirm() { await postNoArg('/change_law_firm'); }
+export async function creditInfo() { await postNoArg('/credit_info'); }
+export async function clearChart() { await postNoArg('/clear_chart'); }
+export async function growthThrottle() { await postNoArg('/growth_throttle'); }
+export async function clearStreamList() { await postNoArg('/clear_stream_list'); }
+export async function fillStreamList() { await postNoArg('/fill_stream_list'); }
+export async function setWhoOwnsFilter(value) {
+    const url = `${apiBase}/set_who_owns_filter`;
+    await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value })
+    });
+}
 export async function antitrustLawsuit(id) { await postIdArg('/antitrust_lawsuit', id); }
 
 export async function harrassingLawsuit(id) { await postIdArg('/harrassing_lawsuit', id); }
@@ -598,6 +639,7 @@ export async function tooltipsSelect() { await postNoArg('/tooltips_select'); }
 export async function shareholderGraphSelect() { await postNoArg('/shareholdergraph_select'); }
 export async function unethicalSelect() { await postNoArg('/unethical_select'); }
 export async function disableHotkeysSelect() { await postNoArg('/disablehotkeys_select'); }
+export async function autoAddSelect() { await postNoArg('/autoadd_select'); }
 
 // Cheat Menu
 export async function cheatDisableLawsuits() { await postNoArg('/cheat_disable_lawsuits'); }
@@ -640,15 +682,7 @@ export async function largestTaxLosses() { await postNoArg('/largest_tax_losses'
 export async function industrySummary() { await postNoArg('/industry_summary'); }
 export async function industryProjections() { await postNoArg('/industry_projections'); }
 export async function viewCorpAssetsForSale() { await postNoArg('/view_corp_assets_for_sale'); }
-export async function industryGrowthRates() { await postNoArg('/industry_growth_rates'); }
 
-/* Who Owns What */
-export async function whoOwnsCommodities() { await postNoArg('/who_owns_commodities'); }
-export async function whoOwnsInterestRateSwaps() { await postNoArg('/who_owns_interest_rate_swaps'); }
-export async function whoOwnsOptions() { await postNoArg('/who_owns_options'); }
-export async function whoOwnsStocks() { await postNoArg('/who_owns_stocks'); }
-export async function whoAreAdvisors() { await postNoArg('/who_are_advisors'); }
-export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 
 /*
  * Navigation Manager – purely local state.
@@ -885,6 +919,22 @@ export function mergeGameState(newState) {
         } else {
             // Backend hasn't caught up, use local value
             newState.isTickerRunning = currentState.isTickerRunning;
+        }
+    }
+
+    // BUG-105 FIX: Reuse old array references when contents haven't changed.
+    // This prevents unnecessary re-renders of report/list components every poll cycle.
+    for (const key of Object.keys(newState)) {
+        const prev = currentState[key];
+        const next = newState[key];
+        if (Array.isArray(prev) && Array.isArray(next)) {
+            if (prev.length === next.length) {
+                let same = true;
+                for (let i = 0; i < prev.length; i++) {
+                    if (prev[i] !== next[i]) { same = false; break; }
+                }
+                if (same) newState[key] = prev;
+            }
         }
     }
 
@@ -1176,6 +1226,47 @@ if (debugLog.enabled) {
         }
     });
 }
+
+// Price Alert checking — runs on every gameState poll
+let alertCallbackFn = null;
+export function setAlertCallback(fn) { alertCallbackFn = fn; }
+
+function resolvePrice(gs, entityType, entityId) {
+    if (entityType === 'stock') {
+        const co = gs.allCompanies?.find(c => c.id === entityId);
+        return co?.price ?? null;
+    }
+    const sec = gs.allSecurities?.find(s => s.id === entityId);
+    return sec?.price ?? null;
+}
+
+gameStore.subscribe((state) => {
+    const gs = state.gameState || {};
+    if (!gs.gameLoaded) return;
+    const alerts = gs.customData?.priceAlerts;
+    if (!Array.isArray(alerts) || alerts.length === 0) return;
+
+    let changed = false;
+    const updated = alerts.map(a => {
+        if (a.triggered) return a;
+        const price = resolvePrice(gs, a.entityType, a.entityId);
+        if (price == null) return a;
+        const hit = (a.condition === 'above' && price >= a.targetPrice)
+                 || (a.condition === 'below' && price <= a.targetPrice);
+        if (hit) {
+            changed = true;
+            if (alertCallbackFn) {
+                alertCallbackFn(a, price);
+            }
+            return { ...a, triggered: true, triggeredAt: Date.now(), triggeredPrice: price };
+        }
+        return a;
+    });
+
+    if (changed) {
+        setCustomData({ priceAlerts: updated });
+    }
+});
 
 const shallow = (a, b) => {
     if (Object.is(a, b)) return true;

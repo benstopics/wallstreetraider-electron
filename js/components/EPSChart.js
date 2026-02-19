@@ -2,6 +2,39 @@ import { html, useEffect, useRef } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import { insertCurrencySymbols } from './helpers.js';
 
+// Snap a value to a "nice" round number for chart axis scaling
+// Based on CHARTEST.INC GetTopRange algorithm
+function niceAxisValue(val) {
+    const abs = Math.abs(val);
+    const sign = val >= 0 ? 1 : -1;
+
+    // Find the nice step: 1, 2, 5, 10, 20, 50, 100, etc.
+    if (abs === 0) return 0;
+    const mag = Math.pow(10, Math.floor(Math.log10(abs)));
+    const norms = [1, 2, 2.5, 5, 10];
+    const norm = abs / mag;
+    for (const n of norms) {
+        if (norm <= n) return sign * n * mag;
+    }
+    return sign * 10 * mag;
+}
+
+// Get nice Y-axis range for EPS data that produces clean intermediate values
+function getNiceRange(minVal, maxVal, divisions) {
+    const range = maxVal - minVal;
+    if (range === 0) return { niceMin: minVal - 1, niceMax: maxVal + 1, step: 0.5 };
+
+    // Calculate a nice step size
+    const rawStep = range / divisions;
+    const step = niceAxisValue(rawStep);
+
+    // Extend min/max to nice boundaries
+    const niceMin = Math.floor(minVal / step) * step;
+    const niceMax = Math.ceil(maxVal / step) * step;
+
+    return { niceMin, niceMax, step };
+}
+
 const EPSChart = ({
     epsData = [], // Array of { year: number, eps: number }
     yAxisTitle = undefined,
@@ -41,8 +74,12 @@ const EPSChart = ({
             ctx.fillStyle = theme.background;
             ctx.fillRect(0, 0, w, h);
 
-            const maxVal = Math.max(...epsData.map(d => d.eps), 0);
-            const minVal = Math.min(...epsData.map(d => d.eps), 0);
+            const rawMax = Math.max(...epsData.map(d => d.eps), 0);
+            const rawMin = Math.min(...epsData.map(d => d.eps), 0);
+
+            const { niceMin, niceMax } = getNiceRange(rawMin, rawMax, 4);
+            const maxVal = niceMax;
+            const minVal = niceMin;
 
             const totalRange = maxVal - minVal || 1; // avoid divide by zero
             const zeroLine = padT + chartH * (maxVal / totalRange); // y pixel position for EPS=0 line
@@ -106,14 +143,19 @@ const EPSChart = ({
                 ctx.fillText(d.year.toString(), x, padT + chartH + 15);
             });
 
-            // Y-axis labels (to the right of chart)
+            // Y-axis labels (to the right of chart) — use nice rounded values
             ctx.fillStyle = '#fff';
             ctx.textAlign = 'left';
             ctx.font = '11px Helvetica, Arial, sans-serif';
             for (let i = 0; i <= 4; i++) {
-                const val = (maxVal - totalRange * i / 4).toFixed(2);
+                const val = maxVal - totalRange * i / 4;
                 const y = padT + chartH * i / 4;
-                ctx.fillText(val, padL + chartW + 5, y + 3); // right of chart
+                // Format with appropriate precision: integers for large values, 1-2 decimals for small
+                const absVal = Math.abs(val);
+                const label = absVal >= 10 ? val.toFixed(0)
+                    : absVal >= 1 ? val.toFixed(1)
+                    : val.toFixed(2);
+                ctx.fillText(label, padL + chartW + 5, y + 3); // right of chart
             }
 
             if (yAxisTitle) {

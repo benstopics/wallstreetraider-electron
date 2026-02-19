@@ -1304,6 +1304,9 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
         `}
       </nav>
       <div class="help-content" ref=${contentRef}>
+        <div style="display: flex; justify-content: flex-end; position: sticky; top: 0; z-index: 1; padding: 4px 0;">
+          <${Button} class="btn px-3 py-1 text-xs" data-testid="btn-close-help" onClick=${onClose} style="background: #333; color: #ccc; border: 1px solid #555;">Close</button>
+        </div>
         <blockquote style="border-left: 4px solid #0d5473; padding-left: 16px; margin: 16px 0; background-color: rgba(13, 84, 115, 0.1);">
         <p><strong>Note: This documentation is a port of the W$R v9.75 Strategy Manual PDF
           and is a work in progress. Some UI descriptions and navigation instructions may differ

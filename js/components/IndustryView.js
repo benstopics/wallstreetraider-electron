@@ -32,6 +32,7 @@ const IndustryView = () => {
     const whoOwnsStocksReport = api.useGameStore(s => s.gameState.whoOwnsStocksReport);
     const whoOwnsInvestmentContractsReport = api.useGameStore(s => s.gameState.whoOwnsInvestmentContractsReport);
     const whosAheadReport = api.useGameStore(s => s.gameState.whosAheadReport);
+    const whoOwnsFilter = api.useGameStore(s => s.gameState.whoOwnsFilter);
 
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredIndustryTab);
     const [savedTab, setSavedTab] = useCookie('industryViewTab', 'Heat Maps');
@@ -149,7 +150,16 @@ const IndustryView = () => {
                         </div>
                     <//>
                     <${Tab} label="Who Owns What?" hotkey="o">
-                        <div class="flex justify-center items-center w-full h-full">
+                        <div class="flex flex-col w-full h-full">
+                            <div class="flex justify-end px-2 py-1">
+                                <${Button}
+                                    class=${`btn text-xs px-3 py-1 ${whoOwnsFilter ? 'btn-active' : ''}`}
+                                    data-testid="btn-who-owns-filter"
+                                    onClick=${() => api.setWhoOwnsFilter(whoOwnsFilter ? 0 : 1)}
+                                    title=${whoOwnsFilter ? 'Showing only your companies - click to show all' : 'Showing all companies - click to show only yours'}
+                                >${whoOwnsFilter ? 'My Companies Only' : 'All Companies'}<//>
+                            </div>
+                            <div class="flex justify-center items-center flex-1 min-h-0">
                             <${Tabs}>
                                 <${Tab} label="Futures" id=${api.UI_MARKET_REPORTS_COMMOD_FUTURES_REPORT}>
                                     <div class="flex justify-center items-center">
@@ -182,6 +192,7 @@ const IndustryView = () => {
                                     </div>
                                 <//>
                             <//>
+                            </div>
                         </div>
                     <//>
                     <${Tab} label="Who's Ahead?" hotkey="w" id=${api.UI_MARKET_REPORTS_WHO_AHEAD_REPORT}>

@@ -1,6 +1,6 @@
 import { html } from './lib/preact.standalone.module.js';
 
-let _hotkeysDisabled = false;
+let _hotkeysDisabled = (typeof window !== 'undefined' && window.__WSR_E2E) || false;
 
 /** Called by app.js when the disable-hotkeys setting changes. */
 export function setHotkeysVisualDisabled(disabled) {
@@ -35,6 +35,8 @@ export const HOTKEY_MAP = [
     { key: 'SHIFT+d',        action: 'DATABASE_SEARCH',   label: 'Database Search',     category: 'Navigation' },
     { key: 'SHIFT+l',        action: 'CHANGE_LAW_FIRM',  label: 'Change Law Firm',     category: 'Navigation' },
     { key: 'a',              action: 'ACT_AS',          label: 'Act As Active Entity', category: 'Navigation' },
+    { key: 'l',              action: 'VIEW_LAST_ENTITY', label: 'View Last Entity',    category: 'Navigation' },
+    { key: 'i',              action: 'VIEW_INDUSTRY',   label: 'View Industry',        category: 'Navigation' },
     { key: 'p',              action: 'VIEW_PLAYER',     label: 'View Player',          category: 'Navigation' },
 
     // Tabs (number keys: 1-9 for tabs 1-9, 0 for tab 10)
@@ -76,6 +78,9 @@ export const HOTKEY_MAP = [
     // General
     { key: ' ',              action: 'TOGGLE_TICKER',    label: 'Toggle Ticker',       category: 'General' },
     { key: 'CTRL+s',        action: 'SAVE_GAME',        label: 'Save Game',           category: 'General' },
+    { key: 'CTRL+=',        action: 'ZOOM_IN',          label: 'Zoom In (Ctrl+=)',    category: 'General' },
+    { key: 'CTRL+-',        action: 'ZOOM_OUT',         label: 'Zoom Out (Ctrl+-)',   category: 'General' },
+    { key: 'CTRL+0',        action: 'ZOOM_RESET',       label: 'Zoom Reset (Ctrl+0)', category: 'General' },
     { key: 'CTRL+ArrowLeft', action: 'ACTING_AS_PREV',   label: 'Previous Acting As',  category: 'General' },
     { key: 'CTRL+ArrowRight',action: 'ACTING_AS_NEXT',   label: 'Next Acting As',      category: 'General' },
     { key: 'CTRL+j',        action: 'ACTING_AS_PREV',   label: 'Previous Acting As (J/K)', category: 'General' },

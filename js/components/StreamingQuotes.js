@@ -14,6 +14,15 @@ const StreamingQuotes = () => {
     const dlrSign = api.useGameStore(s => s.gameState.dlrSign) || '$';
     const euro = api.useGameStore(s => s.gameState.euro) || '';
 
+    // Debounce toggle to prevent double-click and event queue issues (BUG-117)
+    const pendingRef = useRef(false);
+    const toggleQuote = (id) => {
+        if (pendingRef.current) return;
+        pendingRef.current = true;
+        api.toggleStreamingQuote(id);
+        setTimeout(() => { pendingRef.current = false; }, 500);
+    };
+
     // Persist direction (up/down) per quote so the UI stays green until price drops,
     // and stays red until price rises. This avoids "flicker" when backend only
     // sends one-tick deltas.
@@ -46,14 +55,20 @@ const StreamingQuotes = () => {
 
     return html`
         <div class="panel">
-            <div class="panel-header">Streaming Quotes</div>
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Streaming Quotes</span>
+                <span style="display: flex; gap: 4px;">
+                    <${Button} class="btn text-xs px-2 py-0" data-testid="btn-fill-stream" onClick=${() => api.fillStreamList()} title="Auto-fill with owned stocks, controlled companies, and positions">Fill</button>
+                    <${Button} class="btn text-xs px-2 py-0" data-testid="btn-clear-stream" onClick=${() => api.clearStreamList()} title="Clear all streaming quotes">Clear</button>
+                </span>
+            </div>
             <div class="p-1 panel-body">
                 ${activeEntityNum > 10 && !quotes.find(q => q.id === activeEntityNum) ? html`
                 <div 
                     class="flex items-center py-1 mb-2 candidate"
                     onClick=${(e) => {
                             e.stopPropagation();
-                            api.toggleStreamingQuote(activeEntityNum);
+                            toggleQuote(activeEntityNum);
                         }}
                 >
                     <span class="mx-2">
@@ -74,7 +89,7 @@ const StreamingQuotes = () => {
                     <span class="ml-2">
                         <${Button} class="btn red w-full" style="width: 30px" onClick=${(e) => {
                             e.stopPropagation();
-                            api.toggleStreamingQuote(quote.id);
+                            toggleQuote(quote.id);
                         }}><${TrashIcon} /></button>
                     </span>
                 </div>

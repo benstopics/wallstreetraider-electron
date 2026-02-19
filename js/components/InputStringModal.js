@@ -91,7 +91,7 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
 
         return html`<${Modal} show=${show} onClose=${onCancel} style="display: flex; flex-direction: column;">
             <div class="flex-1 min-h-0 p-3 overflow-y-auto">
-                <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
+                <div class="text-lg font-bold text-center">${insertCurrencySymbols(title)}</div>
                 <br/>
                 <div class="mb-4">${renderLines(lines)}</div>
                 <div class="flex gap-2 items-center">
@@ -99,26 +99,27 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
                         ${options.map(opt => html`<option value=${opt.value}>${opt.label}</option>`)}
                     </select>
                     ${isLoadGameDialog && inputValue ? html`
-                        <${Button} class="btn modal red" onClick=${() => { onSubmit(inputValue + '|DELETE'); }}>${bracketLabel('Delete', 'D')}</button>
+                        <${Button} class="btn modal red" data-testid="btn-delete" onClick=${() => { onSubmit(inputValue + '|DELETE'); }}>${bracketLabel('Delete', 'D')}</button>
                     ` : ''}
                 </div>
             </div>
             <div class="flex justify-between items-center p-3 flex-shrink-0">
-                <${Button} class="btn modal green" onClick=${() => { onSubmit(inputValue); }}>${bracketLabel('Submit', 'S')}</button>
-                <${Button} class="btn modal" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>
+                <${Button} class="btn modal green" data-testid="btn-submit" onClick=${() => { onSubmit(inputValue); }}>${bracketLabel('Submit', 'S')}</button>
+                <${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>
             </div>
         <//>`;
     }
 
     return html`<${Modal} show=${show} onClose=${onCancel} style="display: flex; flex-direction: column;">
         <div class="flex-1 min-h-0 p-3 overflow-y-auto">
-            <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
+            <div class="text-lg font-bold text-center">${insertCurrencySymbols(title)}</div>
             <br/>
             <div class="mb-4">${insertCurrencySymbols(text)}</div>
             <input
                 ref=${inputRef}
                 type="text"
                 class="modal-input"
+                data-testid="modal-input"
                 value=${inputValue}
                 onInput=${(e) => setInputValue(e.target.value)}
                 onKeyDown=${(e) => {
@@ -129,8 +130,8 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
             /><br/>
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
-            <${Button} class="btn modal green" onClick=${() => { onSubmit(inputValue); }}>${bracketLabel('Submit', 'S')}</button>
-            <${Button} class="btn modal" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>
+            <${Button} class="btn modal green" data-testid="btn-submit" onClick=${() => { onSubmit(inputValue); }}>${bracketLabel('Submit', 'S')}</button>
+            <${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>
         </div>
     <//>`;
 }

@@ -16,7 +16,7 @@ function CashflowTab() {
     // Get centralized button props
     const buttonProps = useActionButtonProps();
 
-    const hasCorporateAssets = financialProfile.some(asset => asset.includes('Business Assets/Equipment'));
+    const hasCorporateAssets = (financialProfile || []).some(asset => asset.includes('Business Assets/Equipment'));
 
     return html`
             <div class="flex flex-col w-full items-center h-full min-h-0">

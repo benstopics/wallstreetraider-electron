@@ -66,6 +66,8 @@ const IndustrialView = () => {
     const [, setShareholdersScopeTick] = useState(0);
     const shareholdersBarButtons = [
         { label: showShareholdersGraph ? 'Show Text Report' : 'Show Graph', onClick: () => setShowShareholdersGraph(!showShareholdersGraph), color: '' },
+        buttonProps.merger,
+        buttonProps.greenmail,
     ];
     const shareholdersExtrasStart = shareholdersBarButtons.filter(Boolean).length + 1;
 
@@ -113,8 +115,9 @@ const IndustrialView = () => {
                     <${Tab} label="General" hotkey="g" id=${api.UI_CORP_RESEARCH_REPORT}>
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0 overflow-hidden">
-                                <div class="earnings-date-badge mb-1 font-text-sm text-center">
-                                    <span class="whitespace-nowrap">Earnings Date:</span> <span class="whitespace-nowrap">${nextEarningsDate}</span>
+                                <div class="earnings-date-badge mb-1 font-text-sm text-center" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span><span class="whitespace-nowrap">Earnings Date:</span> <span class="whitespace-nowrap">${nextEarningsDate}</span></span>
+                                    <${Button} class="text-xs" style="opacity: 0.6; cursor: pointer; background: none; border: none; padding: 0 2px;" data-testid="btn-clear-chart" onClick=${() => api.clearChart()} title="Clear chart history for this entity">Clear Chart</button>
                                 </div>
                                 <div class="flex flex-2 flex-col w-full">
                                     ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" />`}
