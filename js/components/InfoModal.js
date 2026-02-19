@@ -1,11 +1,13 @@
 import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../lib/preact.standalone.module.js';
 import { insertCurrencySymbols, renderLines } from './helpers.js';
+import * as api from '../api.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
 import { bracketLabel } from '../hotkeys.js';
 
 
 export default function InfoModal({ show, title, text, onClose }) {
+    const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const okButtonRef = useRef(null);
 
     const lines = text?.trim().split('\r') || [];
@@ -55,7 +57,7 @@ export default function InfoModal({ show, title, text, onClose }) {
         `}
         <div class="flex-1 min-h-0 p-3 overflow-y-auto">
             <div>
-                ${renderLines(lines)}
+                ${renderLines(lines, ({ id }) => api.setViewAsset(parseInt(id)), null, hyperlinkRegex)}
             </div>
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">

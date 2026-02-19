@@ -35,22 +35,25 @@ export default function ActionBar() {
         props.sellShortGovtBonds,
     ];
 
-    // Column 2: Commodities, Crypto
+    // Column 2: Commodities, Crypto — redirect to Commodities tab
+    // Note: Generic commodity/crypto buttons (passing id=0) caused either wrong trades
+    // (defaulting to Stock Index) or hard freezes (Win32 Form18/Form23 dialogs invisible
+    // in Electron). The Commodities tab has proper per-commodity buttons.
     const tradeColumn2 = [
         { header: 'Commodities' },
-        { label: 'Buy Futures', onClick: () => api.buyCommodityFutures(0), color: 'green' },
-        { label: 'Sell Futures', onClick: () => api.sellCommodityFutures(0), color: 'red' },
-        { label: 'Short Futures', onClick: () => api.shortCommodityFutures(0), color: 'red' },
-        { label: 'Cover Futures', onClick: () => api.coverShortCommodityFutures(0), color: 'green' },
+        { label: 'Buy Futures', onClick: () => api.buyCommodityFutures(api.STOCK_INDEX_ID), color: 'green' },
+        { label: 'Sell Futures', onClick: () => api.sellCommodityFutures(api.STOCK_INDEX_ID), color: 'red' },
+        { label: 'Short Futures', onClick: () => api.shortCommodityFutures(api.STOCK_INDEX_ID), color: 'red' },
+        { label: 'Cover Futures', onClick: () => api.coverShortCommodityFutures(api.STOCK_INDEX_ID), color: 'green' },
         { divider: true },
-        { label: 'Buy Physical', onClick: () => api.buyPhysicalCommodity(0), color: 'green' },
-        { label: 'Sell Physical', onClick: () => api.sellPhysicalCommodity(0), color: 'red' },
+        { label: 'Buy Physical', disabled: true, disabledMessage: 'Use the Commodities tab for physical commodity trading', color: 'green' },
+        { label: 'Sell Physical', disabled: true, disabledMessage: 'Use the Commodities tab for physical commodity trading', color: 'red' },
         { divider: true },
         { header: 'Crypto' },
-        { label: 'Buy Crypto', onClick: () => api.buyPhysicalCrypto(0), color: 'green' },
-        { label: 'Sell Crypto', onClick: () => api.sellPhysicalCrypto(0), color: 'red' },
-        { label: 'Buy Crypto Futures', onClick: () => api.buyCryptoFutures(0), color: 'green' },
-        { label: 'Sell Crypto Futures', onClick: () => api.sellCryptoFutures(0), color: 'red' },
+        { label: 'Buy Crypto', disabled: true, disabledMessage: 'Use the Commodities tab for crypto trading', color: 'green' },
+        { label: 'Sell Crypto', disabled: true, disabledMessage: 'Use the Commodities tab for crypto trading', color: 'red' },
+        { label: 'Buy Crypto Futures', disabled: true, disabledMessage: 'Use the Commodities tab for crypto futures trading', color: 'green' },
+        { label: 'Sell Crypto Futures', disabled: true, disabledMessage: 'Use the Commodities tab for crypto futures trading', color: 'red' },
     ];
 
     // Column 3: Options
@@ -98,6 +101,7 @@ export default function ActionBar() {
         props.browseForSaleItems,
         { divider: true },
         { header: 'ETF / Advisory' },
+        props.becomeEtfAdvisor,
         props.setAdvisoryFee,
         { divider: true },
         { header: 'Autopilot' },

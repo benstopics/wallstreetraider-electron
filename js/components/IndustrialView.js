@@ -147,7 +147,7 @@ const IndustrialView = () => {
                         </div>
                     <//>
                     <${Tab} label="Earnings" hotkey="e" id=${api.UI_CORP_EARNINGS_REPORT}>
-                        <div class="flex flex-col justify-center items-center">
+                        <div class="flex flex-col justify-center items-center overflow-x-auto w-full">
                             ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                         </div>
                     <//>

@@ -1,5 +1,5 @@
 // HelpModal.jsx (Preact + htm) - Refactored with hardcoded hierarchy + Pre-indexed Search
-import { html, useState, useRef, useCallback, useEffect } from '../lib/preact.standalone.module.js';
+import { html, useState, useRef, useCallback, useEffect, useMemo } from '../lib/preact.standalone.module.js';
 import Modal from './Modal.js';
 import HelpChapter1Content from './HelpChapter1Content.js';
 import HelpChapter2Content from './HelpChapter2Content.js';
@@ -842,7 +842,7 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
         };
     }, [searchQuery]);
 
-    const flatStructure = flattenStructure(HELP_STRUCTURE);
+    const flatStructure = useMemo(() => flattenStructure(HELP_STRUCTURE), []);
 
     // Build search index when modal opens
     useEffect(() => {
@@ -952,8 +952,20 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
             return;
         }
 
-        // Use requestAnimationFrame to yield to the browser for smoother typing
+        // Require minimum 2 characters to avoid pathological single-char searches
+        // that match everything and produce useless results
+        if (debouncedSearchQuery.trim().length < 2) {
+            setSearchResults(null);
+            setIsSearching(false);
+            return;
+        }
+
+        // Cancellation flag — prevents stale searches from updating results
+        // when the query changes before a scheduled search completes
+        let cancelled = false;
+
         const performSearch = () => {
+            if (cancelled) return;
             if (searchMode === 'fast') {
                 // Fast mode: Use pre-indexed search (returns section IDs)
                 ahoCorasickRef.current = null;
@@ -964,6 +976,7 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
                 }
                 const matchingIds = searchIndexRanked(debouncedSearchQuery, searchIndexRef.current);
 
+                if (cancelled) return;
                 if (matchingIds.length === 0) {
                     setSearchResults([]);
                 } else {
@@ -973,6 +986,8 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
             } else {
                 // Deep mode: Snippet-based search with Aho-Corasick highlighting
                 const results = searchDeepWithSnippets(debouncedSearchQuery, HELP_STRUCTURE);
+
+                if (cancelled) return;
 
                 // Build Aho-Corasick automaton for highlighting
                 const ac = new AhoCorasick();
@@ -993,12 +1008,17 @@ export default function HelpModal({ show, onClose, initialSectionId }) {
         };
 
         // Use requestAnimationFrame to avoid blocking the main thread during typing
+        let timeoutId = null;
         const rafId = requestAnimationFrame(() => {
             // Use setTimeout(0) to further yield to allow any pending UI updates
-            setTimeout(performSearch, 0);
+            timeoutId = setTimeout(performSearch, 0);
         });
 
-        return () => cancelAnimationFrame(rafId);
+        return () => {
+            cancelled = true;
+            cancelAnimationFrame(rafId);
+            if (timeoutId !== null) clearTimeout(timeoutId);
+        };
     }, [debouncedSearchQuery, searchMode, indexReady, flatStructure]);
 
     // Display either search results or full structure

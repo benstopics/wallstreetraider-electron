@@ -176,11 +176,12 @@ const AppInner = () => {
         globalHotkeyIdRef.current,
         PRIORITY.GLOBAL,
         (e) => {
-            // ESC, Enter (digit confirm) work even with helpShown
+            // ESC, Enter (digit confirm) work even with helpShown or modal open
             if (e.key === 'Escape' && !isEditableTarget(e.target)) return true;
             if (e.key === 'Enter' && hotkeyManager.digitBuffer && !isEditableTarget(e.target)) return true;
             if (isEditableTarget(e.target)) return false;
             if (helpShown) return false;
+            if (modalType > 0) return false; // Don't fire global hotkeys while a game modal is showing
             // Shift+letter for dropdowns
             if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey) {
                 if (['t', 'c', 'f', 'h', 'b'].includes(e.key.toLowerCase())) return true;
@@ -207,6 +208,7 @@ const AppInner = () => {
 
             if (isEditableTarget(e.target)) return false;
             if (helpShown) return false;
+            if (modalType > 0) return false; // Don't fire global hotkeys while a game modal is showing
 
             // Dropdown letter keys (Shift+letter to open action bar dropdowns)
             if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey) {

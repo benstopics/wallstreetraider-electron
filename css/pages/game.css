@@ -20,9 +20,11 @@
   color: rgba(230,235,245,0.85);
 }
 
-/* Game view container */
+/* Game view container — fills remaining space after toolbar, ticker, and footer */
 .game-view {
-  height: calc(100% - 40px - 40px - var(--ticker-height, 0px));
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Footer */

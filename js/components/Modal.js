@@ -3,6 +3,7 @@ import { useActiveTooltip } from './TutorialTooltip.js';
 
 export default function Modal({ show, onClose, onKeyDown, enableClickOutsideClose = true, children, class: cls = '', style = '' }) {
     const cardRef = useRef(null);
+    const mouseDownOnOverlayRef = useRef(false);
     const activeTooltip = useActiveTooltip();
 
     useEffect(() => {
@@ -37,11 +38,25 @@ export default function Modal({ show, onClose, onKeyDown, enableClickOutsideClos
     const shiftStyle = activeTooltip ? 'transform: translateX(200px);' : '';
     const combinedStyle = style ? `${style}; ${shiftStyle}` : shiftStyle;
 
+    // Click-outside-to-close: only close if BOTH mousedown AND click happen on the overlay.
+    // This prevents accidental closes when the user drags text selection out of the modal.
+    const handleOverlayMouseDown = enableClickOutsideClose ? (e) => {
+        mouseDownOnOverlayRef.current = (e.target === e.currentTarget);
+    } : undefined;
+
+    const handleOverlayClick = enableClickOutsideClose ? (e) => {
+        if (mouseDownOnOverlayRef.current && e.target === e.currentTarget) {
+            onClose();
+        }
+        mouseDownOnOverlayRef.current = false;
+    } : undefined;
+
     return html`<div
         role="dialog"
         aria-modal="true"
         class="modal-overlay"
-        onClick=${enableClickOutsideClose ? onClose : undefined}
+        onMouseDown=${handleOverlayMouseDown}
+        onClick=${handleOverlayClick}
     >
         <div
             ref=${cardRef}

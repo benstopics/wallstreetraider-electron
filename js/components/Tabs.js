@@ -4,11 +4,12 @@ import * as api from '../api.js';
 import { insertCurrencySymbols } from './helpers.js';
 import { tabNumberLabel, bracketLabel } from '../hotkeys.js';
 import { isEditableTarget } from '../keybinds.js';
-import { useHotkey, useIsKeyClaimed } from '../hooks/useHotkey.js';
+import { useHotkey, useIsKeyClaimed, useShiftHeld } from '../hooks/useHotkey.js';
 import { PRIORITY } from '../hotkeyManager.js';
 
 
 const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
+    const shiftHeld = useShiftHeld();
     const tabChildren = Array.isArray(children) ? children.filter(child => (child?.props?.label ?? false)) : [children];
     const tabLabels = tabChildren.map(child => child.props.label);
     const tabHotkeys = tabChildren.map(child => child.props.hotkey || null);
@@ -128,10 +129,12 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
                     }}
                 >
                     ${hotkey
-                        ? (lettersAreClaimed
-                            ? html`<span style="opacity:0.3;margin-right:2px;text-decoration:line-through;">${hotkey})</span>${insertCurrencySymbols(label)}`
-                            : bracketLabel(insertCurrencySymbols(label), hotkey))
-                        : html`${tabNum !== null ? tabNumberLabel(tabNum) : ''}${insertCurrencySymbols(label)}`
+                        ? (shiftHeld
+                            ? (lettersAreClaimed
+                                ? html`<span style="opacity:0.3;margin-right:2px;text-decoration:line-through;">${hotkey})</span>${insertCurrencySymbols(label)}`
+                                : bracketLabel(insertCurrencySymbols(label), hotkey))
+                            : insertCurrencySymbols(label))
+                        : html`${shiftHeld && tabNum !== null ? tabNumberLabel(tabNum) : ''}${insertCurrencySymbols(label)}`
                     }
                 </div>
             `})}

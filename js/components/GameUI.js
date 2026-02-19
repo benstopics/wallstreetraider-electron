@@ -88,10 +88,10 @@ const GameUI = () => {
         <!-- Toolbar -->
         <${Toolbar} />
         <${StockTicker} />
-        <div class="game-view flex flex-column gap-2 p-2">
+        <div class="game-view flex flex-row gap-2 p-2">
             ${!isDbSearch ? html`
             <!-- Left Column -->
-            <div class="flex flex-col w-1/6 gap-2">
+            <div class="flex flex-col gap-2" style="flex: 1 1 0%; min-width: 0;">
                 <!-- Date and Time -->
                 <div class="flex flex-col fixed-width date-display justify-center items-center w-full" style="height: 35px;">
                     ${gameDate}
@@ -131,7 +131,7 @@ const GameUI = () => {
                 </div>
             </div>
 
-            <div class="flex flex-col w-2/6 gap-2 min-h-0">
+            <div class="flex flex-col gap-2 min-h-0" style="flex: 2 1 0%; min-width: 0;">
                 <div class="flex items-center" style="height: 35px;">
                     <${CommandPrompt} />
                 </div>
@@ -157,11 +157,11 @@ const GameUI = () => {
             ` : ''}
 
             <!-- Right Column -->
-            <div class=${`flex flex-col gap-2 h-full ${isDbSearch ? 'w-full' : 'w-4/6'}`}>
+            <div class="flex flex-col gap-2 h-full" style=${`flex: ${isDbSearch ? '1 1 100%' : '4 1 0%'}; min-width: 0;`}>
                 ${html`<${View} />`}
             </div>
         </div>
-        <div class="panel-footer flex flex-row border items-center justify-between gap-2 mx-2" style="height: 25px;">
+        <div class="panel-footer flex flex-row border items-center justify-between gap-2 mx-2" style="min-height: 25px; flex-shrink: 0;">
             <div></div>
             <div class="flex flex-[1] items-center gap-2 cursor-pointer justify-between" onClick=${() => setShowNotifications(true)}>
                 <div>${(trendingNews.length > 0 ? insertCurrencySymbols(trendingNews[0]) : "")}</div>

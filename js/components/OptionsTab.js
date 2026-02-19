@@ -82,13 +82,16 @@ function OptionsTab() {
                             <${DisabledTooltipButton}
                                 disabledMessage=${sellDisabledMsg}
                                 onDisabledClick=${sellDisabledClick}
-                                onClick=${() => (
-                                    type === 'LONGCALL' ? api.sellCalls
-                                    : type === 'LONGPUT' ? api.sellPuts
-                                    : type === 'SHORTCALL' ? api.buyCalls
-                                    : type === 'SHORTPUT' ? api.buyPuts
-                                    : () => { }
-                                )(parseInt(id.split('|')[0]))}
+                                onClick=${async () => {
+                                    await (
+                                        type === 'LONGCALL' ? api.sellCalls
+                                        : type === 'LONGPUT' ? api.sellPuts
+                                        : type === 'SHORTCALL' ? api.buyCalls
+                                        : type === 'SHORTPUT' ? api.buyPuts
+                                        : () => { }
+                                    )(parseInt(id.split('|')[0]));
+                                    api.setViewAsset(parseInt(id.split('|').pop()));
+                                }}
                                 label=${type.includes('LONG') ? 'Sell' : 'Cover'}
                                 color="red"
                                 extrasIndex=${sellIdx}

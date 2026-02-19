@@ -77,6 +77,7 @@ function SettingsModal({ children }) {
     const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
     const disableHotkeysSetting = api.useGameStore(s => s.gameState.disableHotkeysSetting);
     const autoAddSetting = api.useGameStore(s => s.gameState.autoAddSetting);
+    const unethicalSetting = api.useGameStore(s => s.gameState.unethicalSetting);
 
     // Close on outside click
     useEffect(() => {
@@ -120,7 +121,7 @@ function SettingsModal({ children }) {
                 ${children}
             </div>
             ${isOpen ? html`
-                <div ref=${popoverRef} class="toolbar-menu-popover" style="position: absolute; top: 100%; right: 0; z-index: 99999999 !important; display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--panel-border); border-radius: 4px; padding: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                <div ref=${popoverRef} class="toolbar-menu-popover" style="position: absolute; top: 100%; right: 0; z-index: 99999999 !important;">
                     <${Button} class="toolbar-menu-item" data-tutorial="display-button" onClick=${handleDisplayClick}>${insertCurrencySymbols("Display")}</button>
                     <${Button} class="toolbar-menu-item" onClick=${handleHotkeysClick}>${insertCurrencySymbols("Hotkeys")}</button>
                     <div class="toolbar-menu-sep"></div>
@@ -135,6 +136,8 @@ function SettingsModal({ children }) {
                     <${SettingItem} label="${insertCurrencySymbols("Tooltips")}" isOn=${tooltipsSetting} onToggle=${() => api.tooltipsSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Shareholder Graph")}" isOn=${shareholderGraphSetting} onToggle=${() => api.shareholderGraphSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("AutoAdd to Quotes")}" isOn=${autoAddSetting} onToggle=${() => api.autoAddSelect()} />
+                    <div class="toolbar-menu-sep"></div>
+                    <${SettingItem} label="${insertCurrencySymbols("Unethical Scenarios")}" isOn=${unethicalSetting} onToggle=${() => api.unethicalSelect()} />
                 </div>
             ` : ''}
         </div>

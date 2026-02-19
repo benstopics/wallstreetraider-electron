@@ -15,7 +15,8 @@ function IndexPanel({ title, commodityId, panelNumber, isSelected = false, shift
     const buttonProps = useActionButtonProps();
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
 
-    const isActiveEntityETF = buttonProps.isActiveEntityETF;
+    const activeEntityNum = buttonProps.activeEntityNum;
+    const isActiveEntityETF = buttonProps.isActiveEntityETF && activeEntityNum !== api.CMOD_ID;
     const isCrypto = [api.BITCOIN_ID, api.ETHEREUM_ID].includes(commodityId);
 
     const buy = isCrypto ? api.buyPhysicalCrypto : api.buyPhysicalCommodity;

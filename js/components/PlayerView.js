@@ -81,7 +81,7 @@ const PlayerView = () => {
                             <${FinancialsTab} />
                         <//>
                         <${Tab} label="Cashflow" hotkey="c" id=${api.UI_PLAYER_CASH_FLOW_PROJECTION}>
-                            <div class="flex flex-col items-center">
+                            <div class="flex flex-col items-center overflow-x-auto w-full">
                                 <${HotkeyButtonBar} buttons=${[
                                     buttonProps.browseForSaleItems,
                                 ]} class="flex flex-row items-center gap-2 mb-2" />
