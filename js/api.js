@@ -1,40 +1,28 @@
 import { insertCurrencySymbols } from './components/helpers.js';
 import { html, render, useRef, useState, useEffect, useContext, createContext } from './lib/preact.standalone.module.js';
 import zustand from './lib/zustand.module.js';
-import { debugLog } from './debug-log.js';
 const { createStore } = zustand;
 
 const { ipcRenderer } = require('electron');
 
 export const apiBase = 'http://127.0.0.1:9631';
 
-// Network error handling - refresh browser on network errors (e.g., sleep/wake scenarios)
+// Network error handling - log sustained failures but NEVER reload.
+// location.reload() was causing an infinite refresh loop:
+//   POST /newgame -> wsr.exe busy/crash -> gamestate poll fails ->
+//   5 failures -> location.reload() -> polling restarts -> still failing -> reload -> OOM
+let _networkFailCount = 0;
+const NETWORK_FAIL_THRESHOLD = 5;
+
 async function fetchWithRetry(url, options = {}) {
-    const method = options.method || 'GET';
-    const pathOnly = url.replace(apiBase, '');
-    const t0 = performance.now();
     try {
         const response = await fetch(url, options);
-        if (debugLog.enabled) {
-            const ms = (performance.now() - t0).toFixed(1);
-            const bodySnippet = options.body ? ` body=${String(options.body).slice(0, 100)}` : '';
-            debugLog.log('REST', `${method} ${pathOnly}${bodySnippet} -> ${response.status} (${ms}ms)`);
-        }
+        _networkFailCount = 0; // Reset on any successful fetch
         return response;
     } catch (error) {
-        const ms = (performance.now() - t0).toFixed(1);
-        debugLog.error('REST', `${method} ${pathOnly} FAILED (${ms}ms): ${error.message}`);
-
-        const isNetworkError =
-            error.message?.includes('ERR_NETWORK_IO_SUSPENDED') ||
-            error.message?.includes('Failed to fetch') ||
-            error.message?.includes('network') ||
-            error.name === 'TypeError';
-
-        if (isNetworkError) {
-            console.log('Network error detected, refreshing browser...');
-            location.reload();
-            return; // Won't reach here, but for clarity
+        _networkFailCount++;
+        if (_networkFailCount <= 1 || _networkFailCount % 10 === 0) {
+            console.warn(`[FETCH #${_networkFailCount}] ${options.method || 'GET'} ${url.replace(apiBase, '')} FAILED (${(performance.now()).toFixed(1)}ms, streak=${_networkFailCount}): ${error.message}`);
         }
         throw error;
     }
@@ -219,18 +207,34 @@ export function buildDictRegex(allCompanies, allIndustries) {
 
     lookup = Object.create(null); // key: lowercased token -> {id, type}
 
-    // Companies: match by symbol and name
+    // Companies: match by symbol (2+ chars only to avoid false hyperlinks) and name
+    // BUG-027/082/103: Single-letter symbols (N, X, T, E, M, H, L) trigger on common words
     for (const c of allCompanies || []) {
-        if (c.symbol) lookup[c.symbol] = { id: c.id, type: 'C' };
+        if (c.symbol && c.symbol.length >= 2) lookup[c.symbol] = { id: c.id, type: 'C' };
         if (c.name) lookup[c.name] = { id: c.id, type: 'C' };
     }
 
-    // Industries: names can be multi-word
+    // Industries: names can be multi-word, add common informal aliases (BUG-088)
+    const INDUSTRY_ALIASES = {
+        'BIOTECHNOLOGY': ['BioTech', 'Biotech', 'BIOTECH'],
+        'MEDICAL EQUIP. / SUPPLIES': ['Medical Supplies', 'Medical Equipment'],
+        'ENTERTAIN. & BROADCAST': ['Entertainment', 'Broadcasting'],
+        'HOUSEHOLD & PERS. PRODS.': ['Household Products'],
+        'INTERNET SERV. / CONTENT': ['Internet Services', 'Internet'],
+        'NETWORK & TELECOM EQUIP.': ['Telecom Equipment'],
+    };
     for (const ind of allIndustries || []) {
         if (ind.name) {
             lookup[ind.name] = { id: ind.id, type: 'I' };
-            lookup[toTitleCase(ind.name)] = { id: ind.id, type: 'I' }; // also title case
-            lookup[toTitleCase(ind.name).toUpperCase()] = { id: ind.id, type: 'I' }; // also title case
+            lookup[toTitleCase(ind.name)] = { id: ind.id, type: 'I' };
+            lookup[toTitleCase(ind.name).toUpperCase()] = { id: ind.id, type: 'I' };
+            // Add aliases for industry names that appear informally in game text
+            const aliases = INDUSTRY_ALIASES[ind.name];
+            if (aliases) {
+                for (const alias of aliases) {
+                    lookup[alias] = { id: ind.id, type: 'I' };
+                }
+            }
         }
     }
 
@@ -452,7 +456,19 @@ export async function getAssetChart(id) {
 
     try {
         const data = await postIdArg('/asset_chart', id);
-        if (data && Array.isArray(data.prices) && data.prices.length >= 1) return data;
+        if (data && Array.isArray(data.prices) && data.prices.length >= 3) {
+            // Filter out leading zeros — matching PB's charTEST.inc behavior.
+            // Zero values compress the chart scale, making it look like only
+            // the current price is shown.
+            const firstNonZero = data.prices.findIndex(p => p !== 0);
+            if (firstNonZero > 0) {
+                const fillValue = data.prices[firstNonZero];
+                for (let i = 0; i < firstNonZero; i++) {
+                    data.prices[i] = fillValue;
+                }
+            }
+            return data;
+        }
         return buildFallback();
     } catch (e) {
         console.error(e);
@@ -579,6 +595,19 @@ export async function increaseEarnings() { await postNoArg('/increase_earnings')
 
 /* Legal */
 export async function changeLawFirm() { await postNoArg('/change_law_firm'); }
+export async function creditInfo() { await postNoArg('/credit_info'); }
+export async function clearChart() { await postNoArg('/clear_chart'); }
+export async function growthThrottle() { await postNoArg('/growth_throttle'); }
+export async function clearStreamList() { await postNoArg('/clear_stream_list'); }
+export async function fillStreamList() { await postNoArg('/fill_stream_list'); }
+export async function setWhoOwnsFilter(value) {
+    const url = `${apiBase}/set_who_owns_filter`;
+    await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value })
+    });
+}
 export async function antitrustLawsuit(id) { await postIdArg('/antitrust_lawsuit', id); }
 
 export async function harrassingLawsuit(id) { await postIdArg('/harrassing_lawsuit', id); }
@@ -598,6 +627,7 @@ export async function tooltipsSelect() { await postNoArg('/tooltips_select'); }
 export async function shareholderGraphSelect() { await postNoArg('/shareholdergraph_select'); }
 export async function unethicalSelect() { await postNoArg('/unethical_select'); }
 export async function disableHotkeysSelect() { await postNoArg('/disablehotkeys_select'); }
+export async function autoAddSelect() { await postNoArg('/autoadd_select'); }
 
 // Cheat Menu
 export async function cheatDisableLawsuits() { await postNoArg('/cheat_disable_lawsuits'); }
@@ -640,15 +670,7 @@ export async function largestTaxLosses() { await postNoArg('/largest_tax_losses'
 export async function industrySummary() { await postNoArg('/industry_summary'); }
 export async function industryProjections() { await postNoArg('/industry_projections'); }
 export async function viewCorpAssetsForSale() { await postNoArg('/view_corp_assets_for_sale'); }
-export async function industryGrowthRates() { await postNoArg('/industry_growth_rates'); }
 
-/* Who Owns What */
-export async function whoOwnsCommodities() { await postNoArg('/who_owns_commodities'); }
-export async function whoOwnsInterestRateSwaps() { await postNoArg('/who_owns_interest_rate_swaps'); }
-export async function whoOwnsOptions() { await postNoArg('/who_owns_options'); }
-export async function whoOwnsStocks() { await postNoArg('/who_owns_stocks'); }
-export async function whoAreAdvisors() { await postNoArg('/who_are_advisors'); }
-export async function whoOwnsCrypto() { await postNoArg('/who_owns_crypto'); }
 
 /*
  * Navigation Manager – purely local state.
@@ -885,6 +907,22 @@ export function mergeGameState(newState) {
         } else {
             // Backend hasn't caught up, use local value
             newState.isTickerRunning = currentState.isTickerRunning;
+        }
+    }
+
+    // BUG-105 FIX: Reuse old array references when contents haven't changed.
+    // This prevents unnecessary re-renders of report/list components every poll cycle.
+    for (const key of Object.keys(newState)) {
+        const prev = currentState[key];
+        const next = newState[key];
+        if (Array.isArray(prev) && Array.isArray(next)) {
+            if (prev.length === next.length) {
+                let same = true;
+                for (let i = 0; i < prev.length; i++) {
+                    if (prev[i] !== next[i]) { same = false; break; }
+                }
+                if (same) newState[key] = prev;
+            }
         }
     }
 
@@ -1152,30 +1190,6 @@ export const gameStore = createStore((set, get) => ({
     setNavState: (next) => set({ navState: next }),
 }));
 
-// Debug: log Zustand store mutations when WSR_DEBUG_VERBOSE=1
-if (debugLog.enabled) {
-    let prevModalType = 0;
-    let prevIsLoading = false;
-    let prevGameLoaded = false;
-    gameStore.subscribe((state) => {
-        const gs = state.gameState || {};
-        // Log modal type changes
-        if (gs.modalType !== undefined && gs.modalType !== prevModalType) {
-            debugLog.log('STORE', `modalType ${prevModalType} -> ${gs.modalType} title="${gs.modalTitle || ''}" text="${(gs.modalText || '').slice(0, 100)}"`);
-            prevModalType = gs.modalType;
-        }
-        // Log loading state changes
-        if (gs.isLoading !== prevIsLoading) {
-            debugLog.log('STORE', `isLoading ${prevIsLoading} -> ${gs.isLoading}`);
-            prevIsLoading = gs.isLoading;
-        }
-        // Log game loaded changes
-        if (gs.gameLoaded !== prevGameLoaded) {
-            debugLog.log('STORE', `gameLoaded ${prevGameLoaded} -> ${gs.gameLoaded}`);
-            prevGameLoaded = gs.gameLoaded;
-        }
-    });
-}
 
 const shallow = (a, b) => {
     if (Object.is(a, b)) return true;

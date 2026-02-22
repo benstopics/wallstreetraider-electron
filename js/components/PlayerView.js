@@ -82,6 +82,9 @@ const PlayerView = () => {
                         <//>
                         <${Tab} label="Cashflow" hotkey="c" id=${api.UI_PLAYER_CASH_FLOW_PROJECTION}>
                             <div class="flex flex-col items-center">
+                                <${HotkeyButtonBar} buttons=${[
+                                    buttonProps.browseForSaleItems,
+                                ]} class="flex flex-row items-center gap-2 mb-2" />
                                 ${renderLines(cashflowProjection, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                             </div>
                         <//>

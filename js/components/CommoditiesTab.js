@@ -57,7 +57,8 @@ function IndexPanel({ title, commodityId, panelNumber, isSelected = false, shift
     const shortFuturesDisabledInfo = getDisabledInfo([
         { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot short futures" },
         { condition: !!actingAsDisabledMessage, actingAs: true },
-        { condition: [api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId), message: "Banks and insurance companies cannot short futures." }
+        { condition: actingAsIndustryId === api.BANK_IND, message: "Banks cannot trade futures." },
+        { condition: actingAsIndustryId === api.INSURANCE_IND, message: "Insurance companies can only buy (long) stock index futures, not short." }
     ]);
 
     const borderStyle = isSelected

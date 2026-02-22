@@ -76,7 +76,7 @@ function OptionsTab() {
                             const exerciseDisabledMsg = actingAsDisabledMessage || (isShort ? "Cannot exercise shorted options" : false) || (notInTheMoney ? "Option not in the money" : false);
                             const exerciseDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
                             const sellIdx = extrasCounter ? extrasCounter.current++ : null;
-                            const exerciseIdx = extrasCounter ? extrasCounter.current++ : null;
+                            const exerciseIdx = !isShort && extrasCounter ? extrasCounter.current++ : null;
 
                             return html`
                             <${DisabledTooltipButton}
@@ -97,7 +97,7 @@ function OptionsTab() {
                                 isLineSelected=${isLineSelected}
                                 lineNumber=${lineNumber}
                             />
-                            <${DisabledTooltipButton}
+                            ${!isShort && html`<${DisabledTooltipButton}
                                 disabledMessage=${exerciseDisabledMsg}
                                 onDisabledClick=${exerciseDisabledClick}
                                 onClick=${() => (
@@ -112,7 +112,7 @@ function OptionsTab() {
                                 hotkeyLetter="e"
                                 isLineSelected=${isLineSelected}
                                 lineNumber=${lineNumber}
-                            />
+                            />`}
                         `}
                     , hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
                 </div>

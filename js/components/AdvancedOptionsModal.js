@@ -267,7 +267,7 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
         api.modalResult(api.serialize({}));
     };
 
-    // Stub handlers (wire later)
+    const onCalc = () => { api.modalResult(api.serialize({ ...state, buttonId: "CALC" })); };
     const onHelp = () => { api.modalResult(api.serialize({ ...state, buttonId: "HELP" })); };
     const onShowSizeLimits = () => { api.modalResult(api.serialize({ ...state, buttonId: "SHOW_SIZE_LIMITS" })); };
     const onAutoTrade = () => { api.modalResult(api.serialize({ ...state, buttonId: "AUTOTRADE" })); };
@@ -363,7 +363,7 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
     return html`
     <${Modal} show=${show} style="display: flex; flex-direction: column;">
       <div class="flex-1 min-h-0 p-3 overflow-y-auto">
-        <div class="text-lg font-bold h-full">${title}</div>
+        <div class="text-lg font-bold text-center">${title}</div>
         <br/>
         <div class="text-lg font-bold mb-2">${headerTitle}</div>
 
@@ -443,10 +443,12 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
       <div class="flex justify-end gap-2 p-3 flex-shrink-0 items-center">
       
         <div class="my-4 flex flex-wrap gap-2">
+            <${Button} class="btn modal" onClick=${onCalc}>CALC</button>
             <${Button} class="btn modal" onClick=${clearAll}>CLEAR ALL</button>
             <${Button} class="btn modal" onClick=${onHelp}>HELP</button>
             <${Button} class="btn modal" onClick=${onShowSizeLimits}>SHOW SIZE LIMITS</button>
             <${Button} class="btn modal" onClick=${onAutoTrade}>AUTO-TRADE</button>
+            <${Button} class="btn modal" onClick=${onListOptions}>LIST OPTIONS</button>
             <${Button} class="btn modal" onClick=${onCloseAll}>CLOSE ALL OPTIONS</button>
         </div>
         

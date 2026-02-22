@@ -1,4 +1,4 @@
-import { html, render, useState, useEffect } from '../lib/preact.standalone.module.js';
+import { html, render, useState, useEffect, useMemo } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import BalanceSheet from './BalanceSheet.js';
@@ -20,6 +20,7 @@ const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const GameUI = () => {
 
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showMyNews, setShowMyNews] = useState(false);
 
     const newsHeadlines = api.useGameStore(s => s.gameState.newsHeadlines);
     const currentYear = api.useGameStore(s => s.gameState.currentYear);
@@ -36,7 +37,30 @@ const GameUI = () => {
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const activeIndustryNum = api.useGameStore(s => s.gameState.activeIndustryNum);
 
+    const streamingQuotes = api.useGameStore(s => s.gameState.streamingQuotesList) || [];
+    const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
+
     const isDbSearch = activeIndustryNum === -2;
+
+    // Build set of "my" entity names for MyNews filtering
+    const myEntityNames = useMemo(() => {
+        const names = new Set();
+        for (const q of streamingQuotes) {
+            if (q.name) names.add(q.name);
+            if (q.symbol) names.add(q.symbol);
+        }
+        return names;
+    }, [streamingQuotes]);
+
+    const filteredHeadlines = useMemo(() => {
+        if (!showMyNews || myEntityNames.size === 0) return newsHeadlines;
+        return newsHeadlines.filter(h => {
+            for (const name of myEntityNames) {
+                if (h.includes(name)) return true;
+            }
+            return false;
+        });
+    }, [newsHeadlines, showMyNews, myEntityNames]);
 
     const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString());
     useEffect(() => {
@@ -60,7 +84,7 @@ const GameUI = () => {
     const gameDate = `${months[currentMonth - 1]} ${currentDay}, ${currentYear} (Q${currentQuarter})`;
 
     return html`
-    <div class="flex flex-col h-full">
+    <div class="flex flex-col h-full" data-testid="game-ui">
         <!-- Toolbar -->
         <${Toolbar} />
         <${StockTicker} />
@@ -112,10 +136,13 @@ const GameUI = () => {
                     <${CommandPrompt} />
                 </div>
                 <div class="panel flex-[4] flex min-h-0 flex-col">
-                    <div class="panel-header">Financial News Headlines</div>
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Financial News Headlines</span>
+                        <${Button} class="btn text-xs px-2 py-0 ${showMyNews ? 'yellow' : ''}" data-testid="btn-my-news" onClick=${() => setShowMyNews(!showMyNews)} title="Filter to show only news about your stocks and companies">My News</button>
+                    </div>
                     <div class="p-1 panel-body">
                         <div class="flex flex-col h-full overflow-y-auto">
-                            ${newsHeadlines.map(h => html`
+                            ${filteredHeadlines.map(h => html`
                                 <div class="news-headline">
                                     ${api.renderHyperlinks(h, ({ id, type }) => {
                                         if (type === 'C')  api.setViewAsset(id);
@@ -150,7 +177,7 @@ const GameUI = () => {
         </div>
         <${Modal} show=${showNotifications} onClose=${() => setShowNotifications(false)}>
             <div class="flex justify-between items-center mb-4">
-                <div class="text-lg font-bold h-full">Notifications</div>
+                <div class="text-lg font-bold">Notifications</div>
                 <${Button} class="btn red" onClick=${() => setShowNotifications(false)}>Close</button>
             </div>
             <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">

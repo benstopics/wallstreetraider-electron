@@ -156,8 +156,10 @@ function PortfolioTab() {
                                 : buttonProps.sellStock;
 
                             const sellIdx = extrasCounter ? extrasCounter.current++ : null;
-                            const showSpinOff = showCorpButtons && !buttonProps.isActiveEntityETF && !['J', 'GL', 'GS', 'S'].includes(type);
-                            const spinOffIdx = showSpinOff && extrasCounter ? extrasCounter.current++ : null;
+                            const isStockType = !['J', 'GL', 'GS', 'S'].includes(type);
+                            const showSpinOff = showCorpButtons && !buttonProps.isActiveEntityETF && isStockType;
+                            const showBuyMore = !showCorpButtons && isStockType;
+                            const extraBtnIdx = (showSpinOff || showBuyMore) && extrasCounter ? extrasCounter.current++ : null;
 
                             return html`<div class="flex flex-row stop-btn-row">
                                 <${DisabledTooltipButton}
@@ -178,9 +180,19 @@ function PortfolioTab() {
                                 ${showSpinOff ? html`<${DisabledTooltipButton}
                                     ...${buttonProps.spinOff}
                                     onClick=${() => api.spinOff(id)}
-                                    extrasIndex=${spinOffIdx}
+                                    extrasIndex=${extraBtnIdx}
                                     scopeActive=${scopeActiveRef.current}
                                     hotkeyLetter="o"
+                                    isLineSelected=${isLineSelected}
+                                    lineNumber=${lineNumber}
+                                />` : ''}
+                                ${showBuyMore ? html`<${DisabledTooltipButton}
+                                    ...${buttonProps.buyStock}
+                                    onClick=${() => api.buyStock(id)}
+                                    label="Buy More"
+                                    extrasIndex=${extraBtnIdx}
+                                    scopeActive=${scopeActiveRef.current}
+                                    hotkeyLetter="b"
                                     isLineSelected=${isLineSelected}
                                     lineNumber=${lineNumber}
                                 />` : ''}

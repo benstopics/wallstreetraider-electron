@@ -12,6 +12,7 @@ import Button from './Button.js';
 import { insertCurrencySymbols } from './helpers.js';
 import { bracketLabel } from '../hotkeys.js';
 import { useShiftHeld } from '../hooks/useHotkey.js';
+import Modal from './Modal.js';
 
 function CheatsMenu() {
     const [isOpen, setIsOpen] = useState(false);
@@ -100,6 +101,7 @@ function Toolbar() {
     const [showNotepad, setShowNotepad] = useState(false);
     const [showCalculator, setShowCalculator] = useState(false);
     const [showKeybinds, setShowKeybinds] = useState(false);
+    const [showAbout, setShowAbout] = useState(false);
 
     const shiftHeld = useShiftHeld();
 
@@ -108,6 +110,20 @@ function Toolbar() {
             <${NotesModal} show=${showNotepad} onClose=${() => setShowNotepad(false)} />
             <${CalculatorModal} show=${showCalculator} onClose=${() => setShowCalculator(false)} />
             <${KeybindsModal} show=${showKeybinds} onClose=${() => setShowKeybinds(false)} />
+            ${showAbout ? html`
+                <${Modal} show=${showAbout} onClose=${() => setShowAbout(false)} style=${{ "--modal-w": "400px", "--modal-h": "auto" }}>
+                    <div style="padding: 24px; text-align: center;">
+                        <h2 style="margin: 0 0 8px 0; font-size: 20px;">Wall Street Raider</h2>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; opacity: 0.8;">Version 10 Remastered — Early Access</p>
+                        <p style="margin: 0 0 16px 0; font-size: 12px; opacity: 0.6;">Steam App ID: 4080310</p>
+                        <p style="margin: 0 0 4px 0; font-size: 13px;">Copyright \u00a9 ${new Date().getFullYear()}, All Rights Reserved</p>
+                        <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">Ben Ward and HackJack Games</p>
+                        <p style="margin: 0 0 16px 0; font-size: 13px;">Original game by Michael Jenkins</p>
+                        <p style="margin: 0 0 16px 0; font-size: 12px; opacity: 0.7;">The most realistic Wall Street simulation ever created</p>
+                        <${Button} class="btn px-4 py-1" data-testid="btn-close-about" onClick=${() => setShowAbout(false)}>Close</button>
+                    </div>
+                <//>
+            ` : ''}
             <div class="flex items-center gap-2" style="flex-shrink: 1; min-width: 0;">
                 <${HamburgerMenu} />
                 <div class="flex flex-wrap items-center gap-2">
@@ -119,6 +135,9 @@ function Toolbar() {
                     </div>
                     <div class="btn" onClick=${() => showHelp()}>
                         <span style="white-space: nowrap;">${insertCurrencySymbols("Help")}</span>
+                    </div>
+                    <div class="btn" data-testid="btn-about" onClick=${() => setShowAbout(true)}>
+                        <span style="white-space: nowrap;">${insertCurrencySymbols("About")}</span>
                     </div>
                 </div>
             </div>
@@ -135,6 +154,9 @@ function Toolbar() {
                 </div>
                 <div class="btn" data-tutorial="database-search" onClick=${() => api.viewDbSearch()}>
                     <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Database Search", "D") : insertCurrencySymbols("Database Search")}</span>
+                </div>
+                <div class="btn" data-testid="btn-end-turn" onClick=${() => api.checkScoreboard()}>
+                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Scoreboard", "S") : insertCurrencySymbols("Scoreboard")}</span>
                 </div>
             </div>
             <${NavigationPanel} />

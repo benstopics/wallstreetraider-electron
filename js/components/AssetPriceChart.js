@@ -3,6 +3,7 @@ import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import { DEFAULT_ASSET_PRICE_CHART_THEME } from '../../css/chart-styles.js';
 import { insertCurrencySymbols } from './helpers.js';
+import Modal from './Modal.js';
 import {
     DEFAULT_LAYOUT_CONFIG,
     computeLayout,
@@ -232,6 +233,7 @@ const AssetPriceChart = ({
     theme = DEFAULT_ASSET_PRICE_CHART_THEME,
     layoutConfig = DEFAULT_LAYOUT_CONFIG,
     baseMultiplier = 1,  // Multiplier for base unit (e.g., 1e6 if data is in millions)
+    expandable = true,
 }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
@@ -244,6 +246,8 @@ const AssetPriceChart = ({
         price: null,
         dateInfo: null,
     });
+
+    const gameLoaded = api.useGameStore(s => s.gameState.gameLoaded);
 
     // Get current price from allSecurities (for special IDs) or allCompanies (for regular companies)
     const currentPrice = api.useGameStore(s => {
@@ -268,12 +272,12 @@ const AssetPriceChart = ({
         return () => { active = false; };
     }, [assetId]);
 
-    // Refresh chart data when price changes
+    // Refresh chart data when price changes or game loads
     useEffect(() => {
         if (currentPrice !== null) {
             refreshData();
         }
-    }, [assetId, currentPrice]);
+    }, [assetId, currentPrice, gameLoaded]);
 
     // Memoize transformed prices
     const prices = useMemo(() => {
@@ -357,9 +361,13 @@ const AssetPriceChart = ({
             let finalChartTitle = insertCurrencySymbols(
                 typeof chartTitle === 'function' ? chartTitle(chartData) : chartTitle
             );
-            // Append current price to title using the same suffix as Y-axis labels
+            // Append scale unit to title (e.g., "Net Worth ($ Trillion)" not "Net Worth (1032.34T)")
             if (chartTitle && !chartTitle.toString().includes('$')) {
-                finalChartTitle += ` (${formatWithSuffix(prices[prices.length - 1], suffixInfo.suffix, suffixInfo.divisor, baseMultiplier)})`;
+                const SUFFIX_NAMES = { 'Q': 'Quadrillion', 'T': 'Trillion', 'B': 'Billion', 'M': 'Million', 'k': 'Thousand' };
+                const unitName = SUFFIX_NAMES[suffixInfo.suffix];
+                if (unitName) {
+                    finalChartTitle += ` ($ ${unitName})`;
+                }
             }
 
             // Clear and draw
@@ -443,8 +451,10 @@ const AssetPriceChart = ({
         };
     }, [mouseState, prices, layoutConfig, chartTitle, yAxisTitle]);
 
+    const [expanded, setExpanded] = useState(false);
+
     return html`
-        <div ref=${containerRef} class="relative w-full h-full">
+        <div ref=${containerRef} class="relative w-full h-full" style=${expandable ? "cursor: pointer;" : ""} onClick=${expandable ? () => setExpanded(true) : undefined} data-testid="chart-${assetId}">
             <canvas
                 ref=${canvasRef}
                 class="price-chart w-full h-full"
@@ -461,6 +471,22 @@ const AssetPriceChart = ({
                 </div>
             `}
         </div>
+        ${expanded && html`
+            <${Modal} show=${true} onClose=${() => setExpanded(false)} style=${"--modal-w: 80vw; --modal-h: 70vh;"}>
+                <div style="width: 100%; height: 100%; padding: 8px;">
+                    <${AssetPriceChart}
+                        assetId=${assetId}
+                        yAxisTitle=${yAxisTitle}
+                        chartTitle=${chartTitle}
+                        transformValue=${transformValue}
+                        theme=${theme}
+                        layoutConfig=${layoutConfig}
+                        baseMultiplier=${baseMultiplier}
+                        expandable=${false}
+                    />
+                </div>
+            <//>
+        `}
     `;
 };
 

@@ -212,7 +212,7 @@ const DatabaseSearchView = () => {
             if (convertiblesOnly && c.convPrem <= 0) return false;
             if (positiveCashFlow && c.cashFlow !== 1 && c.cashFlow !== 2) return false;
             if (cashFlowBeforeDebt && c.cashFlow !== 2) return false;
-            if (shortCandidates && c.shortScore < 3) return false;
+            if (shortCandidates && (c.shortScore < 3 || !c.hasPublicShares)) return false;
             if (hasPublicShares && !c.hasPublicShares) return false;
 
             return true;
@@ -270,6 +270,75 @@ const DatabaseSearchView = () => {
         setConvertiblesOnly(false); setPositiveCashFlow(false); setCashFlowBeforeDebt(false);
         setShortCandidates(false); setHasPublicShares(false);
     };
+
+    // Recall last DB Search criteria from localStorage
+    const DB_SEARCH_KEY = 'wsr_db_search_criteria';
+
+    const applyCriteria = useCallback((c) => {
+        clearFilters();
+        if (c.searchFilter) { if (searchRef.current) searchRef.current.value = c.searchFilter; setSearchFilter(c.searchFilter); }
+        if (c.minROEFilter) setMinROE(c.minROEFilter);
+        if (c.maxPEFilter) setMaxPE(c.maxPEFilter);
+        if (c.maxPctBookFilter) setMaxPctBook(c.maxPctBookFilter);
+        if (c.minDivFilter) setMinDiv(c.minDivFilter);
+        if (c.minMarketCapFilter) setMinMarketCap(c.minMarketCapFilter);
+        if (c.maxMarketCapFilter) setMaxMarketCap(c.maxMarketCapFilter);
+        if (c.maxConvPremFilter) setMaxConvPrem(c.maxConvPremFilter);
+        if (c.industry) setIndustry(c.industry);
+        if (c.minMgmtRating) setMinMgmtRating(c.minMgmtRating);
+        if (c.minCredRating) setMinCredRating(c.minCredRating);
+        if (c.minAnalystRating) setMinAnalystRating(c.minAnalystRating);
+        if (c.excludeFinancials) setExcludeFinancials(true);
+        if (c.excludeHoldings) setExcludeHoldings(true);
+        if (c.hasBonds) setHasBonds(true);
+        if (c.convertiblesOnly) setConvertiblesOnly(true);
+        if (c.positiveCashFlow) setPositiveCashFlow(true);
+        if (c.cashFlowBeforeDebt) setCashFlowBeforeDebt(true);
+        if (c.shortCandidates) setShortCandidates(true);
+        if (c.hasPublicShares) setHasPublicShares(true);
+        if (c.sortCol) setSortCol(c.sortCol);
+        if (c.sortDir) setSortDir(c.sortDir);
+    }, []);
+
+    const recallSearch = useCallback(() => {
+        try {
+            const saved = localStorage.getItem(DB_SEARCH_KEY);
+            if (saved) applyCriteria(JSON.parse(saved));
+        } catch (e) { /* ignore corrupt data */ }
+    }, [applyCriteria]);
+
+    // Auto-restore last criteria on mount
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(DB_SEARCH_KEY);
+            if (saved) applyCriteria(JSON.parse(saved));
+        } catch (e) { /* ignore */ }
+    }, []);
+
+    // Auto-save criteria whenever filters change
+    useEffect(() => {
+        const criteria = {
+            searchFilter, industry, minROEFilter, maxPEFilter, maxPctBookFilter,
+            minDivFilter, minMarketCapFilter, maxMarketCapFilter, maxConvPremFilter,
+            minMgmtRating, minCredRating, minAnalystRating,
+            excludeFinancials, excludeHoldings, hasBonds, convertiblesOnly,
+            positiveCashFlow, cashFlowBeforeDebt, shortCandidates, hasPublicShares,
+            sortCol, sortDir
+        };
+        const hasAny = searchFilter || industry || minROEFilter || maxPEFilter || maxPctBookFilter
+            || minDivFilter || minMarketCapFilter || maxMarketCapFilter || maxConvPremFilter
+            || minMgmtRating || minCredRating || minAnalystRating
+            || excludeFinancials || excludeHoldings || hasBonds || convertiblesOnly
+            || positiveCashFlow || cashFlowBeforeDebt || shortCandidates || hasPublicShares;
+        if (hasAny) {
+            try { localStorage.setItem(DB_SEARCH_KEY, JSON.stringify(criteria)); } catch (e) { /* ignore */ }
+        }
+    }, [searchFilter, industry, minROEFilter, maxPEFilter, maxPctBookFilter,
+        minDivFilter, minMarketCapFilter, maxMarketCapFilter, maxConvPremFilter,
+        minMgmtRating, minCredRating, minAnalystRating,
+        excludeFinancials, excludeHoldings, hasBonds, convertiblesOnly,
+        positiveCashFlow, cashFlowBeforeDebt, shortCandidates, hasPublicShares,
+        sortCol, sortDir]);
 
     // Presets
     const presets = [
@@ -453,7 +522,8 @@ const DatabaseSearchView = () => {
                         <input type="checkbox" checked=${hasPublicShares} onChange=${e => setHasPublicShares(e.target.checked)} />
                         <span>Public Shares</span>
                     </label>
-                    <button class="db-input px-2 cursor-pointer" onClick=${clearFilters}>Clear</button>
+                    <button class="db-input px-2 cursor-pointer" data-testid="btn-clear-search" onClick=${clearFilters}>Clear</button>
+                    <button class="db-input px-2 cursor-pointer" data-testid="btn-recall-search" onClick=${recallSearch} title="Recall last saved search criteria">Recall</button>
                     <div class="flex-1"></div>
                     <div class="text-gray-400">${filtered.length} of ${data.length}</div>
                 </div>

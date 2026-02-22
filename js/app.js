@@ -158,10 +158,9 @@ const AppInner = () => {
         globalHotkeyIdRef.current,
         PRIORITY.GLOBAL,
         (e) => {
-            // ESC, Enter (digit confirm), Shift (blur) work even with helpShown
+            // ESC, Enter (digit confirm) work even with helpShown
             if (e.key === 'Escape' && !isEditableTarget(e.target)) return true;
             if (e.key === 'Enter' && hotkeyManager.digitBuffer && !isEditableTarget(e.target)) return true;
-            if (e.key === 'Shift' && isEditableTarget(document.activeElement)) return true;
             if (isEditableTarget(e.target)) return false;
             if (helpShown) return false;
             // Shift+letter for dropdowns
@@ -188,12 +187,6 @@ const AppInner = () => {
                 return true;
             }
 
-            // Shift blur: blur editable element so Shift+letter hotkeys work
-            if (e.key === 'Shift' && isEditableTarget(document.activeElement)) {
-                document.activeElement.blur();
-                return true;
-            }
-
             if (isEditableTarget(e.target)) return false;
             if (helpShown) return false;
 
@@ -204,6 +197,13 @@ const AppInner = () => {
                     document.dispatchEvent(new CustomEvent('hotkey-dropdown', { detail: { char: e.key.toLowerCase() } }));
                     return true;
                 }
+            }
+
+            // Handle Ctrl+Shift+= (produces e.key='+' on US keyboards) for zoom in
+            if (e.ctrlKey && (e.key === '+' || e.key === '_')) {
+                e.preventDefault();
+                ipcRenderer.send(e.key === '+' ? 'zoom-in' : 'zoom-out');
+                return true;
             }
 
             const match = matchHotkey(e);
@@ -225,6 +225,8 @@ const AppInner = () => {
                 case 'CHANGE_LAW_FIRM':   api.changeLawFirm(); return true;
                 case 'VIEW_ACTING_AS':   api.setViewAsset(api.gameStore.getState().gameState.actingAsId); return true;
                 case 'ACT_AS':           document.dispatchEvent(new CustomEvent('hotkey-act-as')); return true;
+                case 'VIEW_LAST_ENTITY': document.dispatchEvent(new CustomEvent('hotkey-view-last-entity')); return true;
+                case 'VIEW_INDUSTRY':    document.dispatchEvent(new CustomEvent('hotkey-view-industry')); return true;
                 case 'VIEW_PLAYER':      document.dispatchEvent(new CustomEvent('hotkey-view-player')); return true;
                 case 'ACTING_AS_PREV':   e.preventDefault(); api.cycleActingAs(-1); return true;
                 case 'ACTING_AS_NEXT':   e.preventDefault(); api.cycleActingAs(1); return true;
@@ -253,11 +255,23 @@ const AppInner = () => {
                     e.preventDefault();
                     api.saveGame();
                     return true;
+                case 'ZOOM_IN':
+                    e.preventDefault();
+                    ipcRenderer.send('zoom-in');
+                    return true;
+                case 'ZOOM_OUT':
+                    e.preventDefault();
+                    ipcRenderer.send('zoom-out');
+                    return true;
+                case 'ZOOM_RESET':
+                    e.preventDefault();
+                    ipcRenderer.send('zoom-reset');
+                    return true;
             }
             return false;
         },
         { active: gameLoaded },
-        [isTickerRunning, helpShown, gameLoaded]
+        [isTickerRunning, helpShown, gameLoaded, modalType]
     );
 
     // Stop ticker when help modal is shown

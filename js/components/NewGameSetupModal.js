@@ -95,7 +95,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
 
     return html`<${Modal} show=${show} style="display: flex; flex-direction: column;">
         <div class="flex-1 min-h-0 p-3 overflow-y-auto">
-            <div class="text-lg font-bold h-full">${insertCurrencySymbols("Startup Choices")}</div>
+            <div class="text-lg font-bold text-center">${insertCurrencySymbols("Startup Choices")}</div>
             <br/>
             <div class="mb-4">
                 <div class="flex flex-col">
@@ -144,7 +144,7 @@ export default function NewGameSetupModal({ show, onSubmit, onCancel }) {
                             }} />
                             <br/>
                         </div>
-                        <div class="flex-2 p-2">${insertCurrencySymbols("(100 to 1000 mil. USD)")}</div>
+                        <div class="flex-2 p-2">${insertCurrencySymbols("(@DLRSIGN100 to @DLRSIGN1000 @MIL@EURO)")}</div>
                     </div>
                     <div class="flex">
                         <div class="flex-2 p-2 text-right w-36">${insertCurrencySymbols("Game Length:")}</div>

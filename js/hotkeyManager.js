@@ -306,9 +306,14 @@ class HotkeyManager {
             if (e.key !== ' ' && e.key !== '/') return; // allow spacebar and / to fall through
         }
 
-        // SHIFT tracking
+        // SHIFT tracking — suppress when user is typing in an input/textarea/select
+        // (prevents bracket labels from appearing behind modals when typing capitals)
         if (e.key === 'Shift') {
-            this._setShift(true);
+            const tag = (e.target?.tagName || '').toLowerCase();
+            const inEditable = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target?.isContentEditable;
+            if (!inEditable) {
+                this._setShift(true);
+            }
         }
 
         // Walk handlers in priority order

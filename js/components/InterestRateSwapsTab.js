@@ -5,6 +5,7 @@ import * as api from '../api.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
 import HotkeyButtonBar from './HotkeyButtonBar.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
+import Button from './Button.js';
 
 
 function IndexPanel({ title, bondId }) {
@@ -34,6 +35,7 @@ function InterestRateSwapsTab() {
 
     const swapsPortfolio = api.useGameStore(s => s.gameState.swapsPortfolio);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
+    const { showHelp } = api.useWSRContext();
 
     // Get centralized button props
     const buttonProps = useActionButtonProps();
@@ -51,7 +53,8 @@ function InterestRateSwapsTab() {
     const scopeActiveRef = useRef(false);
     const [, setScopeRenderTick] = useState(0);
     const barButtons = [
-        showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.interestRateSwaps, label: "Create New Swap" },
+        !buttonProps.isActiveEntityETF && { ...buttonProps.interestRateSwaps, label: "Create New Swap" },
+        { label: "Swap Info", onClick: () => showHelp('chap09_IX(B)(11)'), color: 'blue' },
     ];
     const extrasStartNumber = barButtons.filter(Boolean).length + 1;
 

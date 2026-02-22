@@ -166,7 +166,7 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
 
     return html`<${Modal} show=${show} onClose=${handleCancel} style="display: flex; flex-direction: column;">
         <div class="flex-1 min-h-0 p-3 overflow-y-auto">
-            <div class="text-lg font-bold h-full">${insertCurrencySymbols(title)}</div>
+            <div class="text-lg font-bold text-center">${insertCurrencySymbols(title)}</div>
             <br/>
             <div class="mb-4">${insertCurrencySymbols(text)}</div>
             <div style="position:relative;">

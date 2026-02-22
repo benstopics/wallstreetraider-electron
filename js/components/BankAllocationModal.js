@@ -197,7 +197,7 @@ export default function BankAllocationModal({ show, title, stateStr, onSubmit })
     return html`
     <${Modal} show=${show} style="display: flex; flex-direction: column;">
       <div class="flex-1 min-h-0 p-3 overflow-y-auto">
-        <div class="text-lg font-bold h-full">${title}</div>
+        <div class="text-lg font-bold text-center">${title}</div>
         <br/>
         <div class="text-lg font-bold mb-2">${headerTitle}</div>
 

@@ -84,6 +84,24 @@ function NavigationPanel() {
         return () => document.removeEventListener('hotkey-act-as', handler);
     }, [activeEntityNum, actingAsId]);
 
+    // Hotkey: view last entity
+    useEffect(() => {
+        const handler = () => {
+            if (lastEntity) api.setViewAsset(lastEntity.id);
+        };
+        document.addEventListener('hotkey-view-last-entity', handler);
+        return () => document.removeEventListener('hotkey-view-last-entity', handler);
+    }, [lastEntity]);
+
+    // Hotkey: view industry
+    useEffect(() => {
+        const handler = () => {
+            if (currentIndustry && activeIndustryId > 0) api.viewIndustry(activeIndustryId);
+        };
+        document.addEventListener('hotkey-view-industry', handler);
+        return () => document.removeEventListener('hotkey-view-industry', handler);
+    }, [currentIndustry, activeIndustryId]);
+
     // Hotkey: view player
     useEffect(() => {
         const handler = () => {
@@ -143,6 +161,24 @@ function NavigationPanel() {
     const canGoBack = navPointerIdx < navHistory.length - 1;
     const canGoForward = navPointerIdx > 0;
     const hasNavHistory = navHistory.length > 0;
+
+    // FEAT-001: Last Entity — find the most recent asset entry that isn't the current one
+    const lastEntity = (() => {
+        for (let i = 0; i < navHistory.length; i++) {
+            if (i === navPointerIdx) continue;
+            const entry = navHistory[i];
+            if (entry.type === 'asset' && entry.id !== activeEntityNum && entry.id > 0) {
+                const info = companyMap.get(entry.id);
+                if (info) return { id: entry.id, symbol: info.symbol, name: info.name };
+            }
+        }
+        return null;
+    })();
+
+    // FEAT-024: Industry button — get industry name for current entity
+    const currentIndustry = (activeIndustryId > 0 && activeIndustryNum < 0)
+        ? industryMap.get(activeIndustryId) || null
+        : null;
 
     // Acting As navigation (cycle through controlled companies)
     const actingAsIndex = actingAsOptions.findIndex(opt => opt.id === actingAsId);
@@ -231,8 +267,14 @@ function NavigationPanel() {
                     <b>→</b>
                 </button>
                 <div class="flex items-center gap-1">
+                    ${lastEntity
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-last-entity" onclick=${() => api.setViewAsset(lastEntity.id)}>${bracketLabel(lastEntity.symbol || lastEntity.name, 'L')}</button>`
+                        : ''}
+                    ${currentIndustry
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${bracketLabel(currentIndustry.name, 'I')}</button>`
+                        : ''}
                     ${activeEntityNum !== api.HUMAN1_ID
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${bracketLabel(insertCurrencySymbols('Player'), 'P')}</button>`
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" data-testid="btn-view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${bracketLabel(insertCurrencySymbols('Player'), 'P')}</button>`
                         : ''}
                 </div>
             </div>
