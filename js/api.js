@@ -6,15 +6,176 @@ const { createStore } = zustand;
 
 const { ipcRenderer } = require('electron');
 
-export const apiBase = 'http://127.0.0.1:9631';
+export const apiBase = window.__WSR_API_BASE_OVERRIDE || 'http://127.0.0.1:9631';
 
-// Network error handling - refresh browser on network errors (e.g., sleep/wake scenarios)
+// Detect addon mode: WSR_NO_REST=1 means no REST server, use IPC for everything
+const useIPC = typeof process !== 'undefined' && process.env && process.env.WSR_NO_REST === '1';
+console.log('[api] useIPC =', useIPC, 'WSR_NO_REST =', typeof process !== 'undefined' && process.env ? process.env.WSR_NO_REST : 'N/A');
+
+// REST path → GameEventType mapping (from GameEvent.h)
+// Used to route postNoArg/postIdArg through game:dispatch IPC in addon mode
+const REST_TO_EVENT = {
+    '/clear_event_string': 5,
+    '/start_ticker': 10,
+    '/run_ticker': 13,
+    '/stop_ticker': 15,
+    '/set_ticker_speed': 1160,
+    '/loadgame': 20,
+    '/newgame': 30,
+    '/savegame': 40,
+    '/exit_game': 45,
+    '/check_scoreboard': 50,
+    '/buy_stock': 60,
+    '/sell_stock': 70,
+    '/short_stock': 80,
+    '/cover_short_stock': 90,
+    '/buy_corporate_bond': 100,
+    '/sell_corporate_bond': 110,
+    '/buy_long_govt_bonds': 120,
+    '/sell_long_govt_bonds': 125,
+    '/buy_short_govt_bonds': 130,
+    '/sell_short_govt_bonds': 135,
+    '/buy_commodity_futures': 140,
+    '/sell_commodity_futures': 150,
+    '/short_commodity_futures': 160,
+    '/cover_short_commodity_futures': 170,
+    '/buy_physical_commodity': 180,
+    '/sell_physical_commodity': 190,
+    '/buy_physical_crypto': 200,
+    '/sell_physical_crypto': 210,
+    '/buy_crypto_futures': 220,
+    '/sell_crypto_futures': 230,
+    '/buy_calls': 280,
+    '/sell_calls': 290,
+    '/buy_puts': 300,
+    '/sell_puts': 310,
+    '/advanced_options_trading': 330,
+    '/exercise_call_options_early': 340,
+    '/exercise_put_options_early': 350,
+    '/prepay_taxes': 360,
+    '/elect_ceo': 370,
+    '/resign_as_ceo': 380,
+    '/change_managers': 390,
+    '/set_dividend': 400,
+    '/set_productivity': 410,
+    '/set_growth_rate': 420,
+    '/restructure': 430,
+    '/buy_corporate_assets': 440,
+    '/sell_corporate_assets': 450,
+    '/offer_corporate_assets_for_sale': 455,
+    '/view_for_sale_items': 456,
+    '/sell_subsidiary_stock': 460,
+    '/rebrand': 470,
+    '/toggle_company_autopilot': 480,
+    '/toggle_global_autopilot': 490,
+    '/become_etf_advisor': 500,
+    '/set_advisory_fee': 510,
+    '/merger': 530,
+    '/greenmail': 540,
+    '/lbo': 550,
+    '/startup': 560,
+    '/capital_contribution': 570,
+    '/public_stock_offering': 580,
+    '/private_stock_offering': 590,
+    '/issue_new_corp_bonds': 600,
+    '/redeem_corp_bonds': 610,
+    '/extraordinary_dividend': 620,
+    '/tax_free_liquidation': 630,
+    '/taxable_liquidation': 640,
+    '/spin_off': 650,
+    '/split_stock': 660,
+    '/reverse_split_stock': 670,
+    '/borrow_money': 680,
+    '/repay_loan': 690,
+    '/advance_funds': 700,
+    '/call_in_advance': 710,
+    '/interest_rate_swaps': 720,
+    '/view_swap_details': 724,
+    '/terminate_swap': 725,
+    '/set_bank_allocation': 730,
+    '/trade_tbills': 740,
+    '/list_bank_loans': 750,
+    '/change_bank': 770,
+    '/call_in_loan': 780,
+    '/buy_business_loans': 810,
+    '/sell_business_loan': 820,
+    '/buy_consumer_loans': 830,
+    '/sell_consumer_loans': 840,
+    '/buy_prime_mortgages': 850,
+    '/sell_prime_mortgages': 860,
+    '/buy_subprime_mortgages': 870,
+    '/sell_subprime_mortgages': 880,
+    '/list_etfs': 890,
+    '/freeze_all_loans': 900,
+    '/freeze_loan': 905,
+    '/decrease_earnings': 910,
+    '/increase_earnings': 920,
+    '/change_law_firm': 930,
+    '/antitrust_lawsuit': 940,
+    '/harrassing_lawsuit': 950,
+    '/spread_rumors': 960,
+    '/credit_info': 1080,
+    '/clear_chart': 1090,
+    '/growth_throttle': 1100,
+    '/clear_stream_list': 1110,
+    '/fill_stream_list': 1120,
+    '/database_search': 1150,
+    '/set_ticker_speed': 1160,
+    '/set_view_asset': 2000,
+    '/set_view_industry': 2003,
+    '/change_acting_as': 2001,
+    '/toggle_streaming_quote': 2002,
+    '/close_modal': 3000,
+    // '/set_active_ui_report' — handled as special case in postIdArg (direct pointer write, not an event)
+    '/set_tutorial_step': 4100,
+    '/set_tutorial_enabled': 4101,
+    '/supp_earn_select': 2100,
+    '/currency_select': 2101,
+    '/supp_warn_select': 2102,
+    '/suppress_select': 2103,
+    '/autosave_select': 2104,
+    '/exercise_select': 2105,
+    '/sweep_select': 2106,
+    '/makedelivery_select': 2107,
+    '/takedelivery_select': 2108,
+    '/tooltips_select': 2109,
+    '/shareholdergraph_select': 2110,
+    '/unethical_select': 2111,
+    '/disablehotkeys_select': 2112,
+    '/autoadd_select': 2113,
+    '/cheat_disable_lawsuits': 2120,
+    '/cheat_merger_info': 2121,
+    '/cheat_earnings_info': 2122,
+    '/cheat_add_cash': 2123,
+};
+
+// Market report REST paths that use trigger_event with specific GameEventTypes
+const REPORT_PATH_TO_EVENT = {
+    '/view_current_interest_rates': 970,
+    '/whos_ahead': 980,
+    '/db_research_tool': 990,
+    '/economic_stats': 1000,
+    '/most_cash_report': 1010,
+    '/largest_market_cap': 1020,
+    '/largest_tax_losses': 1030,
+    '/industry_summary': 1040,
+    '/industry_projections': 1050,
+    '/view_corp_assets_for_sale': 1060,
+};
+
+// Network error handling - refresh browser only after sustained failures (e.g., sleep/wake).
+// Transient failures (server busy during game load) must NOT trigger reload or it causes
+// an infinite refresh loop: load game -> server busy -> fetch fails -> reload -> repeat.
+let _networkFailCount = 0;
+const NETWORK_FAIL_THRESHOLD = 5;
+
 async function fetchWithRetry(url, options = {}) {
     const method = options.method || 'GET';
     const pathOnly = url.replace(apiBase, '');
     const t0 = performance.now();
     try {
         const response = await fetch(url, options);
+        _networkFailCount = 0; // Reset on any successful fetch
         if (debugLog.enabled) {
             const ms = (performance.now() - t0).toFixed(1);
             const bodySnippet = options.body ? ` body=${String(options.body).slice(0, 100)}` : '';
@@ -32,9 +193,13 @@ async function fetchWithRetry(url, options = {}) {
             error.name === 'TypeError';
 
         if (isNetworkError) {
-            console.log('Network error detected, refreshing browser...');
-            location.reload();
-            return; // Won't reach here, but for clarity
+            _networkFailCount++;
+            if (_networkFailCount >= NETWORK_FAIL_THRESHOLD) {
+                console.log(`Network error detected (${_networkFailCount} consecutive failures), refreshing browser...`);
+                location.reload();
+                return;
+            }
+            console.warn(`Network error (${_networkFailCount}/${NETWORK_FAIL_THRESHOLD}): ${error.message}`);
         }
         throw error;
     }
@@ -110,6 +275,18 @@ export const UI_PLAYER_SWAPS_PORTFOLIO = 38;
 export const UI_DB_SEARCH = 39;
 
 export async function postNoArg(path) {
+    if (useIPC) {
+        // Special-case endpoints that need dedicated IPC handlers
+        if (path === '/close_modal') { return ipcRenderer.invoke('game:closeModal'); }
+        if (path === '/splash_screen_played') { return ipcRenderer.invoke('game:splashScreenPlayed'); }
+
+        // Map REST path to event type and dispatch via IPC
+        const eventType = REST_TO_EVENT[path] ?? REPORT_PATH_TO_EVENT[path];
+        if (eventType !== undefined) {
+            return ipcRenderer.invoke('game:dispatch', eventType, 0, '');
+        }
+        console.warn('[api] No IPC mapping for POST', path);
+    }
     const url = `${apiBase}${path}`;
     const response = await fetchWithRetry(url, {
         method: 'POST',
@@ -122,6 +299,26 @@ export async function postNoArg(path) {
 }
 
 export async function postIdArg(path, id) {
+    if (useIPC) {
+        // /asset_chart needs its own IPC handler (returns data, not just ack)
+        if (path === '/asset_chart') {
+            return ipcRenderer.invoke('game:getAssetChart', typeof id === 'string' ? Number(id) : id);
+        }
+        // /set_who_owns_filter uses a different param name
+        if (path === '/set_who_owns_filter') {
+            return ipcRenderer.invoke('game:setWhoOwnsFilter', id);
+        }
+        // /set_active_ui_report is a direct pointer write, not an event
+        if (path === '/set_active_ui_report') {
+            return ipcRenderer.invoke('game:setActiveUIReport', id);
+        }
+
+        const eventType = REST_TO_EVENT[path];
+        if (eventType !== undefined) {
+            return ipcRenderer.invoke('game:dispatch', eventType, id || 0, '');
+        }
+        console.warn('[api] No IPC mapping for POST', path, 'id=', id);
+    }
     const url = `${apiBase}${path}`;
     const response = await fetchWithRetry(url, {
         method: 'POST',
@@ -136,6 +333,18 @@ export async function postIdArg(path, id) {
 }
 
 export async function postStringArg(path, str) {
+    if (useIPC) {
+        // String-arg endpoints: map to event + strParam1
+        if (path === '/load_specific_save') {
+            // LOAD_SPECIFIC_GAME = 21, str goes in strParam1 as "filename"
+            return ipcRenderer.invoke('game:dispatch', 21, 0, str || '');
+        }
+        if (path === '/savegameas') {
+            // SAVE_GAME_AS = 41, filename in strParam1
+            return ipcRenderer.invoke('game:dispatch', 41, 0, str || '');
+        }
+        console.warn('[api] No IPC mapping for POST string', path);
+    }
     const url = `${apiBase}${path}`;
     const response = await fetchWithRetry(url, {
         method: 'POST',
@@ -149,6 +358,14 @@ export async function postStringArg(path, str) {
 }
 
 export async function getJSON(path) {
+    if (useIPC) {
+        if (path === '/gamestate') return ipcRenderer.invoke('game:getGameState');
+        if (path === '/database_data') return ipcRenderer.invoke('game:getDatabaseData');
+        if (path === '/ownership_tree') return ipcRenderer.invoke('game:getOwnershipTree');
+        if (path === '/subsidiaries_tree') return ipcRenderer.invoke('game:getSubsidiariesTree');
+        if (path === '/quote') return ipcRenderer.invoke('game:getQuote');
+        console.warn('[api] No IPC mapping for GET', path);
+    }
     const url = `${apiBase}${path}`;
     const response = await fetchWithRetry(url);
     if (!response.ok) {
@@ -356,7 +573,10 @@ export async function stopTicker() {
     advanceTutorialOnAction('stopTicker');
 }
 export async function setTickSpeed(speed) { await postIdArg('/set_ticker_speed', speed); }
-export async function advanceTicker() { return postNoArg('/ticker_advance'); }
+export async function advanceTicker() {
+    if (useIPC) return ipcRenderer.invoke('game:advanceTicker');
+    return postNoArg('/ticker_advance');
+}
 export async function loadGame() {
     await postNoArg('/loadgame');
 }
@@ -365,6 +585,10 @@ export async function newGame() {
 }
 export async function saveGame() { await postNoArg('/savegame'); }
 export async function saveGameAs(filename) {
+    if (useIPC) {
+        // SAVE_GAME_AS = 41, filename in strParam1
+        return ipcRenderer.invoke('game:dispatch', 41, 0, filename || '');
+    }
     const url = `${apiBase}/savegameas`;
     await fetchWithRetry(url, {
         method: 'POST',
@@ -385,6 +609,10 @@ export async function deleteSave(filename) {
 
 // Load a specific save file by triggering the backend load event
 export async function loadSpecificSave(filename) {
+    if (useIPC) {
+        // LOAD_SPECIFIC_GAME = 21, filename in strParam1
+        return ipcRenderer.invoke('game:dispatch', 21, 0, filename || '');
+    }
     // First set the filename, then trigger load
     const url = `${apiBase}/load_specific_save`;
     await fetchWithRetry(url, {
@@ -614,6 +842,9 @@ export async function growthThrottle() { await postNoArg('/growth_throttle'); }
 export async function clearStreamList() { await postNoArg('/clear_stream_list'); }
 export async function fillStreamList() { await postNoArg('/fill_stream_list'); }
 export async function setWhoOwnsFilter(value) {
+    if (useIPC) {
+        return ipcRenderer.invoke('game:setWhoOwnsFilter', value);
+    }
     const url = `${apiBase}/set_who_owns_filter`;
     await fetchWithRetry(url, {
         method: 'POST',
@@ -833,6 +1064,13 @@ export async function splashScreenPlayed() { await postNoArg('/splash_screen_pla
 /* Modal */
 export async function closeModal(result) { await postNoArg('/close_modal', result); }
 export async function modalResult(result) {
+    if (useIPC) {
+        if (typeof result === 'number') {
+            return ipcRenderer.invoke('game:modalResult', result, '');
+        } else {
+            return ipcRenderer.invoke('game:modalResult', 0, result || '');
+        }
+    }
     const url = `${apiBase}/modal_result`;
     const response = await fetchWithRetry(url, {
         method: 'POST',
@@ -847,6 +1085,9 @@ export async function modalResult(result) {
 
 /* CustomData API */
 export async function setCustomData(blob) {
+    if (useIPC) {
+        return ipcRenderer.invoke('game:setCustomData', JSON.stringify(blob));
+    }
     const url = `${apiBase}/set_custom_data`;
     const response = await fetchWithRetry(url, {
         method: 'POST',
