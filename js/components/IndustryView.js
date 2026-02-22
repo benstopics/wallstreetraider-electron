@@ -85,8 +85,8 @@ const IndustryView = () => {
                                         ${renderLines(industrySummaryReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                                     </div>
                                 <//>
-                                ${![1, 2, 70, 71].includes(activeIndustryNum) ? html`<${Tab} label="Projection" id=${api.UI_INDUSTRY_PROJECTIONS_REPORT}>
-                                    <div class="flex justify-center items-center">
+                                ${![1, 2, 70].includes(activeIndustryNum) ? html`<${Tab} label=${activeIndustryNum === 71 ? "Fund Strategies" : "Projection"} id=${api.UI_INDUSTRY_PROJECTIONS_REPORT}>
+                                    <div class="flex justify-center items-center overflow-x-auto w-full">
                                         ${industryProjectionReport.some(l => l.trim() !== '')
                                             ? renderLines(industryProjectionReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)
                                             : html`No projections available for the currently selected industry group:<br/><br/>${activeIndustryName}`

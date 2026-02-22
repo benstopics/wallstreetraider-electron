@@ -1,4 +1,4 @@
-import { html, useEffect, useMemo, useState } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useMemo, useRef, useState } from '../lib/preact.standalone.module.js';
 import Modal from './Modal.js';
 import * as api from '../api.js';
 import InTheMoneyChart from './InTheMoneyChart.js';
@@ -194,14 +194,22 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
     const [state, setState] = useState();
     const dlrSign = api.useGameStore(s => s.gameState.dlrSign) || '$';
     const euro = api.useGameStore(s => s.gameState.euro) || '';
+    // Track whether the last state change came from a user edit (not a PB-sent state update).
+    // Only auto-sync to PB for live price calculation when the user explicitly edits a field.
+    // Without this guard, PB returning an error causes mergedState to change, triggering
+    // another auto-sync, which PB processes with the same over-limit data, returning the same
+    // error, creating an infinite loop that requires force-quit to escape.
+    const pendingUserEdit = useRef(false);
 
     useEffect(() => {
         if (!show || !stateStr) {
             setState(undefined);
+            pendingUserEdit.current = false;
+            return;
         }
 
         const newState = {};
-        stateStr?.trim().split('|').forEach((kv) => {
+        stateStr.trim().split('|').forEach((kv) => {
             const [k, v] = kv.split('=');
             if (k) newState[k.trim()] = v ? v.trim() : '';
         });
@@ -212,6 +220,7 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
         let valueToSet;
         if (!state || !state.outstandingShares || newStateNorm.forceUpdate > 0) {
             valueToSet = newStateNorm;
+            pendingUserEdit.current = false; // Fresh dialog open — reset to prevent stale auto-sync
         } else {
             valueToSet = {
                 ...state,
@@ -256,11 +265,19 @@ export default function AdvancedOptionsModal({ show, title, stateStr, onSubmit }
         if (!show) return;
         if (!onSubmit) return;
         if (hasSyncBlockingErrors) return;
+        // Only auto-sync when the user explicitly edited a field, not when PB sent back a state
+        // update. PB-initiated updates (e.g. price recalc results or error messages) must not
+        // loop back to PB, as that causes the infinite-error-loop crash.
+        if (!pendingUserEdit.current) return;
+        pendingUserEdit.current = false;
 
         api.modalResult(api.serialize(mergedState));
     }, [show, hasSyncBlockingErrors, mergedState]);
 
-    const setField = (key, value) => setState((prev) => ({ ...prev, [key]: toStr(value) }));
+    const setField = (key, value) => {
+        pendingUserEdit.current = true;
+        setState((prev) => ({ ...prev, [key]: toStr(value) }));
+    };
 
     const clearAll = () => {
         setState(normalizeState({}));

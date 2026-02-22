@@ -42,6 +42,7 @@ export const COMPUTER2_ID = 3;
 export const COMPUTER3_ID = 4;
 export const COMPUTER4_ID = 5;
 export const STOCK_INDEX_ID = 0;
+export const CMOD_ID = 1600;  // Basic Commodities Fund ETF
 export const OIL_ID = 6;
 export const GOLD_ID = 7;
 export const SILVER_ID = 8;
@@ -910,7 +911,7 @@ export function mergeGameState(newState) {
         }
     }
 
-    // BUG-105 FIX: Reuse old array references when contents haven't changed.
+    // BUG-105 FIX: Reuse old references when contents haven't changed.
     // This prevents unnecessary re-renders of report/list components every poll cycle.
     for (const key of Object.keys(newState)) {
         const prev = currentState[key];
@@ -923,6 +924,10 @@ export function mergeGameState(newState) {
                 }
                 if (same) newState[key] = prev;
             }
+        } else if (typeof prev === 'string' && typeof next === 'string' && prev === next) {
+            // String dedup: reuse old reference when value hasn't changed
+            // Prevents flicker in AdvisorySummary and other text components
+            newState[key] = prev;
         }
     }
 

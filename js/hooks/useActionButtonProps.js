@@ -568,6 +568,15 @@ export function useActionButtonProps() {
         color: 'green'
     };
 
+    const becomeEtfAdvisor = {
+        label: 'Become ETF Advisor',
+        onClick: api.becomeEtfAdvisor,
+        disabled: !!mustActAsCompany || !(isActingAsInsurance || isActingAsBroker),
+        disabledMessage: mustActAsCompany || (!(isActingAsInsurance || isActingAsBroker) ? "Only for insurance/broker companies" : false),
+        onDisabledClick: mustActAsCompany ? onMustActAsCompanyClick : null,
+        color: 'green'
+    };
+
     const setAdvisoryFee = {
         label: 'Set Advisory Fee',
         onClick: api.setAdvisoryFee,
@@ -845,6 +854,7 @@ export function useActionButtonProps() {
         capitalContribution,
 
         // Corporate - ETF/Advisory
+        becomeEtfAdvisor,
         setAdvisoryFee,
 
         // Corporate - Autopilot

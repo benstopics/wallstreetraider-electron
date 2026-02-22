@@ -31,7 +31,7 @@ function CashflowTab() {
                     { ...buttonProps.changeManagers, label: "Fire Managers" },
                 ]} class="flex flex-row items-center gap-5" />` : ''}
                 <br />
-                <div class="flex flex-col flex-[3] items-center overflow-y-auto min-h-0 w-full">
+                <div class="flex flex-col flex-[3] items-center overflow-y-auto overflow-x-auto min-h-0 w-full">
                     <div class="flex flex-col items-center w-full">
                         ${renderLines(cashflowProjection ?? [], ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                     </div>

@@ -18,6 +18,8 @@ function createWindow() {
         frame: true,
         show: false,
         autoHideMenuBar: true,
+        minWidth: 1024,
+        minHeight: 600,
         icon: path.join(__dirname, 'assets', 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
@@ -186,6 +188,11 @@ app.whenReady().then(() => {
 });
 
 function killWSR() {
+    // Try graceful shutdown first via REST API (gives wsr.exe time to finish any in-progress save)
+    try {
+        execSync('curl -s -m 2 -X POST -H "Content-Type: application/json" -d "{}" http://127.0.0.1:9631/exit_game', { stdio: 'ignore', timeout: 3000 });
+    } catch (e) { /* ignore - REST may not be running */ }
+    // Force kill as fallback
     try {
         execSync('taskkill /IM wsr.exe /F', { stdio: 'ignore' });
     } catch (error) {

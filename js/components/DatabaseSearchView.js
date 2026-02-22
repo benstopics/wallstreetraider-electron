@@ -203,7 +203,10 @@ const DatabaseSearchView = () => {
             // Rating filters
             if (minMgmt !== null && (c.mgmtRating || 0) < minMgmt) return false;
             if (minCred !== null && (c.credRating || 0) < minCred) return false;
-            if (minAnalyst !== null && (c.analystRating || 0) < minAnalyst) return false;
+            if (minAnalyst !== null) {
+                const ar = c.analystRating || 0;
+                if (ar === 0 || ar > minAnalyst) return false;
+            }
 
             // Checkbox filters
             if (excludeFinancials && (c.industryId === 1 || c.industryId === 2)) return false;
@@ -360,7 +363,7 @@ const DatabaseSearchView = () => {
         {
             name: 'Blue Chips',
             desc: 'Large cap, analyst Buy+, strong credit',
-            apply: () => { clearFilters(); setMinMarketCap('5000'); setMinAnalystRating('4'); setMinCredRating('7'); setSortCol('marketCap'); setSortDir('desc'); }
+            apply: () => { clearFilters(); setMinMarketCap('5000'); setMinAnalystRating('2'); setMinCredRating('7'); setSortCol('marketCap'); setSortDir('desc'); }
         },
         {
             name: 'Short Candidates',
@@ -385,12 +388,12 @@ const DatabaseSearchView = () => {
         {
             name: 'Bond Opportunities',
             desc: 'Companies with publicly traded bonds',
-            apply: () => { clearFilters(); setHasBonds(true); setMinCredRating('5'); setSortCol('jBondsPublic'); setSortDir('desc'); }
+            apply: () => { clearFilters(); setHasBonds(true); setMinCredRating('5'); setSortCol('bondYield'); setSortDir('desc'); }
         },
         {
             name: 'Analyst Favorites',
             desc: 'Strong Buy ratings with good fundamentals',
-            apply: () => { clearFilters(); setMinAnalystRating('5'); setPositiveCashFlow(true); setSortCol('analystRating'); setSortDir('desc'); }
+            apply: () => { clearFilters(); setMinAnalystRating('1'); setPositiveCashFlow(true); setSortCol('analystRating'); setSortDir('asc'); }
         }
     ];
 
@@ -437,19 +440,19 @@ const DatabaseSearchView = () => {
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Max P/E</div>
-                        <input ref=${maxPERef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMaxPE(e.target.value)} />
+                        <input ref=${maxPERef} class="db-input" style="width:80px" type="number" placeholder="e.g. 15" onInput=${e => debouncedSetMaxPE(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Min Div%</div>
-                        <input ref=${minDivRef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMinDiv(e.target.value)} />
+                        <input ref=${minDivRef} class="db-input" style="width:80px" type="number" placeholder="e.g. 3" onInput=${e => debouncedSetMinDiv(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Min ROE%</div>
-                        <input ref=${minROERef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMinROE(e.target.value)} />
+                        <input ref=${minROERef} class="db-input" style="width:80px" type="number" placeholder="e.g. 10" onInput=${e => debouncedSetMinROE(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Max P/B%</div>
-                        <input ref=${maxPctBookRef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMaxPctBook(e.target.value)} />
+                        <input ref=${maxPctBookRef} class="db-input" style="width:80px" type="number" placeholder="e.g. 100" onInput=${e => debouncedSetMaxPctBook(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">${insertCurrencySymbols("Min Cap (@DLRSIGN@DENOMINATION@EURO)")}</div>
@@ -461,7 +464,7 @@ const DatabaseSearchView = () => {
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Max Conv%</div>
-                        <input ref=${maxConvPremRef} class="db-input" style="width:80px" type="number" onInput=${e => debouncedSetMaxConvPrem(e.target.value)} />
+                        <input ref=${maxConvPremRef} class="db-input" style="width:80px" type="number" placeholder="e.g. 30" onInput=${e => debouncedSetMaxConvPrem(e.target.value)} />
                     </div>
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Min Mgmt</div>
@@ -484,12 +487,14 @@ const DatabaseSearchView = () => {
                         </select>
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Min Analyst</div>
-                        <select class="db-input" style="width:100px" value=${minAnalystRating} onChange=${e => setMinAnalystRating(e.target.value)}>
+                        <div class="text-xs text-gray-400 mb-1">Analyst Rating</div>
+                        <select class="db-input" style="width:120px" value=${minAnalystRating} onChange=${e => setMinAnalystRating(e.target.value)}>
                             <option value="">Any</option>
+                            <option value="1">Strong Buy</option>
+                            <option value="2">Buy+</option>
                             <option value="3">Hold+</option>
-                            <option value="4">Buy+</option>
-                            <option value="5">Strong Buy</option>
+                            <option value="4">Sell+</option>
+                            <option value="5">Strong Sell+</option>
                         </select>
                     </div>
                 </div>
@@ -551,11 +556,12 @@ const DatabaseSearchView = () => {
                             <th class="num cursor-pointer" onClick=${() => handleSort('cashFlow')}>Cash Flow${sortIcon('cashFlow')}</th>
                             <th class="num cursor-pointer" onClick=${() => handleSort('shortScore')} title="0=Not a candidate, 1-2=Marginal, 3+=Good short (declining earnings, overvalued, poor outlook)">Short Score${sortIcon('shortScore')}</th>
                             <th class="num cursor-pointer" onClick=${() => handleSort('jBondsPublic')}>Bonds${sortIcon('jBondsPublic')}</th>
+                            <th class="num cursor-pointer" onClick=${() => handleSort('bondYield')} title="Bond Yield to Maturity">Bond YTM${sortIcon('bondYield')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${sorted.length === 0 ? html`
-                            <tr><td colspan="17" class="text-center text-gray-400 py-4">No results</td></tr>
+                            <tr><td colspan="18" class="text-center text-gray-400 py-4">No results</td></tr>
                         ` : sorted.map(c => html`
                             <tr onClick=${() => api.setViewAsset(c.id)}>
                                 <td><span class="symbol-chip">${c.symbol}</span></td>
@@ -575,6 +581,7 @@ const DatabaseSearchView = () => {
                                 <td class="num">${getCashFlowText(c.cashFlow)}</td>
                                 <td class="num">${getShortScoreText(c.shortScore)}</td>
                                 <td class="num">$ ${c.jBondsPublic > 0 ? fmtInt(c.jBondsPublic) : '-'} M</td>
+                                <td class="num">${c.bondYield > 0 ? fmt(c.bondYield) + '%' : '-'}</td>
                             </tr>
                         `)}
                     </tbody>

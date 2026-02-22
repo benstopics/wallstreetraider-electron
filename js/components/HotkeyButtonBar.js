@@ -17,7 +17,7 @@ import DisabledTooltipButton from './DisabledTooltipButton.js';
  * @param {string} [props.class] - Optional CSS class for the container div.
  * @param {string} [props.style] - Optional inline style for the container div.
  */
-export default function HotkeyButtonBar({ buttons, extrasContainerRef, scopeActiveRef, onScopeActiveChange, panelCount = 0, class: className = 'flex flex-row items-center gap-2 mb-2', style = 'height: 35px;' }) {
+export default function HotkeyButtonBar({ buttons, extrasContainerRef, scopeActiveRef, onScopeActiveChange, panelCount = 0, class: className = 'flex flex-row items-center gap-2 mb-2 flex-wrap', style = 'min-height: 35px;' }) {
     const shiftHeld = useShiftHeld();
     const [flashMessage, setFlashMessage] = useState(null);
     const flashTimeoutRef = useRef(null);
