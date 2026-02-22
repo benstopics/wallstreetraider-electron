@@ -89,6 +89,12 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
         // Check if this is the Load Saved Game dialog
         const isLoadGameDialog = title?.includes('Load Saved Game');
 
+        // Default to first option if inputValue is empty (select shows first option
+        // visually but inputValue stays "" until user interacts with the dropdown)
+        if (!inputValue && options.length > 0 && options[0].value) {
+            setInputValue(options[0].value);
+        }
+
         return html`<${Modal} show=${show} onClose=${onCancel} style="display: flex; flex-direction: column;">
             <div class="flex-1 min-h-0 p-3 overflow-y-auto">
                 <div class="text-lg font-bold text-center">${insertCurrencySymbols(title)}</div>

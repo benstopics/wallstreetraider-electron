@@ -101,7 +101,8 @@ export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
     const response = await fetchWithRetry(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
     });
     if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
