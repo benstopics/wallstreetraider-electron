@@ -182,6 +182,27 @@ function NavigationPanel() {
         ? industryMap.get(activeIndustryId) || null
         : null;
 
+<<<<<<< Updated upstream
+=======
+    // Hotkey: view last entity (must be after lastEntity definition)
+    useEffect(() => {
+        const handler = () => {
+            if (lastEntity) api.setViewAsset(lastEntity.id);
+        };
+        document.addEventListener('hotkey-view-last-entity', handler);
+        return () => document.removeEventListener('hotkey-view-last-entity', handler);
+    }, [lastEntity]);
+
+    // Hotkey: view industry (must be after currentIndustry definition)
+    useEffect(() => {
+        const handler = () => {
+            if (currentIndustry && activeIndustryId > 0) api.viewIndustry(activeIndustryId);
+        };
+        document.addEventListener('hotkey-view-industry', handler);
+        return () => document.removeEventListener('hotkey-view-industry', handler);
+    }, [currentIndustry, activeIndustryId]);
+
+>>>>>>> Stashed changes
     // Acting As navigation (cycle through controlled companies)
     const actingAsIndex = actingAsOptions.findIndex(opt => opt.id === actingAsId);
     const canActingAsPrev = actingAsOptions.length > 1 && actingAsIndex > 0;

@@ -63,6 +63,7 @@ const IndustrialView = () => {
     // Shareholders tab hotkey refs
     const shareholdersExtrasRef = useRef(null);
     const shareholdersScopeRef = useRef(false);
+    const reportScopeRef = useRef(false);
     const [, setShareholdersScopeTick] = useState(0);
     const shareholdersBarButtons = [
         { label: showShareholdersGraph ? 'Show Text Report' : 'Show Graph', onClick: () => setShowShareholdersGraph(!showShareholdersGraph), color: '' },
@@ -117,7 +118,11 @@ const IndustrialView = () => {
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0 overflow-hidden">
                                 <div class="earnings-date-badge mb-1 font-text-sm text-center" style="display: flex; justify-content: space-between; align-items: center;">
                                     <span><span class="whitespace-nowrap">Earnings Date:</span> <span class="whitespace-nowrap">${nextEarningsDate}</span></span>
+<<<<<<< Updated upstream
                                     <${Button} class="text-xs" style="opacity: 0.6; cursor: pointer; background: none; border: none; padding: 0 2px;" data-testid="btn-clear-chart" onClick=${() => api.clearChart()} title="Clear chart history for this entity">Clear Chart</button>
+=======
+                                    <button class="text-xs" style="opacity: 0.6; cursor: pointer; background: none; border: none; padding: 0 2px;" data-testid="btn-clear-chart" onClick=${() => api.clearChart()} title="Clear chart history for this entity">Clear Chart</button>
+>>>>>>> Stashed changes
                                 </div>
                                 <div class="flex flex-2 flex-col w-full">
                                     ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" />`}
@@ -141,14 +146,18 @@ const IndustrialView = () => {
                                     !isActiveEntityETF && buttonProps.advancedOptions,
                                 ]} />
                                 <div class="flex flex-col items-center overflow-y-auto flex-1 min-h-0">
-                                    ${renderLines(researchReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
+                                    ${renderLines(researchReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, reportScopeRef)}
                                 </div>
                             </div>
                         </div>
                     <//>
                     <${Tab} label="Earnings" hotkey="e" id=${api.UI_CORP_EARNINGS_REPORT}>
                         <div class="flex flex-col justify-center items-center overflow-x-auto w-full">
+<<<<<<< Updated upstream
                             ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
+=======
+                            ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, reportScopeRef)}
+>>>>>>> Stashed changes
                         </div>
                     <//>
                     <${Tab} label="Financials" hotkey="f" id=${api.UI_CORP_FINANCIAL_PROFILE}>

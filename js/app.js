@@ -303,26 +303,50 @@ const AppInner = () => {
 
     useEffect(() => {
         let timeoutId;
+        let pollSeq = 0;
+        let consecutiveErrors = 0;
+        let wasGameLoaded = false;
 
         const fetchGameState = () => {
+            pollSeq++;
+            const seq = pollSeq;
             api.getGameState().then((newGameState) => {
-                const hyperlinkRegex = api.buildDictRegex(
-                    newGameState.allCompanies,
-                    newGameState.allIndustries
-                );
-                newGameState.hyperlinkRegex = hyperlinkRegex;
+                consecutiveErrors = 0;
+
+                // Log sparingly: first 3 polls, every 100th, or game state transitions
+                if (seq <= 3 || seq % 100 === 0 || newGameState.gameLoaded !== wasGameLoaded) {
+                    console.log(`[POLL #${seq}] gameLoaded=${newGameState.gameLoaded} modalType=${newGameState.modalType} companies=${newGameState.allCompanies?.length}`);
+                }
+                wasGameLoaded = newGameState.gameLoaded;
+
+                // Only build hyperlink regex when there are companies to link
+                if (newGameState.allCompanies?.length > 0) {
+                    newGameState.hyperlinkRegex = api.buildDictRegex(
+                        newGameState.allCompanies,
+                        newGameState.allIndustries
+                    );
+                }
+
                 const mergedState = api.mergeGameState(newGameState);
                 requestAnimationFrame(() => {
                     setGameState(mergedState);
                 });
 
-                timeoutId = setTimeout(fetchGameState, 50);
+                // Adaptive polling: 200ms on main menu, 50ms during gameplay
+                const interval = newGameState.gameLoaded ? 50 : 200;
+                timeoutId = setTimeout(fetchGameState, interval);
             }).catch((error) => {
-                console.error('Failed to fetch game state:', error);
-                timeoutId = setTimeout(fetchGameState, 200);
+                consecutiveErrors++;
+                if (consecutiveErrors <= 1 || consecutiveErrors % 10 === 0) {
+                    console.error(`[POLL #${seq}] FAILED (errors=${consecutiveErrors}): ${error.message}`);
+                }
+                // Exponential backoff: 1s, 2s, 4s, max 5s
+                const backoff = Math.min(1000 * Math.pow(2, consecutiveErrors - 1), 5000);
+                timeoutId = setTimeout(fetchGameState, backoff);
             });
         };
 
+        console.log('[POLL] Starting gamestate polling loop');
         fetchGameState();
 
         return () => clearTimeout(timeoutId);

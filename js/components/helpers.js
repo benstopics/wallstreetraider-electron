@@ -383,8 +383,8 @@ export function renderLines(lines, onLink, renderExtras, hyperlinkRegex, textMat
         </div>`;
     }
 
-    // If renderExtras is provided with start number, use SelectableLines for selection behavior
-    if (renderExtras && typeof extrasStartNumber === 'number') {
+    // If start number is provided, use SelectableLines for number+ENTER selection behavior
+    if (typeof extrasStartNumber === 'number') {
         return html`<${SelectableLines}
             cleanedLines=${cleanedLines}
             maxLength=${maxLength}

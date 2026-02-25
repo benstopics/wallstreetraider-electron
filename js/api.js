@@ -169,6 +169,16 @@ const REPORT_PATH_TO_EVENT = {
 let _networkFailCount = 0;
 const NETWORK_FAIL_THRESHOLD = 5;
 
+<<<<<<< Updated upstream
+=======
+// Network error handling - log sustained failures but NEVER reload.
+// location.reload() was causing an infinite refresh loop:
+//   POST /newgame -> wsr.exe busy/crash -> gamestate poll fails ->
+//   5 failures -> location.reload() -> polling restarts -> still failing -> reload -> OOM
+let _networkFailCount = 0;
+const NETWORK_FAIL_THRESHOLD = 5;
+
+>>>>>>> Stashed changes
 async function fetchWithRetry(url, options = {}) {
     const method = options.method || 'GET';
     const pathOnly = url.replace(apiBase, '');
@@ -176,6 +186,7 @@ async function fetchWithRetry(url, options = {}) {
     try {
         const response = await fetch(url, options);
         _networkFailCount = 0; // Reset on any successful fetch
+<<<<<<< Updated upstream
         if (debugLog.enabled) {
             const ms = (performance.now() - t0).toFixed(1);
             const bodySnippet = options.body ? ` body=${String(options.body).slice(0, 100)}` : '';
@@ -200,6 +211,13 @@ async function fetchWithRetry(url, options = {}) {
                 return;
             }
             console.warn(`Network error (${_networkFailCount}/${NETWORK_FAIL_THRESHOLD}): ${error.message}`);
+=======
+        return response;
+    } catch (error) {
+        _networkFailCount++;
+        if (_networkFailCount <= 1 || _networkFailCount % 10 === 0) {
+            console.warn(`[FETCH #${_networkFailCount}] ${options.method || 'GET'} ${url.replace(apiBase, '')} FAILED (${(performance.now()).toFixed(1)}ms, streak=${_networkFailCount}): ${error.message}`);
+>>>>>>> Stashed changes
         }
         throw error;
     }
@@ -290,7 +308,8 @@ export async function postNoArg(path) {
     const url = `${apiBase}${path}`;
     const response = await fetchWithRetry(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
     });
     if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
@@ -842,9 +861,12 @@ export async function growthThrottle() { await postNoArg('/growth_throttle'); }
 export async function clearStreamList() { await postNoArg('/clear_stream_list'); }
 export async function fillStreamList() { await postNoArg('/fill_stream_list'); }
 export async function setWhoOwnsFilter(value) {
+<<<<<<< Updated upstream
     if (useIPC) {
         return ipcRenderer.invoke('game:setWhoOwnsFilter', value);
     }
+=======
+>>>>>>> Stashed changes
     const url = `${apiBase}/set_who_owns_filter`;
     await fetchWithRetry(url, {
         method: 'POST',
@@ -1448,6 +1470,7 @@ export const gameStore = createStore((set, get) => ({
     setNavState: (next) => set({ navState: next }),
 }));
 
+<<<<<<< Updated upstream
 // Debug: log Zustand store mutations when WSR_DEBUG_VERBOSE=1
 if (debugLog.enabled) {
     let prevModalType = 0;
@@ -1513,6 +1536,8 @@ gameStore.subscribe((state) => {
         setCustomData({ priceAlerts: updated });
     }
 });
+=======
+>>>>>>> Stashed changes
 
 const shallow = (a, b) => {
     if (Object.is(a, b)) return true;
