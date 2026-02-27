@@ -10,6 +10,14 @@ import localeManager from '../locale/localeManager.js';
 import { bracketLabel } from '../hotkeys.js';
 import { isEditableTarget } from '../keybinds.js';
 
+// Read version from version.txt (single source of truth)
+let APP_VERSION = '10.0.15';
+try {
+    const _fs = require('fs'), _path = require('path');
+    const vFile = _path.join(__dirname, 'version.txt');
+    APP_VERSION = _fs.readFileSync(vFile, 'utf8').trim();
+} catch (e) { /* fallback to hardcoded */ }
+
 const LOGO_SRC = 'assets/wallstreetraider_logo.png';
 const WEBSITE_URL = 'https://wallstreetraider.com';
 const REDDIT_URL = 'https://www.reddit.com/r/WallStreetRaider/';
@@ -465,7 +473,7 @@ const MainMenu = () => {
         <header class="wsr-topbar glass">
           <div class="wsr-topbar-brand">
             <img src=${LOGO_SRC} alt="Wall Street Raider" class="wsr-logo-sm" />
-            <span class="wsr-terminal-title">Jenkins Terminal v10.0.15</span>
+            <span class="wsr-terminal-title">Jenkins Terminal v${APP_VERSION}</span>
           </div>
           <div class="wsr-topbar-right">
             <${Button} class="btn main-menu" data-testid="btn-help" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</${Button}>

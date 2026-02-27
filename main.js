@@ -9,6 +9,12 @@ function getSavePath() {
     return path.join(localAppData, 'Wall Street Raider', 'Saves');
 }
 
+// Read version from version.txt (single source of truth)
+let APP_VERSION = '10.0.15';
+try {
+    APP_VERSION = fs.readFileSync(path.join(__dirname, 'version.txt'), 'utf8').trim();
+} catch (e) { /* fallback */ }
+
 let wsrProcess;
 let mainWindow;
 let isQuitting = false; // Flag to prevent WSR restart when Electron is quitting
@@ -31,6 +37,9 @@ function createWindow() {
     mainWindow.maximize();
 
     mainWindow.loadFile('index.html');
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.setTitle(`JENKINS TERMINAL ${APP_VERSION} -- Wall $treet Raider on Steam (EARLY ACCESS)`);
+    });
     return mainWindow;
 }
 
