@@ -82,7 +82,6 @@ const IndustrialView = () => {
     const setActiveTab = (tab) => {
         setActiveTabInternal(tab);
         setSavedTab(tab);
-        api.updateCurrentNavTab(tab);
     };
 
     useEffect(() => {
@@ -118,11 +117,7 @@ const IndustrialView = () => {
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0 overflow-hidden">
                                 <div class="earnings-date-badge mb-1 font-text-sm text-center" style="display: flex; justify-content: space-between; align-items: center;">
                                     <span><span class="whitespace-nowrap">Earnings Date:</span> <span class="whitespace-nowrap">${nextEarningsDate}</span></span>
-<<<<<<< Updated upstream
-                                    <${Button} class="text-xs" style="opacity: 0.6; cursor: pointer; background: none; border: none; padding: 0 2px;" data-testid="btn-clear-chart" onClick=${() => api.clearChart()} title="Clear chart history for this entity">Clear Chart</button>
-=======
                                     <button class="text-xs" style="opacity: 0.6; cursor: pointer; background: none; border: none; padding: 0 2px;" data-testid="btn-clear-chart" onClick=${() => api.clearChart()} title="Clear chart history for this entity">Clear Chart</button>
->>>>>>> Stashed changes
                                 </div>
                                 <div class="flex flex-2 flex-col w-full">
                                     ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" />`}
@@ -153,11 +148,7 @@ const IndustrialView = () => {
                     <//>
                     <${Tab} label="Earnings" hotkey="e" id=${api.UI_CORP_EARNINGS_REPORT}>
                         <div class="flex flex-col justify-center items-center overflow-x-auto w-full">
-<<<<<<< Updated upstream
-                            ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
-=======
                             ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, reportScopeRef)}
->>>>>>> Stashed changes
                         </div>
                     <//>
                     <${Tab} label="Financials" hotkey="f" id=${api.UI_CORP_FINANCIAL_PROFILE}>

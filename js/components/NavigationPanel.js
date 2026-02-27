@@ -9,7 +9,6 @@ import { insertCurrencySymbols } from './helpers.js';
 
 function NavigationPanel() {
     const shiftHeld = useShiftHeld();
-    // Navigation state - read from store for reactivity, but NavigationManager is source of truth
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
     const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const playerId = api.useGameStore(s => s.gameState.playerId);
@@ -17,10 +16,9 @@ function NavigationPanel() {
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const activeIndustryNum = api.useGameStore(s => s.gameState.activeIndustryNum);
 
-    // Nav state from separate store key (NOT from gameState — no polling interference)
-    const navState = api.useGameStore(s => s.navState);
-    const navHistory = navState?.entries || [];
-    const navPointerIdx = navState?.pointerIndex ?? 0;
+    // Nav history from C++ gameState (managed in GameState.h, not JS)
+    const navHistory = api.useGameStore(s => s.gameState.navHistory) || [];
+    const navPointerIdx = api.useGameStore(s => s.gameState.navPointerIndex) ?? 0;
 
     // Acting As state
     const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies) || [];
@@ -29,46 +27,6 @@ function NavigationPanel() {
     const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
 
     const selectRef = useRef(null);
-
-    // Initialize NavigationManager from CustomData on first load (once)
-    const savedNavData = api.useGameStore(s => s.gameState.customData?.navHistory);
-    useEffect(() => {
-        if (savedNavData && !api.navManager.initialized) {
-            api.navManager.init(savedNavData);
-        }
-    }, [savedNavData]);
-
-    // BUG-030/BUG-115/BUG-096/BUG-049: Auto-track the current viewed entity/industry
-    // in navigation history. This ensures navigation is populated after game load,
-    // after startup creates a new company, when ETFs are viewed, etc.
-    const prevEntityRef = useRef(null);
-    const prevIndustryRef = useRef(null);
-    useEffect(() => {
-        if (!activeEntityNum && activeIndustryNum === undefined) return;
-        if (activeIndustryNum >= 0 || activeIndustryNum === -2) {
-            // Viewing an industry or DB Search
-            if (prevIndustryRef.current !== activeIndustryNum) {
-                prevIndustryRef.current = activeIndustryNum;
-                prevEntityRef.current = null;
-                // Push to nav if not already the current entry
-                const current = navHistory[navPointerIdx];
-                if (!current || current.type !== 'industry' || current.id !== activeIndustryNum) {
-                    api.navManager.push({ id: activeIndustryNum, type: 'industry' });
-                }
-            }
-        } else if (activeEntityNum && activeEntityNum > 0) {
-            // Viewing an asset (company or player)
-            if (prevEntityRef.current !== activeEntityNum) {
-                prevEntityRef.current = activeEntityNum;
-                prevIndustryRef.current = null;
-                // Push to nav if not already the current entry
-                const current = navHistory[navPointerIdx];
-                if (!current || current.type !== 'asset' || current.id !== activeEntityNum) {
-                    api.navManager.push({ id: activeEntityNum, type: 'asset' });
-                }
-            }
-        }
-    }, [activeEntityNum, activeIndustryNum]);
 
     // Get the advisorId for the active entity (for ETFs with industry 71)
     const activeEntity = (allCompanies || []).find(c => c.id === activeEntityNum);
@@ -85,24 +43,6 @@ function NavigationPanel() {
         document.addEventListener('hotkey-act-as', handler);
         return () => document.removeEventListener('hotkey-act-as', handler);
     }, [activeEntityNum, actingAsId]);
-
-    // Hotkey: view last entity
-    useEffect(() => {
-        const handler = () => {
-            if (lastEntity) api.setViewAsset(lastEntity.id);
-        };
-        document.addEventListener('hotkey-view-last-entity', handler);
-        return () => document.removeEventListener('hotkey-view-last-entity', handler);
-    }, [lastEntity]);
-
-    // Hotkey: view industry
-    useEffect(() => {
-        const handler = () => {
-            if (currentIndustry && activeIndustryId > 0) api.viewIndustry(activeIndustryId);
-        };
-        document.addEventListener('hotkey-view-industry', handler);
-        return () => document.removeEventListener('hotkey-view-industry', handler);
-    }, [currentIndustry, activeIndustryId]);
 
     // Hotkey: view player
     useEffect(() => {
@@ -147,7 +87,14 @@ function NavigationPanel() {
         const [type, idStr, idStr2] = e.target.value.split('-');
         const id = parseInt(idStr, 10);
         const id2 = idStr2 ? -parseInt(idStr2, 10) : null;
-        api.gotoPage({ id: id2 !== null ? id2 : id, type });
+        const navId = id2 !== null ? id2 : id;
+        // Find the index in navHistory and goto it via C++ endpoint
+        const idx = navHistory.findIndex(h => h.id === navId && h.type === type);
+        if (idx >= 0) {
+            api.navGotoIndex(idx);
+        } else {
+            api.gotoPage({ id: navId, type });
+        }
     };
 
     // Acting As dropdown data
@@ -182,8 +129,6 @@ function NavigationPanel() {
         ? industryMap.get(activeIndustryId) || null
         : null;
 
-<<<<<<< Updated upstream
-=======
     // Hotkey: view last entity (must be after lastEntity definition)
     useEffect(() => {
         const handler = () => {
@@ -202,7 +147,6 @@ function NavigationPanel() {
         return () => document.removeEventListener('hotkey-view-industry', handler);
     }, [currentIndustry, activeIndustryId]);
 
->>>>>>> Stashed changes
     // Acting As navigation (cycle through controlled companies)
     const actingAsIndex = actingAsOptions.findIndex(opt => opt.id === actingAsId);
     const canActingAsPrev = actingAsOptions.length > 1 && actingAsIndex > 0;

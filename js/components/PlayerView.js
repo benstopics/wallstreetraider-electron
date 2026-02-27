@@ -58,7 +58,6 @@ const PlayerView = () => {
     const setActiveTab = (tab) => {
         setActiveTabInternal(tab);
         setSavedTab(tab);
-        api.updateCurrentNavTab(tab);
     };
 
     // Handle preferred tab from navigation

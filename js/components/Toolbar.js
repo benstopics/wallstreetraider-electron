@@ -115,10 +115,8 @@ function Toolbar() {
                     <div style="padding: 24px; text-align: center;">
                         <h2 style="margin: 0 0 8px 0; font-size: 20px;">Wall Street Raider</h2>
                         <p style="margin: 0 0 4px 0; font-size: 14px; opacity: 0.8;">Version 10 Remastered — Early Access</p>
-                        <p style="margin: 0 0 16px 0; font-size: 12px; opacity: 0.6;">Steam App ID: 4080310</p>
-                        <p style="margin: 0 0 4px 0; font-size: 13px;">Copyright \u00a9 ${new Date().getFullYear()}, All Rights Reserved</p>
-                        <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">Ben Ward and HackJack Games</p>
-                        <p style="margin: 0 0 16px 0; font-size: 13px;">Original game by Michael Jenkins</p>
+                        <p style="margin: 0 0 4px 0; font-size: 13px;">Copyright \u00a9 1986-${new Date().getFullYear()}, All Rights Reserved</p>
+                        <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold;">HackJack Games & Ronin Software</p>
                         <p style="margin: 0 0 16px 0; font-size: 12px; opacity: 0.7;">The most realistic Wall Street simulation ever created</p>
                         <${Button} class="btn px-4 py-1" data-testid="btn-close-about" onClick=${() => setShowAbout(false)}>Close</button>
                     </div>

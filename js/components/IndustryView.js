@@ -46,7 +46,6 @@ const IndustryView = () => {
     const setActiveTab = (tab) => {
         setActiveTabInternal(tab);
         setSavedTab(tab);
-        api.updateCurrentNavTab(tab);
     };
 
     // If a caller (e.g., the Menu) requested a specific IndustryView tab,

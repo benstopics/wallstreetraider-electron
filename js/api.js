@@ -169,16 +169,6 @@ const REPORT_PATH_TO_EVENT = {
 let _networkFailCount = 0;
 const NETWORK_FAIL_THRESHOLD = 5;
 
-<<<<<<< Updated upstream
-=======
-// Network error handling - log sustained failures but NEVER reload.
-// location.reload() was causing an infinite refresh loop:
-//   POST /newgame -> wsr.exe busy/crash -> gamestate poll fails ->
-//   5 failures -> location.reload() -> polling restarts -> still failing -> reload -> OOM
-let _networkFailCount = 0;
-const NETWORK_FAIL_THRESHOLD = 5;
-
->>>>>>> Stashed changes
 async function fetchWithRetry(url, options = {}) {
     const method = options.method || 'GET';
     const pathOnly = url.replace(apiBase, '');
@@ -186,38 +176,11 @@ async function fetchWithRetry(url, options = {}) {
     try {
         const response = await fetch(url, options);
         _networkFailCount = 0; // Reset on any successful fetch
-<<<<<<< Updated upstream
-        if (debugLog.enabled) {
-            const ms = (performance.now() - t0).toFixed(1);
-            const bodySnippet = options.body ? ` body=${String(options.body).slice(0, 100)}` : '';
-            debugLog.log('REST', `${method} ${pathOnly}${bodySnippet} -> ${response.status} (${ms}ms)`);
-        }
-        return response;
-    } catch (error) {
-        const ms = (performance.now() - t0).toFixed(1);
-        debugLog.error('REST', `${method} ${pathOnly} FAILED (${ms}ms): ${error.message}`);
-
-        const isNetworkError =
-            error.message?.includes('ERR_NETWORK_IO_SUSPENDED') ||
-            error.message?.includes('Failed to fetch') ||
-            error.message?.includes('network') ||
-            error.name === 'TypeError';
-
-        if (isNetworkError) {
-            _networkFailCount++;
-            if (_networkFailCount >= NETWORK_FAIL_THRESHOLD) {
-                console.log(`Network error detected (${_networkFailCount} consecutive failures), refreshing browser...`);
-                location.reload();
-                return;
-            }
-            console.warn(`Network error (${_networkFailCount}/${NETWORK_FAIL_THRESHOLD}): ${error.message}`);
-=======
         return response;
     } catch (error) {
         _networkFailCount++;
         if (_networkFailCount <= 1 || _networkFailCount % 10 === 0) {
-            console.warn(`[FETCH #${_networkFailCount}] ${options.method || 'GET'} ${url.replace(apiBase, '')} FAILED (${(performance.now()).toFixed(1)}ms, streak=${_networkFailCount}): ${error.message}`);
->>>>>>> Stashed changes
+            console.warn(`[FETCH #${_networkFailCount}] ${method} ${pathOnly} FAILED (${(performance.now() - t0).toFixed(1)}ms, streak=${_networkFailCount}): ${error.message}`);
         }
         throw error;
     }
@@ -672,8 +635,6 @@ ipcRenderer.on('wsr-restarting', () => {
 ipcRenderer.on('wsr-restarted', () => {
     console.log('wsr.exe restarted, returning to main menu...');
     gameStore.setState({ gameState: { gameLoaded: false, isLoading: false } });
-    // Reset navigation manager so it can re-init from customData on next game load
-    navManager.reset();
 });
 export async function checkScoreboard() { await postNoArg('/check_scoreboard'); }
 export async function getQuoteOfTheDay() { return getJSON('/quote'); }
@@ -861,12 +822,6 @@ export async function growthThrottle() { await postNoArg('/growth_throttle'); }
 export async function clearStreamList() { await postNoArg('/clear_stream_list'); }
 export async function fillStreamList() { await postNoArg('/fill_stream_list'); }
 export async function setWhoOwnsFilter(value) {
-<<<<<<< Updated upstream
-    if (useIPC) {
-        return ipcRenderer.invoke('game:setWhoOwnsFilter', value);
-    }
-=======
->>>>>>> Stashed changes
     const url = `${apiBase}/set_who_owns_filter`;
     await fetchWithRetry(url, {
         method: 'POST',
@@ -939,147 +894,10 @@ export async function viewCorpAssetsForSale() { await postNoArg('/view_corp_asse
 
 
 /*
- * Navigation Manager – purely local state.
- *
- * History lives in-memory on this instance.  The UI reads from
- * store.navState (separate from gameState, never overwritten by polling).
- * CustomData is only used for save/restore persistence (debounced).
+ * Navigation is now managed in C++ (GameState.h).
+ * navHistory + navPointerIndex come from gameState polling.
+ * Back/forward/goto are POST calls to C++ endpoints.
  */
-class NavigationManager {
-    constructor() {
-        this.history = [];
-        this.pointerIndex = 0;
-        this.maxHistory = 30;
-        this.initialized = false;
-        this._persistTimer = null;
-    }
-
-    // Restore from CustomData on app load (called once)
-    init(savedData) {
-        if (savedData?.entries && this.history.length === 0) {
-            this.history = savedData.entries.slice();
-            this.pointerIndex = Math.max(0, Math.min(
-                savedData.pointerIndex ?? 0, this.history.length - 1));
-        }
-        this.initialized = true;
-        this._notifyUI();
-    }
-
-    // Reset navigation state (called on wsr restart / exit game)
-    reset() {
-        this.history = [];
-        this.pointerIndex = 0;
-        this.initialized = false;
-        clearTimeout(this._persistTimer);
-        this._notifyUI();
-    }
-
-    // Push local state to the store so reactive components re-render.
-    // This ONLY touches navState, never gameState.
-    _notifyUI() {
-        gameStore.getState().setNavState({
-            entries: this.history.slice(),
-            pointerIndex: this.pointerIndex,
-        });
-    }
-
-    // Debounced save to CustomData for cross-session persistence only.
-    // Does NOT touch gameState or the store.
-    _schedulePersist() {
-        clearTimeout(this._persistTimer);
-        this._persistTimer = setTimeout(() => {
-            setCustomData({
-                navHistory: { entries: this.history, pointerIndex: this.pointerIndex }
-            }).catch(() => {});
-        }, 1000);
-    }
-
-    _navigateToCurrentPage() {
-        const page = this.history[this.pointerIndex];
-        if (!page) return;
-
-        // Tab restoration (instant local state on gameState – fine, it's a pref)
-        if (page.tab) {
-            const state = gameStore.getState();
-            const gs = state.gameState || {};
-            if (page.type === 'industry') {
-                state.setGameState({ ...gs, uiPreferredIndustryTab: page.tab });
-            } else if (page.id === HUMAN1_ID) {
-                state.setGameState({ ...gs, uiPreferredPlayerTab: page.tab });
-            } else {
-                state.setGameState({ ...gs, uiPreferredCompanyTab: page.tab });
-            }
-        }
-
-        // Fire the POST to switch the viewed entity
-        const endpoint = page.type === 'industry' ? '/set_view_industry' : '/set_view_asset';
-        postIdArg(endpoint, page.id).catch(() => {});
-    }
-
-    push(page) {
-        if (!page || !page.type) return;
-        if (this.pointerIndex > 0) {
-            this.history.splice(0, this.pointerIndex);
-            this.pointerIndex = 0;
-        }
-        const index = this.history.findIndex(p => p.id === page.id && p.type === page.type);
-        if (index !== -1) this.history.splice(index, 1);
-        this.history.unshift(page);
-        if (this.history.length > this.maxHistory) this.history.pop();
-        this._notifyUI();
-        this._schedulePersist();
-    }
-
-    goBack() {
-        if (this.pointerIndex >= this.history.length - 1) return false;
-        this.pointerIndex++;
-        this._navigateToCurrentPage();
-        this._notifyUI();
-        this._schedulePersist();
-        return true;
-    }
-
-    goForward() {
-        if (this.pointerIndex <= 0) return false;
-        this.pointerIndex--;
-        this._navigateToCurrentPage();
-        this._notifyUI();
-        this._schedulePersist();
-        return true;
-    }
-
-    gotoIndex(index) {
-        if (index < 0 || index >= this.history.length) return false;
-        this.pointerIndex = index;
-        this._navigateToCurrentPage();
-        this._notifyUI();
-        this._schedulePersist();
-        return true;
-    }
-
-    gotoPage(page) {
-        if (!page || !page.type) return false;
-        const index = this.history.findIndex(p => p.id === page.id && p.type === page.type);
-        if (index !== -1) return this.gotoIndex(index);
-        // Not in history – navigate directly
-        if (page.type === 'industry') {
-            postIdArg('/set_view_industry', page.id).catch(() => {});
-        } else if (page.type === 'asset') {
-            postIdArg('/set_view_asset', page.id).catch(() => {});
-        }
-        this.push(page);
-        return true;
-    }
-
-    updateCurrentTab(tab) {
-        if (this.pointerIndex >= 0 && this.pointerIndex < this.history.length) {
-            this.history[this.pointerIndex].tab = tab;
-            this._schedulePersist();
-        }
-    }
-}
-
-export const navManager = new NavigationManager();
 
 export async function splashScreenPlayed() { await postNoArg('/splash_screen_played'); }
 
@@ -1243,48 +1061,31 @@ export function serialize(obj) {
     return Object.entries(obj).map(([key, value]) => `${key}=${value}`).join('|');
 }
 
-function shiftNavHistory(page) {
-    navManager.push(page);
-}
+// Navigation — C++ handles history tracking in set_view_asset/set_view_industry/change_acting_as
 
 export async function viewIndustry(id) {
     await postIdArg('/set_view_industry', id);
-    shiftNavHistory({ id, type: 'industry' });
     advanceTutorialOnAction('viewIndustry');
 }
 
-// Open the Database Search view (sets activeIndustryNum to -2)
 export async function viewDbSearch() {
     await postIdArg('/set_view_industry', -2);
-    // Also set the active UI report to trigger UpdateDatabase
     await postIdArg('/set_active_ui_report', UI_DB_SEARCH);
-    shiftNavHistory({ id: -2, type: 'industry' });
 }
 
-// Open the Market Heat Map (IndustryView -> "Heat Maps" tab) from anywhere (e.g., top Menu).
-// This sets a one-shot tab preference that IndustryView will consume and then clear.
 export async function openMarketHeatMap() {
     const state = gameStore.getState();
     const gs = state.gameState || {};
-
-    // Ensure IndustryView is active (needs activeIndustryNum >= 0)
     const industryId = (typeof gs.activeIndustryNum === 'number' && gs.activeIndustryNum >= 0)
         ? gs.activeIndustryNum
         : 0;
-
-    // One-shot preference used by IndustryView to select the proper tab.
     state.setGameState({ ...gs, uiPreferredIndustryTab: 'Heat Maps' });
-
-    // Navigate to IndustryView and request the correct report id.
     await viewIndustry(industryId);
     await setActiveUIReport(UI_MARKET_HEATMAP);
 }
 
 export async function setViewAsset(id) {
     await postIdArg('/set_view_asset', id);
-    shiftNavHistory({ id, type: 'asset' });
-
-    // Tutorial advancement
     if (id === HUMAN1_ID) {
         advanceTutorialOnAction('viewPlayer');
     } else {
@@ -1292,29 +1093,25 @@ export async function setViewAsset(id) {
     }
 }
 
-export function gotoPage(p) {
-    return navManager.gotoPage(p);
+export async function gotoPage(p) {
+    const endpoint = p.type === 'industry' ? '/set_view_industry' : '/set_view_asset';
+    await postIdArg(endpoint, p.id);
 }
 
-export function goBack() {
-    return navManager.goBack();
+export async function goBack() {
+    await postNoArg('/nav_back');
 }
 
-export function goForward() {
-    return navManager.goForward();
+export async function goForward() {
+    await postNoArg('/nav_forward');
 }
 
-// Update the tab on the current navigation entry (called when user changes tabs)
-export function updateCurrentNavTab(tab) {
-    navManager.updateCurrentTab(tab);
+export async function navGotoIndex(index) {
+    await postIdArg('/nav_goto', index);
 }
 
 export async function changeActingAs(id) {
     await postIdArg('/change_acting_as', id);
-    // BUG-079: Add the acting-as entity to navigation history
-    if (id && id !== HUMAN1_ID) {
-        shiftNavHistory({ id, type: 'asset' });
-    }
 }
 
 // Cycle acting-as to next/previous controlled company
@@ -1466,35 +1263,7 @@ export const WSRContext = createContext();
 export const gameStore = createStore((set, get) => ({
     gameState: {},
     setGameState: (next) => set({ gameState: next }),
-    navState: { entries: [], pointerIndex: 0 },
-    setNavState: (next) => set({ navState: next }),
 }));
-
-<<<<<<< Updated upstream
-// Debug: log Zustand store mutations when WSR_DEBUG_VERBOSE=1
-if (debugLog.enabled) {
-    let prevModalType = 0;
-    let prevIsLoading = false;
-    let prevGameLoaded = false;
-    gameStore.subscribe((state) => {
-        const gs = state.gameState || {};
-        // Log modal type changes
-        if (gs.modalType !== undefined && gs.modalType !== prevModalType) {
-            debugLog.log('STORE', `modalType ${prevModalType} -> ${gs.modalType} title="${gs.modalTitle || ''}" text="${(gs.modalText || '').slice(0, 100)}"`);
-            prevModalType = gs.modalType;
-        }
-        // Log loading state changes
-        if (gs.isLoading !== prevIsLoading) {
-            debugLog.log('STORE', `isLoading ${prevIsLoading} -> ${gs.isLoading}`);
-            prevIsLoading = gs.isLoading;
-        }
-        // Log game loaded changes
-        if (gs.gameLoaded !== prevGameLoaded) {
-            debugLog.log('STORE', `gameLoaded ${prevGameLoaded} -> ${gs.gameLoaded}`);
-            prevGameLoaded = gs.gameLoaded;
-        }
-    });
-}
 
 // Price Alert checking — runs on every gameState poll
 let alertCallbackFn = null;
@@ -1536,8 +1305,6 @@ gameStore.subscribe((state) => {
         setCustomData({ priceAlerts: updated });
     }
 });
-=======
->>>>>>> Stashed changes
 
 const shallow = (a, b) => {
     if (Object.is(a, b)) return true;

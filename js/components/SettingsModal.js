@@ -77,10 +77,6 @@ function SettingsModal({ children }) {
     const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
     const disableHotkeysSetting = api.useGameStore(s => s.gameState.disableHotkeysSetting);
     const autoAddSetting = api.useGameStore(s => s.gameState.autoAddSetting);
-<<<<<<< Updated upstream
-    const unethicalSetting = api.useGameStore(s => s.gameState.unethicalSetting);
-=======
->>>>>>> Stashed changes
 
     // Close on outside click
     useEffect(() => {
@@ -139,11 +135,6 @@ function SettingsModal({ children }) {
                     <${SettingItem} label="${insertCurrencySymbols("Tooltips")}" isOn=${tooltipsSetting} onToggle=${() => api.tooltipsSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Shareholder Graph")}" isOn=${shareholderGraphSetting} onToggle=${() => api.shareholderGraphSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("AutoAdd to Quotes")}" isOn=${autoAddSetting} onToggle=${() => api.autoAddSelect()} />
-<<<<<<< Updated upstream
-                    <div class="toolbar-menu-sep"></div>
-                    <${SettingItem} label="${insertCurrencySymbols("Unethical Scenarios")}" isOn=${unethicalSetting} onToggle=${() => api.unethicalSelect()} />
-=======
->>>>>>> Stashed changes
                 </div>
             ` : ''}
         </div>

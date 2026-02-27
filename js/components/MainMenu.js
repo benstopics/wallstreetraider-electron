@@ -14,7 +14,7 @@ const LOGO_SRC = 'assets/wallstreetraider_logo.png';
 const WEBSITE_URL = 'https://wallstreetraider.com';
 const REDDIT_URL = 'https://www.reddit.com/r/WallStreetRaider/';
 const DISCORD_URL = 'https://discord.com/invite/5ujV5Cp9Ej';
-const STEAM_URL = 'https://store.steampowered.com/app/4080310/Wall_Street_Raider/';
+const STEAM_URL = 'https://store.steampowered.com/app/3525620/Wall_Street_Raider/';
 
 // ── Lore snippets from the origin story ──
 const LORE_SNIPPETS = [
@@ -30,6 +30,70 @@ const LORE_SNIPPETS = [
 
 // ── Changelog data ──
 const CHANGELOG = [
+    {
+        ver: "v10.0.15",
+        sections: [
+            {
+                heading: "New Features",
+                items: [
+                    "Price Alerts \u2014 set high/low thresholds on any stock from its company view; alerts fire as toast notifications and persist across sessions",
+                    "My News filter in Business/World News \u2014 toggle to show only headlines affecting your controlled companies",
+                    "Who Owns filter \u2014 filter shareholders list by sector, entity type, or ownership percentage",
+                    "Expandable full-screen charts \u2014 click expand icon on any price chart for a larger view",
+                    "Streaming Quotes toolbar: Fill all active tickers and Clear list buttons",
+                    "About dialog with version info, credits, and links accessible from main menu",
+                    "Scoreboard button in toolbar for quick access to player rankings",
+                    "Growth Throttle control in Settings \u2014 adjust economic growth speed",
+                    "Become ETF Advisor action for eligible player entities",
+                    "Credit Info panel showing credit rating details and borrowing capacity",
+                    "Zoom hotkeys (Ctrl+Plus / Ctrl+Minus / Ctrl+0) for UI scaling",
+                    "Auto-Add to Streaming Quotes option \u2014 automatically adds viewed companies to ticker",
+                    "Database Search remembers last query and auto-saves results between sessions",
+                    "Bond Yield-to-Maturity column in portfolio bond listings",
+                    "Last Entity / Last Industry quick-nav buttons in navigation panel",
+                ]
+            },
+            {
+                heading: "UI/UX Improvements",
+                items: [
+                    "Responsive toolbar layout \u2014 toolbar items wrap cleanly at smaller window sizes",
+                    "Navigation panel redesigned: history managed server-side, back/forward no longer causes UI freezes",
+                    "Conditional hotkey labels \u2014 shortcut hints only appear when hotkeys are enabled",
+                    "Chart rendering improvements: better axis labels, tooltip formatting, and color consistency",
+                    "Currency denomination support throughout all financial displays and reports",
+                    "Improved modal sizing and positioning for text-heavy dialogs",
+                    "Streaming Quotes panel: duplicate ticker prevention, better add/remove flow",
+                    "Portfolio view column alignment and number formatting improvements",
+                    "Settings panel reorganized with clearer section grouping",
+                ]
+            },
+            {
+                heading: "Bug Fixes",
+                items: [
+                    "Fix single-letter stock symbols incorrectly triggering hyperlink detection in news text",
+                    "Fix industry alias names not hyperlinking correctly in news headlines",
+                    "Fix Acting As entity not tracking correctly after navigation changes",
+                    "Fix excessive re-renders during game state polling causing UI lag",
+                    "Fix Advanced Options calculator entering infinite loop on certain strike prices",
+                    "Fix clicking outside modal unintentionally dismissing important dialogs",
+                    "Fix Options tab incorrectly restricted for ETF entities",
+                    "Fix commodity and crypto trade flows failing when asset id was 0",
+                    "Fix ETF company selection modal using legacy Win32 dialog instead of Electron dropdown",
+                    "Fix short sale guard condition checking wrong variable in PB bridge",
+                    "Fix save directory defaulting to install path instead of user documents",
+                ]
+            },
+            {
+                heading: "Performance & Infrastructure",
+                items: [
+                    "Adaptive polling \u2014 200ms on main menu, 50ms during gameplay; eliminates per-poll console spam",
+                    "Debug logger system for structured diagnostic output without console noise",
+                    "IPC mode foundation for future native Electron\u2013engine communication",
+                    "hasPublicShares field added to game state for accurate public offering eligibility checks",
+                ]
+            },
+        ]
+    },
     {
         ver: "v10.0.14.1",
         sections: [
@@ -401,7 +465,7 @@ const MainMenu = () => {
         <header class="wsr-topbar glass">
           <div class="wsr-topbar-brand">
             <img src=${LOGO_SRC} alt="Wall Street Raider" class="wsr-logo-sm" />
-            <span class="wsr-terminal-title">Jenkins Terminal v10.0.14.1</span>
+            <span class="wsr-terminal-title">Jenkins Terminal v10.0.15</span>
           </div>
           <div class="wsr-topbar-right">
             <${Button} class="btn main-menu" data-testid="btn-help" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</${Button}>
