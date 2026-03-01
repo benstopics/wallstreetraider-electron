@@ -25,7 +25,7 @@ function getCompanyPrice(company) {
 
 const Tab = Tabs.Tab;
 
-function IndexPanel({ title, bondId, panelNumber, isSelected = false, shiftHeld = false }) {
+function IndexPanel({ title, bondId, panelNumber, isSelected = false }) {
     const buttonProps = useActionButtonProps();
     const buyProps = bondId === api.TBOND_RATE_ID
         ? buttonProps.buyLongGovtBonds
@@ -35,7 +35,7 @@ function IndexPanel({ title, bondId, panelNumber, isSelected = false, shiftHeld 
         ? 'outline: 2px solid rgba(96, 165, 250, 0.7); border-radius: 4px;'
         : '';
 
-    const shiftBadge = shiftHeld && panelNumber != null
+    const shiftBadge = panelNumber != null
         ? html`<span style="position:absolute;top:2px;left:4px;opacity:0.7;font-size:11px;z-index:1;">${panelNumber})</span>`
         : '';
 
@@ -140,9 +140,9 @@ function PortfolioTab() {
                     class="flex flex-row items-center justify-start gap-2 mb-2" />
                 <div class="flex flex-row flex-[1]">
                     <${IndexPanel} title="Long Bond" bondId=${api.TBOND_RATE_ID}
-                        panelNumber=${panelStartNumber} isSelected=${selectedPanelNumber === panelStartNumber} shiftHeld=${shiftHeld} />
+                        panelNumber=${panelStartNumber} isSelected=${selectedPanelNumber === panelStartNumber} />
                     <${IndexPanel} title="Short Bond" bondId=${api.SBOND_RATE_ID}
-                        panelNumber=${panelStartNumber + 1} isSelected=${selectedPanelNumber === panelStartNumber + 1} shiftHeld=${shiftHeld} />
+                        panelNumber=${panelStartNumber + 1} isSelected=${selectedPanelNumber === panelStartNumber + 1} />
                 </div>
                 <div ref=${extrasContainerRef} class="flex flex-col items-center flex-[3] overflow-y-auto min-h-0">
                     ${renderLines(portfolio,

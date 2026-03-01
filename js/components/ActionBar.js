@@ -1,6 +1,7 @@
 import { html } from '../lib/preact.standalone.module.js';
 import DropdownMenu from './DropdownMenu.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
+import { useShiftHeld } from '../hooks/useHotkey.js';
 import * as api from '../api.js';
 
 /**
@@ -11,6 +12,8 @@ import * as api from '../api.js';
  */
 export default function ActionBar() {
     const props = useActionButtonProps();
+
+    const shiftHeld = useShiftHeld();
 
     // ==================== TRADE DROPDOWN (Multi-Column) ====================
     // Column 1: Stocks, Corporate Bonds, Government Bonds
@@ -191,7 +194,7 @@ export default function ActionBar() {
                 icon="📈"
                 columns=${tradeColumns}
                 color="green"
-
+                shiftHeld=${shiftHeld}
             />
             <${DropdownMenu}
                 label="Corporate"
@@ -199,7 +202,7 @@ export default function ActionBar() {
                 icon="🏢"
                 columns=${corporateColumns}
                 color="blue"
-
+                shiftHeld=${shiftHeld}
             />
             <${DropdownMenu}
                 label="Finance"
@@ -207,7 +210,7 @@ export default function ActionBar() {
                 icon="💰"
                 columns=${financeColumns}
                 color="brown"
-
+                shiftHeld=${shiftHeld}
             />
             <${DropdownMenu}
                 label="Hostile"
@@ -215,7 +218,7 @@ export default function ActionBar() {
                 icon="⚔️"
                 items=${hostileItems}
                 color="red"
-
+                shiftHeld=${shiftHeld}
             />
             ${props.isActingAsBank ? html`<${DropdownMenu}
                 label="Banking"
@@ -223,7 +226,7 @@ export default function ActionBar() {
                 icon="🏦"
                 items=${bankingItems}
                 color="blue"
-
+                shiftHeld=${shiftHeld}
             />` : ''}
         </div>
     `;

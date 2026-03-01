@@ -11,7 +11,7 @@ import { usePanelSelection } from '../hooks/usePanelSelection.js';
 
 const Tab = Tabs.Tab;
 
-function IndexPanel({ title, commodityId, panelNumber, isSelected = false, shiftHeld = false }) {
+function IndexPanel({ title, commodityId, panelNumber, isSelected = false }) {
     const buttonProps = useActionButtonProps();
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
 
@@ -66,7 +66,7 @@ function IndexPanel({ title, commodityId, panelNumber, isSelected = false, shift
         ? 'outline: 2px solid rgba(96, 165, 250, 0.7); border-radius: 4px;'
         : '';
 
-    const shiftBadge = shiftHeld && panelNumber != null
+    const shiftBadge = panelNumber != null
         ? html`<span style="position:absolute;top:2px;left:4px;opacity:0.7;font-size:11px;z-index:1;">${panelNumber})</span>`
         : '';
 
@@ -160,16 +160,16 @@ function CommoditiesTab() {
                 panelCount=${PANEL_COUNT}
                 class="" style="height:0;overflow:hidden" />
             <div class="flex flex-row w-full">
-                <${IndexPanel} title="Gold" commodityId=${api.GOLD_ID} panelNumber=${1} isSelected=${selectedPanelNumber === 1} shiftHeld=${shiftHeld} />
-                <${IndexPanel} title="Silver" commodityId=${api.SILVER_ID} panelNumber=${2} isSelected=${selectedPanelNumber === 2} shiftHeld=${shiftHeld} />
-                <${IndexPanel} title="Oil" commodityId=${api.OIL_ID} panelNumber=${3} isSelected=${selectedPanelNumber === 3} shiftHeld=${shiftHeld} />
-                <${IndexPanel} title="Corn" commodityId=${api.CORN_ID} panelNumber=${4} isSelected=${selectedPanelNumber === 4} shiftHeld=${shiftHeld} />
-                <${IndexPanel} title="Wheat" commodityId=${api.WHEAT_ID} panelNumber=${5} isSelected=${selectedPanelNumber === 5} shiftHeld=${shiftHeld} />
+                <${IndexPanel} title="Gold" commodityId=${api.GOLD_ID} panelNumber=${1} isSelected=${selectedPanelNumber === 1} />
+                <${IndexPanel} title="Silver" commodityId=${api.SILVER_ID} panelNumber=${2} isSelected=${selectedPanelNumber === 2} />
+                <${IndexPanel} title="Oil" commodityId=${api.OIL_ID} panelNumber=${3} isSelected=${selectedPanelNumber === 3} />
+                <${IndexPanel} title="Corn" commodityId=${api.CORN_ID} panelNumber=${4} isSelected=${selectedPanelNumber === 4} />
+                <${IndexPanel} title="Wheat" commodityId=${api.WHEAT_ID} panelNumber=${5} isSelected=${selectedPanelNumber === 5} />
             </div>
             <div class="flex flex-row w-full">
-                <${IndexPanel} title="Stock Index" commodityId=${api.STOCK_INDEX_ID} panelNumber=${6} isSelected=${selectedPanelNumber === 6} shiftHeld=${shiftHeld} />
-                <${IndexPanel} title="Bitcoin (BTC)" commodityId=${api.BITCOIN_ID} panelNumber=${7} isSelected=${selectedPanelNumber === 7} shiftHeld=${shiftHeld} />
-                <${IndexPanel} title="Ethereum (ETH)" commodityId=${api.ETHEREUM_ID} panelNumber=${8} isSelected=${selectedPanelNumber === 8} shiftHeld=${shiftHeld} />
+                <${IndexPanel} title="Stock Index" commodityId=${api.STOCK_INDEX_ID} panelNumber=${6} isSelected=${selectedPanelNumber === 6} />
+                <${IndexPanel} title="Bitcoin (BTC)" commodityId=${api.BITCOIN_ID} panelNumber=${7} isSelected=${selectedPanelNumber === 7} />
+                <${IndexPanel} title="Ethereum (ETH)" commodityId=${api.ETHEREUM_ID} panelNumber=${8} isSelected=${selectedPanelNumber === 8} />
             </div>
             <div class="flex flex-col flex-[3] overflow-y-auto min-h-0">
                 <div class="flex flex-row w-full">

@@ -15,7 +15,7 @@ import { PRIORITY } from '../hotkeyManager.js';
  * @param {string} color - Button color variant
  * @param {boolean} disabled - Whether the dropdown is disabled
  */
-export default function DropdownMenu({ label, icon, items = [], columns = null, color = '', disabled = false, dataTutorial = null, hotkeyChar = null }) {
+export default function DropdownMenu({ label, icon, items = [], columns = null, color = '', disabled = false, dataTutorial = null, hotkeyChar = null, shiftHeld = false }) {
     const [isOpen, setIsOpen] = useState(false);
     const [openSubmenuIndex, setOpenSubmenuIndex] = useState(null);
     const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
@@ -352,7 +352,7 @@ export default function DropdownMenu({ label, icon, items = [], columns = null, 
                 onClick=${() => !disabled && setIsOpen(!isOpen)}
             >
                 ${icon ? html`<span class="dropdown-icon">${icon}</span>` : ''}
-                <span>${hotkeyChar ? bracketLabel(insertCurrencySymbols(label), hotkeyChar) : insertCurrencySymbols(label)}</span>
+                <span>${hotkeyChar && shiftHeld ? bracketLabel(insertCurrencySymbols(label), hotkeyChar) : insertCurrencySymbols(label)}</span>
                 <span class="dropdown-caret">${isOpen ? '▲' : '▼'}</span>
             </button>
 

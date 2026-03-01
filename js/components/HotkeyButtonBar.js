@@ -1,5 +1,4 @@
 import { html, useEffect, useRef, useState } from '../lib/preact.standalone.module.js';
-import { useShiftHeld } from '../hooks/useHotkey.js';
 import { PRIORITY, hotkeyManager } from '../hotkeyManager.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
 
@@ -7,7 +6,7 @@ import DisabledTooltipButton from './DisabledTooltipButton.js';
  * A button bar with numbered hotkey buttons.
  *
  * Each button is numbered (1, 2, 3, ...) and number keys trigger the corresponding
- * button's click via hotkey-tab events. SHIFT shows visual number prefixes.
+ * button's click via hotkey-tab events. Number prefixes are always visible.
  *
  * @param {Object} props
  * @param {Array} props.buttons - Array of button prop objects (same shape as DisabledTooltipButton props).
@@ -18,7 +17,6 @@ import DisabledTooltipButton from './DisabledTooltipButton.js';
  * @param {string} [props.style] - Optional inline style for the container div.
  */
 export default function HotkeyButtonBar({ buttons, extrasContainerRef, scopeActiveRef, onScopeActiveChange, panelCount = 0, class: className = 'flex flex-row items-center gap-2 mb-2 flex-wrap', style = 'min-height: 35px;' }) {
-    const shiftHeld = useShiftHeld();
     const [flashMessage, setFlashMessage] = useState(null);
     const flashTimeoutRef = useRef(null);
 
@@ -98,8 +96,7 @@ export default function HotkeyButtonBar({ buttons, extrasContainerRef, scopeActi
         <div class="${className}" style="${style}">
             ${activeButtons.map((btn, i) => {
                 const num = i < 9 ? `${i + 1}` : i === 9 ? '0' : null;
-                // Show Shift+N prefix when SHIFT is held
-                const prefix = shiftHeld && num !== null
+                const prefix = num !== null
                     ? html`<span style="opacity:0.45;margin-right:2px;">${num})</span>`
                     : '';
                 return html`<${DisabledTooltipButton}

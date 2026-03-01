@@ -328,7 +328,9 @@ export default function KeybindsModal({ show, onClose }) {
       </div>
 
       <div class="text-xs opacity-70 p-3 flex-shrink-0">
-        Notes: Space is reserved for the ticker (pause/run). While this window is open, global hotkeys are disabled.
+        <b>Shift hotkeys:</b> Hold Shift to reveal and activate the Action Bar menus (Shift+T/C/F/H/B) and Toolbar shortcuts (Shift+L/M/D/S).<br/>
+        <b>Always-visible hotkeys:</b> Tab labels, button bar numbers, navigation panel shortcuts (V, A, P, L, I), and panel badges are always shown.<br/>
+        Space is reserved for the ticker (pause/run). While this window is open, global hotkeys are disabled.
       </div>
     <//>
   `;
