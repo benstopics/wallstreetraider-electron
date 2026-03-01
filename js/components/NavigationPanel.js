@@ -3,12 +3,10 @@ import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import Button from './Button.js';
 import { bracketLabel } from '../hotkeys.js';
-import { useShiftHeld } from '../hooks/useHotkey.js';
 import { insertCurrencySymbols } from './helpers.js';
 
 
 function NavigationPanel() {
-    const shiftHeld = useShiftHeld();
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
     const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const playerId = api.useGameStore(s => s.gameState.playerId);
@@ -193,17 +191,17 @@ function NavigationPanel() {
                         ? html`<${Button}
                             class="btn px-2 py-1 text-xs whitespace-nowrap"
                             data-tutorial="view-acting-as"
-                            onclick=${() => api.setViewAsset(actingAsId)}>${shiftHeld ? bracketLabel('← View', 'V') : '← View'}</button>`
+                            onclick=${() => api.setViewAsset(actingAsId)}>${bracketLabel('← View', 'V')}</button>`
                         : ''}
                     ${/* Act As X button - when viewing a controlled company but not acting as it */
                       actingAsId !== activeEntityNum && actingAsOptions.find(opt => opt.id === activeEntityNum)
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(activeEntityNum)}>${shiftHeld ? bracketLabel(`Act As ${activeEntitySymbol}`, 'A') : `Act As ${activeEntitySymbol}`}</button>`
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(activeEntityNum)}>${bracketLabel(`Act As ${activeEntitySymbol}`, 'A')}</button>`
                         : ''}
                     ${/* ETF Advisor badge/button */
                       (activeIndustryId == 71 && controlledAdvisorId > 0)
                         ? (actingAsId === controlledAdvisorId
                             ? html`<span class="badge badge-primary px-2 py-1 text-xs whitespace-nowrap">${insertCurrencySymbols('Advisor')}</span>`
-                            : html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(controlledAdvisorId)}>${shiftHeld ? bracketLabel(insertCurrencySymbols('Advisor'), 'D') : insertCurrencySymbols('Advisor')}</button>`)
+                            : html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(controlledAdvisorId)}>${bracketLabel(insertCurrencySymbols('Advisor'), 'D')}</button>`)
                         : ''}
                 </div>
             </div>
@@ -235,13 +233,13 @@ function NavigationPanel() {
                 </button>
                 <div class="flex items-center gap-1">
                     ${lastEntity
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-last-entity" onclick=${() => api.setViewAsset(lastEntity.id)}>${shiftHeld ? bracketLabel(lastEntity.symbol || lastEntity.name, 'L') : (lastEntity.symbol || lastEntity.name)}</button>`
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-last-entity" onclick=${() => api.setViewAsset(lastEntity.id)}>${bracketLabel(lastEntity.symbol || lastEntity.name, 'L')}</button>`
                         : ''}
                     ${currentIndustry
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${shiftHeld ? bracketLabel(currentIndustry.name, 'I') : currentIndustry.name}</button>`
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${bracketLabel(currentIndustry.name, 'I')}</button>`
                         : ''}
                     ${activeEntityNum !== api.HUMAN1_ID
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" data-testid="btn-view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${shiftHeld ? bracketLabel(insertCurrencySymbols('Player'), 'P') : insertCurrencySymbols('Player')}</button>`
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" data-testid="btn-view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${bracketLabel(insertCurrencySymbols('Player'), 'P')}</button>`
                         : ''}
                 </div>
             </div>

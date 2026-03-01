@@ -245,7 +245,7 @@ const DatabaseSearchView = () => {
             }
             return sortDir === 'asc' ? av - bv : bv - av;
         });
-        return arr.slice(0, 200);
+        return arr;
     }, [filtered, sortCol, sortDir]);
 
     const handleSort = (col) => {

@@ -54,7 +54,6 @@ const CHANGELOG = [
                     "Growth Throttle control in Settings \u2014 adjust economic growth speed",
                     "Become ETF Advisor action for eligible player entities",
                     "Credit Info panel showing credit rating details and borrowing capacity",
-                    "Zoom hotkeys (Ctrl+Plus / Ctrl+Minus / Ctrl+0) for UI scaling",
                     "Auto-Add to Streaming Quotes option \u2014 automatically adds viewed companies to ticker",
                     "Database Search remembers last query and auto-saves results between sessions",
                     "Bond Yield-to-Maturity column in portfolio bond listings",
@@ -497,12 +496,12 @@ const MainMenu = () => {
             <div class="wsr-stats">
               <span class="wsr-stat">
                 <span class="wsr-stat-value">1,600</span>
-                <span class="wsr-stat-label">Companies</span>
+                <span class="wsr-stat-label">Simulated Companies</span>
               </span>
               <span class="wsr-stat-sep">\u00b7</span>
               <span class="wsr-stat">
                 <span class="wsr-stat-value">124</span>
-                <span class="wsr-stat-label">Countries</span>
+                <span class="wsr-stat-label">Player Countries</span>
               </span>
               <span class="wsr-stat-sep">\u00b7</span>
               <span class="wsr-stat">
@@ -573,7 +572,7 @@ const MainMenu = () => {
 
         <!-- ── Footer ── -->
         <footer class="wsr-footer glass">
-          <span class="wsr-footer-copy">Copyright \u00a9 ${new Date().getFullYear()}, All Rights Reserved, Ben Ward and HackJack Games</span>
+          <span class="wsr-footer-copy">Copyright \u00a9 1986-${new Date().getFullYear()}, All Rights Reserved, Ben Ward and HackJack Games</span>
           ${localeWarning}
           <div class="wsr-social-bar">
             <a class="wsr-social-link" href=${REDDIT_URL} target="_blank" rel="noopener">

@@ -278,8 +278,10 @@ export function useActionButtonProps() {
     const advancedOptions = {
         label: 'Advanced Options',
         onClick: api.advancedOptionsTrading,
-        disabled: isActiveEntityETF,
-        disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
+        disabled: isActiveEntityETF || isActingAsBank || isActingAsInsurance,
+        disabledMessage: isActiveEntityETF ? "Not available for ETFs"
+            : (isActingAsBank || isActingAsInsurance) ? "Not available for banks/insurers"
+            : false,
         color: 'green'
     };
 
@@ -627,6 +629,12 @@ export function useActionButtonProps() {
         color: 'green'
     };
 
+    const sellBusinessLoans = {
+        label: 'Sell Business Loans',
+        onClick: api.sellBusinessLoan,
+        color: 'red'
+    };
+
     const buyConsumerLoans = {
         label: 'Buy Consumer Loans',
         onClick: api.buyConsumerLoans,
@@ -865,6 +873,7 @@ export function useActionButtonProps() {
         listBankLoans,
         freezeAllLoans,
         buyBusinessLoans,
+        sellBusinessLoans,
         buyConsumerLoans,
         sellConsumerLoans,
         buyPrimeMortgages,
