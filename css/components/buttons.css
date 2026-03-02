@@ -43,6 +43,10 @@
   height: 100%;
 }
 
+.flex-wrap > .btn-container {
+  height: 35px !important;
+}
+
 .btn svg {
   fill: white;
 }

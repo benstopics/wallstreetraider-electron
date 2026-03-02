@@ -182,9 +182,9 @@ const AppInner = () => {
             if (isEditableTarget(e.target)) return false;
             if (helpShown) return false;
             if (modalType > 0) return false; // Don't fire global hotkeys while a game modal is showing
-            // Shift+letter for dropdowns
+            // Shift+letter for dropdowns (Corporate=c, Hostile=h)
             if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey) {
-                if (['t', 'c', 'f', 'h', 'b'].includes(e.key.toLowerCase())) return true;
+                if (['c', 'h'].includes(e.key.toLowerCase())) return true;
             }
             return !!matchHotkey(e);
         },
@@ -212,7 +212,7 @@ const AppInner = () => {
 
             // Dropdown letter keys (Shift+letter to open action bar dropdowns)
             if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey) {
-                const dropdownChars = ['t', 'c', 'f', 'h', 'b'];
+                const dropdownChars = ['c', 'h'];
                 if (dropdownChars.includes(e.key.toLowerCase())) {
                     document.dispatchEvent(new CustomEvent('hotkey-dropdown', { detail: { char: e.key.toLowerCase() } }));
                     return true;

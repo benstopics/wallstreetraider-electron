@@ -766,9 +766,9 @@ export async function becomeEtfAdvisor() { await postNoArg('/become_etf_advisor'
 export async function setAdvisoryFee() { await postNoArg('/set_advisory_fee'); }
 
 /* Deals & Funding */
-export async function merger() { await postNoArg('/merger'); }
-export async function greenmail() { await postNoArg('/greenmail'); }
-export async function lbo() { await postNoArg('/lbo'); }
+export async function merger(targetId = 0) { await postIdArg('/merger', targetId); }
+export async function greenmail(targetId = 0) { await postIdArg('/greenmail', targetId); }
+export async function lbo(targetId = 0) { await postIdArg('/lbo', targetId); }
 export async function startup() { await postNoArg('/startup'); }
 export async function capitalContribution() { await postNoArg('/capital_contribution'); }
 export async function publicStockOffering() { await postNoArg('/public_stock_offering'); }

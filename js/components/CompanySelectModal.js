@@ -4,7 +4,7 @@ import Modal from './Modal.js';
 import Button from './Button.js';
 import * as api from '../api.js';
 
-export default function CompanySelectModal({ show, title, text, onSubmit, defaultValue }) {
+export default function CompanySelectModal({ show, title, text, onSubmit, defaultValue, filter }) {
     const gameState = api.useGameStore(s => s.gameState);
     const [query, setQuery] = useState('');
     const [activeIdx, setActiveIdx] = useState(0);
@@ -24,11 +24,13 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
     }, [show]);
 
     const entities = useMemo(() => {
-        return (gameState.allCompanies ?? [])
+        let list = (gameState.allCompanies ?? [])
             .filter(c => title.includes('Change the Bank') ? c.industryId === api.BANK_IND
                 : title.includes('A COMPANY YOU CONTROL') ? api.isPlayerControlled(controlledCompanies, c.id)
                 : true);
-    }, [gameState.allCompanies, title]);
+        if (filter) list = list.filter(filter);
+        return list;
+    }, [gameState.allCompanies, title, filter]);
 
     const suggestions = useMemo(() => {
         const q = (query || '').toUpperCase().trim();

@@ -7,7 +7,6 @@ import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
 import FinancialsTab from './FinancialsTab.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
-import Button from './Button.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
 import HotkeyButtonBar from './HotkeyButtonBar.js';
 import OwnershipGraph from './OwnershipGraph.js';
@@ -20,6 +19,7 @@ const Tab = Tabs.Tab;
 
 const PlayerView = () => {
 
+    const playerName = api.useGameStore(s => s.gameState.playerName) || 'Player';
     const cashflowProjection = api.useGameStore(s => s.gameState.cashflowProjection);
     const advances = api.useGameStore(s => s.gameState.advances);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
@@ -70,11 +70,16 @@ const PlayerView = () => {
         }
     }, [preferredTab]);
 
+    // Auto-set actingAs to player when viewing player dashboard
+    useEffect(() => {
+        api.changeActingAs(api.HUMAN1_ID);
+    }, []);
+
     return html`
         <div class="flex flex-col h-full">
             <div class="flex flex-row gap-2 flex-1 min-h-0">
                 <div class="flex flex-col w-full gap-2 h-full">
-                    <${ActionBar} />
+                    <${ActionBar} entityLabel=${playerName} />
                     <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
                         <${Tab} label="Financials" hotkey="f" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
                             <${FinancialsTab} />
@@ -135,7 +140,7 @@ const PlayerView = () => {
                                     class="flex flex-row items-center gap-2 mb-2" />
                                 ${showCorporationsGraph ? html`
                                     <div class="flex-1 min-h-0 overflow-auto">
-                                        <${OwnershipGraph} showOwners=${false} showSubsidiaries=${true} />
+                                        <${OwnershipGraph} showOwners=${false} showSubsidiaries=${true} startNumber=${corpsExtrasStart} />
                                     </div>
                                 ` : html`
                                     <div ref=${corpsExtrasRef} class="flex flex-col items-center overflow-y-auto min-h-0">
@@ -150,17 +155,6 @@ const PlayerView = () => {
                                                     extrasIndex=${extrasCounter ? extrasCounter.current++ : null}
                                                     scopeActive=${corpsScopeRef.current}
                                                     hotkeyLetter="a"
-                                                    isLineSelected=${isLineSelected}
-                                                    lineNumber=${lineNumber}
-                                                />
-                                                <${DisabledTooltipButton}
-                                                    disabledMessage=${false}
-                                                    onClick=${() => api.changeActingAs(id)}
-                                                    label="Act As"
-                                                    color="brown"
-                                                    extrasIndex=${extrasCounter ? extrasCounter.current++ : null}
-                                                    scopeActive=${corpsScopeRef.current}
-                                                    hotkeyLetter="t"
                                                     isLineSelected=${isLineSelected}
                                                     lineNumber=${lineNumber}
                                                 />

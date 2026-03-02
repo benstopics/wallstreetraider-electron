@@ -1,233 +1,181 @@
-import { html } from '../lib/preact.standalone.module.js';
+import { html, useState, useCallback, useMemo } from '../lib/preact.standalone.module.js';
 import DropdownMenu from './DropdownMenu.js';
+import CompanySelectModal from './CompanySelectModal.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 import { useShiftHeld } from '../hooks/useHotkey.js';
 import * as api from '../api.js';
 
 /**
- * ActionBar - Persistent action bar with dropdown menus
- * Implements Option C: Separate actions (dropdowns) from information (tabs)
+ * ActionBar - Dropdown menus for Corporate & Hostile actions, plus standalone buttons.
  *
- * Uses useActionButtonProps hook for centralized button definitions.
+ * Corporate (hotkey C): M&A, Assets, Misc
+ * Hostile (hotkey H): Legal, Reputation, Takeovers
+ * Standalone: Price Alerts
+ *
+ * Hostile actions that need a target company open a CompanySelectModal picker.
  */
-export default function ActionBar() {
+export default function ActionBar({ entityLabel }) {
     const props = useActionButtonProps();
-
     const shiftHeld = useShiftHeld();
 
-    // ==================== TRADE DROPDOWN (Multi-Column) ====================
-    // Column 1: Stocks, Corporate Bonds, Government Bonds
-    const tradeColumn1 = [
-        { header: 'Stocks' },
-        props.buyStock,
-        props.sellStock,
-        props.shortStock,
-        props.coverShort,
-        { divider: true },
-        { header: 'Corporate Bonds' },
-        props.buyCorpBond,
-        props.sellCorpBond,
-        { divider: true },
-        { header: 'Government Bonds' },
-        props.buyLongGovtBonds,
-        props.sellLongGovtBonds,
-        props.buyShortGovtBonds,
-        props.sellShortGovtBonds,
-    ];
+    // ==================== Hostile Target Picker State ====================
+    const [hostileAction, setHostileAction] = useState(null);
+    const [showTargetPicker, setShowTargetPicker] = useState(false);
 
-    // Column 2: Commodities, Crypto — redirect to Commodities tab
-    // Note: Generic commodity/crypto buttons (passing id=0) caused either wrong trades
-    // (defaulting to Stock Index) or hard freezes (Win32 Form18/Form23 dialogs invisible
-    // in Electron). The Commodities tab has proper per-commodity buttons.
-    const tradeColumn2 = [
-        { header: 'Commodities' },
-        { label: 'Buy Futures', onClick: () => api.buyCommodityFutures(api.STOCK_INDEX_ID), color: 'green' },
-        { label: 'Sell Futures', onClick: () => api.sellCommodityFutures(api.STOCK_INDEX_ID), color: 'red' },
-        { label: 'Short Futures', onClick: () => api.shortCommodityFutures(api.STOCK_INDEX_ID), color: 'red' },
-        { label: 'Cover Futures', onClick: () => api.coverShortCommodityFutures(api.STOCK_INDEX_ID), color: 'green' },
-        { divider: true },
-        { label: 'Buy Physical', disabled: true, disabledMessage: 'Use the Commodities tab for physical commodity trading', color: 'green' },
-        { label: 'Sell Physical', disabled: true, disabledMessage: 'Use the Commodities tab for physical commodity trading', color: 'red' },
-        { divider: true },
-        { header: 'Crypto' },
-        { label: 'Buy Crypto', disabled: true, disabledMessage: 'Use the Commodities tab for crypto trading', color: 'green' },
-        { label: 'Sell Crypto', disabled: true, disabledMessage: 'Use the Commodities tab for crypto trading', color: 'red' },
-        { label: 'Buy Crypto Futures', disabled: true, disabledMessage: 'Use the Commodities tab for crypto futures trading', color: 'green' },
-        { label: 'Sell Crypto Futures', disabled: true, disabledMessage: 'Use the Commodities tab for crypto futures trading', color: 'red' },
-    ];
+    const {
+        actingAsId,
+        actingAsSymbol,
+        activeEntityNum,
+        controlledCompanies,
+        isActiveEntityETF,
+        isActingAsBank,
+    } = props;
 
-    // Column 3: Options
-    const tradeColumn3 = [
-        { header: 'Options' },
-        props.buyCalls,
-        props.sellCalls,
-        props.buyPuts,
-        props.sellPuts,
-        { ...props.advancedOptions, label: 'Advanced Options...' },
-        { divider: true },
-        { header: 'Alerts' },
-        { label: 'Price Alerts...', onClick: () => window.__showPriceAlerts?.(), color: 'blue', 'data-testid': 'btn-price-alerts' },
-    ];
+    const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
 
-    const tradeColumns = [tradeColumn1, tradeColumn2, tradeColumn3];
+    // Build filter for target picker based on action
+    const targetFilter = useMemo(() => {
+        const controlledIds = new Set((controlledCompanies || []).map(c => c.id));
+        if (hostileAction === 'antitrust') {
+            return (c) => !controlledIds.has(c.id) && c.industryId === actingAsIndustryId;
+        }
+        return (c) => !controlledIds.has(c.id);
+    }, [hostileAction, controlledCompanies, actingAsIndustryId]);
 
-    // ==================== CORPORATE DROPDOWN (Multi-Column) ====================
-    // Column 1: Leadership, Strategy
-    const corporateColumn1 = [
-        { header: 'Leadership' },
-        props.electResignCeo,
-        props.changeManagers,
-        { divider: true },
-        { header: 'Strategy' },
-        props.setProductivity,
-        props.setGrowthRate,
-        props.growthThrottle,
-        props.rebrand,
-        props.restructure,
-    ];
+    const openPicker = useCallback((action) => {
+        setHostileAction(action);
+        setShowTargetPicker(true);
+    }, []);
 
-    // Column 2: M&A, Assets, ETF/Advisory, Autopilot
-    const corporateColumn2 = [
+    const handleTargetSelected = useCallback(async (targetIdStr) => {
+        setShowTargetPicker(false);
+        if (!targetIdStr) { setHostileAction(null); return; }
+
+        const targetId = parseInt(targetIdStr, 10);
+        if (!targetId || isNaN(targetId)) { setHostileAction(null); return; }
+
+        const action = hostileAction;
+        setHostileAction(null);
+
+        // Actions that take a target ID directly — no navigation needed
+        if (action === 'antitrust') { api.antitrustLawsuit(targetId); return; }
+        if (action === 'harassing') { api.harrassingLawsuit(targetId); return; }
+        if (action === 'spreadRumors') { api.spreadRumors(targetId); return; }
+
+        // Pass target ID directly — PB temporarily sets ActvEntyNum to target,
+        // runs the action, then restores ActvEntyNum. No navigation needed.
+        if (action === 'greenmail') api.greenmail(targetId);
+        else if (action === 'lbo') api.lbo(targetId);
+        else if (action === 'merger') api.merger(targetId);
+    }, [hostileAction, activeEntityNum]);
+
+    // ==================== Disabled Helpers ====================
+    const notActingAsCompany = !actingAsId || actingAsId <= 10;
+    const companyMsg = notActingAsCompany ? "Must be acting as a company" : false;
+    const etfMsg = isActiveEntityETF ? "Not available for ETFs" : false;
+    const pickerDisabled = isActiveEntityETF || notActingAsCompany;
+    const pickerDisabledMsg = etfMsg || companyMsg;
+
+    // ==================== Action Labels for Picker Title ====================
+    const actionLabels = {
+        antitrust: 'Antitrust Lawsuit',
+        harassing: 'Harassing Lawsuit',
+        spreadRumors: 'Spread Rumors',
+        greenmail: 'Greenmail',
+        lbo: 'Leveraged Buyout',
+        merger: 'Merger',
+    };
+
+    // ==================== CORPORATE DROPDOWN ====================
+    const corporateItems = [
         { header: 'M&A' },
-        props.merger,
         props.startup,
+        {
+            ...props.merger,
+            label: 'Merger',
+            onClick: () => openPicker('merger'),
+            disabled: pickerDisabled,
+            disabledMessage: pickerDisabledMsg,
+            color: 'green',
+        },
         props.capitalContribution,
         { divider: true },
         { header: 'Assets' },
-        props.buyCorporateAssets,
-        props.sellCorporateAssets,
-        props.offerAssetsForSale,
-        props.sellSubsidiaryStock,
         props.browseForSaleItems,
         { divider: true },
-        { header: 'ETF / Advisory' },
-        props.becomeEtfAdvisor,
-        props.setAdvisoryFee,
-        { divider: true },
-        { header: 'Autopilot' },
-        props.toggleGlobalAutopilot,
-    ];
-
-    const corporateColumns = [corporateColumn1, corporateColumn2];
-
-    // ==================== FINANCE DROPDOWN (Multi-Column) ====================
-    // Column 1: Equity, Debt
-    const financeColumn1 = [
-        { header: 'Equity' },
-        props.publicStockOffering,
-        props.privateStockOffering,
-        props.splitStock,
-        props.reverseSplit,
-        { divider: true },
-        { header: 'Debt' },
-        props.issueCorpBonds,
-        props.redeemCorpBonds,
-        props.borrowMoney,
-        props.repayLoan,
-        props.tradeTbills,
-    ];
-
-    // Column 2: Returns, Banking, Swaps, Taxes, Accounting
-    const financeColumn2 = [
-        { header: 'Returns' },
-        props.setDividend,
-        props.extraordinaryDividend,
-        props.taxFreeLiquidation,
-        props.taxableLiquidation,
-        { divider: true },
-        { header: 'Banking' },
-        props.changeBank,
-        props.creditInfo,
-        props.advanceFunds,
-        { divider: true },
-        { header: 'Swaps' },
-        props.interestRateSwaps,
-        { divider: true },
-        { header: 'Taxes' },
-        props.prepayTaxes,
-        { header: 'Accounting' },
-        props.increaseEarnings,
-        props.decreaseEarnings,
-    ];
-
-    const financeColumns = [financeColumn1, financeColumn2];
-
-    // ==================== BANKING DROPDOWN (only when acting as bank) ====================
-    const bankingItems = [
-        { header: 'Bank Operations' },
-        props.setBankAllocation,
-        props.listBankLoans,
-        props.freezeAllLoans,
-        { divider: true },
-        { header: 'Loan Portfolio' },
-        props.buyBusinessLoans,
-        props.sellBusinessLoans,
-        props.buyConsumerLoans,
-        props.sellConsumerLoans,
-        props.buyPrimeMortgages,
-        props.sellPrimeMortgages,
-        props.buySubprimeMortgages,
-        props.sellSubprimeMortgages,
+        { header: 'Misc' },
+        props.electResignCeo,
     ];
 
     // ==================== HOSTILE DROPDOWN ====================
     const hostileItems = [
         { header: 'Legal' },
         props.changeLawFirm,
-        props.antitrustLawsuit,
-        props.harassingLawsuit,
+        {
+            label: 'Antitrust Lawsuit',
+            onClick: () => openPicker('antitrust'),
+            disabled: pickerDisabled,
+            disabledMessage: pickerDisabledMsg,
+            color: 'red',
+        },
+        {
+            label: 'Harassing Lawsuit',
+            onClick: () => openPicker('harassing'),
+            disabled: false,
+            color: 'red',
+        },
         { divider: true },
         { header: 'Reputation' },
-        props.spreadRumors,
+        {
+            label: 'Spread Rumors',
+            onClick: () => openPicker('spreadRumors'),
+            disabled: false,
+            color: 'red',
+        },
         { divider: true },
         { header: 'Takeovers' },
-        props.greenmail,
-        props.leveragedBuyout,
-        { divider: true },
+        {
+            label: 'Greenmail',
+            onClick: () => openPicker('greenmail'),
+            disabled: pickerDisabled,
+            disabledMessage: pickerDisabledMsg,
+            color: 'red',
+        },
+        {
+            label: 'Leveraged Buyout',
+            onClick: () => openPicker('lbo'),
+            disabled: pickerDisabled,
+            disabledMessage: pickerDisabledMsg,
+            color: 'red',
+        },
     ];
 
     return html`
-        <div class="action-bar">
-            <${DropdownMenu}
-                label="Trade"
-                hotkeyChar="t"
-                icon="📈"
-                columns=${tradeColumns}
-                color="green"
-                shiftHeld=${shiftHeld}
-            />
+        <div class="action-bar" style="align-items: center;">
+            ${entityLabel ? html`<span style="font-weight: bold; font-size: var(--font-size-sm); white-space: nowrap; opacity: 0.7;">${entityLabel}</span>` : ''}
             <${DropdownMenu}
                 label="Corporate"
-                hotkeyChar="c"
                 icon="🏢"
-                columns=${corporateColumns}
+                items=${corporateItems}
                 color="blue"
-                shiftHeld=${shiftHeld}
-            />
-            <${DropdownMenu}
-                label="Finance"
-                hotkeyChar="f"
-                icon="💰"
-                columns=${financeColumns}
-                color="brown"
+                hotkeyChar="c"
                 shiftHeld=${shiftHeld}
             />
             <${DropdownMenu}
                 label="Hostile"
-                hotkeyChar="h"
                 icon="⚔️"
                 items=${hostileItems}
                 color="red"
+                hotkeyChar="h"
                 shiftHeld=${shiftHeld}
             />
-            ${props.isActingAsBank ? html`<${DropdownMenu}
-                label="Banking"
-                hotkeyChar="b"
-                icon="🏦"
-                items=${bankingItems}
-                color="blue"
-                shiftHeld=${shiftHeld}
-            />` : ''}
         </div>
+        <${CompanySelectModal}
+            show=${showTargetPicker}
+            title=${`Select target for ${actionLabels[hostileAction] || 'action'}${actingAsSymbol ? ` (acting as ${actingAsSymbol})` : ''}`}
+            text="Choose a company to target:"
+            onSubmit=${handleTargetSelected}
+            filter=${targetFilter}
+        />
     `;
 }

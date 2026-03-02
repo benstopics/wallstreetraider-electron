@@ -134,13 +134,25 @@ function FinancialsTab() {
     const scopeActiveRef = useRef(false);
     const [, setScopeRenderTick] = useState(0);
     const barButtons = [
+        // Equity group
+        showCorpButtons && buttonProps.publicStockOffering,
+        showCorpButtons && !buttonProps.isActiveEntityETF && buttonProps.privateStockOffering,
+        showCorpButtons && buttonProps.splitStock,
+        showCorpButtons && buttonProps.reverseSplit,
+        showCorpButtons && { divider: true },
+        // Debt group
+        showCorpButtons && buttonProps.issueCorpBonds,
         buttonProps.borrowMoney,
         buttonProps.repayLoan,
+        buttonProps.changeBank,
+        showCorpButtons && !buttonProps.isActiveEntityETF && buttonProps.tradeTbills,
+        { divider: true },
+        // Returns group
         showCorpButtons && buttonProps.extraordinaryDividend,
         showCorpButtons && !buttonProps.isActiveEntityETF && buttonProps.taxFreeLiquidation,
         showCorpButtons && !buttonProps.isActiveEntityETF && buttonProps.taxableLiquidation,
-        buttonProps.changeBank,
-        showCorpButtons && !buttonProps.isActiveEntityETF && buttonProps.tradeTbills,
+        // Player-only
+        !showCorpButtons && buttonProps.prepayTaxes,
     ];
     const extrasStartNumber = barButtons.filter(Boolean).length + 1;
 

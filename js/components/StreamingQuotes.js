@@ -60,6 +60,7 @@ const StreamingQuotes = () => {
                 <span style="display: flex; gap: 4px;">
                     <${Button} class="btn text-xs px-2 py-0" data-testid="btn-fill-stream" onClick=${() => api.fillStreamList()} title="Auto-fill with owned stocks, controlled companies, and positions">Fill</button>
                     <${Button} class="btn text-xs px-2 py-0" data-testid="btn-clear-stream" onClick=${() => api.clearStreamList()} title="Clear all streaming quotes">Clear</button>
+                    <${Button} class="btn text-xs px-2 py-0" onClick=${() => window.__showPriceAlerts?.()} title="Price Alerts">Alerts</button>
                 </span>
             </div>
             <div class="p-1 panel-body">

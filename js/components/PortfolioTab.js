@@ -113,10 +113,9 @@ function PortfolioTab() {
     const showCorpButtons = activeEntityNum > 10 || buttonProps.isActiveEntityETF;
     const barButtons = [
         buttonProps.buyStock,
-        buttonProps.sellStock,
-        buttonProps.shortStock,
+        !showCorpButtons && buttonProps.sellStock,
+        !showCorpButtons && buttonProps.shortStock,
         showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.buyCorpBond, label: "Buy Bonds" },
-        showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.merger, label: "Merge With" },
         showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.sellSubsidiaryStock, label: "Offer Stock for Sale" },
     ];
     const barCount = barButtons.filter(Boolean).length;

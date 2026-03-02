@@ -104,7 +104,7 @@ export default function PriceAlertModal({ show, onClose }) {
         <div style="padding: 16px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="margin: 0; font-size: 16px;">Price Alerts</h3>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
                     ${view === 'list' ? html`
                         <${Button} class="btn btn-sm text-xs px-3 py-1" data-testid="btn-create-alert" onClick=${() => setView('create')}>New Alert<//>
                         ${triggeredCount > 0 ? html`
@@ -113,6 +113,7 @@ export default function PriceAlertModal({ show, onClose }) {
                     ` : html`
                         <${Button} class="btn btn-sm text-xs px-3 py-1" onClick=${() => setView('list')}>Back to List<//>
                     `}
+                    <button onClick=${onClose} style="background: none; border: none; color: #888; cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1;" title="Close">x</button>
                 </div>
             </div>
 

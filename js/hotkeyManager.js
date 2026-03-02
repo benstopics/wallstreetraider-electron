@@ -224,9 +224,12 @@ class HotkeyManager {
         const prospective = this.digitBuffer + digit;
         const prospectiveNum = parseInt(prospective, 10);
 
+        // Treat bare "0" as 10 (10th button, displayed as "0)")
+        const effectiveNum = (!this.digitBuffer && prospective === '0') ? 10 : prospectiveNum;
+
         // If no buffer and within immediate range, fire immediately
-        if (!this.digitBuffer && prospectiveNum <= immediateCount) {
-            this._dispatchDigitConfirm(prospectiveNum);
+        if (!this.digitBuffer && effectiveNum <= immediateCount) {
+            this._dispatchDigitConfirm(effectiveNum);
             return;
         }
 

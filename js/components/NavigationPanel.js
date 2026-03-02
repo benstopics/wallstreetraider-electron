@@ -164,7 +164,7 @@ function NavigationPanel() {
     return html`
         <div class="flex flex-col gap-1" data-tutorial="navigation-panel" style="min-width: 280px;">
             <!-- Row 1: Acting As -->
-            <div class="flex flex-row items-center gap-2" data-tutorial="acting-as-dropdown">
+            <!--<div class="flex flex-row items-center gap-2" data-tutorial="acting-as-dropdown">
                 <small class="whitespace-nowrap" style="width: 70px;">${insertCurrencySymbols('Acting As')}:</small>
                 <${Button}
                     class="btn px-2 py-1 ${!canActingAsPrev ? 'invisible' : ''}"
@@ -204,7 +204,7 @@ function NavigationPanel() {
                             : html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(controlledAdvisorId)}>${bracketLabel(insertCurrencySymbols('Advisor'), 'D')}</button>`)
                         : ''}
                 </div>
-            </div>
+            </div>-->
 
             <!-- Row 2: Viewing / Navigation -->
             <div class="flex flex-row items-center gap-2">
@@ -232,9 +232,6 @@ function NavigationPanel() {
                     <b>→</b>
                 </button>
                 <div class="flex items-center gap-1">
-                    ${lastEntity
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-last-entity" onclick=${() => api.setViewAsset(lastEntity.id)}>${bracketLabel(lastEntity.symbol || lastEntity.name, 'L')}</button>`
-                        : ''}
                     ${currentIndustry
                         ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${bracketLabel(currentIndustry.name, 'I')}</button>`
                         : ''}

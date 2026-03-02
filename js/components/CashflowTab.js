@@ -28,6 +28,7 @@ function CashflowTab() {
                     buttonProps.setDividend,
                     buttonProps.setProductivity,
                     buttonProps.setGrowthRate,
+                    buttonProps.growthThrottle,
                     { ...buttonProps.changeManagers, label: "Fire Managers" },
                 ]} class="flex flex-row items-center gap-5" />` : ''}
                 <br />

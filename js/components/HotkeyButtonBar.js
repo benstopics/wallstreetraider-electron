@@ -16,12 +16,13 @@ import DisabledTooltipButton from './DisabledTooltipButton.js';
  * @param {string} [props.class] - Optional CSS class for the container div.
  * @param {string} [props.style] - Optional inline style for the container div.
  */
-export default function HotkeyButtonBar({ buttons, extrasContainerRef, scopeActiveRef, onScopeActiveChange, panelCount = 0, class: className = 'flex flex-row items-center gap-2 mb-2 flex-wrap', style = 'min-height: 35px;' }) {
+export default function HotkeyButtonBar({ buttons, extrasContainerRef, scopeActiveRef, onScopeActiveChange, panelCount = 0, class: className = 'flex flex-row items-center gap-2 mb-2 flex-wrap flex-shrink-0', style = 'min-height: 35px;' }) {
     const [flashMessage, setFlashMessage] = useState(null);
     const flashTimeoutRef = useRef(null);
 
-    // Filter out falsy entries (from conditional rendering)
-    const activeButtons = (buttons || []).filter(Boolean);
+    // Filter out falsy entries (from conditional rendering), but keep divider objects
+    const activeButtons = (buttons || []).filter(b => b && !b.divider);
+    const rawButtons = (buttons || []).filter(Boolean);
 
     // Show a brief flash message (auto-hides after 2s)
     const showFlash = (message) => {
@@ -94,16 +95,23 @@ export default function HotkeyButtonBar({ buttons, extrasContainerRef, scopeActi
 
     return html`
         <div class="${className}" style="${style}">
-            ${activeButtons.map((btn, i) => {
-                const num = i < 9 ? `${i + 1}` : i === 9 ? '0' : null;
-                const prefix = num !== null
-                    ? html`<span style="opacity:0.45;margin-right:2px;">${num})</span>`
-                    : '';
-                return html`<${DisabledTooltipButton}
-                    ...${btn}
-                    label=${html`${prefix}${btn.label}`}
-                />`;
-            })}
+            ${(() => {
+                let btnIdx = 0;
+                return rawButtons.map((btn, i) => {
+                    if (btn.divider) {
+                        return html`<div key=${'d' + i} style="width:1px;height:20px;background:rgba(255,255,255,0.15);margin:0 4px;align-self:center;" />`;
+                    }
+                    const idx = btnIdx++;
+                    const num = idx < 9 ? `${idx + 1}` : idx === 9 ? '0' : null;
+                    const prefix = num !== null
+                        ? html`<span style="opacity:0.45;margin-right:2px;">${num})</span>`
+                        : '';
+                    return html`<${DisabledTooltipButton}
+                        ...${btn}
+                        label=${html`${prefix}${btn.label}`}
+                    />`;
+                });
+            })()}
             ${flashMessage ? html`<span class="text-red-300 text-sm ml-2"
                 style="animation: fadeIn 0.15s ease-out;">${flashMessage}</span>` : ''}
         </div>

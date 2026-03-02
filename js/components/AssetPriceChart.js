@@ -248,6 +248,7 @@ const AssetPriceChart = ({
     });
 
     const gameLoaded = api.useGameStore(s => s.gameState.gameLoaded);
+    const modalType = api.useGameStore(s => s.gameState.modalType);
 
     // Get current price from allSecurities (for special IDs) or allCompanies (for regular companies)
     const currentPrice = api.useGameStore(s => {
@@ -277,7 +278,7 @@ const AssetPriceChart = ({
         if (currentPrice !== null) {
             refreshData();
         }
-    }, [assetId, currentPrice, gameLoaded]);
+    }, [assetId, currentPrice, gameLoaded, modalType]);
 
     // Memoize transformed prices
     const prices = useMemo(() => {

@@ -1,4 +1,4 @@
-import { html, useEffect, useState, useRef } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useState, useRef, useCallback } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import AdvisorySummary from './AdvisorySummary.js';
@@ -9,13 +9,14 @@ import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import EPSChart from './EPSChart.js';
 import FinancialsTab from './FinancialsTab.js';
-import DisabledTooltipButton from './DisabledTooltipButton.js';
 import HotkeyButtonBar from './HotkeyButtonBar.js';
 import LoansTab from './LoansTab.js';
 import CashflowTab from './CashflowTab.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import OwnershipGraph from './OwnershipGraph.js';
 import ActionBar from './ActionBar.js';
+
+import ActingAsPicker from './ActingAsPicker.js';
 
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 import { useCookie } from '../hooks/useCookie.js';
@@ -44,6 +45,7 @@ const IndustrialView = () => {
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const activeIndustryId = api.useGameStore(s => s.gameState.activeIndustryId);
     const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
+    const activeEntityName = api.useGameStore(s => s.gameState.activeEntityName);
     const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
     const researchReport = api.useGameStore(s => s.gameState.researchReport);
     const earningsReport = api.useGameStore(s => s.gameState.earningsReport);
@@ -67,13 +69,36 @@ const IndustrialView = () => {
     const [, setShareholdersScopeTick] = useState(0);
     const shareholdersBarButtons = [
         { label: showShareholdersGraph ? 'Show Text Report' : 'Show Graph', onClick: () => setShowShareholdersGraph(!showShareholdersGraph), color: '' },
-        buttonProps.merger,
-        buttonProps.greenmail,
     ];
     const shareholdersExtrasStart = shareholdersBarButtons.filter(Boolean).length + 1;
 
     // ETF detection for conditional UI
     const isActiveEntityETF = activeIndustryId === api.ETF_IND;
+
+    // ActingAsPicker state for trade buttons on non-controlled views
+    const [pickerAction, setPickerAction] = useState(null);
+    const [showPicker, setShowPicker] = useState(false);
+
+    // Wrap a trade button's onClick to show picker on non-controlled views
+    const wrapTradeButton = useCallback((btn, actionFn) => {
+        if (!btn || buttonProps.controlsActiveEntity) return btn;
+        return { ...btn, onClick: () => { setPickerAction(() => actionFn); setShowPicker(true); } };
+    }, [buttonProps.controlsActiveEntity]);
+
+    const handlePickerSelect = useCallback((entityId) => {
+        setShowPicker(false);
+        if (pickerAction) {
+            api.changeActingAs(entityId);
+            // Small delay to let actingAs propagate before firing the action
+            setTimeout(() => pickerAction(), 100);
+        }
+        setPickerAction(null);
+    }, [pickerAction]);
+
+    const handlePickerCancel = useCallback(() => {
+        setShowPicker(false);
+        setPickerAction(null);
+    }, []);
 
     const [savedTab, setSavedTab] = useCookie('industrialViewTab', 'General');
     const [activeTab, setActiveTabInternal] = useState(savedTab);
@@ -106,11 +131,18 @@ const IndustrialView = () => {
         }
     }, [eventString]);
 
+    // Auto-set actingAs when navigating to a controlled company
+    useEffect(() => {
+        if (buttonProps.controlsActiveEntity && activeEntityNum > 10) {
+            api.changeActingAs(activeEntityNum);
+        }
+    }, [activeEntityNum, buttonProps.controlsActiveEntity]);
+
     return html`
     <div class="flex flex-col h-full">
         <div class="flex flex-row gap-2 flex-1 min-h-0">
             <div class="flex flex-col w-full gap-2 h-full">
-                <${ActionBar} />
+                ${buttonProps.controlsActiveEntity ? html`<${ActionBar} entityLabel="${activeEntitySymbol} - ${activeEntityName}" />` : ''}
                 <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
                     <${Tab} label="General" hotkey="g" id=${api.UI_CORP_RESEARCH_REPORT}>
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
@@ -131,14 +163,19 @@ const IndustrialView = () => {
                             </div>
                             <div class="flex w-3/4 flex-col h-full min-h-0">
                                 <${HotkeyButtonBar} buttons=${[
-                                    buttonProps.buyStock,
-                                    buttonProps.shortStock,
-                                    !isActiveEntityETF && { ...buttonProps.buyCorpBond, label: "Buy Bonds" },
-                                    buttonProps.buyCalls,
-                                    buttonProps.sellCalls,
-                                    buttonProps.buyPuts,
-                                    buttonProps.sellPuts,
-                                    !isActiveEntityETF && buttonProps.advancedOptions,
+                                    wrapTradeButton(buttonProps.buyStock, () => api.buyStock(activeEntityNum)),
+                                    wrapTradeButton(buttonProps.shortStock, () => api.shortStock(activeEntityNum)),
+                                    !isActiveEntityETF && wrapTradeButton({ ...buttonProps.buyCorpBond, label: "Buy Bonds" }, () => api.buyCorporateBond(activeEntityNum)),
+                                    wrapTradeButton(buttonProps.buyCalls, () => api.buyCalls(0)),
+                                    wrapTradeButton(buttonProps.sellCalls, () => api.sellCalls(0)),
+                                    wrapTradeButton(buttonProps.buyPuts, () => api.buyPuts(0)),
+                                    wrapTradeButton(buttonProps.sellPuts, () => api.sellPuts(0)),
+                                    !isActiveEntityETF && wrapTradeButton(buttonProps.advancedOptions, api.advancedOptionsTrading),
+                                    buttonProps.controlsActiveEntity && !isActiveEntityETF && { divider: true },
+                                    buttonProps.controlsActiveEntity && !isActiveEntityETF && buttonProps.rebrand,
+                                    buttonProps.controlsActiveEntity && !isActiveEntityETF && buttonProps.restructure,
+                                    isActiveEntityETF && buttonProps.controlsActiveEntity && buttonProps.becomeEtfAdvisor,
+                                    isActiveEntityETF && buttonProps.controlsActiveEntity && buttonProps.setAdvisoryFee,
                                 ]} />
                                 <div class="flex flex-col items-center overflow-y-auto flex-1 min-h-0">
                                     ${renderLines(researchReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, reportScopeRef)}
@@ -148,6 +185,10 @@ const IndustrialView = () => {
                     <//>
                     <${Tab} label="Earnings" hotkey="e" id=${api.UI_CORP_EARNINGS_REPORT}>
                         <div class="flex flex-col justify-center items-center overflow-x-auto w-full">
+                            ${buttonProps.controlsActiveEntity && !isActiveEntityETF ? html`<${HotkeyButtonBar} buttons=${[
+                                buttonProps.increaseEarnings,
+                                buttonProps.decreaseEarnings,
+                            ]} class="flex flex-row items-center gap-2 mb-2" />` : ''}
                             ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, reportScopeRef)}
                         </div>
                     <//>
@@ -181,7 +222,7 @@ const IndustrialView = () => {
                                 class="flex flex-row items-center gap-2 mb-2" />
                             ${showShareholdersGraph ? html`
                                 <div class="flex-1 min-h-0 overflow-auto" style="min-height: 280px;">
-                                    <${OwnershipGraph} showOwners=${true} showSubsidiaries=${true} />
+                                    <${OwnershipGraph} showOwners=${true} showSubsidiaries=${true} startNumber=${shareholdersExtrasStart} />
                                 </div>
                             ` : html`
                                 <div ref=${shareholdersExtrasRef} class="flex flex-col items-center overflow-y-auto min-h-0">
@@ -194,6 +235,12 @@ const IndustrialView = () => {
             </div>
         </div>
     </div>
+    <${ActingAsPicker}
+        show=${showPicker}
+        actionLabel=${pickerAction ? 'Select who is acting' : ''}
+        onSelect=${handlePickerSelect}
+        onCancel=${handlePickerCancel}
+    />
 `;
 
 }
