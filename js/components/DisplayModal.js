@@ -2,7 +2,9 @@ import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
-const { ipcRenderer } = require('electron');
+const ipcRenderer = (typeof require !== 'undefined')
+    ? require('electron').ipcRenderer
+    : { invoke: () => Promise.resolve(null), send: () => {}, on: () => {} };
 
 // Convert zoom level to percentage (zoom level 0 = 100%, each level is ~20%)
 function zoomLevelToPercent(level) {

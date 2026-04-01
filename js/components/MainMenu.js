@@ -13,6 +13,7 @@ import { isEditableTarget } from '../keybinds.js';
 // Read version from version.txt (single source of truth)
 let APP_VERSION = '10.0.15';
 try {
+    if (typeof require === 'undefined') throw new Error('no require');
     const _fs = require('fs'), _path = require('path');
     const vFile = _path.join(__dirname, 'version.txt');
     APP_VERSION = _fs.readFileSync(vFile, 'utf8').trim();
@@ -517,13 +518,15 @@ const MainMenu = () => {
               </span>
               <span class="wsr-stat-sep">\u00b7</span>
               <span class="wsr-stat">
+                <span class="wsr-stat-label">Played in</span>
                 <span class="wsr-stat-value">124</span>
-                <span class="wsr-stat-label">Player Countries</span>
+                <span class="wsr-stat-label">countries</span>
               </span>
               <span class="wsr-stat-sep">\u00b7</span>
               <span class="wsr-stat">
+                <span class="wsr-stat-label">In development for</span>
                 <span class="wsr-stat-value">40</span>
-                <span class="wsr-stat-label">Years in Development</span>
+                <span class="wsr-stat-label">years</span>
               </span>
             </div>
 

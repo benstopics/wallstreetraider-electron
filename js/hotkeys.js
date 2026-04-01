@@ -68,6 +68,11 @@ export const HOTKEY_MAP = [
     { key: 'n', action: 'MODAL_NO',     label: 'No (Confirm)',     category: 'Modals' },
     { key: 'c', action: 'MODAL_CANCEL', label: 'Cancel / Close',   category: 'Modals' },
 
+    // Streaming Quotes
+    { key: 'SHIFT+f',       action: 'FILL_STREAM',      label: 'Fill Streaming Quotes',  category: 'General' },
+    { key: 'SHIFT+a',       action: 'SHOW_ALERTS',       label: 'Price Alerts',           category: 'General' },
+    { key: 'SHIFT+r',       action: 'CLEAR_STREAM',      label: 'Clear Streaming Quotes', category: 'General' },
+
     // General
     { key: ' ',              action: 'TOGGLE_TICKER',    label: 'Toggle Ticker',       category: 'General' },
     { key: 'CTRL+s',        action: 'SAVE_GAME',        label: 'Save Game',           category: 'General' },

@@ -27,6 +27,33 @@
   overflow: hidden;
 }
 
+/* Portrait layout: [sidebar | news] on top, view full-width below, 50/50 height */
+@media (orientation: portrait) {
+  .game-view {
+    flex-direction: column !important;
+    overflow: hidden;
+  }
+
+  /* Top panels row: half the available height, stays side-by-side */
+  .game-top-panels {
+    flex: 1 1 0% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* View: other half */
+  .game-col-view {
+    flex: 1 1 0% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0;
+    height: unset !important;
+    overflow: auto;
+  }
+}
+
 /* Footer */
 .gameui-footer {
   white-space: nowrap;

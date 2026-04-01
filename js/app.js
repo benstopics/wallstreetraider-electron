@@ -6,7 +6,9 @@ import { isEditableTarget } from './keybinds.js';
 import { hotkeyManager, PRIORITY } from './hotkeyManager.js';
 import { useHotkey } from './hooks/useHotkey.js';
 
-const { ipcRenderer } = require('electron');
+const ipcRenderer = (typeof require !== 'undefined')
+    ? require('electron').ipcRenderer
+    : { invoke: () => Promise.resolve(null), send: () => {}, on: () => {} };
 import GameUI from './components/GameUI.js';
 import MainMenu from './components/MainMenu.js';
 import SplashSequence from './components/SplashSequence.js';
@@ -22,7 +24,6 @@ import TextAnnounceModal from './components/TextAnnounceModal.js';
 import CompanySelectModal from './components/CompanySelectModal.js';
 import TutorialModal from './components/TutorialModal.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
-import { ToastContainer, showToast } from './components/Toast.js';
 import PriceAlertModal from './components/PriceAlertModal.js';
 
 // Initialize the centralized hotkey manager (single capture-phase listener).
@@ -35,26 +36,10 @@ const logos = [
     { src: "assets/hackjackgames_logo.png", backgroundColor: "#000000" }
 ];
 
-const isDev = process.env.NODE_ENV?.trim() == 'development';
+const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV?.trim() == 'development';
 
 const AppInner = () => {
     const { helpShown, helpSectionId, hideHelp, setGameState } = api.useWSRContext();
-
-    const [showPriceAlerts, setShowPriceAlerts] = useState(false);
-
-    // Register alert callback for toast notifications
-    useEffect(() => {
-        api.setAlertCallback((alert, price) => {
-            showToast(`${alert.entityName} ${alert.condition === 'above' ? 'above' : 'below'} ${alert.targetPrice.toFixed(2)} (now ${price.toFixed(2)})`, { type: 'alert', duration: 8000 });
-        });
-        return () => api.setAlertCallback(null);
-    }, []);
-
-    // Expose setShowPriceAlerts globally for ActionBar
-    useEffect(() => {
-        window.__showPriceAlerts = () => setShowPriceAlerts(true);
-        return () => { delete window.__showPriceAlerts; };
-    }, []);
 
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
     const splashScreenPlayed = isDev ? true : api.useGameStore(s => s.gameState.splashScreenPlayed);
@@ -251,6 +236,11 @@ const AppInner = () => {
                 case 'ACTING_AS_PREV':   e.preventDefault(); api.cycleActingAs(-1); return true;
                 case 'ACTING_AS_NEXT':   e.preventDefault(); api.cycleActingAs(1); return true;
 
+                // Streaming Quotes
+                case 'FILL_STREAM':   api.fillStreamList(); return true;
+                case 'SHOW_ALERTS':   api.showPriceAlerts(); return true;
+                case 'CLEAR_STREAM':  api.clearStreamList(); return true;
+
                 // Bar buttons (SHIFT+number)
                 case 'BAR_1': case 'BAR_2': case 'BAR_3': case 'BAR_4': case 'BAR_5':
                 case 'BAR_6': case 'BAR_7': case 'BAR_8': case 'BAR_9': case 'BAR_10': {
@@ -441,8 +431,7 @@ const AppInner = () => {
             onCancel=${hideModal}
         />
         <${TutorialModal} />
-        <${PriceAlertModal} show=${showPriceAlerts} onClose=${() => setShowPriceAlerts(false)} />
-        <${ToastContainer} />
+        <${PriceAlertModal} show=${modalType === 11} onClose=${hideModal} />
     `;
 }
 
