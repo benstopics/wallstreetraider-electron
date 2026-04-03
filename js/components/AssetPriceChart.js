@@ -237,7 +237,7 @@ const AssetPriceChart = ({
 }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
-    const [chartData, setChartData] = useState(null);
+    const [cachedChartData, setCachedChartData] = useState(null);
     const [mouseState, setMouseState] = useState({
         isHovering: false,
         canvasX: 0,
@@ -248,6 +248,8 @@ const AssetPriceChart = ({
     });
 
     const gameLoaded = api.useGameStore(s => s.gameState.gameLoaded);
+    const currentMonth = api.useGameStore(s => s.gameState.currentMonth);
+    const currentYear = api.useGameStore(s => s.gameState.currentYear);
 
     // Get current price from allSecurities (for special IDs) or allCompanies (for regular companies)
     const currentPrice = api.useGameStore(s => {
@@ -263,21 +265,28 @@ const AssetPriceChart = ({
         }
     });
 
-    // Function to refresh chart data
+    // Fetch historical chart data (cached until month changes)
     const refreshData = useCallback(() => {
         let active = true;
         api.getAssetChart(assetId).then(data => {
-            if (active) setChartData(data);
+            if (active) setCachedChartData(data);
         }).catch(console.error);
         return () => { active = false; };
     }, [assetId]);
 
-    // Refresh chart data when price changes or game loads
+    // Re-fetch only when game month advances or asset changes
     useEffect(() => {
-        if (currentPrice !== null) {
-            refreshData();
-        }
-    }, [assetId, currentPrice, gameLoaded]);
+        if (gameLoaded) refreshData();
+    }, [assetId, currentMonth, currentYear, gameLoaded]);
+
+    // Derive render-ready chartData by splicing live price into cached history
+    const chartData = useMemo(() => {
+        if (!cachedChartData?.prices?.length) return cachedChartData;
+        if (currentPrice === null) return cachedChartData;
+        const prices = [...cachedChartData.prices];
+        prices[prices.length - 1] = currentPrice;
+        return { ...cachedChartData, prices };
+    }, [cachedChartData, currentPrice]);
 
     // Memoize transformed prices
     const prices = useMemo(() => {

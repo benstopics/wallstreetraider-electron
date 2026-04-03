@@ -4,7 +4,10 @@ import zustand from './lib/zustand.module.js';
 import { debugLog } from './debug-log.js';
 const { createStore } = zustand;
 
-const { ipcRenderer } = require('electron');
+// In a plain browser (phone access), Electron APIs are unavailable — stub them out.
+const ipcRenderer = (typeof require !== 'undefined')
+    ? require('electron').ipcRenderer
+    : { invoke: () => Promise.resolve(null), send: () => {}, on: () => {} };
 
 export const apiBase = window.__WSR_API_BASE_OVERRIDE || 'http://127.0.0.1:9631';
 
@@ -766,9 +769,9 @@ export async function becomeEtfAdvisor() { await postNoArg('/become_etf_advisor'
 export async function setAdvisoryFee() { await postNoArg('/set_advisory_fee'); }
 
 /* Deals & Funding */
-export async function merger() { await postNoArg('/merger'); }
-export async function greenmail() { await postNoArg('/greenmail'); }
-export async function lbo() { await postNoArg('/lbo'); }
+export async function merger(targetId = 0) { await postIdArg('/merger', targetId); }
+export async function greenmail(targetId = 0) { await postIdArg('/greenmail', targetId); }
+export async function lbo(targetId = 0) { await postIdArg('/lbo', targetId); }
 export async function startup() { await postNoArg('/startup'); }
 export async function capitalContribution() { await postNoArg('/capital_contribution'); }
 export async function publicStockOffering() { await postNoArg('/public_stock_offering'); }

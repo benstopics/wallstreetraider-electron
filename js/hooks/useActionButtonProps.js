@@ -565,8 +565,8 @@ export function useActionButtonProps() {
     const capitalContribution = {
         label: 'Capital Contribution',
         onClick: api.capitalContribution,
-        disabled: !!cannotActAsSelf || (isActiveEntityETF && isActingAsETFAdvisor),
-        disabledMessage: cannotActAsSelf || (isActiveEntityETF && isActingAsETFAdvisor ? "Not available for ETFs" : false),
+        disabled: isActiveEntityETF && isActingAsETFAdvisor,
+        disabledMessage: isActiveEntityETF && isActingAsETFAdvisor ? "Not available for ETFs" : false,
         color: 'green'
     };
 
@@ -718,7 +718,7 @@ export function useActionButtonProps() {
 
     const greenmail = {
         label: 'Greenmail',
-        onClick: api.greenmail,
+        onClick: () => api.greenmail(),
         disabled: !!mustActAsCompany || isActiveEntityETF || actingAsId === activeEntityNum,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs"
             : mustActAsCompany
@@ -729,7 +729,7 @@ export function useActionButtonProps() {
 
     const leveragedBuyout = {
         label: 'Leveraged Buyout',
-        onClick: api.lbo,
+        onClick: () => api.lbo(),
         disabled: !!mustActAsCompany || isActiveEntityETF || actingAsId === activeEntityNum,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs"
             : mustActAsCompany
@@ -742,7 +742,7 @@ export function useActionButtonProps() {
     const mergerIsSelf = !mergerNeedsCompany && actingAsId === activeEntityNum;
     const merger = {
         label: `Merger with${activeEntitySymbol ? ` ${activeEntitySymbol}` : ''}`,
-        onClick: api.merger,
+        onClick: () => api.merger(),
         disabled: isActiveEntityETF || mergerNeedsCompany || mergerIsSelf,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs"
             : mergerNeedsCompany ? "Must be acting as a company"

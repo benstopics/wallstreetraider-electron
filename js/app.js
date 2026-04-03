@@ -6,7 +6,9 @@ import { isEditableTarget } from './keybinds.js';
 import { hotkeyManager, PRIORITY } from './hotkeyManager.js';
 import { useHotkey } from './hooks/useHotkey.js';
 
-const { ipcRenderer } = require('electron');
+const ipcRenderer = (typeof require !== 'undefined')
+    ? require('electron').ipcRenderer
+    : { invoke: () => Promise.resolve(null), send: () => {}, on: () => {} };
 import GameUI from './components/GameUI.js';
 import MainMenu from './components/MainMenu.js';
 import SplashSequence from './components/SplashSequence.js';
@@ -35,7 +37,7 @@ const logos = [
     { src: "assets/hackjackgames_logo.png", backgroundColor: "#000000" }
 ];
 
-const isDev = process.env.NODE_ENV?.trim() == 'development';
+const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV?.trim() == 'development';
 
 const AppInner = () => {
     const { helpShown, helpSectionId, hideHelp, setGameState } = api.useWSRContext();
@@ -229,9 +231,10 @@ const AppInner = () => {
             const match = matchHotkey(e);
             if (!match) return false;
 
-            // Ignore key repeat for navigation actions
+            // Ignore key repeat for navigation and one-shot actions
             if (e.repeat && (match.action === 'NAV_BACK' || match.action === 'NAV_FORWARD' ||
-                             match.action === 'ACTING_AS_PREV' || match.action === 'ACTING_AS_NEXT')) {
+                             match.action === 'ACTING_AS_PREV' || match.action === 'ACTING_AS_NEXT' ||
+                             match.action === 'SAVE_GAME')) {
                 e.preventDefault();
                 return true;
             }

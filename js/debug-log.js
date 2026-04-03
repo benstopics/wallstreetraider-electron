@@ -9,15 +9,17 @@
  *   debugLog.log('REST', 'POST /buy_stock id=42 -> 200 (15ms)');
  */
 
-const fs = require('fs');
-const path = require('path');
+// In a plain browser (phone access via serve), Node APIs are unavailable.
+const isNode = typeof process !== 'undefined' && typeof process.env !== 'undefined' && typeof require !== 'undefined';
+const fs = isNode ? require('fs') : null;
+const path = isNode ? require('path') : null;
 
-const isEnabled = process.env.WSR_DEBUG_VERBOSE === '1';
+const isEnabled = isNode && process.env.WSR_DEBUG_VERBOSE === '1';
 
 // Log directory: same directory as the app
-const logDir = process.cwd();
-const frontendLogPath = path.join(logDir, 'wsr_frontend.log');
-const errorLogPath = path.join(logDir, 'wsr_frontend_errors.log');
+const logDir = isNode ? process.cwd() : '';
+const frontendLogPath = isNode ? path.join(logDir, 'wsr_frontend.log') : '';
+const errorLogPath = isNode ? path.join(logDir, 'wsr_frontend_errors.log') : '';
 
 // Max log file size: 5MB
 const MAX_LOG_SIZE = 5 * 1024 * 1024;
@@ -45,6 +47,7 @@ function rotateIfNeeded(filePath) {
 }
 
 function appendLog(filePath, line) {
+    if (!fs) return;
     try {
         rotateIfNeeded(filePath);
         fs.appendFileSync(filePath, line + '\n');
