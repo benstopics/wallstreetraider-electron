@@ -30,6 +30,7 @@
 @import url('features/menu.css');
 @import url('features/tutorial.css');
 @import url('features/ticker.css');
+@import url('features/overview.css');
 
 /* Pages */
 @import url('pages/main-menu.css');

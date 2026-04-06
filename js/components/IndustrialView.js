@@ -17,6 +17,7 @@ import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import OwnershipGraph from './OwnershipGraph.js';
 import ActionBar from './ActionBar.js';
 
+import OverviewPanel from './OverviewPanel.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 import { useCookie } from '../hooks/useCookie.js';
 
@@ -112,6 +113,9 @@ const IndustrialView = () => {
             <div class="flex flex-col w-full gap-2 h-full">
                 <${ActionBar} />
                 <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
+                    <${Tab} label="Overview" hotkey="v">
+                        <${OverviewPanel} />
+                    <//>
                     <${Tab} label="General" hotkey="g" id=${api.UI_CORP_RESEARCH_REPORT}>
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0 overflow-hidden">

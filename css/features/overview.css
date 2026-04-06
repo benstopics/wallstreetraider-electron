@@ -1,0 +1,140 @@
+/* =========================================================
+   Overview Panel — Company overview tab styles
+   ========================================================= */
+
+.overview-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 12px;
+  overflow-y: auto;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Company Identity grid ───────────────────────────── */
+
+.overview-identity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  padding: 6px 0;
+}
+
+.overview-field {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 10px;
+}
+
+.overview-label {
+  font-size: var(--font-size-sm);
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.overview-value {
+  font-size: var(--font-size-sm);
+  color: var(--color-warning);
+}
+
+.overview-mono {
+  /* font is already monospace globally via theme.css */
+}
+
+.overview-placeholder {
+  color: var(--fg-muted);
+}
+
+/* Industry hyperlink — matches renderHyperlinks style (text-blue-400 + hover:underline) */
+.overview-industry-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  color: #60a5fa;
+  line-height: inherit;
+}
+.overview-industry-link:hover {
+  text-decoration: underline;
+}
+
+/* Pencil (rebrand) icon button — subtle, after company name */
+.overview-pencil-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--fg-muted, rgba(230,230,230,0.5));
+  padding: 0 3px;
+  vertical-align: middle;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+  line-height: 1;
+}
+.overview-pencil-btn:hover {
+  opacity: 1;
+  color: var(--color-info);
+}
+
+/* ── Management Team rows ────────────────────────────── */
+
+.overview-mgmt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+}
+
+/* ── Analyst Summary metric cards ────────────────────── */
+
+.overview-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--border-color);
+  padding: 0;
+}
+
+/* 3-column on wider panels */
+@media (min-width: 520px) {
+  .overview-metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.overview-metric-card {
+  display: flex;
+  flex-direction: column;
+  padding: 7px 10px;
+  background: var(--bg-primary, #16181d);
+  gap: 3px;
+}
+
+.overview-metric-label {
+  font-size: var(--font-size-sm);
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.overview-metric-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-warning);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.overview-metric-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
