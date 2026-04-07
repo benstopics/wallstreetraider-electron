@@ -118,7 +118,7 @@
   justify-content: center;
   gap: 0;
   padding: 6px 0 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .wsr-stat {
@@ -143,6 +143,8 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+  white-space: nowrap;
+  margin: 0 3px;
 }
 
 .wsr-stat-sep {

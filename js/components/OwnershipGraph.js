@@ -212,7 +212,7 @@ const getDirectChildren = (tree) => {
     return tree.owners;
 };
 
-const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
+const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true, startNumber = 1 }) => {
     const [ownershipData, setOwnershipData] = useState(null);
     const [subsidiariesData, setSubsidiariesData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -295,7 +295,7 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true }) => {
     // Build numbered node map for hotkeys (only clickable nodes with entityId > 10)
     const numberedNodesRef = useRef([]);
     const numberedNodes = [];
-    let nodeNum = 1;
+    let nodeNum = startNumber;
     for (const owner of owners) {
         if (owner.entityId > 10) {
             numberedNodes.push({ num: nodeNum++, entityId: owner.entityId, side: 'owner' });

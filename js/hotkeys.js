@@ -68,12 +68,10 @@ export const HOTKEY_MAP = [
     { key: 'n', action: 'MODAL_NO',     label: 'No (Confirm)',     category: 'Modals' },
     { key: 'c', action: 'MODAL_CANCEL', label: 'Cancel / Close',   category: 'Modals' },
 
-    // Action Bar (Shift+letter to open dropdown, then 1-9 to select item)
-    { key: 'SHIFT+t', action: 'DROPDOWN_TRADE',     label: 'Trade Menu',      category: 'Action Bar' },
-    { key: 'SHIFT+f', action: 'DROPDOWN_FINANCE',   label: 'Finance Menu',    category: 'Action Bar' },
-    { key: 'SHIFT+c', action: 'DROPDOWN_CORPORATE', label: 'Corporate Menu',  category: 'Action Bar' },
-    { key: 'SHIFT+h', action: 'DROPDOWN_HOSTILE',   label: 'Hostile Menu',    category: 'Action Bar' },
-    { key: 'SHIFT+b', action: 'DROPDOWN_BANKING',   label: 'Banking Menu',    category: 'Action Bar' },
+    // Streaming Quotes
+    { key: 'SHIFT+f',       action: 'FILL_STREAM',      label: 'Fill Streaming Quotes',  category: 'General' },
+    { key: 'SHIFT+a',       action: 'SHOW_ALERTS',       label: 'Price Alerts',           category: 'General' },
+    { key: 'SHIFT+r',       action: 'CLEAR_STREAM',      label: 'Clear Streaming Quotes', category: 'General' },
 
     // General
     { key: ' ',              action: 'TOGGLE_TICKER',    label: 'Toggle Ticker',       category: 'General' },

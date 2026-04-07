@@ -150,6 +150,9 @@ const REST_TO_EVENT = {
     '/cheat_merger_info': 2121,
     '/cheat_earnings_info': 2122,
     '/cheat_add_cash': 2123,
+    '/create_price_alert': 4102,
+    '/delete_price_alert': 4103,
+    '/show_price_alerts': 4104,
 };
 
 // Market report REST paths that use trigger_event with specific GameEventTypes
@@ -943,6 +946,36 @@ export async function setCustomData(blob) {
     return response.text();
 }
 
+/* Price Alerts API — bridge to PB alerts.inc via events 4102/4103/4104 */
+export async function showPriceAlerts() { await postNoArg('/show_price_alerts'); }
+
+export async function createPriceAlert(entityId, direction, targetPrice) {
+    const str = `${entityId}|${direction}|${targetPrice}`;
+    const url = `${apiBase}/create_price_alert`;
+    const response = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ str })
+    });
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.text();
+}
+
+export async function deletePriceAlert(slot) {
+    const url = `${apiBase}/delete_price_alert`;
+    const response = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: slot })
+    });
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.text();
+}
+
 /* Ticker optimistic state */
 // Track locally set ticker running state - preserve until backend catches up
 let localTickerRunning = null; // null means use backend value
@@ -1267,47 +1300,6 @@ export const gameStore = createStore((set, get) => ({
     gameState: {},
     setGameState: (next) => set({ gameState: next }),
 }));
-
-// Price Alert checking — runs on every gameState poll
-let alertCallbackFn = null;
-export function setAlertCallback(fn) { alertCallbackFn = fn; }
-
-function resolvePrice(gs, entityType, entityId) {
-    if (entityType === 'stock') {
-        const co = gs.allCompanies?.find(c => c.id === entityId);
-        return co?.price ?? null;
-    }
-    const sec = gs.allSecurities?.find(s => s.id === entityId);
-    return sec?.price ?? null;
-}
-
-gameStore.subscribe((state) => {
-    const gs = state.gameState || {};
-    if (!gs.gameLoaded) return;
-    const alerts = gs.customData?.priceAlerts;
-    if (!Array.isArray(alerts) || alerts.length === 0) return;
-
-    let changed = false;
-    const updated = alerts.map(a => {
-        if (a.triggered) return a;
-        const price = resolvePrice(gs, a.entityType, a.entityId);
-        if (price == null) return a;
-        const hit = (a.condition === 'above' && price >= a.targetPrice)
-                 || (a.condition === 'below' && price <= a.targetPrice);
-        if (hit) {
-            changed = true;
-            if (alertCallbackFn) {
-                alertCallbackFn(a, price);
-            }
-            return { ...a, triggered: true, triggeredAt: Date.now(), triggeredPrice: price };
-        }
-        return a;
-    });
-
-    if (changed) {
-        setCustomData({ priceAlerts: updated });
-    }
-});
 
 const shallow = (a, b) => {
     if (Object.is(a, b)) return true;

@@ -13,6 +13,7 @@ import { isEditableTarget } from '../keybinds.js';
 // Read version from version.txt (single source of truth)
 let APP_VERSION = '10.0.15';
 try {
+    if (typeof require === 'undefined') throw new Error('no require');
     const _fs = require('fs'), _path = require('path');
     const vFile = _path.join(__dirname, 'version.txt');
     APP_VERSION = _fs.readFileSync(vFile, 'utf8').trim();
@@ -44,16 +45,19 @@ const CHANGELOG = [
             {
                 heading: "New Features",
                 items: [
-                    "Price Alerts \u2014 set high/low thresholds on any stock from its company view; alerts fire as toast notifications and persist across sessions",
+                    "Price Alerts \u2014 set high/low thresholds on any stock, commodity, or rate; alerts fire as toast notifications and persist across sessions",
+                    "Clear Chart History \u2014 button on company view to wipe price chart data for the current entity",
+                    "Company Target Picker \u2014 Merger, Greenmail, LBO, Lawsuits, and Spread Rumors now open a searchable company selector instead of acting on the viewed entity",
+                    "Acting-As Picker \u2014 trade actions on non-controlled companies prompt \"Who is performing this action?\" with player and controlled company choices",
+                    "Interactive Tutorial system \u2014 guided walkthrough tooltips for new players",
                     "My News filter in Business/World News \u2014 toggle to show only headlines affecting your controlled companies",
                     "Who Owns filter \u2014 filter shareholders list by sector, entity type, or ownership percentage",
                     "Expandable full-screen charts \u2014 click expand icon on any price chart for a larger view",
-                    "Streaming Quotes toolbar: Fill all active tickers and Clear list buttons",
+                    "Streaming Quotes toolbar: Fill, Clear, and Alerts buttons in panel header",
                     "About dialog with version info, credits, and links accessible from main menu",
                     "Scoreboard button in toolbar for quick access to player rankings",
                     "Growth Throttle control in Settings \u2014 adjust economic growth speed",
                     "Become ETF Advisor action for eligible player entities",
-                    "Credit Info panel showing credit rating details and borrowing capacity",
                     "Auto-Add to Streaming Quotes option \u2014 automatically adds viewed companies to ticker",
                     "Database Search remembers last query and auto-saves results between sessions",
                     "Bond Yield-to-Maturity column in portfolio bond listings",
@@ -63,20 +67,33 @@ const CHANGELOG = [
             {
                 heading: "UI/UX Improvements",
                 items: [
+                    "ActionBar restructured \u2014 streamlined to Corporate and Hostile dropdowns; entity label shows what you're viewing",
+                    "Hotkey labels always visible \u2014 tab letters, button numbers, and navigation badges no longer hidden behind Shift",
+                    "Reduced Shift+letter conflicts \u2014 only Shift+C (Corporate) and Shift+H (Hostile) remain, freeing capital letters for typing",
+                    "Elect as CEO moved from button bar to Corporate dropdown to reduce button wrapping",
                     "Responsive toolbar layout \u2014 toolbar items wrap cleanly at smaller window sizes",
                     "Navigation panel redesigned: history managed server-side, back/forward no longer causes UI freezes",
-                    "Conditional hotkey labels \u2014 shortcut hints only appear when hotkeys are enabled",
                     "Chart rendering improvements: better axis labels, tooltip formatting, and color consistency",
                     "Currency denomination support throughout all financial displays and reports",
                     "Improved modal sizing and positioning for text-heavy dialogs",
                     "Streaming Quotes panel: duplicate ticker prevention, better add/remove flow",
                     "Portfolio view column alignment and number formatting improvements",
                     "Settings panel reorganized with clearer section grouping",
+                    "Close button added to Price Alerts modal",
                 ]
             },
             {
                 heading: "Bug Fixes",
                 items: [
+                    "Fix Merger not working \u2014 reworked to use target company picker with proper entity switching in PB bridge",
+                    "Fix Harassing Lawsuit not working \u2014 now uses target picker instead of acting on viewed entity",
+                    "Fix Spread Rumors not working \u2014 now uses target picker instead of acting on viewed entity",
+                    "Fix Antitrust and other lawsuit buttons not functioning under Hostile dropdown",
+                    "Fix Merger \"can't merge with itself\" error \u2014 target picker filters out controlled companies",
+                    "Fix \"must be acting as this company\" merger error \u2014 PB bridge now saves/restores ActvEntyNum",
+                    "Fix Greenmail & LBO incorrectly clickable when acting as Player \u2014 now properly disabled",
+                    "Fix Browse for Sale Items missing on Player Cashflow tab",
+                    "Fix hotkey 0 not triggering 10th button (e.g., Restructure)",
                     "Fix single-letter stock symbols incorrectly triggering hyperlink detection in news text",
                     "Fix industry alias names not hyperlinking correctly in news headlines",
                     "Fix Acting As entity not tracking correctly after navigation changes",
@@ -88,6 +105,7 @@ const CHANGELOG = [
                     "Fix ETF company selection modal using legacy Win32 dialog instead of Electron dropdown",
                     "Fix short sale guard condition checking wrong variable in PB bridge",
                     "Fix save directory defaulting to install path instead of user documents",
+                    "Fix database search results capped at 200 rows",
                 ]
             },
             {
@@ -500,13 +518,15 @@ const MainMenu = () => {
               </span>
               <span class="wsr-stat-sep">\u00b7</span>
               <span class="wsr-stat">
+                <span class="wsr-stat-label">Played in</span>
                 <span class="wsr-stat-value">124</span>
-                <span class="wsr-stat-label">Player Countries</span>
+                <span class="wsr-stat-label">countries</span>
               </span>
               <span class="wsr-stat-sep">\u00b7</span>
               <span class="wsr-stat">
+                <span class="wsr-stat-label">In development for</span>
                 <span class="wsr-stat-value">40</span>
-                <span class="wsr-stat-label">Years in Development</span>
+                <span class="wsr-stat-label">years</span>
               </span>
             </div>
 

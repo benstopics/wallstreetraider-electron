@@ -90,8 +90,9 @@ const GameUI = () => {
         <${StockTicker} />
         <div class="game-view flex flex-row gap-2 p-2">
             ${!isDbSearch ? html`
+            <div class="game-top-panels flex flex-row gap-2 min-h-0" style="flex: 3 1 0%; min-width: 0;">
             <!-- Left Column -->
-            <div class="flex flex-col gap-2" style="flex: 1 1 0%; min-width: 0;">
+            <div class="game-col-sidebar flex flex-col gap-2" style="flex: 1 1 0%; min-width: 0;">
                 <!-- Date and Time -->
                 <div class="flex flex-col fixed-width date-display justify-center items-center w-full" style="height: 35px;">
                     ${gameDate}
@@ -131,7 +132,7 @@ const GameUI = () => {
                 </div>
             </div>
 
-            <div class="flex flex-col gap-2 min-h-0" style="flex: 2 1 0%; min-width: 0;">
+            <div class="game-col-news flex flex-col gap-2 min-h-0" style="flex: 2 1 0%; min-width: 0;">
                 <div class="flex items-center" style="height: 35px;">
                     <${CommandPrompt} />
                 </div>
@@ -154,10 +155,11 @@ const GameUI = () => {
                     </div>
                 </div>
             </div>
+            </div>
             ` : ''}
 
             <!-- Right Column -->
-            <div class="flex flex-col gap-2 h-full" style=${`flex: ${isDbSearch ? '1 1 100%' : '4 1 0%'}; min-width: 0;`}>
+            <div class="game-col-view flex flex-col gap-2 h-full" style=${`flex: ${isDbSearch ? '1 1 100%' : '4 1 0%'}; min-width: 0;`}>
                 ${html`<${View} />`}
             </div>
         </div>

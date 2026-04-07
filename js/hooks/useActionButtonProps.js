@@ -787,6 +787,7 @@ export function useActionButtonProps() {
         actingAsSymbol,
         activeEntityNum,
         controlledCompanies,
+        controlsActiveEntity,
 
         // Helper functions/values for dynamic buttons (e.g., in renderLines)
         mustActAsCompanyMessage: mustActAsViewedEntity,

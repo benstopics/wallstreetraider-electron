@@ -24,7 +24,6 @@ import TextAnnounceModal from './components/TextAnnounceModal.js';
 import CompanySelectModal from './components/CompanySelectModal.js';
 import TutorialModal from './components/TutorialModal.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
-import { ToastContainer, showToast } from './components/Toast.js';
 import PriceAlertModal from './components/PriceAlertModal.js';
 
 // Initialize the centralized hotkey manager (single capture-phase listener).
@@ -41,22 +40,6 @@ const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV?.trim() ==
 
 const AppInner = () => {
     const { helpShown, helpSectionId, hideHelp, setGameState } = api.useWSRContext();
-
-    const [showPriceAlerts, setShowPriceAlerts] = useState(false);
-
-    // Register alert callback for toast notifications
-    useEffect(() => {
-        api.setAlertCallback((alert, price) => {
-            showToast(`${alert.entityName} ${alert.condition === 'above' ? 'above' : 'below'} ${alert.targetPrice.toFixed(2)} (now ${price.toFixed(2)})`, { type: 'alert', duration: 8000 });
-        });
-        return () => api.setAlertCallback(null);
-    }, []);
-
-    // Expose setShowPriceAlerts globally for ActionBar
-    useEffect(() => {
-        window.__showPriceAlerts = () => setShowPriceAlerts(true);
-        return () => { delete window.__showPriceAlerts; };
-    }, []);
 
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
     const splashScreenPlayed = isDev ? true : api.useGameStore(s => s.gameState.splashScreenPlayed);
@@ -184,9 +167,9 @@ const AppInner = () => {
             if (isEditableTarget(e.target)) return false;
             if (helpShown) return false;
             if (modalType > 0) return false; // Don't fire global hotkeys while a game modal is showing
-            // Shift+letter for dropdowns
+            // Shift+letter for dropdowns (Corporate=c, Hostile=h)
             if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey) {
-                if (['t', 'c', 'f', 'h', 'b'].includes(e.key.toLowerCase())) return true;
+                if (['c', 'h'].includes(e.key.toLowerCase())) return true;
             }
             return !!matchHotkey(e);
         },
@@ -214,7 +197,7 @@ const AppInner = () => {
 
             // Dropdown letter keys (Shift+letter to open action bar dropdowns)
             if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey) {
-                const dropdownChars = ['t', 'c', 'f', 'h', 'b'];
+                const dropdownChars = ['c', 'h'];
                 if (dropdownChars.includes(e.key.toLowerCase())) {
                     document.dispatchEvent(new CustomEvent('hotkey-dropdown', { detail: { char: e.key.toLowerCase() } }));
                     return true;
@@ -253,6 +236,11 @@ const AppInner = () => {
                 case 'VIEW_PLAYER':      document.dispatchEvent(new CustomEvent('hotkey-view-player')); return true;
                 case 'ACTING_AS_PREV':   e.preventDefault(); api.cycleActingAs(-1); return true;
                 case 'ACTING_AS_NEXT':   e.preventDefault(); api.cycleActingAs(1); return true;
+
+                // Streaming Quotes
+                case 'FILL_STREAM':   api.fillStreamList(); return true;
+                case 'SHOW_ALERTS':   api.showPriceAlerts(); return true;
+                case 'CLEAR_STREAM':  api.clearStreamList(); return true;
 
                 // Bar buttons (SHIFT+number)
                 case 'BAR_1': case 'BAR_2': case 'BAR_3': case 'BAR_4': case 'BAR_5':
@@ -444,8 +432,7 @@ const AppInner = () => {
             onCancel=${hideModal}
         />
         <${TutorialModal} />
-        <${PriceAlertModal} show=${showPriceAlerts} onClose=${() => setShowPriceAlerts(false)} />
-        <${ToastContainer} />
+        <${PriceAlertModal} show=${modalType === 11} onClose=${hideModal} />
     `;
 }
 
