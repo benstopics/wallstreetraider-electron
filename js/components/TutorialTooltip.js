@@ -262,19 +262,16 @@ const TUTORIAL_TOOLTIPS = [
         id: 'offer-assets-for-sale',
         condition: (gameState) => {
             return gameState.modalTitle && gameState.modalType > 0 &&
-                   (gameState.modalTitle.includes('Offer of Assets for Sale') ||
-                    gameState.modalTitle.includes('Asset Sale by'));
+                   gameState.modalTitle.includes('Sell or List Assets?');
         },
-        title: 'Offer To Sell Assets vs. Direct Sale',
+        title: 'Sell Now vs. List for Sale',
         content: `
-            <p>You're offering corporate assets for sale at a <strong>5% discount from book value</strong>. Here's why this is usually better than a direct "Sell Corporate Assets" transaction:</p>
+            <p>You have two ways to sell corporate assets:</p>
             <ul style="margin: 8px 0 8px 20px; list-style-type: disc;">
-                <li><strong>No 10% sales commission</strong> — direct asset sales cost you 10% in commissions. Posting an offer costs nothing.</li>
-                <li><strong>Net 5% better price</strong> — even at the 5% discount, you keep 95 cents on the dollar vs. only 90 cents after commission on a direct sale.</li>
-                <li><strong>Doesn't use a transaction</strong> — posting the offer is free. Only counts as a transaction if a buyer actually accepts.</li>
+                <li><strong>YES — Sell Now:</strong> Immediate cash. A buyer is found or assets are scrapped. A <strong>10% commission</strong> is deducted — you net 90 cents on the dollar.</li>
+                <li><strong>NO — List for Sale:</strong> Posted at 5% below book value with <strong>no commission</strong> — you net 95 cents on the dollar. But a buyer in the same industry must accept before the offer expires (this quarter or next).</li>
             </ul>
-            <p style="margin-top: 8px;"><strong>The catch:</strong> There's no guarantee a buyer will accept before the offer expires (end of current or next quarter). Only companies in the same industry group or holding/trading companies can accept.</p>
-            <p style="margin-top: 8px;"><em>If you need cash immediately, use "Sell Corporate Assets" instead. If you can wait a quarter, the offer route nets you more.</em></p>
+            <p style="margin-top: 8px;"><em>If you need cash now, choose YES. If you can wait a quarter, NO nets you 5% more.</em></p>
         `
     },
     {
@@ -600,13 +597,14 @@ const TUTORIAL_TOOLTIPS = [
         condition: (gs) => gs.modalType === 3 && gs.modalTitle && gs.modalTitle.includes('Restructuring'),
         title: 'Corporate Restructuring',
         content: `
-            <p>A <strong>restructuring charge</strong> is a one-time expense for reorganizing the company. This is a write-down that reduces reported earnings but may improve future profitability.</p>
+            <p>Enter a percentage (up to 50%) of the company's business assets to write down to zero — scrapping equipment, closing factories, and cutting the workforce. It's brutal, but sometimes necessary to turn around a poorly performing company.</p>
             <ul style="margin: 8px 0 8px 20px; list-style-type: disc;">
-                <li>Covers costs like layoffs, plant closures, and asset write-downs</li>
-                <li>Reduces current earnings but removes drag on future performance</li>
-                <li>The stock price may drop initially but recover if the restructuring improves operations</li>
+                <li><strong>Improves future profitability</strong> — remaining assets tend to earn a higher return once deadweight is removed, unless the company was already well-run</li>
+                <li><strong>Slashes current earnings and net worth</strong> — you may be limited to less than 50% if the company already has a weak credit rating</li>
+                <li><strong>Tax benefit</strong> — the large loss saves taxes and can make the next year's earnings comparisons look very favorable as the company recovers</li>
+                <li><strong>Extraordinary item</strong> — if the charge is large enough, accountants may classify it as extraordinary, keeping it out of reported operating earnings (which is what the market prices)</li>
             </ul>
-            <p style="margin-top: 8px;"><em>Tip: Sometimes called a "big bath" when companies take all their bad news at once to reset expectations.</em></p>
+            <p style="margin-top: 8px; color: #f87171;"><strong>Caution:</strong> A large write-off on a company already in weak financial condition can push it toward bankruptcy. Check the Research Report first to gauge whether management has room to absorb the hit.</p>
         `
     },
     {

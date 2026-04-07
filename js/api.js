@@ -65,7 +65,6 @@ const REST_TO_EVENT = {
     '/restructure': 430,
     '/buy_corporate_assets': 440,
     '/sell_corporate_assets': 450,
-    '/offer_corporate_assets_for_sale': 455,
     '/view_for_sale_items': 456,
     '/sell_subsidiary_stock': 460,
     '/rebrand': 470,
@@ -762,7 +761,6 @@ export async function setGrowthRate() { await postNoArg('/set_growth_rate'); }
 export async function restructure() { await postNoArg('/restructure'); }
 export async function buyCorporateAssets() { await postNoArg('/buy_corporate_assets'); }
 export async function sellCorporateAssets() { await postNoArg('/sell_corporate_assets'); }
-export async function offerCorporateAssetsForSale() { await postNoArg('/offer_corporate_assets_for_sale'); }
 export async function viewForSaleItems() { await postNoArg('/view_for_sale_items'); }
 export async function sellSubsidiaryStock() { await postNoArg('/sell_subsidiary_stock'); }
 export async function rebrand() { await postNoArg('/rebrand'); }
@@ -1255,7 +1253,6 @@ export const commandMap = {
     // === Corporate - Assets ===
     'BUYASSET':     { description: 'Buy corporate assets',            fn: buyCorporateAssets,          takesId: false },
     'SELLASSET':    { description: 'Sell corporate assets',           fn: sellCorporateAssets,         takesId: false },
-    'OFFERASSET':   { description: 'Offer assets for sale',           fn: offerCorporateAssetsForSale, takesId: false },
     'SELLSUB':      { description: 'Sell subsidiary stock',           fn: sellSubsidiaryStock,         takesId: false },
     'SPINOFF':      { description: 'Spin off a subsidiary',           fn: spinOff,                     takesId: true },
     'BROWSE':       { description: 'Browse for-sale items',           fn: viewForSaleItems,            takesId: false },

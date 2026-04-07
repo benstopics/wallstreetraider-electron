@@ -305,7 +305,7 @@ export default function OverviewPanel() {
         <div class="panel" style="height:auto; flex-shrink:0;">
             <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Analyst Summary</span>
-                <button class="btn blue" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowReport(true)}>View Full Report</button>
+                <button class="btn blue" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowReport(true)}>View Research Report</button>
             </div>
             <div class="panel-body" style="padding:0;">
                 <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden;">

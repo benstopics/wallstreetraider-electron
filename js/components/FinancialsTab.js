@@ -356,6 +356,16 @@ function FinancialsTab() {
                         <div style="${CELL_S}">
                             <div style="display:flex; align-items:center; gap:4px;">
                                 <div style="${CELL_LABEL_S}">Assets/Equipment</div>
+                                ${controlsActiveEntity && !isBank && !isActiveEntityETF ? html`
+                                    <${DisabledTooltipButton}
+                                        ...${buttonProps.restructure}
+                                        label="Restructure"
+                                        buttonClass=""
+                                    />
+                                ` : ''}
+                            </div>
+                            <div style="display:flex; align-items:center; gap:4px;">
+                                <div style="${CELL_NUM_S}">${fmtM(aef.capAssets)}</div>
                                 ${controlsActiveEntity && !isBank ? html`
                                     <${DisabledTooltipButton}
                                         ...${buttonProps.buyCorporateAssets}
@@ -368,15 +378,9 @@ function FinancialsTab() {
                                             label="Sell"
                                             buttonClass=""
                                         />
-                                        <${DisabledTooltipButton}
-                                            ...${buttonProps.offerAssetsForSale}
-                                            label="Offer for Sale"
-                                            buttonClass=""
-                                        />
                                     ` : ''}
                                 ` : ''}
                             </div>
-                            <div style="${CELL_NUM_S}">${fmtM(aef.capAssets)}</div>
                         </div>
 
                         <div style="${CELL_S}">

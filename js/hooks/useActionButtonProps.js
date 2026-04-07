@@ -505,15 +505,6 @@ export function useActionButtonProps() {
         color: 'red'
     };
 
-    const offerAssetsForSale = {
-        label: 'Offer Assets For Sale',
-        onClick: api.offerCorporateAssetsForSale,
-        disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
-        disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),
-        onDisabledClick: onActAsClick,
-        color: 'blue'
-    };
-
     const sellSubsidiaryStock = {
         label: 'Offer to Sell Subsidiary Stock',
         onClick: api.sellSubsidiaryStock,
@@ -849,7 +840,6 @@ export function useActionButtonProps() {
         // Corporate - Assets
         buyCorporateAssets,
         sellCorporateAssets,
-        offerAssetsForSale,
         sellSubsidiaryStock,
         spinOff,
         browseForSaleItems,

@@ -260,6 +260,10 @@
 /* Tooltip modal */
 .tutorial-tooltip-container {
   padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  overflow: hidden;
 }
 
 .tutorial-tooltip-header {
@@ -286,6 +290,9 @@
   font-size: var(--font-size-md);
   line-height: 1.6;
   color: var(--fg-primary);
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
 }
 
 .tutorial-tooltip-content p {
