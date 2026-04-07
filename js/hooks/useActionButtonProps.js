@@ -365,7 +365,7 @@ export function useActionButtonProps() {
     };
 
     const changeManagers = {
-        label: 'Change Managers',
+        label: 'Fire Management',
         onClick: api.changeManagers,
         disabled: !!getActingAsDisabledMessage() || isActiveEntityETF,
         disabledMessage: getActingAsDisabledMessage() || (isActiveEntityETF ? "Not available for ETFs" : false),

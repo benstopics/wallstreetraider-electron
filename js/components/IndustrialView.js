@@ -12,7 +12,6 @@ import FinancialsTab from './FinancialsTab.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
 import HotkeyButtonBar from './HotkeyButtonBar.js';
 import LoansTab from './LoansTab.js';
-import CashflowTab from './CashflowTab.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import OwnershipGraph from './OwnershipGraph.js';
 import ActionBar from './ActionBar.js';
@@ -47,7 +46,6 @@ const IndustrialView = () => {
     const activeEntitySymbol = api.useGameStore(s => s.gameState.activeEntitySymbol);
     const financialProfile = api.useGameStore(s => s.gameState.financialProfile);
     const researchReport = api.useGameStore(s => s.gameState.researchReport);
-    const earningsReport = api.useGameStore(s => s.gameState.earningsReport);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const eventString = api.useGameStore(s => s.gameState.eventString);
     const nextEarningsDate = api.useGameStore(s => s.gameState.nextEarningsDate);
@@ -150,16 +148,8 @@ const IndustrialView = () => {
                             </div>
                         </div>
                     <//>
-                    <${Tab} label="Earnings" hotkey="e" id=${api.UI_CORP_EARNINGS_REPORT}>
-                        <div class="flex flex-col justify-center items-center overflow-x-auto w-full">
-                            ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, reportScopeRef)}
-                        </div>
-                    <//>
                     <${Tab} label="Financials" hotkey="f" id=${api.UI_CORP_FINANCIAL_PROFILE}>
                         <${FinancialsTab} />
-                    <//>
-                    <${Tab} label="Cashflow" hotkey="c" id=${api.UI_CORP_CASH_FLOW_PROJECTION}>
-                        ${html`<${CashflowTab} />`}
                     <//>
                     ${activeIndustryId === api.BANK_IND ? html`<${Tab} label="Loans" hotkey="l" id=${api.UI_BANK_LOANS_LIST}>
                         ${html`<${LoansTab} />`}

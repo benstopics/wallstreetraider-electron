@@ -258,6 +258,25 @@ const TUTORIAL_TOOLTIPS = [
         tutorialAdvice: `Click <strong>"No"</strong> to buy shares on the open market.`
     },
     {
+        id: 'offer-assets-for-sale',
+        condition: (gameState) => {
+            return gameState.modalTitle && gameState.modalType > 0 &&
+                   (gameState.modalTitle.includes('Offer of Assets for Sale') ||
+                    gameState.modalTitle.includes('Asset Sale by'));
+        },
+        title: 'Offer To Sell Assets vs. Direct Sale',
+        content: `
+            <p>You're offering corporate assets for sale at a <strong>5% discount from book value</strong>. Here's why this is usually better than a direct "Sell Corporate Assets" transaction:</p>
+            <ul style="margin: 8px 0 8px 20px; list-style-type: disc;">
+                <li><strong>No 10% sales commission</strong> — direct asset sales cost you 10% in commissions. Posting an offer costs nothing.</li>
+                <li><strong>Net 5% better price</strong> — even at the 5% discount, you keep 95 cents on the dollar vs. only 90 cents after commission on a direct sale.</li>
+                <li><strong>Doesn't use a transaction</strong> — posting the offer is free. Only counts as a transaction if a buyer actually accepts.</li>
+            </ul>
+            <p style="margin-top: 8px;"><strong>The catch:</strong> There's no guarantee a buyer will accept before the offer expires (end of current or next quarter). Only companies in the same industry group or holding/trading companies can accept.</p>
+            <p style="margin-top: 8px;"><em>If you need cash immediately, use "Sell Corporate Assets" instead. If you can wait a quarter, the offer route nets you more.</em></p>
+        `
+    },
+    {
         id: 'interest-rate-swaps',
         condition: (gameState) => gameState.modalType === 7,
         title: 'Interest Rate Swaps',

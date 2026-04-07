@@ -539,15 +539,15 @@ export const TUTORIAL_STEPS = [
                 ${prosText}
                 ${consText}
                 ${pros.length === 0 && cons.length === 0 ? '<p>Take time to review the balance sheet details above.</p>' : ''}
-                <p>Ready to invest? Click on the <strong>General</strong> tab to access the Buy button.</p>
-                <p class="tutorial-action"><strong>Action:</strong> Click on the "General" tab to continue.</p>
+                <p>Ready to invest? Click on the <strong>Overview</strong> tab to access the Buy button.</p>
+                <p class="tutorial-action"><strong>Action:</strong> Click on the "Overview" tab to continue.</p>
             `;
         },
-        highlightSelector: '[data-tutorial="tab-general"]',
+        highlightSelector: '[data-tutorial="tab-overview"]',
         position: 'bottom',
         helpId: 'chap10_X(D)',
         advanceOn: {
-            click: '[data-tutorial="tab-general"]'
+            click: '[data-tutorial="tab-overview"]'
         },
         allowInteraction: true
     },
