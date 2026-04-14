@@ -17,6 +17,7 @@ import ActionBar from './ActionBar.js';
 
 import OverviewPanel from './OverviewPanel.js';
 import ActingAsPicker from './ActingAsPicker.js';
+import PortHoldingsTab from './PortHoldingsTab.js';
 
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 import { useCookie } from '../hooks/useCookie.js';
@@ -104,9 +105,23 @@ const IndustrialView = () => {
 
     // Wrapper to also update navigation history when tab changes
     const setActiveTab = (tab) => {
+        if (tab === 'Search') {
+            api.viewDbSearch();
+            return;
+        }
+        if (tab === 'Market') {
+            api.viewIndustry(0);
+            return;
+        }
         setActiveTabInternal(tab);
         setSavedTab(tab);
     };
+
+    // Sync holdings-tab flag to store whenever activeTab changes (covers mount + all navigation paths)
+    useEffect(() => {
+        api.gameStore.getState().setUiHoldingsTabActive(activeTab === 'Holdings');
+        return () => api.gameStore.getState().setUiHoldingsTabActive(false);
+    }, [activeTab]);
 
     useEffect(() => {
         // Check for preferred tab from navigation
@@ -143,7 +158,11 @@ const IndustrialView = () => {
             <div class="flex flex-col w-full gap-2 h-full">
                 ${buttonProps.controlsActiveEntity ? html`<${ActionBar} entityLabel="${activeEntitySymbol} - ${activeEntityName}" />` : ''}
                 <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
-                    <${Tab} label="Overview" hotkey="v">
+                    <${Tab} label="Search">
+                    <//>
+                    <${Tab} label="Market" hotkey="m">
+                    <//>
+                    <${Tab} label="Overview" hotkey="v" id=${api.UI_CORP_OVERVIEW}>
                         <${OverviewPanel} />
                     <//>
                     <${Tab} label="General" hotkey="g" id=${api.UI_CORP_RESEARCH_REPORT}>
@@ -203,6 +222,9 @@ const IndustrialView = () => {
                     ${activeIndustryId != api.BANK_IND ? html`<${Tab} label="Commodities & Crypto" hotkey="m" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
                         ${html`<${CommoditiesTab} />`}
                     <//>` : ''}
+                    <${Tab} label="Holdings" hotkey="h" id=${api.UI_CORP_HOLDINGS}>
+                        <${PortHoldingsTab} />
+                    <//>
                     <${Tab} label="Shareholders" hotkey="r" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
                         <div class="flex flex-col h-full">
                             <${HotkeyButtonBar} buttons=${shareholdersBarButtons}

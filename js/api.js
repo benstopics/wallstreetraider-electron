@@ -259,6 +259,9 @@ export const UI_COMPANIES_HEATMAP = 36;
 export const UI_CORP_SWAPS_PORTFOLIO = 37;
 export const UI_PLAYER_SWAPS_PORTFOLIO = 38;
 export const UI_DB_SEARCH = 39;
+export const UI_CORP_HOLDINGS = 40;
+export const UI_PLAYER_HOLDINGS = 41;
+export const UI_CORP_OVERVIEW = 42;
 
 export async function postNoArg(path) {
     if (useIPC) {
@@ -313,6 +316,29 @@ export async function postIdArg(path, id) {
         body: JSON.stringify({ id })
     });
 
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.json();
+}
+
+// Like postIdArg but optionally includes intParam2 (acting-as entity override).
+// If actingAsId > 0, C++ handler switches acting-as, executes the trade, then restores.
+export async function postIdArgWithActingAs(path, id, actingAsId = 0) {
+    if (useIPC) {
+        const eventType = REST_TO_EVENT[path];
+        if (eventType !== undefined) {
+            return ipcRenderer.invoke('game:dispatch', eventType, id || 0, '', actingAsId || 0);
+        }
+        console.warn('[api] No IPC mapping for POST', path, 'id=', id);
+    }
+    const url = `${apiBase}${path}`;
+    const body = (actingAsId > 0) ? { id, intParam2: actingAsId } : { id };
+    const response = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
     if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
     }
@@ -703,36 +729,36 @@ export async function getAssetChart(id) {
 }
 
 /* Trading Center - Stocks */
-export async function buyStock(id) {
+export async function buyStock(id, actingAsId = 0) {
     console.log('[Tutorial] buyStock called with id:', id);
     try {
-        await postIdArg('/buy_stock', id);
+        await postIdArgWithActingAs('/buy_stock', id, actingAsId);
     } finally {
         // Call advanceTutorialOnAction even if API call fails
         advanceTutorialOnAction('buyStock');
     }
 }
-export async function sellStock(id) { await postIdArg('/sell_stock', id); }
-export async function shortStock(id) { await postIdArg('/short_stock', id); }
-export async function coverShortStock(id) { await postIdArg('/cover_short_stock', id); }
+export async function sellStock(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_stock', id, actingAsId); }
+export async function shortStock(id, actingAsId = 0) { await postIdArgWithActingAs('/short_stock', id, actingAsId); }
+export async function coverShortStock(id, actingAsId = 0) { await postIdArgWithActingAs('/cover_short_stock', id, actingAsId); }
 
 /* Bonds */
-export async function buyCorporateBond(id) { await postIdArg('/buy_corporate_bond', id); }
-export async function sellCorporateBond(id) { await postIdArg('/sell_corporate_bond', id); }
-export async function buyLongGovtBonds() { await postNoArg('/buy_long_govt_bonds'); }
-export async function sellLongGovtBonds() { await postNoArg('/sell_long_govt_bonds'); }
-export async function buyShortGovtBonds() { await postNoArg('/buy_short_govt_bonds'); }
-export async function sellShortGovtBonds() { await postNoArg('/sell_short_govt_bonds'); }
+export async function buyCorporateBond(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_corporate_bond', id, actingAsId); }
+export async function sellCorporateBond(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_corporate_bond', id, actingAsId); }
+export async function buyLongGovtBonds(actingAsId = 0) { await postIdArgWithActingAs('/buy_long_govt_bonds', 0, actingAsId); }
+export async function sellLongGovtBonds(actingAsId = 0) { await postIdArgWithActingAs('/sell_long_govt_bonds', 0, actingAsId); }
+export async function buyShortGovtBonds(actingAsId = 0) { await postIdArgWithActingAs('/buy_short_govt_bonds', 0, actingAsId); }
+export async function sellShortGovtBonds(actingAsId = 0) { await postIdArgWithActingAs('/sell_short_govt_bonds', 0, actingAsId); }
 
 /* Commodity Futures */
 export async function buyCommodityFutures(id) { await postIdArg('/buy_commodity_futures', id); }
-export async function sellCommodityFutures(id) { await postIdArg('/sell_commodity_futures', id); }
+export async function sellCommodityFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_commodity_futures', id, actingAsId); }
 export async function shortCommodityFutures(id) { await postIdArg('/short_commodity_futures', id); }
-export async function coverShortCommodityFutures(id) { await postIdArg('/cover_short_commodity_futures', id); }
+export async function coverShortCommodityFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/cover_short_commodity_futures', id, actingAsId); }
 
 /* Physical Commodities */
 export async function buyPhysicalCommodity(id) { await postIdArg('/buy_physical_commodity', id); }
-export async function sellPhysicalCommodity(id) { await postIdArg('/sell_physical_commodity', id); }
+export async function sellPhysicalCommodity(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_physical_commodity', id, actingAsId); }
 
 /* Crypto */
 export async function buyPhysicalCrypto(id) { await postIdArg('/buy_physical_crypto', id); }
@@ -741,14 +767,13 @@ export async function buyCryptoFutures(id) { await postIdArg('/buy_crypto_future
 export async function sellCryptoFutures(id) { await postIdArg('/sell_crypto_futures', id); }
 
 /* Options */
-export async function buyCalls(id) { await postIdArg('/buy_calls', id); }
-export async function sellCalls(id) { await postIdArg('/sell_calls', id); }
-export async function buyPuts(id) { await postIdArg('/buy_puts', id); }
-export async function sellPuts(id) { await postIdArg('/sell_puts', id); }
-export async function sellOptions() { await postNoArg('/sell_options'); }
+export async function buyCalls(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_calls', id, actingAsId); }
+export async function sellCalls(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_calls', id, actingAsId); }
+export async function buyPuts(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_puts', id, actingAsId); }
+export async function sellPuts(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_puts', id, actingAsId); }
 export async function advancedOptionsTrading() { await postNoArg('/advanced_options_trading'); }
-export async function exerciseCallOptionsEarly(id) { await postIdArg('/exercise_call_options_early', id); }
-export async function exercisePutOptionsEarly(id) { await postIdArg('/exercise_put_options_early', id); }
+export async function exerciseCallOptionsEarly(id, actingAsId = 0) { await postIdArgWithActingAs('/exercise_call_options_early', id, actingAsId); }
+export async function exercisePutOptionsEarly(id, actingAsId = 0) { await postIdArgWithActingAs('/exercise_put_options_early', id, actingAsId); }
 
 /* Management */
 export async function prepayTaxes() { await postNoArg('/prepay_taxes'); }
@@ -775,8 +800,8 @@ export async function greenmail(targetId = 0) { await postIdArg('/greenmail', ta
 export async function lbo(targetId = 0) { await postIdArg('/lbo', targetId); }
 export async function startup() { await postNoArg('/startup'); }
 export async function capitalContribution() { await postNoArg('/capital_contribution'); }
-export async function publicStockOffering() { await postNoArg('/public_stock_offering'); }
-export async function privateStockOffering() { await postNoArg('/private_stock_offering'); }
+export async function publicStockOffering(entityId = 0) { await postIdArgWithActingAs('/public_stock_offering', 0, entityId); }
+export async function privateStockOffering(entityId = 0) { await postIdArgWithActingAs('/private_stock_offering', 0, entityId); }
 export async function issueNewCorpBonds() { await postNoArg('/issue_new_corp_bonds'); }
 export async function redeemCorpBonds() { await postNoArg('/redeem_corp_bonds'); }
 export async function extraordinaryDividend() { await postNoArg('/extraordinary_dividend'); }
@@ -792,8 +817,8 @@ export async function repayLoan() { await postNoArg('/repay_loan'); }
 export async function advanceFunds() { await postNoArg('/advance_funds'); }
 export async function callInAdvance(id) { await postIdArg('/call_in_advance', id); }
 export async function interestRateSwaps() { await postNoArg('/interest_rate_swaps'); }
-export async function viewSwapDetails(id) { await postIdArg('/view_swap_details', id); }
-export async function terminateSwap(id) { await postIdArg('/terminate_swap', id); }
+export async function viewSwapDetails(id, actingAsId = 0) { await postIdArgWithActingAs('/view_swap_details', id, actingAsId); }
+export async function terminateSwap(id, actingAsId = 0) { await postIdArgWithActingAs('/terminate_swap', id, actingAsId); }
 
 /* Bank/Insurance Specific */
 export async function setBankAllocation() { await postNoArg('/set_bank_allocation'); }
@@ -1119,6 +1144,11 @@ export async function openMarketHeatMap() {
 }
 
 export async function setViewAsset(id) {
+    // Optimistically update activeEntityNum so components reading from the store
+    // during the 50ms polling gap don't compute actAs against the previous entity.
+    gameStore.setState(state => ({
+        gameState: { ...state.gameState, activeEntityNum: id }
+    }));
     await postIdArg('/set_view_asset', id);
     if (id === HUMAN1_ID) {
         advanceTutorialOnAction('viewPlayer');
@@ -1142,6 +1172,16 @@ export async function goForward() {
 
 export async function navGotoIndex(index) {
     await postIdArg('/nav_goto', index);
+}
+
+// Restore nav history from localStorage — called on game load.
+// entries: [{id, type}] ordered most-recent-first.
+export async function navSetHistory(entries) {
+    await fetchWithRetry(`${apiBase}/nav_set_history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entries)
+    });
 }
 
 export async function changeActingAs(id) {
@@ -1296,6 +1336,8 @@ export const WSRContext = createContext();
 export const gameStore = createStore((set, get) => ({
     gameState: {},
     setGameState: (next) => set({ gameState: next }),
+    uiHoldingsTabActive: false,
+    setUiHoldingsTabActive: (v) => set({ uiHoldingsTabActive: v }),
 }));
 
 const shallow = (a, b) => {

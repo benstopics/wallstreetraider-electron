@@ -53,9 +53,6 @@ function NavigationPanel() {
         return () => document.removeEventListener('hotkey-view-player', handler);
     }, [activeEntityNum]);
 
-    // Navigation dropdown data
-    const activePage = activeIndustryNum != -1 ? `industry-${activeIndustryNum}` : `asset-${activeEntityNum}`;
-
     const companyMap = new Map(
         (allCompanies ?? [])
             .concat([{ id: playerId, name: playerName, symbol: '' }])
@@ -71,7 +68,14 @@ function NavigationPanel() {
             .map(ind => [ind.id, { name: ind.name }])
     );
 
-    const navOptions = navHistory
+    // Build display options from navHistory.
+    // If history is empty (e.g. game just loaded, navSetHistory not yet resolved),
+    // synthesize a single entry for the current active entity so the dropdown
+    // is never blank during gameplay.
+    const effectiveHistory = navHistory.length > 0 ? navHistory
+        : (activeEntityNum > 0 ? [{ id: activeEntityNum, type: 'asset' }] : []);
+
+    const navOptions = effectiveHistory
         .map(page => {
             if (page.type === 'industry') {
                 const info = industryMap.get(page.id);
@@ -80,6 +84,13 @@ function NavigationPanel() {
             const info = companyMap.get(page.id);
             return { id: page.id, type: 'asset', name: info?.name || `Entity #${page.id}`, symbol: info?.symbol || '' };
         });
+
+    // Derive the selected value from navHistory[navPointerIdx] so it always
+    // matches an existing option even when activeEntityNum lags by a poll cycle.
+    const currentEntry = effectiveHistory[navPointerIdx] || effectiveHistory[0];
+    const activePage = currentEntry
+        ? `${currentEntry.type}-${currentEntry.id}`
+        : (activeIndustryNum != -1 ? `industry-${activeIndustryNum}` : `asset-${activeEntityNum}`);
 
     const onNavChange = (e) => {
         const [type, idStr, idStr2] = e.target.value.split('-');
@@ -107,7 +118,7 @@ function NavigationPanel() {
 
     const canGoBack = navPointerIdx < navHistory.length - 1;
     const canGoForward = navPointerIdx > 0;
-    const hasNavHistory = navHistory.length > 0;
+    const hasNavHistory = effectiveHistory.length > 0;
 
     // FEAT-001: Last Entity — find the most recent asset entry that isn't the current one
     const lastEntity = (() => {
@@ -223,7 +234,7 @@ function NavigationPanel() {
                 >
                     ${hasNavHistory
                         ? navOptions.map(opt => html`<option value="${opt.type}-${opt.id}">${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)
-                        : html`<option>-</option>`
+                        : html`<option value="">—</option>`
                     }
                 </select>
                 <${Button}

@@ -5,6 +5,7 @@ import OptionsTab from './OptionsTab.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
+import PortHoldingsTab from './PortHoldingsTab.js';
 import FinancialsTab from './FinancialsTab.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
@@ -56,9 +57,23 @@ const PlayerView = () => {
 
     // Wrapper to also update navigation history when tab changes
     const setActiveTab = (tab) => {
+        if (tab === 'Search') {
+            api.viewDbSearch();
+            return;
+        }
+        if (tab === 'Market') {
+            api.viewIndustry(0);
+            return;
+        }
         setActiveTabInternal(tab);
         setSavedTab(tab);
     };
+
+    // Sync holdings-tab flag to store whenever activeTab changes (covers mount + all navigation paths)
+    useEffect(() => {
+        api.gameStore.getState().setUiHoldingsTabActive(activeTab === 'Holdings');
+        return () => api.gameStore.getState().setUiHoldingsTabActive(false);
+    }, [activeTab]);
 
     // Handle preferred tab from navigation
     useEffect(() => {
@@ -81,6 +96,10 @@ const PlayerView = () => {
                 <div class="flex flex-col w-full gap-2 h-full">
                     <${ActionBar} entityLabel=${playerName} />
                     <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
+                        <${Tab} label="Search">
+                        <//>
+                        <${Tab} label="Market" hotkey="m">
+                        <//>
                         <${Tab} label="Financials" hotkey="f" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
                             <${FinancialsTab} />
                         <//>
@@ -130,6 +149,9 @@ const PlayerView = () => {
                                     , hyperlinkRegex, undefined, advancesExtrasStart, advancesScopeRef)}
                                 </div>
                             </div>
+                        <//>
+                        <${Tab} label="Holdings" hotkey="h" id=${api.UI_PLAYER_HOLDINGS}>
+                            <${PortHoldingsTab} />
                         <//>
                         <${Tab} label="My Corporations" hotkey="p" id=${api.UI_PLAYER_CORPORATIONS_LIST}>
                             <div class="flex flex-col h-full">

@@ -40,6 +40,7 @@ export default function OverviewPanel() {
     const euro             = api.useGameStore(s => s.gameState.euro)    || '';
     const playerName       = api.useGameStore(s => s.gameState.playerName) || 'Player';
     const actingAsId       = api.useGameStore(s => s.gameState.actingAsId);
+    const hyperlinkRegex   = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const allCompanies     = api.useGameStore(s => s.gameState.allCompanies) || [];
     const allPlayers       = api.useGameStore(s => s.gameState.allPlayers)   || [];
 
@@ -48,6 +49,8 @@ export default function OverviewPanel() {
     const buttonProps = useActionButtonProps();
 
     // ── Destructure activeEntityData ───────────────────────
+    const aef = api.useGameStore(s => s.gameState.activeEntityFinancials) || {};
+
     const {
         name:               activeEntityName,
         symbol:             activeEntitySymbol,
@@ -72,11 +75,36 @@ export default function OverviewPanel() {
         stockPrice52WkLow,
         controlledById,
         country,
+        bondDesc = '',
+        bondPrice = 0,
     } = activeEntityData;
 
     // ── Derived ────────────────────────────────────────────
     const isActiveEntityETF = activeIndustryId === api.ETF_IND;
     const isActingAsAdvisor = isActiveEntityETF && actingAsId > 10 && actingAsId === advisorId;
+
+    // ── Bond parsing ───────────────────────────────────────
+    // jBondDesc format: "YYYY@cc.cc" (straight) or "YYYYcv|CVP|@cc.cc" (convertible)
+    const hasBonds = bondDesc !== '' && bondPrice > 0;
+    const bondIsConvertible = hasBonds && bondDesc.includes('cv');
+    let bondCoupon = 0, bondMaturity = '', bondCvp = 0;
+    if (hasBonds) {
+        if (bondIsConvertible) {
+            bondMaturity = bondDesc.substring(0, 4);
+            const afterCv = bondDesc.split('cv|')[1] || '';
+            const cvParts = afterCv.split('|@');
+            bondCvp = parseFloat(cvParts[0]) || 0;
+            bondCoupon = parseFloat(cvParts[1]) || 0;
+        } else {
+            const parts = bondDesc.split('@');
+            bondMaturity = parts[0];
+            bondCoupon = parseFloat(parts[1]) || 0;
+        }
+    }
+    // Conversion premium for convertible bonds (premium over par)
+    const bondPremium = (bondIsConvertible && bondPrice > 0)
+        ? (bondPrice - 100).toFixed(1)
+        : null;
 
     // ── Formatters ─────────────────────────────────────────
     const fmtPrice = (v) =>
@@ -101,11 +129,11 @@ export default function OverviewPanel() {
     if (showReport) return html`
     <div class="flex flex-col w-full h-full min-h-0">
         <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-            <span>Research Report — ${activeEntityName || '—'}</span>
             <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowReport(false)}>← Back</button>
+            <span>Research Report — ${activeEntityName || '—'}</span>
         </div>
         <div class="flex flex-col items-center overflow-y-auto" style="flex:1; min-height:0; padding:8px 10px;">
-            ${renderLines(researchReport, ({ id }) => api.setViewAsset(parseInt(id)))}
+            ${renderLines(researchReport, ({ id }) => api.setViewAsset(parseInt(id)), null, hyperlinkRegex)}
         </div>
     </div>`;
 
@@ -185,6 +213,21 @@ export default function OverviewPanel() {
                         </div>
                     </div>
 
+                    ${playerControlsActive && !isActiveEntityETF ? html`
+                        <div style="grid-column:1/-1; display:flex; gap:6px; flex-wrap:wrap; padding:4px 0;">
+                            <${DisabledTooltipButton}
+                                ...${buttonProps.publicStockOffering}
+                                onClick=${() => api.publicStockOffering(activeEntityNum)}
+                                buttonClass=""
+                            />
+                            <${DisabledTooltipButton}
+                                ...${buttonProps.privateStockOffering}
+                                onClick=${() => api.privateStockOffering(activeEntityNum)}
+                                buttonClass=""
+                            />
+                        </div>
+                    ` : ''}
+
                     <div style="${CELL_S}">
                         <div style="${CELL_LABEL_S}">Industry</div>
                         <div>
@@ -207,7 +250,12 @@ export default function OverviewPanel() {
                         <div style="${CELL_TXT_S}">
                             ${(() => {
                                 if (playerControlsActive) {
-                                    return playerName;
+                                    return html`<span
+                                        class="hover:underline"
+                                        style="color:#60a5fa; cursor:pointer;"
+                                        title="Navigate to ${playerName}"
+                                        onClick=${() => api.setViewAsset(api.HUMAN1_ID)}
+                                    >${playerName}</span>`;
                                 }
                                 const cid = controlledById;
                                 if (!cid || cid === activeEntityNum) {
@@ -258,7 +306,12 @@ export default function OverviewPanel() {
                     <div style="display:grid; grid-template-columns:1fr; gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden; margin-bottom:8px;">
                         <div style="${CELL_S}">
                             <div style="${CELL_LABEL_S}">Investment Advisor</div>
-                            <div style="${CELL_TXT_S}">${advisorName || '—'}</div>
+                            <div style="${CELL_TXT_S}">
+                                ${advisorId && advisorName ? html`
+                                    <span class="hover:underline" style="color:#60a5fa; cursor:pointer;"
+                                        onClick=${() => api.setViewAsset(advisorId)} title="Navigate to ${advisorName}">${advisorName}</span>
+                                ` : (advisorName || '—')}
+                            </div>
                         </div>
                     </div>
                     <!-- ETF action buttons -->
@@ -349,6 +402,48 @@ export default function OverviewPanel() {
                     />
 
                 </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             Corporate Bonds (only when bonds are outstanding)
+             ══════════════════════════════════════════════ -->
+        <div class="panel" style="height:auto; flex-shrink:0;">
+            <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Corporate Bonds</span>
+                ${hasBonds
+                    ? html`<${DisabledTooltipButton} ...${buttonProps.buyCorpBond} label="Buy Bonds" buttonClass="" />`
+                    : ''}
+            </div>
+            <div class="panel-body" style="padding:0;">
+                ${hasBonds ? html`
+                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden;">
+                        <${MetricCard}
+                            label="Type"
+                            value=${bondIsConvertible ? 'Convertible' : 'Straight'}
+                            color="neutral"
+                        />
+                        <${MetricCard}
+                            label="Premium"
+                            value=${bondPremium != null ? `${bondPremium}%` : '—'}
+                            color="neutral"
+                        />
+                        <${MetricCard}
+                            label="Outstanding"
+                            value=${aef.bondsOut > 0 ? fmtMillions(aef.bondsOut) : '—'}
+                            color="neutral"
+                        />
+                        <${MetricCard}
+                            label="Price"
+                            value=${bondPrice > 0 ? bondPrice.toFixed(2) : '—'}
+                            color="neutral"
+                        />
+                    </div>
+                ` : html`
+                    <div style="padding:6px;">
+                        <${DisabledTooltipButton} ...${buttonProps.issueCorpBonds} buttonClass="" />
+                    </div>
+                `}
             </div>
         </div>
 

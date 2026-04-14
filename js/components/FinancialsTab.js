@@ -54,43 +54,11 @@ const renderExtras = (actingAs, controlsActiveEntity, activeEntityNum, activeEnt
 
     if (type === 'SUBPRIME') {
         const sellable = !text?.includes('   0.0');
-        const disabledTooltip = controlsActiveEntity
-            ? `Must be acting as this company. Click to act as ${activeEntitySymbol}`
-            : "Must be acting as this company";
-        const handleActAsClick = controlsActiveEntity ? () => api.changeActingAs(activeEntityNum) : null;
 
         const sellIdx = extrasCounter ? extrasCounter.current++ : null;
         const buyIdx  = extrasCounter ? extrasCounter.current++ : null;
 
-        if (!actingAs) {
-            nodes.push(html`<${DisabledTooltipButton}
-                disabledMessage=${disabledTooltip}
-                onDisabledClick=${handleActAsClick}
-                label="Sell"
-                color="red"
-                containerClass="w-12 mx-1"
-                buttonClass="w-full"
-                extrasIndex=${sellIdx}
-                scopeActive=${scopeActiveRef?.current}
-                hotkeyLetter="s"
-                isLineSelected=${isLineSelected}
-                lineNumber=${lineNumber}
-            />`);
-            nodes.push(html`<${DisabledTooltipButton}
-                disabledMessage=${disabledTooltip}
-                onDisabledClick=${handleActAsClick}
-                label="Buy"
-                color="green"
-                containerClass="w-12 mx-1"
-                buttonClass="w-full"
-                extrasIndex=${buyIdx}
-                scopeActive=${scopeActiveRef?.current}
-                hotkeyLetter="b"
-                isLineSelected=${isLineSelected}
-                lineNumber=${lineNumber}
-            />`);
-        } else {
-            if (!sellable) {
+        if (!sellable) {
                 nodes.push(html`<${DisabledTooltipButton}
                     disabledMessage=${"No securities to sell"}
                     label="Sell"
@@ -121,7 +89,6 @@ const renderExtras = (actingAs, controlsActiveEntity, activeEntityNum, activeEnt
                 isLineSelected=${isLineSelected}
                 lineNumber=${lineNumber}
             />`);
-        }
 
         return html`<div class="flex justify-center items-center">${nodes}</div>`;
     }
@@ -218,8 +185,8 @@ function FinancialsTab() {
     if (showFullProjection) return html`
         <div class="flex flex-col w-full h-full min-h-0">
             <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-                <span>Cash Flow Projection — ${activeEntitySymbol || activeEntityNum}</span>
                 <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowFullProjection(false)}>← Back</button>
+                <span>Cash Flow Projection — ${activeEntitySymbol || activeEntityNum}</span>
             </div>
             <div class="flex flex-col items-center overflow-y-auto flex-1 min-h-0" style="padding:8px 10px;">
                 ${renderLines(cashflowProjection, ({ id }) => api.setViewAsset(id))}
@@ -231,8 +198,8 @@ function FinancialsTab() {
     if (showEarningsReport) return html`
         <div class="flex flex-col w-full h-full min-h-0">
             <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-                <span>Earnings Report — ${activeEntitySymbol || activeEntityNum}</span>
                 <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowEarningsReport(false)}>← Back</button>
+                <span>Earnings Report — ${activeEntitySymbol || activeEntityNum}</span>
             </div>
             <div class="flex flex-col items-center overflow-y-auto flex-1 min-h-0" style="padding:8px 10px;">
                 ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id))}
@@ -244,8 +211,8 @@ function FinancialsTab() {
     if (showFullProfile) return html`
         <div class="flex flex-col w-full h-full min-h-0">
             <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-                <span>Financial Profile — ${activeEntitySymbol || activeEntityNum}</span>
                 <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowFullProfile(false)}>← Back</button>
+                <span>Financial Profile — ${activeEntitySymbol || activeEntityNum}</span>
             </div>
             <div ref=${extrasContainerRef} class="flex flex-col items-center overflow-y-auto flex-1 min-h-0" style="padding:8px 10px;">
                 ${renderLines(
@@ -306,7 +273,7 @@ function FinancialsTab() {
         <div style="display:flex; justify-content:center; margin-bottom:6px; flex-shrink:0;">
             <button class="btn blue" style="padding:2px 14px; font-size:var(--font-size-sm);"
                 onClick=${() => setShowFullProfile(true)}>
-                View Financial Statement
+                View Financial Disclosure
             </button>
         </div>
 

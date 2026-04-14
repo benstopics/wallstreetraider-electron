@@ -1,9 +1,5 @@
 import { html, useEffect, useState } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
-import Tabs from './Tabs.js';
-
-
-const Tab = Tabs.Tab;
 
 export function squarify(width, height, items, getSizeValue) {
 
@@ -141,18 +137,10 @@ function MarketHeatMapTab() {
     const [tabSize, setTabSize] = useState({ width: 600, height: 1200 });
     const [hoveredNode, setHoveredNode] = useState(null);
 
-    const allCompanies = api.useGameStore(s => s.gameState.allCompanies);
     const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
-    const allCompaniesBySector = JSON.parse(JSON.stringify(allIndustries));
-
-    allCompaniesBySector.forEach(ind => {
-        ind.children = allCompanies.filter(comp => comp.industryId === ind.id);
-    });
-
     const controlledCompanies = api.useGameStore(s => s.gameState.controlledCompanies) || [];
 
     const industriesMarketCapTree = squarify(tabSize.width, tabSize.height, allIndustries, ind => ind.totalMarketCap);
-    const companyTree = squarify(tabSize.width, tabSize.height, allCompaniesBySector, x => x.totalMarketCap ?? x.marketCap);
 
     const renderNode = (node, key, getColor, getText, onClick) => {
         // Leaf node (no children)
@@ -165,7 +153,7 @@ function MarketHeatMapTab() {
                     flex: node._sizePct ?? 1,
                     background: getColor ? getColor(node) : 'rgba(100, 100, 100, 0.5)',
                     cursor: 'pointer',
-                    border: api.isPlayerControlled(controlledCompanies, node.id) ? '3px dashed gold' : undefined,
+                    border: undefined,
                 }}
                     onClick=${() => onClick(node)}
                     onMouseEnter=${() => setHoveredNode(node)}
@@ -252,58 +240,26 @@ function MarketHeatMapTab() {
         return 'rgb(0, 0, 0)';
     };
 
-    const maxPriceChange = Math.max(...allCompanies.map(c => Math.abs(c.priceChange || 0)), 1);
     const maxDemandGrowth = Math.max(...allIndustries.map(i => Math.abs(i.demandGrowth || 0)), 1);
 
     return html`
         <div id="market-heat-map-tab" class="w-full h-auto">
-            <${Tabs}>
-                <${Tab} label="All Sectors" id=${api.UI_INDUSTRIES_HEATMAP}>
-                    <div style="position: absolute; padding: 10px; font-size: 0.9em; background: rgba(20, 20, 20, 0.8); border: 1px solid rgba(100, 100, 100, 0.5); border-radius: 5px; margin: 10px; z-index: 10;">
-                        ${hoveredNode
-            ? html`
-                                ${hoveredNode.name}<br/>
-                                Demand Growth: ${typeof hoveredNode.demandGrowth === 'number' ? hoveredNode.demandGrowth.toFixed(2) + '%' : '\u00A0'}<br/>
-                                Long-Term Growth: ${typeof hoveredNode.permDemandGrowth === 'number' ? hoveredNode.permDemandGrowth.toFixed(2) + '%' : '\u00A0'}<br/>
-                                Total Market Cap: ${typeof hoveredNode.totalMarketCap === 'number' ? '$' + (parseFloat(hoveredNode.totalMarketCap.toFixed(0))).toLocaleString() : '\u00A0'}
-                            `
-            : html`Hover over a sector to see details<br/>${'\u00A0'}<br/>${'\u00A0'}<br/>${'\u00A0'}`}
-                    </div>
-                    <div class="flex w-full flex-${industriesMarketCapTree.flexDirection}" style="height: ${tabSize.width}px">
-                        ${industriesMarketCapTree.children.map((node, i) => renderNode(node,
-                            `root-${i}`, ind => value2RGBA(ind.demandGrowth, maxDemandGrowth),
-                            ind => ind.name,
-                            ind => api.viewIndustry(ind.id)))}
-                    </div>
-                <//>
-                <${Tab} label="Companies by Sector" id=${api.UI_COMPANIES_HEATMAP}>
-                    <div style="position: absolute; padding: 10px; font-size: 0.9em; background: rgba(20, 20, 20, 0.8); border: 1px solid rgba(100, 100, 100, 0.5); border-radius: 5px; margin: 10px; z-index: 10;">
-                        ${hoveredNode
-                            ? hoveredNode.type === 'group'
-                            ? html`
-                                ${hoveredNode.name}<br/>
-                                Demand Growth: ${typeof hoveredNode.demandGrowth === 'number' ? hoveredNode.demandGrowth.toFixed(2) + '%' : '\u00A0'}<br/>
-                                Long-Term Growth: ${typeof hoveredNode.permDemandGrowth === 'number' ? hoveredNode.permDemandGrowth.toFixed(2) + '%' : '\u00A0'}<br/>
-                                Total Market Cap: ${typeof hoveredNode.totalMarketCap === 'number' ? '$' + (parseFloat(hoveredNode.totalMarketCap.toFixed(0))).toLocaleString() : '\u00A0'}
-                            `
-            : html`
-                                ${hoveredNode.name}<br/>
-                                Stock Price: ${typeof hoveredNode.price === 'number'
-                    ? '$' + (parseFloat(hoveredNode.price.toFixed(2))).toLocaleString() + ` (${hoveredNode.priceChange >= 0 ? '+' : ''}${(hoveredNode.priceChange / hoveredNode.price * 100).toFixed(2)}%)`
-                    : '\u00A0'}<br/>
-                                Outstanding Shares: ${typeof hoveredNode.outstandingShares === 'number' ? (parseFloat(hoveredNode.outstandingShares.toFixed(2))).toLocaleString() : '\u00A0'} million<br/>
-                                Market Cap: ${typeof hoveredNode.marketCap === 'number' ? '$' + (parseFloat(hoveredNode.marketCap.toFixed(0))).toLocaleString() : '\u00A0'}<br/>`
-            : html`Hover over a company to see details<br/>${'\u00A0'}<br/>${'\u00A0'}<br/>${'\u00A0'}`}
-                    </div>
-                    <div class="flex w-full flex-${companyTree.flexDirection}" style="height: 2000px">
-                        ${companyTree.children.map((node, i) => renderNode(node,
-                            `root-${i}`,
-                            comp => value2RGBA(comp.priceChange, maxPriceChange),
-                            x => x.symbol ?? x.name,
-                            x => x.symbol ? api.setViewAsset(x.id) : api.viewIndustry(x.id)))}
-                    </div>
-                <//>
-            <//>
+            <div style="position: absolute; padding: 10px; font-size: 0.9em; background: rgba(20, 20, 20, 0.8); border: 1px solid rgba(100, 100, 100, 0.5); border-radius: 5px; margin: 10px; z-index: 10;">
+                ${hoveredNode
+        ? html`
+                        ${hoveredNode.name}<br/>
+                        Demand Growth: ${typeof hoveredNode.demandGrowth === 'number' ? hoveredNode.demandGrowth.toFixed(2) + '%' : '\u00A0'}<br/>
+                        Long-Term Growth: ${typeof hoveredNode.permDemandGrowth === 'number' ? hoveredNode.permDemandGrowth.toFixed(2) + '%' : '\u00A0'}<br/>
+                        Total Market Cap: ${typeof hoveredNode.totalMarketCap === 'number' ? '$' + (parseFloat(hoveredNode.totalMarketCap.toFixed(0))).toLocaleString() : '\u00A0'}
+                    `
+        : html`Hover over a sector to see details<br/>${'\u00A0'}<br/>${'\u00A0'}<br/>${'\u00A0'}`}
+            </div>
+            <div class="flex w-full flex-${industriesMarketCapTree.flexDirection}" style="height: ${tabSize.width}px">
+                ${industriesMarketCapTree.children.map((node, i) => renderNode(node,
+                    `root-${i}`, ind => value2RGBA(ind.demandGrowth, maxDemandGrowth),
+                    ind => ind.name,
+                    ind => api.viewIndustry(ind.id)))}
+            </div>
         </div>
     `;
 }

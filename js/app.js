@@ -52,11 +52,11 @@ const AppInner = () => {
     const readyToRestart = api.useGameStore(s => s.gameState.readyToRestart);
     const disableHotkeysSetting = api.useGameStore(s => s.gameState.disableHotkeysSetting);
 
-    // Sync "Disable Hotkeys" setting from game state to hotkeyManager
+    // Hotkeys are globally disabled (ignore disableHotkeysSetting)
     useEffect(() => {
-        hotkeyManager.setDisabled(!!disableHotkeysSetting);
-        setHotkeysVisualDisabled(!!disableHotkeysSetting);
-    }, [disableHotkeysSetting]);
+        hotkeyManager.setDisabled(true);
+        setHotkeysVisualDisabled(true);
+    }, []);
 
     // Detect ready to restart signal and restart WSR to return to main menu
     // This flag is set AFTER all end-game dialogs are closed
@@ -297,6 +297,9 @@ const AppInner = () => {
         let pollSeq = 0;
         let consecutiveErrors = 0;
         let wasGameLoaded = false;
+        let prevNavJson = '';           // last-seen navHistory JSON for change detection
+
+        const NAV_STORAGE_KEY = 'wsr_navHistory';
 
         const fetchGameState = () => {
             pollSeq++;
@@ -304,11 +307,40 @@ const AppInner = () => {
             api.getGameState().then((newGameState) => {
                 consecutiveErrors = 0;
 
+                // Detect game-load transition (false → true)
+                const justLoaded = !wasGameLoaded && newGameState.gameLoaded;
+
                 // Log sparingly: first 3 polls, every 100th, or game state transitions
                 if (seq <= 3 || seq % 100 === 0 || newGameState.gameLoaded !== wasGameLoaded) {
                     console.log(`[POLL #${seq}] gameLoaded=${newGameState.gameLoaded} modalType=${newGameState.modalType} companies=${newGameState.allCompanies?.length}`);
                 }
                 wasGameLoaded = newGameState.gameLoaded;
+
+                // On game load: restore persisted nav history, or seed with current entity
+                if (justLoaded) {
+                    try {
+                        const saved = localStorage.getItem(NAV_STORAGE_KEY);
+                        const history = saved ? JSON.parse(saved) : [];
+                        if (history.length > 0) {
+                            api.navSetHistory(history).catch(() => {});
+                        } else {
+                            const aeid = newGameState.activeEntityNum;
+                            if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
+                        }
+                    } catch (e) {
+                        const aeid = newGameState.activeEntityNum;
+                        if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
+                    }
+                }
+
+                // Persist nav history whenever it changes (only during gameplay)
+                if (newGameState.gameLoaded && newGameState.navHistory?.length > 0) {
+                    const navJson = JSON.stringify(newGameState.navHistory);
+                    if (navJson !== prevNavJson) {
+                        prevNavJson = navJson;
+                        try { localStorage.setItem(NAV_STORAGE_KEY, navJson); } catch (e) {}
+                    }
+                }
 
                 // Only build hyperlink regex when there are companies to link
                 if (newGameState.allCompanies?.length > 0) {

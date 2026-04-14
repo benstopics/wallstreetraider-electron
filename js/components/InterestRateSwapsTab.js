@@ -40,10 +40,6 @@ function InterestRateSwapsTab() {
     // Get centralized button props
     const buttonProps = useActionButtonProps();
 
-    // Get disabled message and click handler from hook for dynamic buttons
-    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
-    const handleActAsClick = buttonProps.onMustActAsCompanyClick;
-
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     // Hide company-only buttons when viewing a player (activeEntityNum < 10)
     const showCorpButtons = activeEntityNum >= 10 || buttonProps.isActiveEntityETF;
@@ -89,9 +85,7 @@ function InterestRateSwapsTab() {
                                 lineNumber=${lineNumber}
                             />
                             <${DisabledTooltipButton}
-                                disabledMessage=${actingAsDisabledMessage}
                                 onClick=${() => api.terminateSwap(id)}
-                                onDisabledClick=${handleActAsClick}
                                 label="Terminate"
                                 color="red"
                                 extrasIndex=${terminateIdx}

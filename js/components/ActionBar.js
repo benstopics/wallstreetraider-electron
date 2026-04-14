@@ -1,5 +1,6 @@
 import { html, useState, useCallback, useMemo } from '../lib/preact.standalone.module.js';
 import DropdownMenu from './DropdownMenu.js';
+import CommandPrompt from './CommandPrompt.js';
 import CompanySelectModal from './CompanySelectModal.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 import { useShiftHeld } from '../hooks/useHotkey.js';
@@ -161,6 +162,7 @@ export default function ActionBar({ entityLabel }) {
                 hotkeyChar="c"
                 shiftHeld=${shiftHeld}
             />
+            <div style="flex:1"><${CommandPrompt} /></div>
             <${DropdownMenu}
                 label="Hostile"
                 icon="⚔️"

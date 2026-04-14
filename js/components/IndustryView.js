@@ -32,8 +32,8 @@ const IndustryView = () => {
     const whoOwnsStocksReport = api.useGameStore(s => s.gameState.whoOwnsStocksReport);
     const whoOwnsInvestmentContractsReport = api.useGameStore(s => s.gameState.whoOwnsInvestmentContractsReport);
     const whosAheadReport = api.useGameStore(s => s.gameState.whosAheadReport);
-    const whoOwnsFilter = api.useGameStore(s => s.gameState.whoOwnsFilter);
 
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredIndustryTab);
     const [savedTab, setSavedTab] = useCookie('industryViewTab', 'Heat Maps');
     const [activeTab, setActiveTabInternal] = useState(preferredTab || savedTab);
@@ -65,10 +65,13 @@ const IndustryView = () => {
 
     const scopeActiveRef = useRef(false);
 
+    const handleBack = () => api.setViewAsset(activeEntityNum || api.HUMAN1_ID);
+
     return html`
     <div class="flex flex-col h-full">
         <div class="flex flex-row gap-2 flex-1 min-h-0">
             <div class="flex flex-col w-1/4 gap-2">
+                <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm); width:fit-content; height:auto;" onClick=${handleBack}>← Back</button>
                 <div class="">
                     ${html`<${AssetPriceChart} assetId=${api.STOCK_INDEX_ID} chartTitle="Stock Market Index" />`}
                 </div>
@@ -100,7 +103,7 @@ const IndustryView = () => {
                             <//>
                         </div>
                     <//>` : ''}
-                    <${Tab} label="Heat Maps" hotkey="h" id=${api.UI_MARKET_HEATMAP}>
+                    <${Tab} label="Heat Map" hotkey="h" id=${api.UI_MARKET_HEATMAP}>
                         <${MarketHeatMapTab} />
                     <//>
                     <${Tab} label="Industry Growth Rates" hotkey="g" id=${api.UI_MARKET_REPORTS_INDUSTRY_GROWTH_RATES_REPORT}>
@@ -152,14 +155,6 @@ const IndustryView = () => {
                     <//>
                     <${Tab} label="Who Owns What?" hotkey="o">
                         <div class="flex flex-col w-full h-full">
-                            <div class="flex justify-end px-2 py-1">
-                                <${Button}
-                                    class=${`btn text-xs px-3 py-1 ${whoOwnsFilter ? 'btn-active' : ''}`}
-                                    data-testid="btn-who-owns-filter"
-                                    onClick=${() => api.setWhoOwnsFilter(whoOwnsFilter ? 0 : 1)}
-                                    title=${whoOwnsFilter ? 'Showing only your companies - click to show all' : 'Showing all companies - click to show only yours'}
-                                >${whoOwnsFilter ? 'My Companies Only' : 'All Companies'}<//>
-                            </div>
                             <div class="flex justify-center items-center flex-1 min-h-0">
                             <${Tabs}>
                                 <${Tab} label="Futures" id=${api.UI_MARKET_REPORTS_COMMOD_FUTURES_REPORT}>

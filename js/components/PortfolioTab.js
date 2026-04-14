@@ -66,7 +66,6 @@ function PortfolioTab() {
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
-
     // Get centralized button props
     const buttonProps = useActionButtonProps();
 
@@ -115,7 +114,6 @@ function PortfolioTab() {
         buttonProps.buyStock,
         !showCorpButtons && buttonProps.sellStock,
         !showCorpButtons && buttonProps.shortStock,
-        showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.buyCorpBond, label: "Buy Bonds" },
         showCorpButtons && !buttonProps.isActiveEntityETF && { ...buttonProps.sellSubsidiaryStock, label: "Offer Stock for Sale" },
     ];
     const barCount = barButtons.filter(Boolean).length;
@@ -168,7 +166,7 @@ function PortfolioTab() {
                                         : type === "GS" ? api.sellShortGovtBonds
                                         : type === "GL" ? api.sellLongGovtBonds
                                         : api.sellStock
-                                    )(id)}
+                                    )(type === "GS" || type === "GL" ? activeEntityNum : id)}
                                     label="${type === "S" ? "Cover" : "Sell"}"
                                     extrasIndex=${sellIdx}
                                     scopeActive=${scopeActiveRef.current}

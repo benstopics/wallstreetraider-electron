@@ -51,12 +51,27 @@ export default function CommandPrompt() {
         { id: api.HUMAN1_ID, symbol: 'PLAYER', name: gameState?.playerName || 'Player' },
     ].concat(gameState.allCompanies ?? []);
 
+    const parts = (command ?? '').trim().toUpperCase().split(/\s+/);
+    const cmdKey = parts[0];
+    const operandStr = parts.length > 1 ? parts[parts.length - 1] : null;
+    const cmdEntry = api.commandMap[cmdKey];
+
     const suggestions = useMemo(() => {
 
         if (command.trim() === '') return commands;
 
         const q = (lastPart || "").toUpperCase();
         if (!q) return [];
+
+        // When no recognized command and multiple words typed, do a full-name search
+        // so "NIPPON SECURITIES" finds NIPPON SECURITIES (NISK), not URBAN GROUP SECURITIES (UGS)
+        if (!cmdEntry && tokens.length > 1) {
+            const fullQ = command.trim().toUpperCase();
+            return entities
+                .filter(c => c.name?.toUpperCase().includes(fullQ))
+                .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                .slice(0, 8);
+        }
 
         const base = commands.concat(entities);
 
@@ -101,12 +116,7 @@ export default function CommandPrompt() {
         });
 
         return tagged.slice(0, 8);
-    }, [entities, lastPart]);
-
-    const parts = (command ?? '').trim().toUpperCase().split(/\s+/);
-    const cmdKey = parts[0];
-    const operandStr = parts.length > 1 ? parts[parts.length - 1] : null;
-    const cmdEntry = api.commandMap[cmdKey];
+    }, [entities, lastPart, cmdEntry, tokens, command]);
 
     const resolveEntityId = (str) => {
         if (!str) return undefined;
@@ -117,12 +127,19 @@ export default function CommandPrompt() {
     };
 
     const resolvedId = useMemo(() => {
+        // Multi-word input with no command: resolve by full company name (e.g. "NIPPON SECURITIES")
+        if (!cmdEntry && tokens.length > 1) {
+            const fullQ = parts.join(' ');
+            return (gameState?.allCompanies || []).find(c =>
+                c.name?.toUpperCase() === fullQ
+            )?.id ?? undefined;
+        }
         // Resolve operand (second token) for commands like "BUY AAPL"
         if (operandStr) return resolveEntityId(operandStr);
         // Resolve single token as entity when it's not a recognized command
         if (!cmdEntry && cmdKey) return resolveEntityId(cmdKey);
         return 0;
-    }, [operandStr, cmdKey, cmdEntry, gameState?.allCompanies, gameState?.playerName]);
+    }, [operandStr, cmdKey, cmdEntry, tokens, parts, gameState?.allCompanies, gameState?.playerName]);
 
     // --- overlay/hint computation ------------------------------------------------
     function getOverlayAndHint() {

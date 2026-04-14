@@ -9,7 +9,6 @@ import Toolbar from './Toolbar.js';
 import { NewspaperIcon, NotificationIcon } from '../icons.js';
 import Modal from './Modal.js';
 import AssetPriceChart from './AssetPriceChart.js';
-import CommandPrompt from './CommandPrompt.js';
 import Button from './Button.js';
 import StockTicker from './StockTicker.js';
 import { insertCurrencySymbols } from './helpers.js';
@@ -36,11 +35,12 @@ const GameUI = () => {
     const trendingNews = api.useGameStore(s => s.gameState.trendingNews);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
     const activeIndustryNum = api.useGameStore(s => s.gameState.activeIndustryNum);
+    const holdingsTabActive = api.useGameStore(s => s.uiHoldingsTabActive ?? false);
 
     const streamingQuotes = api.useGameStore(s => s.gameState.streamingQuotesList) || [];
     const allCompanies = api.useGameStore(s => s.gameState.allCompanies) || [];
 
-    const isDbSearch = activeIndustryNum === -2;
+    const isFullscreen = activeIndustryNum === -2 || activeIndustryNum >= 0;
 
     // Build set of "my" entity names for MyNews filtering
     const myEntityNames = useMemo(() => {
@@ -89,9 +89,8 @@ const GameUI = () => {
         <${Toolbar} />
         <${StockTicker} />
         <div class="game-view flex flex-row gap-2 p-2">
-            ${!isDbSearch ? html`
-            <div class="game-top-panels flex flex-row gap-2 min-h-0" style="flex: 3 1 0%; min-width: 0;">
-            <!-- Left Column -->
+            ${!isFullscreen ? html`
+            <!-- Left Column (sidebar) — isolated in its own flex child so view/news changes never affect its width -->
             <div class="game-col-sidebar flex flex-col gap-2" style="flex: 1 1 0%; min-width: 0;">
                 <!-- Date and Time -->
                 <div class="flex flex-col fixed-width date-display justify-center items-center w-full" style="height: 35px;">
@@ -131,36 +130,36 @@ const GameUI = () => {
                     <${StreamingQuotes} />
                 </div>
             </div>
+            ` : ''}
 
-            <div class="game-col-news flex flex-col gap-2 min-h-0" style="flex: 2 1 0%; min-width: 0;">
-                <div class="flex items-center" style="height: 35px;">
-                    <${CommandPrompt} />
+            <!-- View + News wrapper: view and news resize between themselves; sidebar is unaffected -->
+            <div class="flex flex-row gap-2 min-h-0" style=${`flex: ${isFullscreen ? '1 1 100%' : '6 1 0%'}; min-width: 0;`}>
+                <div class="game-col-view flex flex-col gap-2 h-full" style="flex: 4 1 0%; min-width: 0;">
+                    ${html`<${View} />`}
                 </div>
-                <div class="panel flex-[4] flex min-h-0 flex-col">
-                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Financial News Headlines</span>
-                        <${Button} class="btn text-xs px-2 py-0 ${showMyNews ? 'yellow' : ''}" data-testid="btn-my-news" onClick=${() => setShowMyNews(!showMyNews)} title="Filter to show only news about your stocks and companies">My News</button>
-                    </div>
-                    <div class="p-1 panel-body">
-                        <div class="flex flex-col h-full overflow-y-auto">
-                            ${filteredHeadlines.map(h => html`
-                                <div class="news-headline">
-                                    ${api.renderHyperlinks(h, ({ id, type }) => {
-                                        if (type === 'C')  api.setViewAsset(id);
-                                        else if (type === 'I') api.viewIndustry(id);
-                                    }, hyperlinkRegex)}
-                                </div>
-                            `)}
+
+                ${!isFullscreen ? html`
+                <div class="game-col-news flex flex-col gap-2 min-h-0" style=${`flex: ${holdingsTabActive ? '0 0 0px' : '2 1 0%'}; overflow: hidden; min-width: 0;`}>
+                    <div class="panel flex-[4] flex min-h-0 flex-col">
+                        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Financial News Headlines</span>
+                            <${Button} class="btn text-xs px-2 py-0 ${showMyNews ? 'yellow' : ''}" data-testid="btn-my-news" onClick=${() => setShowMyNews(!showMyNews)} title="Filter to show only news about your stocks and companies">My News</button>
+                        </div>
+                        <div class="p-1 panel-body">
+                            <div class="flex flex-col h-full overflow-y-auto">
+                                ${filteredHeadlines.map(h => html`
+                                    <div class="news-headline">
+                                        ${api.renderHyperlinks(h, ({ id, type }) => {
+                                            if (type === 'C')  api.setViewAsset(id);
+                                            else if (type === 'I') api.viewIndustry(id);
+                                        }, hyperlinkRegex)}
+                                    </div>
+                                `)}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            </div>
-            ` : ''}
-
-            <!-- Right Column -->
-            <div class="game-col-view flex flex-col gap-2 h-full" style=${`flex: ${isDbSearch ? '1 1 100%' : '4 1 0%'}; min-width: 0;`}>
-                ${html`<${View} />`}
+                ` : ''}
             </div>
         </div>
         <div class="panel-footer flex flex-row border items-center justify-between gap-2 mx-2" style="min-height: 25px; flex-shrink: 0;">

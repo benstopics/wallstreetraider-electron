@@ -53,8 +53,13 @@ const getShortScoreText = (score) => {
     return '-';
 };
 
+const CUSTOM_DATA_KEY = 'dbSearchCriteria';
+const SAVE_DEBOUNCE_MS = 1000;
+
 const DatabaseSearchView = () => {
     const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
+    const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
+    const customData = api.useGameStore(s => s.gameState?.customData ?? {});
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -118,6 +123,11 @@ const DatabaseSearchView = () => {
     // Sort
     const [sortCol, setSortCol] = useState('marketCap');
     const [sortDir, setSortDir] = useState('desc');
+
+    const restoredRef = useRef(false);
+    const debouncedSaveCustomData = useMemo(() => api.debounce((criteria) => {
+        api.setCustomData({ [CUSTOM_DATA_KEY]: criteria });
+    }, SAVE_DEBOUNCE_MS), []);
 
     // Fetch data on mount, retry if database not ready (all marketCaps are 0)
     useEffect(() => {
@@ -310,16 +320,28 @@ const DatabaseSearchView = () => {
         } catch (e) { /* ignore corrupt data */ }
     }, [applyCriteria]);
 
-    // Auto-restore last criteria on mount
+    // Restore criteria: prefer customData (save-persistent), fall back to localStorage
     useEffect(() => {
+        if (restoredRef.current) return;
+        const fromCustom = customData?.[CUSTOM_DATA_KEY];
+        if (fromCustom) {
+            restoredRef.current = true;
+            applyCriteria(fromCustom);
+            return;
+        }
+        // Fall back to localStorage for saves that predate customData persistence
         try {
             const saved = localStorage.getItem(DB_SEARCH_KEY);
-            if (saved) applyCriteria(JSON.parse(saved));
+            if (saved) {
+                restoredRef.current = true;
+                applyCriteria(JSON.parse(saved));
+            }
         } catch (e) { /* ignore */ }
-    }, []);
+    }, [customData, applyCriteria]);
 
-    // Auto-save criteria whenever filters change
+    // Auto-save criteria whenever filters or sort change
     useEffect(() => {
+        if (!restoredRef.current) return; // don't save before restore completes
         const criteria = {
             searchFilter, industry, minROEFilter, maxPEFilter, maxPctBookFilter,
             minDivFilter, minMarketCapFilter, maxMarketCapFilter, maxConvPremFilter,
@@ -328,14 +350,8 @@ const DatabaseSearchView = () => {
             positiveCashFlow, cashFlowBeforeDebt, shortCandidates, hasPublicShares,
             sortCol, sortDir
         };
-        const hasAny = searchFilter || industry || minROEFilter || maxPEFilter || maxPctBookFilter
-            || minDivFilter || minMarketCapFilter || maxMarketCapFilter || maxConvPremFilter
-            || minMgmtRating || minCredRating || minAnalystRating
-            || excludeFinancials || excludeHoldings || hasBonds || convertiblesOnly
-            || positiveCashFlow || cashFlowBeforeDebt || shortCandidates || hasPublicShares;
-        if (hasAny) {
-            try { localStorage.setItem(DB_SEARCH_KEY, JSON.stringify(criteria)); } catch (e) { /* ignore */ }
-        }
+        try { localStorage.setItem(DB_SEARCH_KEY, JSON.stringify(criteria)); } catch (e) { /* ignore */ }
+        debouncedSaveCustomData(criteria);
     }, [searchFilter, industry, minROEFilter, maxPEFilter, maxPctBookFilter,
         minDivFilter, minMarketCapFilter, maxMarketCapFilter, maxConvPremFilter,
         minMgmtRating, minCredRating, minAnalystRating,
@@ -409,12 +425,19 @@ const DatabaseSearchView = () => {
         </div>`;
     }
 
+    const handleBack = async () => {
+        // Clear DB_SEARCH on the server first — poll will revert to -2 until this lands
+        await api.setActiveUIReport(api.UI_MARKET_HEATMAP);
+        api.setViewAsset(activeEntityNum || api.HUMAN1_ID);
+    };
+
     return html`
         <div class="flex flex-col h-full gap-2 min-h-0">
             <!-- Filters -->
             <div class="panel p-2" style="height: auto; flex-shrink: 0;">
                 <!-- Presets row -->
                 <div class="flex items-center justify-between mb-2 pb-2 border-b border-gray-600">
+                    <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm); width:fit-content; height:auto;" onClick=${handleBack}>← Back</button>
                     <div class="text-sm font-semibold">Presets:</div>
                     <div class="flex flex-wrap gap-1">
                         ${presets.map(p => html`

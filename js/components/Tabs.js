@@ -131,7 +131,7 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
                         ? (lettersAreClaimed
                             ? html`<span style="opacity:0.3;margin-right:2px;text-decoration:line-through;">${hotkey})</span>${insertCurrencySymbols(label)}`
                             : bracketLabel(insertCurrencySymbols(label), hotkey))
-                        : html`${tabNum !== null ? tabNumberLabel(tabNum) : ''}${insertCurrencySymbols(label)}`
+                        : html`${(!hasLetterHotkeys && tabNum !== null) ? tabNumberLabel(tabNum) : ''}${insertCurrencySymbols(label)}`
                     }
                 </div>
             `})}

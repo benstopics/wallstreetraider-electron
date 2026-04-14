@@ -5,7 +5,7 @@ import DisabledTooltipButton from './DisabledTooltipButton.js';
 import HotkeyButtonBar from './HotkeyButtonBar.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
-const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, handleActAsClick, scopeActiveRef) => ({ type, id, text, extrasCounter, isLineSelected, lineNumber }) => {
+const renderExtras = (actingAs, controlledCompanies, scopeActiveRef) => ({ type, id, text, extrasCounter, isLineSelected, lineNumber }) => {
 
     const nodes = [];
 
@@ -25,36 +25,7 @@ const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, ha
         const sellIdx = extrasCounter ? extrasCounter.current++ : null;
         const buyIdx = extrasCounter ? extrasCounter.current++ : null;
 
-        if (!actingAs) {
-            nodes.push(html`<${DisabledTooltipButton}
-                disabledMessage=${actingAsDisabledMessage}
-                onDisabledClick=${handleActAsClick}
-                label="Sell"
-                color="red"
-                containerClass="w-12 mx-1"
-                buttonClass="w-full"
-                extrasIndex=${sellIdx}
-                scopeActive=${scopeActiveRef?.current}
-                hotkeyLetter="s"
-                isLineSelected=${isLineSelected}
-                lineNumber=${lineNumber}
-            />`);
-
-            nodes.push(html`<${DisabledTooltipButton}
-                disabledMessage=${actingAsDisabledMessage}
-                onDisabledClick=${handleActAsClick}
-                label="Buy"
-                color="green"
-                containerClass="w-12 mx-1"
-                buttonClass="w-full"
-                extrasIndex=${buyIdx}
-                scopeActive=${scopeActiveRef?.current}
-                hotkeyLetter="b"
-                isLineSelected=${isLineSelected}
-                lineNumber=${lineNumber}
-            />`);
-        } else {
-            if (!sellable) {
+        if (!sellable) {
                 nodes.push(html`<${DisabledTooltipButton}
                     disabledMessage=${"No securities to sell"}
                     label="Sell"
@@ -78,15 +49,14 @@ const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, ha
                 />`);
             }
 
-            nodes.push(html`<${LetterHotkeyButton}
-                class="btn green flex-1 mx-1 w-12"
-                onClick=${() => buy(id)}
-                label="Buy"
-                letter="b"
-                isLineSelected=${isLineSelected}
-                lineNumber=${lineNumber}
-            />`);
-        }
+        nodes.push(html`<${LetterHotkeyButton}
+            class="btn green flex-1 mx-1 w-12"
+            onClick=${() => buy(id)}
+            label="Buy"
+            letter="b"
+            isLineSelected=${isLineSelected}
+            lineNumber=${lineNumber}
+        />`);
 
         return html`<div class="flex justify-center items-center">
             ${nodes}
@@ -97,49 +67,6 @@ const renderExtras = (actingAs, controlledCompanies, actingAsDisabledMessage, ha
     const freezeIdx = extrasCounter ? extrasCounter.current++ : null;
     const callInIdx = extrasCounter ? extrasCounter.current++ : null;
 
-    if (!actingAs) {
-        return html`<div class="flex justify-center items-center">
-            <${DisabledTooltipButton}
-                disabledMessage=${actingAsDisabledMessage}
-                onDisabledClick=${handleActAsClick}
-                label="Sell"
-                color="red"
-                containerClass="mx-1 w-12"
-                buttonClass="w-full"
-                extrasIndex=${sellIdx}
-                scopeActive=${scopeActiveRef?.current}
-                hotkeyLetter="s"
-                isLineSelected=${isLineSelected}
-                lineNumber=${lineNumber}
-            />
-            <${DisabledTooltipButton}
-                disabledMessage=${actingAsDisabledMessage}
-                onDisabledClick=${handleActAsClick}
-                label="Freeze"
-                color="blue"
-                containerClass="mx-1 w-12"
-                buttonClass="w-full"
-                extrasIndex=${freezeIdx}
-                scopeActive=${scopeActiveRef?.current}
-                hotkeyLetter="f"
-                isLineSelected=${isLineSelected}
-                lineNumber=${lineNumber}
-            />
-            <${DisabledTooltipButton}
-                disabledMessage=${actingAsDisabledMessage}
-                onDisabledClick=${handleActAsClick}
-                label="Call In"
-                color="brown"
-                containerClass="mx-1 w-12"
-                buttonClass="whitespace-nowrap w-full"
-                extrasIndex=${callInIdx}
-                scopeActive=${scopeActiveRef?.current}
-                hotkeyLetter="c"
-                isLineSelected=${isLineSelected}
-                lineNumber=${lineNumber}
-            />
-        </div>`;
-    }
 
     // SELL
     const hasLoans = !text?.includes('   0.0   ');
@@ -222,10 +149,6 @@ function LoansTab() {
     // Get centralized button props
     const buttonProps = useActionButtonProps();
 
-    // Get disabled message and click handler for dynamic buttons
-    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
-    const handleActAsClick = buttonProps.onMustActAsCompanyClick;
-
     // Extras hotkey refs
     const extrasContainerRef = useRef(null);
     const scopeActiveRef = useRef(false);
@@ -249,7 +172,7 @@ function LoansTab() {
 
             <div class="flex flex-col flex-[3] justify-center items-center overflow-y-auto min-h-0">
                 <div ref=${extrasContainerRef} class="flex flex-col items-center w-full">
-                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, actingAsDisabledMessage, handleActAsClick, scopeActiveRef), hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
+                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, scopeActiveRef), hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
                 </div>
             </div>
         </div>

@@ -34,10 +34,6 @@ function OptionsTab() {
     // ETFs can trade options through their advisor; the PB code handles ETF routing internally.
     const isETF = buttonProps.isActiveEntityETF;
 
-    // Acting-as check for line buttons
-    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
-    const handleActAsClick = buttonProps.onMustActAsCompanyClick;
-
     // Extras hotkey refs
     const extrasContainerRef = useRef(null);
     const scopeActiveRef = useRef(false);
@@ -68,20 +64,13 @@ function OptionsTab() {
                             const contract = parseReportLine(text);
                             const notInTheMoney = (type.includes('LONGCALL') && contract.stockPrice < contract.strikePrice)
                                 || (type.includes('LONGPUT') && contract.stockPrice > contract.strikePrice);
-                            // Priority: acting-as > not-in-the-money
-                            // ETF per-line buttons are NOT disabled — PB code handles ETF routing internally
-                            const sellDisabledMsg = actingAsDisabledMessage;
-                            const sellDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
                             const isShort = type.includes('SHORT');
-                            const exerciseDisabledMsg = actingAsDisabledMessage || (isShort ? "Cannot exercise shorted options" : false) || (notInTheMoney ? "Option not in the money" : false);
-                            const exerciseDisabledClick = actingAsDisabledMessage ? handleActAsClick : null;
+                            const exerciseDisabledMsg = (isShort ? "Cannot exercise shorted options" : false) || (notInTheMoney ? "Option not in the money" : false);
                             const sellIdx = extrasCounter ? extrasCounter.current++ : null;
                             const exerciseIdx = !isShort && extrasCounter ? extrasCounter.current++ : null;
 
                             return html`
                             <${DisabledTooltipButton}
-                                disabledMessage=${sellDisabledMsg}
-                                onDisabledClick=${sellDisabledClick}
                                 onClick=${async () => {
                                     await (
                                         type === 'LONGCALL' ? api.sellCalls

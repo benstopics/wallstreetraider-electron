@@ -10,7 +10,6 @@ const View = () => {
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const activeIndustryNum = api.useGameStore(s => s.gameState.activeIndustryNum);
 
-    // Database Search view (activeIndustryNum === -2)
     if (activeIndustryNum === -2) {
         return html`<${DatabaseSearchView} />`;
     }

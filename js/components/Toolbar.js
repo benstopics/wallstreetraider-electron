@@ -147,13 +147,7 @@ function Toolbar() {
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Toggle Global Autopilot")}</span>
                 </div>
                 <${CheatsMenu} />
-                <div class="btn" data-tutorial="market-reports" onClick=${() => api.viewIndustry(0)}>
-                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Market Reports", "M") : "Market Reports"}</span>
-                </div>
-                <div class="btn" data-tutorial="database-search" onClick=${() => api.viewDbSearch()}>
-                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Database Search", "D") : "Database Search"}</span>
-                </div>
-                <div class="btn" data-testid="btn-end-turn" onClick=${() => api.checkScoreboard()}>
+<div class="btn" data-testid="btn-end-turn" onClick=${() => api.checkScoreboard()}>
                     <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Scoreboard", "S") : "Scoreboard"}</span>
                 </div>
             </div>

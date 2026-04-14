@@ -23,44 +23,27 @@ function IndexPanel({ title, commodityId, panelNumber, isSelected = false }) {
     const buyFutures = isCrypto ? api.buyCryptoFutures : api.buyCommodityFutures;
     const shortFutures = isCrypto ? api.sellCryptoFutures : api.shortCommodityFutures;
 
-    // Use hook's viewed-entity-aware acting-as check
-    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
-    const actingAsDisabledClick = buttonProps.onMustActAsCompanyClick;
-
     const showBuyButton = commodityId !== api.STOCK_INDEX_ID;
 
-    // Helper to build disabled message with click-to-act-as when appropriate
-    const getDisabledInfo = (baseMessages) => {
-        for (const check of baseMessages) {
-            if (check.condition) {
-                return {
-                    message: check.actingAs ? actingAsDisabledMessage : check.message,
-                    onClick: check.actingAs ? actingAsDisabledClick : null
-                };
-            }
-        }
-        return { message: false, onClick: null };
+    const buyDisabledInfo = {
+        message: isActiveEntityETF ? (isCrypto ? "ETFs cannot trade cryptocurrencies" : "ETFs cannot trade physical commodities")
+            : actingAsIndustryId === api.BANK_IND ? "Banks cannot trade commodities, indexes or crypto."
+            : false
     };
 
-    const buyDisabledInfo = getDisabledInfo([
-        { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrencies" : "ETFs cannot trade physical commodities" },
-        { condition: !!actingAsDisabledMessage, actingAs: true },
-        { condition: actingAsIndustryId === api.BANK_IND, message: "Banks cannot trade commodities, indexes or crypto." }
-    ]);
+    const buyFuturesDisabledInfo = {
+        message: isActiveEntityETF ? (isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot trade commodity futures")
+            : actingAsIndustryId === api.BANK_IND ? "Banks cannot trade futures."
+            : actingAsIndustryId === api.INSURANCE_IND && commodityId !== api.STOCK_INDEX_ID ? "Insurance companies can only trade stock index futures."
+            : false
+    };
 
-    const buyFuturesDisabledInfo = getDisabledInfo([
-        { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot trade commodity futures" },
-        { condition: !!actingAsDisabledMessage, actingAs: true },
-        { condition: actingAsIndustryId === api.BANK_IND, message: "Banks cannot trade futures." },
-        { condition: actingAsIndustryId === api.INSURANCE_IND && commodityId !== api.STOCK_INDEX_ID, message: "Insurance companies can only trade stock index futures." }
-    ]);
-
-    const shortFuturesDisabledInfo = getDisabledInfo([
-        { condition: isActiveEntityETF, message: isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot short futures" },
-        { condition: !!actingAsDisabledMessage, actingAs: true },
-        { condition: actingAsIndustryId === api.BANK_IND, message: "Banks cannot trade futures." },
-        { condition: actingAsIndustryId === api.INSURANCE_IND, message: "Insurance companies can only buy (long) stock index futures, not short." }
-    ]);
+    const shortFuturesDisabledInfo = {
+        message: isActiveEntityETF ? (isCrypto ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot short futures")
+            : actingAsIndustryId === api.BANK_IND ? "Banks cannot trade futures."
+            : actingAsIndustryId === api.INSURANCE_IND ? "Insurance companies can only buy (long) stock index futures, not short."
+            : false
+    };
 
     const borderStyle = isSelected
         ? 'outline: 2px solid rgba(96, 165, 250, 0.7); border-radius: 4px;'
@@ -80,7 +63,6 @@ function IndexPanel({ title, commodityId, panelNumber, isSelected = false }) {
                 ${showBuyButton ? html`<${DisabledTooltipButton}
                     disabledMessage=${buyDisabledInfo.message}
                     onClick=${() => buy(commodityId)}
-                    onDisabledClick=${buyDisabledInfo.onClick}
                     label="Buy"
                     color="green"
                     containerClass="flex-1"
@@ -92,7 +74,6 @@ function IndexPanel({ title, commodityId, panelNumber, isSelected = false }) {
                 <${DisabledTooltipButton}
                     disabledMessage=${buyFuturesDisabledInfo.message}
                     onClick=${() => buyFutures(commodityId)}
-                    onDisabledClick=${buyFuturesDisabledInfo.onClick}
                     label="Buy Futures"
                     color="green"
                     containerClass="flex-1"
@@ -104,7 +85,6 @@ function IndexPanel({ title, commodityId, panelNumber, isSelected = false }) {
                 <${DisabledTooltipButton}
                     disabledMessage=${shortFuturesDisabledInfo.message}
                     onClick=${() => shortFutures(commodityId)}
-                    onDisabledClick=${shortFuturesDisabledInfo.onClick}
                     label="Short Futures"
                     color="red"
                     containerClass="flex-1"
@@ -133,10 +113,6 @@ function CommoditiesTab() {
 
     // Get centralized button props
     const buttonProps = useActionButtonProps();
-
-    // Get disabled message and click handler from hook for dynamic buttons
-    const actingAsDisabledMessage = buttonProps.mustActAsCompanyMessage;
-    const handleActAsClick = buttonProps.onMustActAsCompanyClick;
 
     // Extras hotkey refs
     const extrasContainerRef = useRef(null);
@@ -180,14 +156,12 @@ function CommoditiesTab() {
                     ({ type, id, text, extrasCounter, isLineSelected, lineNumber }) => {
                         const idx = extrasCounter ? extrasCounter.current++ : null;
                         return html`<${DisabledTooltipButton}
-                            disabledMessage=${actingAsDisabledMessage}
                             onClick=${() => (type === "P" ? api.sellPhysicalCommodity
                                     : type === "PC" ? api.sellPhysicalCrypto
                                     : type === "F" ? isContractShort(text) ? api.coverShortCommodityFutures : api.sellCommodityFutures
                                     : type === "CF" ? isContractShort(text) ? api.buyCryptoFutures : api.sellCryptoFutures
                                     : () => {}
                                 )(id)}
-                            onDisabledClick=${handleActAsClick}
                             label=${type.includes('F') && isContractShort(text) ? 'Cover' : 'Sell'}
                             color="red"
                             buttonClass="flex-1 mx-1"
