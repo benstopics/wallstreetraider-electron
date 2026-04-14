@@ -2,7 +2,6 @@ import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../
 import { insertCurrencySymbols, renderLines } from './helpers.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
-import { bracketLabel } from '../hotkeys.js';
 
 
 export default function InputStringModal({ show, title, text, defaultValue, onSubmit, onCancel }) {
@@ -105,13 +104,13 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
                         ${options.map(opt => html`<option value=${opt.value}>${opt.label}</option>`)}
                     </select>
                     ${isLoadGameDialog && inputValue ? html`
-                        <${Button} class="btn modal red" data-testid="btn-delete" onClick=${() => { onSubmit(inputValue + '|DELETE'); }}>${bracketLabel('Delete', 'D')}</button>
+                        <${Button} class="btn modal red" data-testid="btn-delete" onClick=${() => { onSubmit(inputValue + '|DELETE'); }}>Delete</button>
                     ` : ''}
                 </div>
             </div>
             <div class="flex justify-between items-center p-3 flex-shrink-0">
-                <${Button} class="btn modal green" data-testid="btn-submit" onClick=${() => { onSubmit(inputValue); }}>${bracketLabel('Submit', 'S')}</button>
-                <${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>
+                <${Button} class="btn modal green" data-testid="btn-submit" onClick=${() => { onSubmit(inputValue); }}>Submit</button>
+                <${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>Cancel</button>
             </div>
         <//>`;
     }
@@ -136,8 +135,8 @@ export default function InputStringModal({ show, title, text, defaultValue, onSu
             /><br/>
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
-            <${Button} class="btn modal green" data-testid="btn-submit" onClick=${() => { onSubmit(inputValue); }}>${bracketLabel('Submit', 'S')}</button>
-            <${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>
+            <${Button} class="btn modal green" data-testid="btn-submit" onClick=${() => { onSubmit(inputValue); }}>Submit</button>
+            <${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>Cancel</button>
         </div>
     <//>`;
 }

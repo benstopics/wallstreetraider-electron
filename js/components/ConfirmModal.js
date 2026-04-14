@@ -2,7 +2,6 @@ import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../
 import { insertCurrencySymbols, renderLines } from './helpers.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
-import { bracketLabel } from '../hotkeys.js';
 
 
 export default function ConfirmModal({ show, title, text, onYes, onNo, onCancel }) {
@@ -16,9 +15,9 @@ export default function ConfirmModal({ show, title, text, onYes, onNo, onCancel 
             <div class="mb-4">${renderLines(lines)}</div>
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
-            <${Button} class="btn modal green" data-testid="btn-yes" onClick=${onYes}>${bracketLabel('Yes', 'Y')}</button>
-            <${Button} class="btn modal red" data-testid="btn-no" onClick=${onNo}>${bracketLabel('No', 'N')}</button>
-            ${onCancel ? html`<${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>${bracketLabel('Cancel', 'C')}</button>` : ''}
+            <${Button} class="btn modal green" data-testid="btn-yes" onClick=${onYes}>Yes</button>
+            <${Button} class="btn modal red" data-testid="btn-no" onClick=${onNo}>No</button>
+            ${onCancel ? html`<${Button} class="btn modal" data-testid="btn-cancel" onClick=${onCancel}>Cancel</button>` : ''}
         </div>
     <//>`;
 }

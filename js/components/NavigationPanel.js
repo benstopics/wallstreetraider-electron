@@ -1,8 +1,7 @@
-import { html, useEffect, useRef } from '../lib/preact.standalone.module.js';
+import { html, useRef } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import Button from './Button.js';
-import { bracketLabel } from '../hotkeys.js';
 import { insertCurrencySymbols } from './helpers.js';
 
 
@@ -31,27 +30,6 @@ function NavigationPanel() {
     const advisorId = activeEntity?.advisorId || 0;
     const controlledAdvisorId = controlledCompanies.some(c => c.id === advisorId) ? advisorId : 0;
 
-    // Hotkey: act as active entity
-    useEffect(() => {
-        const handler = () => {
-            if (activeEntityNum && activeEntityNum !== actingAsId) {
-                api.changeActingAs(activeEntityNum);
-            }
-        };
-        document.addEventListener('hotkey-act-as', handler);
-        return () => document.removeEventListener('hotkey-act-as', handler);
-    }, [activeEntityNum, actingAsId]);
-
-    // Hotkey: view player
-    useEffect(() => {
-        const handler = () => {
-            if (activeEntityNum !== api.HUMAN1_ID) {
-                api.setViewAsset(api.HUMAN1_ID);
-            }
-        };
-        document.addEventListener('hotkey-view-player', handler);
-        return () => document.removeEventListener('hotkey-view-player', handler);
-    }, [activeEntityNum]);
 
     const companyMap = new Map(
         (allCompanies ?? [])
@@ -138,23 +116,6 @@ function NavigationPanel() {
         ? industryMap.get(activeIndustryId) || null
         : null;
 
-    // Hotkey: view last entity (must be after lastEntity definition)
-    useEffect(() => {
-        const handler = () => {
-            if (lastEntity) api.setViewAsset(lastEntity.id);
-        };
-        document.addEventListener('hotkey-view-last-entity', handler);
-        return () => document.removeEventListener('hotkey-view-last-entity', handler);
-    }, [lastEntity]);
-
-    // Hotkey: view industry (must be after currentIndustry definition)
-    useEffect(() => {
-        const handler = () => {
-            if (currentIndustry && activeIndustryId > 0) api.viewIndustry(activeIndustryId);
-        };
-        document.addEventListener('hotkey-view-industry', handler);
-        return () => document.removeEventListener('hotkey-view-industry', handler);
-    }, [currentIndustry, activeIndustryId]);
 
     // Acting As navigation (cycle through controlled companies)
     const actingAsIndex = actingAsOptions.findIndex(opt => opt.id === actingAsId);
@@ -202,17 +163,17 @@ function NavigationPanel() {
                         ? html`<${Button}
                             class="btn px-2 py-1 text-xs whitespace-nowrap"
                             data-tutorial="view-acting-as"
-                            onclick=${() => api.setViewAsset(actingAsId)}>${bracketLabel('← View', 'V')}</button>`
+                            onclick=${() => api.setViewAsset(actingAsId)}>← View</button>`
                         : ''}
                     ${/* Act As X button - when viewing a controlled company but not acting as it */
                       actingAsId !== activeEntityNum && actingAsOptions.find(opt => opt.id === activeEntityNum)
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(activeEntityNum)}>${bracketLabel(`Act As ${activeEntitySymbol}`, 'A')}</button>`
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(activeEntityNum)}>Act As ${activeEntitySymbol}</button>`
                         : ''}
                     ${/* ETF Advisor badge/button */
                       (activeIndustryId == 71 && controlledAdvisorId > 0)
                         ? (actingAsId === controlledAdvisorId
                             ? html`<span class="badge badge-primary px-2 py-1 text-xs whitespace-nowrap">${insertCurrencySymbols('Advisor')}</span>`
-                            : html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(controlledAdvisorId)}>${bracketLabel(insertCurrencySymbols('Advisor'), 'D')}</button>`)
+                            : html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" onclick=${() => api.changeActingAs(controlledAdvisorId)}>${insertCurrencySymbols('Advisor')}</button>`)
                         : ''}
                 </div>
             </div>-->
@@ -244,10 +205,10 @@ function NavigationPanel() {
                 </button>
                 <div class="flex items-center gap-1">
                     ${currentIndustry
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${bracketLabel(currentIndustry.name, 'I')}</button>`
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${currentIndustry.name}</button>`
                         : ''}
                     ${activeEntityNum !== api.HUMAN1_ID
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" data-testid="btn-view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${bracketLabel(insertCurrencySymbols('Player'), 'P')}</button>`
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" data-testid="btn-view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${insertCurrencySymbols('Player')}</button>`
                         : ''}
                 </div>
             </div>

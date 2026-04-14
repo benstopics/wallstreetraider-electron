@@ -4,8 +4,6 @@ import { formatCurrency } from './helpers.js';
 import * as api from '../api.js';
 import { StarIcon, TrashIcon } from '../icons.js';
 import Button from './Button.js';
-import { useShiftHeld } from '../hooks/useHotkey.js';
-import { bracketLabel } from '../hotkeys.js';
 
 
 const StreamingQuotes = () => {
@@ -15,7 +13,6 @@ const StreamingQuotes = () => {
     const activeEntityName = api.useGameStore(s => s.gameState.activeEntityName);
     const dlrSign = api.useGameStore(s => s.gameState.dlrSign) || '$';
     const euro = api.useGameStore(s => s.gameState.euro) || '';
-    const shiftHeld = useShiftHeld();
 
     // Debounce toggle to prevent double-click and event queue issues (BUG-117)
     const pendingRef = useRef(false);
@@ -59,14 +56,13 @@ const StreamingQuotes = () => {
     return html`
         <div class="panel">
             <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Streaming Quotes</span>
+                <!--<span>Streaming Quotes</span>-->
                 <span style="display: flex; gap: 4px;">
-                    <${Button} class="btn btn-sm" data-testid="btn-fill-stream" onClick=${() => api.fillStreamList()} title="Auto-fill with owned stocks, controlled companies, and positions (Shift+F)">${shiftHeld ? bracketLabel('Fill', 'F') : 'Fill'}</button>
-                    <${Button} class="btn btn-sm" data-testid="btn-clear-stream" onClick=${() => api.clearStreamList()} title="Clear all streaming quotes (Shift+R)">${shiftHeld ? bracketLabel('Clear', 'R') : 'Clear'}</button>
-                    <${Button} class="btn btn-sm" onClick=${() => api.showPriceAlerts()} title="Price Alerts (Shift+A)">${shiftHeld ? bracketLabel('Alerts', 'A') : 'Alerts'}</button>
+                    <${Button} class="btn btn-sm" data-testid="btn-fill-stream" onClick=${() => api.fillStreamList()} title="Auto-fill with owned stocks, controlled companies, and positions">Fill</button>
+                    <${Button} class="btn btn-sm" data-testid="btn-clear-stream" onClick=${() => api.clearStreamList()} title="Clear all streaming quotes">Clear</button>
+                    <${Button} class="btn btn-sm" onClick=${() => api.showPriceAlerts()} title="Price Alerts">Alerts</button>
                 </span>
             </div>
-            <div class="p-1 panel-body">
                 ${activeEntityNum > 10 && !quotes.find(q => q.id === activeEntityNum) ? html`
                 <div
                     class="flex items-center py-1 mb-2 candidate"
@@ -80,24 +76,25 @@ const StreamingQuotes = () => {
                     </span>
                     <span class="align-left">Add ${activeEntityName}</span>
                 </div>` : ''}
-            ${[...quotes].sort((a, b) => a.symbol.localeCompare(b.symbol)).map(quote => html`
-                <div
-                    class="quote-line py-1 ${quote.id === activeEntityNum ? 'selected' : ''}"
-                    onClick=${() => api.setViewAsset(quote.id)}
-                >
-                    <span class="quote-symbol text-gray-400">${quote.symbol}</span>
-                    <span class="quote-name">${quote.name}</span>
-                    <span class=${`fixed-width quote-price ${getDirClass(quote)}`}>
-                        ${dlrSign}${formatCurrency(quote.price)}${euro}
-                    </span>
-                    <span class="ml-2">
-                        <${Button} class="btn red w-full" style="width: 30px" onClick=${(e) => {
-                            e.stopPropagation();
-                            toggleQuote(quote.id);
-                        }}><${TrashIcon} /></button>
-                    </span>
-                </div>
-            `)}
+            <div class="p-1 panel-body">
+                ${[...quotes].sort((a, b) => a.symbol.localeCompare(b.symbol)).map(quote => html`
+                    <div
+                        class="quote-line py-1 ${quote.id === activeEntityNum ? 'selected' : ''}"
+                        onClick=${() => api.setViewAsset(quote.id)}
+                    >
+                        <span class="quote-symbol text-gray-400">${quote.symbol}</span>
+                        <span class="quote-name">${quote.name}</span>
+                        <span class=${`fixed-width quote-price ${getDirClass(quote)}`}>
+                            ${dlrSign}${formatCurrency(quote.price)}${euro}
+                        </span>
+                        <span class="ml-2">
+                            <${Button} class="btn red w-full" style="width: 30px" onClick=${(e) => {
+                                e.stopPropagation();
+                                toggleQuote(quote.id);
+                            }}><${TrashIcon} /></button>
+                        </span>
+                    </div>
+                `)}
             </div>
         </div>
     `;

@@ -273,12 +273,6 @@ export default function CommandPrompt() {
         }
     }, []);
 
-    // Listen for hotkey-focus-command events
-    useEffect(() => {
-        const handler = () => inputRef.current?.focus();
-        document.addEventListener('hotkey-focus-command', handler);
-        return () => document.removeEventListener('hotkey-focus-command', handler);
-    }, []);
 
     return html`
     <div style="position:relative; width:100%; display:flex; align-items:stretch; gap:0;">

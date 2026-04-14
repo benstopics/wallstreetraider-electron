@@ -554,7 +554,7 @@ export default function PortHoldingsTable() {
             class="db-input"
             onClick=${() => setHideSubsid(v => !v)}
             style="cursor:pointer;${hideSubsid ? 'border-color:var(--accent-secondary);color:var(--accent-secondary)' : ''}">
-            Hide Subsidiaries
+            Hide Subsidiary Holdings
           </button>
         </div>
       </div>

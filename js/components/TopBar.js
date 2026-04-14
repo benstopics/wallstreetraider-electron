@@ -17,14 +17,11 @@ import * as api from '../api.js';
 import NavigationPanel from './NavigationPanel.js';
 import NotesModal from './NotesModal.js';
 import CalculatorModal from './CalculatorModal.js';
-import KeybindsModal from './KeybindsModal.js';
 import SettingsModal from './SettingsModal.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
 import AlertBadge from './AlertBadge.js';
 import { insertCurrencySymbols, formatCurrency } from './helpers.js';
-import { bracketLabel } from '../hotkeys.js';
-import { useShiftHeld } from '../hooks/useHotkey.js';
 
 // ── Cheats popover (unchanged from Toolbar) ──────────────────────────────────
 function CheatsMenu() {
@@ -166,16 +163,12 @@ export default function TopBar({ onToggleCharts, chartsVisible }) {
 
     const [showNotepad, setShowNotepad]     = useState(false);
     const [showCalculator, setShowCalculator] = useState(false);
-    const [showKeybinds, setShowKeybinds]   = useState(false);
     const [showAbout, setShowAbout]         = useState(false);
-
-    const shiftHeld = useShiftHeld();
 
     return html`
         <div class="top-bar items-center justify-between flex-wrap" style="min-height: 44px; flex-shrink: 0; gap: 4px; padding: 2px 6px;">
             <${NotesModal}     show=${showNotepad}   onClose=${() => setShowNotepad(false)} />
             <${CalculatorModal} show=${showCalculator} onClose=${() => setShowCalculator(false)} />
-            <${KeybindsModal}  show=${showKeybinds}  onClose=${() => setShowKeybinds(false)} />
 
             ${showAbout ? html`
                 <${Modal} show=${showAbout} onClose=${() => setShowAbout(false)} style=${{ '--modal-w': '400px', '--modal-h': 'auto' }}>
@@ -213,7 +206,7 @@ export default function TopBar({ onToggleCharts, chartsVisible }) {
                 <${CheatsMenu} />
 
                 <div class="btn" data-testid="btn-end-turn" onClick=${() => api.checkScoreboard()}>
-                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Scoreboard", "S") : "Scoreboard"}</span>
+                    <span style="white-space: nowrap;">Scoreboard</span>
                 </div>
             </div>
 

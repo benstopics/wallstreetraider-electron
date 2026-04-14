@@ -1,11 +1,10 @@
 import { html, useEffect, useRef, useState, useCallback } from '../lib/preact.standalone.module.js';
 import Tooltip from './Tooltip.js';
 import Button from './Button.js';
-import { tabNumberLabel, bracketLabel } from '../hotkeys.js';
 
 
 
-export default function DisabledTooltipButton({ disabledMessage, onClick, onDisabledClick, label, color, containerClass = 'btn-container', buttonClass = 'mx-1', dataTutorial = null, extrasIndex = null, scopeActive = false, hotkeyLetter = null, isLineSelected = false, lineNumber = null }) {
+export default function DisabledTooltipButton({ disabledMessage, onClick, onDisabledClick, label, color, containerClass = 'btn-container', buttonClass = 'mx-1', dataTutorial = null, extrasIndex = null, scopeActive = false }) {
     const onClickRef = useRef(onClick);
     const onDisabledClickRef = useRef(onDisabledClick);
     onClickRef.current = onClick;
@@ -25,36 +24,10 @@ export default function DisabledTooltipButton({ disabledMessage, onClick, onDisa
         };
     }, [forceShowTooltip]);
 
-    // Listen for letter hotkey events when line is selected
-    useEffect(() => {
-        if (!hotkeyLetter || !isLineSelected) return;
-
-        const handler = (e) => {
-            if (e.detail?.lineNumber !== lineNumber) return;
-            if (e.detail?.letter !== hotkeyLetter.toLowerCase()) return;
-
-            // Trigger the appropriate click handler
-            if (!disabledMessage && onClickRef.current) {
-                onClickRef.current();
-            } else if (onDisabledClickRef.current) {
-                onDisabledClickRef.current();
-            } else if (disabledMessage) {
-                // Disabled with no click handler - show tooltip via hotkey
-                setForceShowTooltip(true);
-            }
-        };
-        document.addEventListener('hotkey-extras-letter', handler);
-        return () => document.removeEventListener('hotkey-extras-letter', handler);
-    }, [hotkeyLetter, isLineSelected, lineNumber, disabledMessage]);
-
-    // Format label with hotkey letter or extras number
+    // Format label
     let displayLabel = label;
-    if (isLineSelected && hotkeyLetter && typeof label === 'string') {
-        // Show bracketed letter when line is selected: [S]ell, [B]uy
-        displayLabel = bracketLabel(label, hotkeyLetter);
-    } else if (extrasIndex !== null && scopeActive) {
-        // Prepend extras number label when active (old behavior for non-letter mode)
-        displayLabel = html`${tabNumberLabel(extrasIndex)}${label}`;
+    if (extrasIndex !== null && scopeActive) {
+        displayLabel = html`${extrasIndex}) ${label}`;
     } else if (typeof label === 'string') {
         const buttonLines = label.split('\n');
         if (buttonLines.length > 1) {

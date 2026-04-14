@@ -1,8 +1,5 @@
 import { html, useState, useEffect, useRef } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
-import { useHotkey } from '../hooks/useHotkey.js';
-import { PRIORITY } from '../hotkeyManager.js';
-import { isEditableTarget } from '../keybinds.js';
 
 // Node dimensions
 const NODE_WIDTH = 180;
@@ -313,31 +310,6 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true, startNumbe
     for (const n of numberedNodes) {
         nodeNumberMap.set(n.entityId, n.num);
     }
-
-    // Hotkey handler for digit keys → navigate to numbered node
-    const hotkeyIdRef = useRef(Symbol('ownership-graph-hotkey'));
-    useHotkey(
-        hotkeyIdRef.current,
-        PRIORITY.TABS - 1,  // Just below TABS so tabs still work
-        (e) => {
-            if (isEditableTarget(e.target)) return false;
-            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return false;
-            return /^[1-9]$/.test(e.key);
-        },
-        (e) => {
-            const digit = parseInt(e.key, 10);
-            const node = numberedNodesRef.current.find(n => n.num === digit);
-            if (node) {
-                e.stopImmediatePropagation();
-                e.preventDefault();
-                api.setViewAsset(node.entityId);
-                return true;
-            }
-            return false;
-        },
-        {},
-        [numberedNodes.length]
-    );
 
     // Use ownership data for center node info (it has the root entity)
     const centerEntity = ownershipData || subsidiariesData;

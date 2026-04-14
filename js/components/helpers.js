@@ -3,40 +3,17 @@ import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import { gameStore } from '../api.js';
 import localeManager from '../locale/localeManager.js';
-import { tabNumberLabel, bracketLabel, isHotkeysVisualDisabled } from '../hotkeys.js';
-import { isEditableTarget } from '../keybinds.js';
-import { useHotkey } from '../hooks/useHotkey.js';
-import { PRIORITY, hotkeyManager } from '../hotkeyManager.js';
 
 export const MILLION = 1000000;
 
-// Letter hotkey button - listens for letter hotkey events and triggers onClick
-export function LetterHotkeyButton({ class: className, onClick, label, letter, isLineSelected, lineNumber }) {
-    const onClickRef = useRef(onClick);
-    onClickRef.current = onClick;
-
-    useEffect(() => {
-        if (!letter || !isLineSelected) return;
-
-        const handler = (e) => {
-            if (e.detail?.lineNumber !== lineNumber) return;
-            if (e.detail?.letter !== letter.toLowerCase()) return;
-            if (onClickRef.current) onClickRef.current();
-        };
-        document.addEventListener('hotkey-extras-letter', handler);
-        return () => document.removeEventListener('hotkey-extras-letter', handler);
-    }, [letter, isLineSelected, lineNumber]);
-
-    const displayLabel = isLineSelected && letter
-        ? bracketLabel(label, letter)
-        : label;
-
-    return html`<button class=${className} onClick=${onClick}>${displayLabel}</button>`;
+// Letter hotkey button
+export function LetterHotkeyButton({ class: className, onClick, label }) {
+    return html`<button class=${className} onClick=${onClick}>${label}</button>`;
 }
 
-// Letter hotkey label - shows bracketed letter when line is selected
-export function LetterHotkeyLabel({ label, letter, lineNumber }) {
-    return bracketLabel(label, letter);
+// Letter hotkey label - shows label
+export function LetterHotkeyLabel({ label }) {
+    return label;
 }
 
 export function formatCurrency(number) {
@@ -120,7 +97,7 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
     // Selection mode — all lines inside SelectableLines get selOpts for consistent alignment
     if (selOpts) {
         const { lineNumber, isSelected, anySelected, onSelect, scopeActive, prefixWidth } = selOpts;
-        const showNumbers = scopeActive && !isHotkeysVisualDisabled();
+        const showNumbers = false;
         const prefixStyle = showNumbers
             ? `display:inline-block;min-width:${prefixWidth};text-align:right;margin-right:2px;`
             : '';
@@ -198,40 +175,24 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
         </div>`;
 }
 
-function SelectableLines({ cleanedLines, maxLength, onLink, renderExtras, hyperlinkRegex, extrasStartNumber, scopeActiveRef, additionalValidNumbers }) {
+function SelectableLines({ cleanedLines, maxLength, onLink, renderExtras, hyperlinkRegex, extrasStartNumber, scopeActiveRef }) {
     const [selectedLineNum, setSelectedLineNum] = useState(null);
     const lineMapRef = useRef(new Map());
     const onLinkRef = useRef(onLink);
     const selectedRef = useRef(null);
-    const validLinesRef = useRef(new Set());
     onLinkRef.current = onLink;
 
-    // Assign line numbers to hyperlink lines and build validLines set
+    // Assign line numbers to hyperlink lines
     lineMapRef.current = new Map();
-    const validLines = new Set();
     let lineCounter = extrasStartNumber;
     const numberedLines = cleanedLines.map(line => {
         if (line.link) {
             const lineNumber = lineCounter++;
             lineMapRef.current.set(lineNumber, line);
-            validLines.add(lineNumber);
             return { ...line, lineNumber };
         }
         return { ...line, lineNumber: null };
     });
-
-    // Merge panel numbers (additionalValidNumbers) into validLines for digit routing
-    const allValidLines = new Set(validLines);
-    if (additionalValidNumbers) {
-        for (const n of additionalValidNumbers) allValidLines.add(n);
-    }
-
-    // Check if validLines actually changed (compare contents, not reference)
-    const validLinesChanged = allValidLines.size !== validLinesRef.current.size ||
-        [...allValidLines].some(n => !validLinesRef.current.has(n));
-    if (validLinesChanged) {
-        validLinesRef.current = allValidLines;
-    }
 
     // Check if selected line still exists in current data
     const anySelected = selectedLineNum != null && lineMapRef.current.has(selectedLineNum);
@@ -240,90 +201,6 @@ function SelectableLines({ cleanedLines, maxLength, onLink, renderExtras, hyperl
 
     // Create extrasCounter only for the selected line
     const extrasCounter = anySelected ? { current: extrasStartNumber } : null;
-
-    const immediateCount = extrasStartNumber - 1;
-
-    // Update validLines in the centralized manager when they change
-    useEffect(() => {
-        if (validLinesChanged) {
-            hotkeyManager.update(hotkeyIdRef.current, { meta: { validLines: validLinesRef.current } });
-        }
-    }, [validLinesChanged]);
-
-    // Listen for hotkey-line-select events (immediate selection from app.js)
-    useEffect(() => {
-        const handler = (e) => {
-            const lineNumber = e.detail?.lineNumber;
-            if (typeof lineNumber !== 'number') return;
-            if (lineMapRef.current.has(lineNumber)) {
-                setSelectedLineNum(lineNumber);
-            } else {
-                // Number is not one of our lines (e.g. a panel) — deselect for mutual exclusion
-                setSelectedLineNum(null);
-            }
-        };
-        document.addEventListener('hotkey-line-select', handler);
-        return () => document.removeEventListener('hotkey-line-select', handler);
-    }, []);
-
-    // Stable ID for hotkey registration
-    const hotkeyIdRef = useRef(Symbol('selectable-lines-hotkey'));
-
-    // Centralized hotkey handler for ESC, Enter, and letter keys when a line is selected.
-    // Registered at PRIORITY.LINE_SELECTION so it takes precedence over TABS and GLOBAL.
-    // meta.claimsLetters tells Tabs to show suppressed visual state.
-    useHotkey(
-        hotkeyIdRef.current,
-        PRIORITY.LINE_SELECTION,
-        (e) => {
-            if (selectedRef.current === null) return false;
-            // Don't intercept keys when user is typing in an input/textarea
-            if (isEditableTarget(e.target)) return false;
-            if (e.key === 'Escape' || e.key === 'Enter') return true;
-            // Match unmodified letters (allow shift for capitals)
-            if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[a-z]$/i.test(e.key)) return true;
-            return false;
-        },
-        (e) => {
-            if (e.key === 'Escape') {
-                e.stopImmediatePropagation();
-                e.preventDefault();
-                setSelectedLineNum(null);
-                return true;
-            }
-
-            if (e.key === 'Enter') {
-                const line = lineMapRef.current.get(selectedRef.current);
-                if (line && onLinkRef.current) {
-                    const lid = line.link?.id;
-                    const hasId = lid > 0 || (lid && lid.includes?.('|'));
-                    if (hasId) {
-                        e.stopImmediatePropagation();
-                        e.preventDefault();
-                        onLinkRef.current(line.link);
-                        setSelectedLineNum(null);
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            // Letter keys → dispatch to extras buttons on the selected line
-            const key = e.key.toLowerCase();
-            if (/^[a-z]$/.test(key)) {
-                e.stopImmediatePropagation();
-                e.preventDefault();
-                document.dispatchEvent(new CustomEvent('hotkey-extras-letter', {
-                    detail: { letter: key, lineNumber: selectedRef.current }
-                }));
-                return true;
-            }
-
-            return false;
-        },
-        { active: validLinesRef.current.size > 0, meta: { claimsLetters: anySelected, lineSelectMode: validLinesRef.current.size > 0, validLines: validLinesRef.current, immediateCount } },
-        [anySelected, immediateCount, validLinesRef.current.size]
-    );
 
     const onSelect = (lineNum) => setSelectedLineNum(lineNum);
 
@@ -357,7 +234,7 @@ function SelectableLines({ cleanedLines, maxLength, onLink, renderExtras, hyperl
     </div>`;
 }
 
-export function renderLines(lines, onLink, renderExtras, hyperlinkRegex, textMatch, extrasStartNumber, scopeActiveRef, additionalValidNumbers) {
+export function renderLines(lines, onLink, renderExtras, hyperlinkRegex, textMatch, extrasStartNumber, scopeActiveRef) {
     if (!lines) return html``;
 
     // Step 1: Strip hyperlinks and get clean lines
@@ -393,7 +270,6 @@ export function renderLines(lines, onLink, renderExtras, hyperlinkRegex, textMat
             hyperlinkRegex=${hyperlinkRegex}
             extrasStartNumber=${extrasStartNumber}
             scopeActiveRef=${scopeActiveRef}
-            additionalValidNumbers=${additionalValidNumbers}
         />`;
     }
 

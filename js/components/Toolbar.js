@@ -6,12 +6,9 @@ import NavigationPanel from './NavigationPanel.js';
 import InputStringModal from './InputStringModal.js';
 import NotesModal from './NotesModal.js';
 import CalculatorModal from './CalculatorModal.js';
-import KeybindsModal from './KeybindsModal.js';
 import SettingsModal from './SettingsModal.js';
 import Button from './Button.js';
 import { insertCurrencySymbols } from './helpers.js';
-import { bracketLabel } from '../hotkeys.js';
-import { useShiftHeld } from '../hooks/useHotkey.js';
 import Modal from './Modal.js';
 
 function CheatsMenu() {
@@ -100,16 +97,12 @@ function Toolbar() {
 
     const [showNotepad, setShowNotepad] = useState(false);
     const [showCalculator, setShowCalculator] = useState(false);
-    const [showKeybinds, setShowKeybinds] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
-
-    const shiftHeld = useShiftHeld();
 
     return html`
         <div class="top-bar items-center justify-between" style="min-height: 44px; flex-shrink: 0;">
             <${NotesModal} show=${showNotepad} onClose=${() => setShowNotepad(false)} />
             <${CalculatorModal} show=${showCalculator} onClose=${() => setShowCalculator(false)} />
-            <${KeybindsModal} show=${showKeybinds} onClose=${() => setShowKeybinds(false)} />
             ${showAbout ? html`
                 <${Modal} show=${showAbout} onClose=${() => setShowAbout(false)} style=${{ "--modal-w": "400px", "--modal-h": "auto" }}>
                     <div style="padding: 24px; text-align: center;">
@@ -141,14 +134,14 @@ function Toolbar() {
             </div>
             <div class="flex flex-wrap items-center gap-2" style="flex-shrink: 1; min-width: 0;">
                 <div class="btn" onClick=${() => api.changeLawFirm()}>
-                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Change Law Firm", "L") : "Change Law Firm"}</span>
+                    <span style="white-space: nowrap;">Change Law Firm</span>
                 </div>
                 <div class="btn" onClick=${() => api.toggleGlobalAutopilot()}>
                     <span style="white-space: nowrap;">${insertCurrencySymbols("Toggle Global Autopilot")}</span>
                 </div>
                 <${CheatsMenu} />
 <div class="btn" data-testid="btn-end-turn" onClick=${() => api.checkScoreboard()}>
-                    <span style="white-space: nowrap;">${shiftHeld ? bracketLabel("Scoreboard", "S") : "Scoreboard"}</span>
+                    <span style="white-space: nowrap;">Scoreboard</span>
                 </div>
             </div>
             <${NavigationPanel} />

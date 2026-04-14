@@ -3,7 +3,6 @@ import { insertCurrencySymbols, renderLines } from './helpers.js';
 import * as api from '../api.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
-import { bracketLabel } from '../hotkeys.js';
 
 
 export default function InfoModal({ show, title, text, onClose }) {
@@ -21,7 +20,7 @@ export default function InfoModal({ show, title, text, onClose }) {
         return () => clearTimeout(t);
     }, [show]);
 
-    // Handle Enter key to close (C key is handled by app.js hotkeyManager MODAL_CANCEL)
+    // Handle Enter key to close
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -62,7 +61,7 @@ export default function InfoModal({ show, title, text, onClose }) {
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
             <div></div>
-            <button ref=${okButtonRef} class="btn modal green" data-testid="btn-close" onClick=${onClose}>${bracketLabel('Close', 'C')}</button>
+            <button ref=${okButtonRef} class="btn modal green" data-testid="btn-close" onClick=${onClose}>Close</button>
         </div>
     <//>`;
 }

@@ -3,7 +3,6 @@ import DropdownMenu from './DropdownMenu.js';
 import CommandPrompt from './CommandPrompt.js';
 import CompanySelectModal from './CompanySelectModal.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
-import { useShiftHeld } from '../hooks/useHotkey.js';
 import * as api from '../api.js';
 
 /**
@@ -17,7 +16,6 @@ import * as api from '../api.js';
  */
 export default function ActionBar({ entityLabel }) {
     const props = useActionButtonProps();
-    const shiftHeld = useShiftHeld();
 
     // ==================== Hostile Target Picker State ====================
     const [hostileAction, setHostileAction] = useState(null);
@@ -159,8 +157,6 @@ export default function ActionBar({ entityLabel }) {
                 icon="🏢"
                 items=${corporateItems}
                 color="blue"
-                hotkeyChar="c"
-                shiftHeld=${shiftHeld}
             />
             <div style="flex:1"><${CommandPrompt} /></div>
             <${DropdownMenu}
@@ -168,8 +164,6 @@ export default function ActionBar({ entityLabel }) {
                 icon="⚔️"
                 items=${hostileItems}
                 color="red"
-                hotkeyChar="h"
-                shiftHeld=${shiftHeld}
             />
         </div>
         <${CompanySelectModal}

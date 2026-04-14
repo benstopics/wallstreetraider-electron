@@ -2,7 +2,6 @@ import { html, useState, useRef, useMemo, useEffect } from '../lib/preact.standa
 import * as api from '../api.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
-import { bracketLabel } from '../hotkeys.js';
 
 /**
  * Frontend entity ID → PB commodity code mapping.
@@ -369,8 +368,8 @@ export default function PriceAlertModal({ show, onClose }) {
             <div class="flex justify-between items-center p-3 flex-shrink-0">
                 <${Button} class="btn modal green" data-testid="btn-submit-alert"
                     onClick=${doSubmit}
-                    disabled=${!selectedEntity || !targetPrice}>${bracketLabel('Submit', 'S')}</button>
-                <${Button} class="btn modal" onClick=${onClose}>${bracketLabel('Close', 'C')}</button>
+                    disabled=${!selectedEntity || !targetPrice}>Submit</button>
+                <${Button} class="btn modal" onClick=${onClose}>Close</button>
             </div>
         <//>`;
     }
@@ -416,8 +415,8 @@ export default function PriceAlertModal({ show, onClose }) {
             `}
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
-            <${Button} class="btn modal green" data-testid="btn-create-alert" onClick=${() => setView('create')}>${bracketLabel('New Alert', 'N')}</button>
-            <${Button} class="btn modal" onClick=${onClose}>${bracketLabel('Close', 'C')}</button>
+            <${Button} class="btn modal green" data-testid="btn-create-alert" onClick=${() => setView('create')}>New Alert</button>
+            <${Button} class="btn modal" onClick=${onClose}>Close</button>
         </div>
     <//>`;
 }

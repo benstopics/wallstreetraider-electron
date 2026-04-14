@@ -3,7 +3,6 @@ import { html, useState, useRef, useLayoutEffect, useMemo, useEffect } from '../
 import { insertCurrencySymbols } from './helpers.js';
 import Modal from './Modal.js';
 import { renderLines } from './helpers.js';
-import { bracketLabel } from '../hotkeys.js';
 import * as api from '../api.js';
 import Button from './Button.js';
 
@@ -44,7 +43,7 @@ export default function TextAnnounceModal({ show, title, text, onSubmit, onCance
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
             <div></div>
-            <${Button} ref=${okButtonRef} class="btn modal green" data-testid="btn-close" onClick=${onCancel}>${bracketLabel('Close', 'C')}</button>
+            <${Button} ref=${okButtonRef} class="btn modal green" data-testid="btn-close" onClick=${onCancel}>Close</button>
         </div>
     <//>`;
 }

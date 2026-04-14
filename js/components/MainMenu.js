@@ -7,8 +7,6 @@ import SettingsModal from './SettingsModal.js';
 import Button from './Button.js';
 import LocalizationDropdown from './LocalizationDropdown.js';
 import localeManager from '../locale/localeManager.js';
-import { bracketLabel } from '../hotkeys.js';
-import { isEditableTarget } from '../keybinds.js';
 
 // Read version from version.txt (single source of truth)
 let APP_VERSION = '10.0.15';
@@ -463,23 +461,6 @@ const MainMenu = () => {
     const { showHelp } = api.useWSRContext();
     const localeWarning = localeManager.getWarningForLocale(localeManager.getCurrentLocale());
 
-    // Main menu keyboard shortcuts: L=Load, N=New, E=Exit, H=Help
-    useEffect(() => {
-        const handleKey = (e) => {
-            if (isEditableTarget(e.target)) return;
-            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-            switch (e.key.toLowerCase()) {
-                case 'l': api.loadGame(); break;
-                case 'n': api.newGame(); break;
-                case 'e': api.exitToDesktop(); break;
-                case 'h': showHelp(); break;
-                default: return;
-            }
-            e.preventDefault();
-        };
-        document.addEventListener('keydown', handleKey);
-        return () => document.removeEventListener('keydown', handleKey);
-    }, []);
 
     return html`
     <div class="wsr-root" data-testid="main-menu">
@@ -493,7 +474,7 @@ const MainMenu = () => {
             <span class="wsr-terminal-title">Jenkins Terminal v${APP_VERSION}</span>
           </div>
           <div class="wsr-topbar-right">
-            <${Button} class="btn main-menu" data-testid="btn-help" onClick=${() => showHelp()}>${bracketLabel('Help', 'H')}</${Button}>
+            <${Button} class="btn main-menu" data-testid="btn-help" onClick=${() => showHelp()}>Help</${Button}>
             <${SettingsModal}>
               <${Button} class="btn main-menu">Settings</${Button}>
             <//>
@@ -533,9 +514,9 @@ const MainMenu = () => {
             <div class="wsr-divider"></div>
 
             <div class="wsr-hero-buttons">
-              <${Button} class="btn green main-menu" data-testid="btn-load-game" onClick=${api.loadGame}>${bracketLabel('Load Game', 'L')}</${Button}>
-              <${Button} class="btn green main-menu" data-testid="btn-new-game" onClick=${api.newGame}>${bracketLabel('New Game', 'N')}</${Button}>
-              <${Button} class="btn main-menu" data-testid="btn-exit" onClick=${api.exitToDesktop}>${bracketLabel('Exit', 'E')}</${Button}>
+              <${Button} class="btn green main-menu" data-testid="btn-load-game" onClick=${api.loadGame}>Load Game</${Button}>
+              <${Button} class="btn green main-menu" data-testid="btn-new-game" onClick=${api.newGame}>New Game</${Button}>
+              <${Button} class="btn main-menu" data-testid="btn-exit" onClick=${api.exitToDesktop}>Exit</${Button}>
             </div>
 
             ${quote && html`
