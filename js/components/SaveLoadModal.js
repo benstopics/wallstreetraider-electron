@@ -16,8 +16,6 @@ export default function SaveLoadModal({ show, onClose, mode = 'load' }) {
     const [saves, setSaves] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedSave, setSelectedSave] = useState(null);
-
     // Delete confirmation state
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [saveToDelete, setSaveToDelete] = useState(null);
@@ -150,9 +148,8 @@ export default function SaveLoadModal({ show, onClose, mode = 'load' }) {
                                 ${saves.map(save => html`
                                     <tr
                                         key=${save.filename}
-                                        class="hover:bg-gray-700 cursor-pointer ${selectedSave === save.filename ? 'bg-gray-600' : ''}"
-                                        onClick=${() => setSelectedSave(save.filename)}
-                                        onDblClick=${() => handleLoad(save.filename)}
+                                        class="bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                                        onClick=${() => handleLoad(save.filename)}
                                     >
                                         <td class="p-2">${save.filename}</td>
                                         <td class="p-2">${save.modifiedDate}</td>

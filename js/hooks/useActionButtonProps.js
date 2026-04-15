@@ -584,6 +584,7 @@ export function useActionButtonProps() {
         activeEntityNum,
         controlledCompanies,
         controlsActiveEntity,
+        controlsETFAdvisor,
 
         // Legacy stubs kept for external consumers (CommoditiesTab, LoansTab, OptionsTab, etc.)
         // These are no longer functional since acting-as switching is handled by the PB override.

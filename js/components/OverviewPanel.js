@@ -82,6 +82,9 @@ export default function OverviewPanel() {
     // ── Derived ────────────────────────────────────────────
     const isActiveEntityETF = activeIndustryId === api.ETF_IND;
     const isActingAsAdvisor = isActiveEntityETF && actingAsId > 10 && actingAsId === advisorId;
+    const advisedFund = !isActiveEntityETF
+        ? allCompanies.find(c => c.industryId === api.ETF_IND && c.advisorId === activeEntityNum)
+        : null;
 
     // ── Bond parsing ───────────────────────────────────────
     // jBondDesc format: "YYYY@cc.cc" (straight) or "YYYYcv|CVP|@cc.cc" (convertible)
@@ -322,9 +325,9 @@ export default function OverviewPanel() {
                         ` : ''}
                     </div>
                 ` : html`
-                    <!-- Non-ETF: CEO | Management Quality grid -->
+                    <!-- Non-ETF: CEO | Management Quality grid (+ Fund Advisor For if applicable) -->
                     <!-- TODO: Bridge chair[] PB array so AI-player CEO names can be shown -->
-                    <div style="${GRID_2_S} margin-bottom:${playerControlsActive ? '8px' : '0'};">
+                    <div style="${advisedFund ? GRID_3_S : GRID_2_S} margin-bottom:${playerControlsActive ? '8px' : '0'};">
                         <div style="${CELL_S}">
                             <div style="${CELL_LABEL_S}">CEO</div>
                             <div style="${CELL_TXT_S}">${playerIsCEO ? 'You' : '—'}</div>
@@ -335,6 +338,16 @@ export default function OverviewPanel() {
                                 ${mgmtRating != null ? getMgmtLabel(mgmtRating) : 'N/A'}
                             </div>
                         </div>
+                        ${advisedFund ? html`
+                        <div style="${CELL_S}">
+                            <div style="${CELL_LABEL_S}">Fund Advisor For</div>
+                            <div style="${CELL_TXT_S}">
+                                <span class="hover:underline" style="color:#60a5fa; cursor:pointer;"
+                                    onClick=${() => api.setViewAsset(advisedFund.id)}
+                                    title="Navigate to ${advisedFund.name}">${advisedFund.name}</span>
+                            </div>
+                        </div>
+                        ` : ''}
                     </div>
                     <!-- Action buttons below grid (only when player controls this company) -->
                     ${playerControlsActive ? html`

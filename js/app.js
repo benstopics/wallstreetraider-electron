@@ -109,6 +109,64 @@ const AppInner = () => {
         }
     }, [helpShown]);
 
+    // Global hotkeys — keep refs so the listener always sees current values
+    const isTickerRunningRef = useRef(isTickerRunning);
+    const modalTypeRef = useRef(modalType);
+    const gameLoadedRef = useRef(gameLoaded);
+    useEffect(() => { isTickerRunningRef.current = isTickerRunning; }, [isTickerRunning]);
+    useEffect(() => { modalTypeRef.current = modalType; }, [modalType]);
+    useEffect(() => { gameLoadedRef.current = gameLoaded; }, [gameLoaded]);
+
+    useEffect(() => {
+        const isEditable = (el) => {
+            if (!el) return false;
+            const tag = el.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+            if (el.isContentEditable) return true;
+            return false;
+        };
+
+        const onKeyDown = (e) => {
+            if (!gameLoadedRef.current) return;
+
+            // CTRL+S → save game (works even in editable elements)
+            if (e.ctrlKey && !e.altKey && !e.shiftKey && e.key === 's') {
+                e.preventDefault();
+                api.saveGame();
+                return;
+            }
+
+            if (isEditable(e.target)) return;
+
+            const modal = modalTypeRef.current;
+
+            // Space → toggle ticker (not when modal is open)
+            if (e.key === ' ' && modal === 0) {
+                e.preventDefault();
+                if (isTickerRunningRef.current) api.stopTicker();
+                else api.startTicker();
+                return;
+            }
+
+            // / → focus command prompt
+            if (e.key === '/' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+                e.preventDefault();
+                const input = document.querySelector('input.command-line');
+                if (input) input.focus();
+                return;
+            }
+
+            // Arrow left/right → nav back/forward (not when modal is open)
+            if (modal === 0 && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+                if (e.key === 'ArrowLeft') { e.preventDefault(); api.goBack(); return; }
+                if (e.key === 'ArrowRight') { e.preventDefault(); api.goForward(); return; }
+            }
+        };
+
+        document.addEventListener('keydown', onKeyDown);
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, []);
+
     useEffect(() => {
         let timeoutId;
         let pollSeq = 0;

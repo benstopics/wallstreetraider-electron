@@ -541,6 +541,7 @@ export function renderHyperlinks(headline, onClick, regex) {
     let lastIndex = 0;
     let m;
 
+    regex.lastIndex = 0;
     while ((m = regex.exec(headline)) !== null) {
         const before = headline.slice(lastIndex, m.index);
         if (before) parts.push(before);
@@ -1065,6 +1066,16 @@ export function mergeGameState(newState) {
         }
     }
 
+    // Preserve UI-only preferred tab overrides — the backend doesn't know about these
+    // fields, so polling would otherwise overwrite them with undefined before the view
+    // components can consume them.
+    if (currentState.uiPreferredCompanyTab && !newState.uiPreferredCompanyTab) {
+        newState.uiPreferredCompanyTab = currentState.uiPreferredCompanyTab;
+    }
+    if (currentState.uiPreferredPlayerTab && !newState.uiPreferredPlayerTab) {
+        newState.uiPreferredPlayerTab = currentState.uiPreferredPlayerTab;
+    }
+
     // BUG-105 FIX: Reuse old references when contents haven't changed.
     // This prevents unnecessary re-renders of report/list components every poll cycle.
     for (const key of Object.keys(newState)) {
@@ -1159,6 +1170,31 @@ export async function setViewAsset(id) {
     }
 }
 
+// Like setViewAsset but also sets a preferred tab so the destination view
+// opens on the correct tab (e.g. "Stocks & Bonds" when drilling from Holdings).
+// preferredTab is a string matching the tab label in IndustrialView / PlayerView.
+// NOTE: the preferred tab is set AFTER the navigation REST call completes so that
+// it lands in a separate render cycle and doesn't cause a simultaneous activeEntityNum
+// + preferredTab state change, which previously caused rapid mount/unmount of heavy
+// components (Holdings ↔ target tab) and an Oilpan OOM crash.
+export async function setViewAssetWithTab(id, preferredTab) {
+    const isPlayer = id <= 10; // players are entity 1-10
+    // Navigate first (same as setViewAsset — single render cycle)
+    gameStore.setState(state => ({
+        gameState: { ...state.gameState, activeEntityNum: id }
+    }));
+    await postIdArg('/set_view_asset', id);
+    if (id === HUMAN1_ID) {
+        advanceTutorialOnAction('viewPlayer');
+    } else {
+        advanceTutorialOnAction('viewCorp');
+    }
+    // Set preferred tab AFTER navigation, in its own render cycle
+    const gs = gameStore.getState().gameState || {};
+    const patchKey = isPlayer ? 'uiPreferredPlayerTab' : 'uiPreferredCompanyTab';
+    gameStore.getState().setGameState({ ...gs, [patchKey]: preferredTab });
+}
+
 export async function gotoPage(p) {
     const endpoint = p.type === 'industry' ? '/set_view_industry' : '/set_view_asset';
     await postIdArg(endpoint, p.id);
@@ -1215,7 +1251,6 @@ export async function toggleStreamingQuote(id) { await postIdArg('/toggle_stream
 
 export const commandMap = {
     // === Navigation / Acting As ===
-    'ACT':          { description: 'Act as company/player',           fn: changeActingAs,              takesId: true },
 
     // === Trading - Stocks ===
     'BUY':          { description: 'Buy stock',                       fn: buyStock,                    takesId: true },

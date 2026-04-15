@@ -38,7 +38,7 @@ export default function TextAnnounceModal({ show, title, text, onSubmit, onCance
             <div class="text-lg font-bold">${insertCurrencySymbols(title)}</div>
             <br/>
             ${lines.length > 0 ? html`<div class="mb-4 flex fixed-width text-left text-report-content">
-                ${renderLines(lines, ({ id }) => { api.modalResult(id.toString().padStart(4, '0')); }, null, hyperlinkRegex)}
+                ${renderLines(lines, ({ id }) => { api.modalResult(id.toString().padStart(4, '0')); }, null, null)}
             </div>` : ''}
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">

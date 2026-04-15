@@ -4,7 +4,6 @@ import Modal from './Modal.js';
 import Button from './Button.js';
 
 const COMMAND_CATEGORIES = [
-    { label: 'Navigation',               keys: ['ACT'] },
     { label: 'Trading - Stocks',          keys: ['BUY','SELL','SHORT','COVER'] },
     { label: 'Trading - Corp Bonds',      keys: ['BUYBOND','SELLBOND'] },
     { label: 'Trading - Govt Bonds',      keys: ['BUYLGOV','SELLLGOV','BUYSGOV','SELLSGOV'] },
@@ -36,7 +35,7 @@ export default function CommandPrompt() {
     const [activeIdx, setActiveIdx] = useState(0);
     const [showHelp, setShowHelp] = useState(false);
 
-    const tokens = useMemo(() => command.trimStart().split(/\s+/), [command]);
+    const tokens = useMemo(() => command.trim().split(/\s+/), [command]);
     const lastPart = useMemo(() => (tokens.length ? tokens[tokens.length - 1] : ''), [tokens]);
 
     const commands = Object.entries(api.commandMap).map(([key, { description }]) => ({
@@ -242,7 +241,7 @@ export default function CommandPrompt() {
             setCommand('');
             caretRef.current = 0;
             setOpen(false);
-            inputRef.current?.blur();
+            // keep focus so the user can type the next command immediately
             return;
         }
         if (e.key === ' ') {

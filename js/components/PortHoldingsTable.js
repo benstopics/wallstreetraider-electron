@@ -340,21 +340,22 @@ function RowActions({ row, onAction }) {
             const canBuy   = row.quantity < 100;
             const canShort = row.quantity < 100 && !row.ownerCompanyId;
             return html`<div style="display:flex;gap:3px">
+                ${btn('Details','',false)}
                 ${btn('Sell','red',false)}
                 ${canBuy   ? btn('Buy More','green',false) : null}
                 ${canShort ? btn('Short','red',false)      : null}
             </div>`;
         }
-        case 'SHORT':     return btn('Cover','blue',false);
-        case 'CORP_BOND': return btn('Sell','red',false);
-        case 'GOVT_BOND': return btn('Sell','red',false);
+        case 'SHORT':     return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Cover','blue',false)}</div>`;
+        case 'CORP_BOND': return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}</div>`;
+        case 'GOVT_BOND': return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}</div>`;
         case 'OPTION':
             if (row.position === 'LONG') {
-                return html`${btn('Sell','red',false)}${btn('Exercise','blue',!row.inTheMoney)}`;
+                return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}${btn('Exercise','blue',!row.inTheMoney)}</div>`;
             }
-            return btn('Cover','blue',false);
-        case 'FUTURE':   return btn('Close','red',false);
-        case 'PHYSICAL': return btn('Sell','red',false);
+            return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Cover','blue',false)}</div>`;
+        case 'FUTURE':   return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Close','red',false)}</div>`;
+        case 'PHYSICAL': return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}</div>`;
         case 'SWAP':     return html`${btn('Details','',false)}${btn('Terminate','red',false)}`;
         default:         return null;
     }
@@ -401,6 +402,7 @@ export default function PortHoldingsTable() {
     const [sortCol,      setSortCol]      = useState('marketValue');
     const [sortDir,      setSortDir]      = useState('desc');
     const [hideSubsid,   setHideSubsid]   = useState(false);
+    const [search,       setSearch]       = useState('');
 
     const restoredRef = useRef(false);
 
@@ -428,12 +430,17 @@ export default function PortHoldingsTable() {
     // Filter
     const filtered = useMemo(() => {
         const base = filter === 'ALL' ? rows : rows.filter(r => r.assetType === filter);
+        const q = search.trim().toLowerCase();
         return base.filter(r => {
             if (r.ownerCompanyId !== null && !controlledIds.has(r.ownerCompanyId)) return false;
             if (hideSubsid && r.ownerCompanyId !== null) return false;
+            if (q) {
+                const hit = (s) => s && s.toLowerCase().includes(q);
+                if (!hit(r.name) && !hit(r.symbol) && !hit(r.ownerName) && !hit(r.ownerSymbol)) return false;
+            }
             return true;
         });
-    }, [rows, filter, controlledIds, hideSubsid]);
+    }, [rows, filter, controlledIds, hideSubsid, search]);
 
     // Sort
     const sorted = useMemo(() => {
@@ -465,12 +472,30 @@ export default function PortHoldingsTable() {
         await api.setViewAsset(companyId);
     };
 
+    // Tab to navigate to when clicking Details, per asset type
+    const DETAILS_TAB = {
+        STOCK:     'Stocks & Bonds',
+        SHORT:     'Stocks & Bonds',
+        CORP_BOND: 'Stocks & Bonds',
+        GOVT_BOND: 'Stocks & Bonds',
+        OPTION:    'Options',
+        FUTURE:    'Commodities & Crypto',
+        PHYSICAL:  'Commodities & Crypto',
+    };
+
     // Full action routing — passes ownerCompanyId as actingAsId for subsidiary rows
     const handleAction = async (row, kind) => {
         const t = row.assetType;
         // holderId is always populated by the backend with the exact entity that holds the asset.
         // Always pass it as actAs (intParam2) so ui.inc sets PlayCo& explicitly.
         const actAs = row.holderId ?? 0;
+
+        // Details: navigate to the holder's view, opening the relevant portfolio tab
+        if (kind === 'Details' && t !== 'SWAP') {
+            const tab = DETAILS_TAB[t];
+            if (tab && row.holderId) await api.setViewAssetWithTab(row.holderId, tab);
+            return;
+        }
 
         if (t === 'STOCK') {
             if (kind === 'Sell')     await api.sellStock(row.companyId, actAs);
@@ -534,6 +559,13 @@ export default function PortHoldingsTable() {
 
       <!-- C.3: db-input class for filter pills -->
       <div style="padding:5px 10px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:4px;flex-wrap:wrap;flex-shrink:0">
+        <input
+          class="db-input"
+          type="text"
+          placeholder="Search…"
+          value=${search}
+          onInput=${e => setSearch(e.target.value)}
+          style="width:130px;padding:2px 6px" />
         ${PILLS.map(p => {
           const tc = TYPE_COLORS[p.key];
           const active = filter === p.key;

@@ -75,11 +75,11 @@ const PlayerView = () => {
         return () => api.gameStore.getState().setUiHoldingsTabActive(false);
     }, [activeTab]);
 
-    // Handle preferred tab from navigation
+    // Handle preferred tab from navigation (one-shot — consume and clear).
     useEffect(() => {
         if (preferredTab) {
             setActiveTabInternal(preferredTab);
-            // Clear one-shot preference
+            setSavedTab(preferredTab); // persist so tab stays after preferredTab is cleared
             const gs = api.gameStore.getState().gameState || {};
             api.gameStore.getState().setGameState({ ...gs, uiPreferredPlayerTab: null });
         }

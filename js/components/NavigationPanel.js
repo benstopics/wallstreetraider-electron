@@ -181,8 +181,17 @@ function NavigationPanel() {
             <!-- Row 2: Viewing / Navigation -->
             <div class="flex flex-row items-center gap-2">
                 <small class="whitespace-nowrap" style="width: 70px;">Viewing:</small>
+                <div class="flex items-center gap-1">
+                    ${currentIndustry
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${currentIndustry.name}</button>`
+                        : ''}
+                    ${activeEntityNum !== api.HUMAN1_ID
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" data-testid="btn-view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${insertCurrencySymbols('Player')}</button>`
+                        : ''}
+                </div>
                 <${Button}
-                    class="btn px-2 py-1 ${!hasNavHistory || !canGoBack ? 'invisible' : ''}"
+                    class="btn px-3 py-1 ${!hasNavHistory || !canGoBack ? 'invisible' : ''}"
+                    style="font-size:16px; line-height:1;"
                     onClick=${() => api.goBack()}>
                     <b>←</b>
                 </button>
@@ -199,18 +208,11 @@ function NavigationPanel() {
                     }
                 </select>
                 <${Button}
-                    class="btn px-2 py-1 ${!hasNavHistory || !canGoForward ? 'invisible' : ''}"
+                    class="btn px-3 py-1 ${!hasNavHistory || !canGoForward ? 'invisible' : ''}"
+                    style="font-size:16px; line-height:1;"
                     onClick=${() => api.goForward()}>
                     <b>→</b>
                 </button>
-                <div class="flex items-center gap-1">
-                    ${currentIndustry
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${currentIndustry.name}</button>`
-                        : ''}
-                    ${activeEntityNum !== api.HUMAN1_ID
-                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" data-testid="btn-view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${insertCurrencySymbols('Player')}</button>`
-                        : ''}
-                </div>
             </div>
         </div>
     `;

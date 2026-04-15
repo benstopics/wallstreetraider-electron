@@ -123,17 +123,24 @@ const IndustrialView = () => {
         return () => api.gameStore.getState().setUiHoldingsTabActive(false);
     }, [activeTab]);
 
+    // When navigating to a new entity (without a preferred tab), restore the saved tab.
     useEffect(() => {
-        // Check for preferred tab from navigation
-        if (preferredTab) {
-            setActiveTabInternal(preferredTab);
-            // Clear one-shot preference
-            const gs = api.gameStore.getState().gameState || {};
-            api.gameStore.getState().setGameState({ ...gs, uiPreferredCompanyTab: null });
-        } else {
+        if (!preferredTab) {
             setActiveTabInternal(savedTab);
         }
-    }, [activeEntityNum, preferredTab]);
+    }, [activeEntityNum]);
+
+    // When a preferred tab is set (one-shot from Details navigation), apply and consume it.
+    // This is intentionally separate from the entity-change effect so that clearing
+    // preferredTab to null does NOT re-trigger the entity-change effect and revert the tab.
+    useEffect(() => {
+        if (preferredTab) {
+            setActiveTabInternal(preferredTab);
+            setSavedTab(preferredTab); // persist so entity-change effect doesn't revert it
+            const gs = api.gameStore.getState().gameState || {};
+            api.gameStore.getState().setGameState({ ...gs, uiPreferredCompanyTab: null });
+        }
+    }, [preferredTab]);
 
     useEffect(() => {
         if (eventString) {
@@ -156,7 +163,7 @@ const IndustrialView = () => {
     <div class="flex flex-col h-full">
         <div class="flex flex-row gap-2 flex-1 min-h-0">
             <div class="flex flex-col w-full gap-2 h-full">
-                ${buttonProps.controlsActiveEntity ? html`<${ActionBar} entityLabel="${activeEntitySymbol} - ${activeEntityName}" />` : ''}
+                <${ActionBar} entityLabel="${activeEntitySymbol} - ${activeEntityName}" />
                 <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
                     <${Tab} label="Search">
                     <//>
@@ -196,7 +203,7 @@ const IndustrialView = () => {
                                     buttonProps.controlsActiveEntity && !isActiveEntityETF && buttonProps.rebrand,
                                     buttonProps.controlsActiveEntity && !isActiveEntityETF && buttonProps.restructure,
                                     isActiveEntityETF && buttonProps.controlsActiveEntity && buttonProps.becomeEtfAdvisor,
-                                    isActiveEntityETF && buttonProps.controlsActiveEntity && buttonProps.setAdvisoryFee,
+                                    isActiveEntityETF && (buttonProps.controlsActiveEntity || buttonProps.controlsETFAdvisor) && buttonProps.setAdvisoryFee,
                                 ]} />
                                 <div class="flex flex-col items-center overflow-y-auto flex-1 min-h-0">
                                     ${renderLines(researchReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, reportScopeRef)}

@@ -152,19 +152,23 @@ export default function ActionBar({ entityLabel }) {
     return html`
         <div class="action-bar" style="align-items: center;">
             ${entityLabel ? html`<span style="font-weight: bold; font-size: var(--font-size-sm); white-space: nowrap; opacity: 0.7;">${entityLabel}</span>` : ''}
-            <${DropdownMenu}
-                label="Corporate"
-                icon="🏢"
-                items=${corporateItems}
-                color="blue"
-            />
+            ${!notActingAsCompany ? html`
+                <${DropdownMenu}
+                    label="Corporate"
+                    icon="🏢"
+                    items=${corporateItems}
+                    color="blue"
+                />
+            ` : ''}
             <div style="flex:1"><${CommandPrompt} /></div>
-            <${DropdownMenu}
-                label="Hostile"
-                icon="⚔️"
-                items=${hostileItems}
-                color="red"
-            />
+            ${!notActingAsCompany ? html`
+                <${DropdownMenu}
+                    label="Hostile"
+                    icon="⚔️"
+                    items=${hostileItems}
+                    color="red"
+                />
+            ` : ''}
         </div>
         <${CompanySelectModal}
             show=${showTargetPicker}

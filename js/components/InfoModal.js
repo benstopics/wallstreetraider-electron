@@ -56,7 +56,7 @@ export default function InfoModal({ show, title, text, onClose }) {
         `}
         <div class="flex-1 min-h-0 p-3 overflow-y-auto">
             <div>
-                ${renderLines(lines, ({ id }) => api.setViewAsset(parseInt(id)), null, hyperlinkRegex)}
+                ${renderLines(lines, null, null, null)}
             </div>
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">

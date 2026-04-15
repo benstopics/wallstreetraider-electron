@@ -128,7 +128,8 @@ function FinancialsTab() {
 
     // Entity type flags
     const isCorp   = activeEntityNum > 10;
-    const isBank   = activeIndustryId === api.BANK_IND;
+    const isBank    = activeIndustryId === api.BANK_IND;
+    const isInsurer = activeIndustryId === api.INSURANCE_IND;
     const isPlayer = activeEntityNum > 0 && activeEntityNum <= 10;
 
     // Extras hotkey refs (used in both player view and drill-down)
@@ -176,10 +177,12 @@ function FinancialsTab() {
             ? 'var(--color-positive)'
             : 'var(--color-negative)';
 
-    // Tax & other liabilities (residual: totalDebt minus the two visible line items)
-    const taxAndOther = (aef.totalDebt != null && aef.loan != null && aef.bondsOut != null)
-        ? Math.max(0, aef.totalDebt - (aef.loan || 0) - (aef.bondsOut || 0))
-        : null;
+    // Correct total liabilities by industry type (matches Profiles() TL# + HidReserve# formula)
+    const totalLiabilities = isBank
+        ? (aef.demandDeposits||0) + (aef.certDeposits||0) + (aef.totalDebt||0) + (aef.hidReserve||0)
+        : isInsurer
+            ? (aef.totalDebt||0) + (aef.insurReserves||0) + (aef.hidReserve||0)
+            : (aef.totalDebt||0) + (aef.hidReserve||0);
 
     // ── Drill-down view — cash flow projection text ──────────
     if (showFullProjection) return html`
@@ -283,190 +286,150 @@ function FinancialsTab() {
         <!-- ══════════════════════════════════════════════
              PANELS 1 + 2: Assets | Liabilities side-by-side
              ══════════════════════════════════════════════ -->
-        <div style="display:flex; gap:6px; align-items:stretch; margin-bottom:14px;">
+        ${(() => {
+            // Row styles for the list layout
+            const RS = 'display:flex; justify-content:space-between; align-items:center; padding:2px 0; min-height:22px;';
+            const RL = `${CELL_LABEL_S} margin-bottom:0; flex:1;`;
+            const RV = CELL_NUM_S;
+            const RB = 'display:flex; align-items:center; gap:3px; flex-shrink:0;';
+            const SEP = html`<div style="border-top:1px solid var(--border-color); margin:3px 0;"></div>`;
 
-            <!-- ── PANEL 1: Assets Breakdown ── -->
-            <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
-            <div class="panel" style="flex:1;">
-                <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>Assets</span>
-                    ${controlsActiveEntity && !isActiveEntityETF ? html`
-                        <div style="display:flex; gap:4px; align-items:center;">
-                            <${DisabledTooltipButton} ...${buttonProps.taxFreeLiquidation}  buttonClass="" />
-                            <${DisabledTooltipButton} ...${buttonProps.taxableLiquidation}  buttonClass="" />
+            // Row helpers
+            const row = (label, val, btns) => html`
+                <div style="${RS}">
+                    <div style="${RL}">${label}</div>
+                    ${btns ? html`<div style="${RB}">${btns}</div>` : ''}
+                    <div style="${RV} margin-left:8px;">${fmtM(val)}</div>
+                </div>`;
+            const rowNeg = (label, val) => html`
+                <div style="${RS}">
+                    <div style="${RL}">${label}</div>
+                    <div style="font-size:var(--font-size-sm); color:var(--color-negative); margin-left:8px;">${val > 0 ? fmtM(-val) : fmtM(0)}</div>
+                </div>`;
+
+            // Asset rows — industry-specific
+            const assetRows = isBank ? html`
+                ${row('Cash (Bank Demand Deposits)', aef.cash)}
+                ${row('Short-term T-Bills', aef.tBills,
+                    controlsActiveEntity && !isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.tradeTbills} label="Trade" buttonClass="" />` : null)}
+                ${row('Stock in Subsidiary Corps.', aef.stocksPortfolioValue)}
+                ${row('Options Long/Short: Net Value', aef.optPortfolio)}
+                ${row('Govt. Bonds (@ Adjusted Cost)', aef.govBonds)}
+                ${row('Corp. Bonds (@ Adjusted Cost)', aef.corpBonds)}
+                ${row('Business Loan Portfolio', aef.bizLoan)}
+                ${row('Consumer Loan Portfolio', aef.consumerLoan)}
+                ${row('Mortgage Loans/Securities', aef.mortgageLoan)}
+                ${rowNeg('Less: Bad Debt Reserves', aef.badDebt)}
+            ` : isInsurer ? html`
+                ${row('Cash (Bank Demand Deposits)', aef.cash)}
+                ${row('Short-term T-Bills', aef.tBills,
+                    controlsActiveEntity && !isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.tradeTbills} label="Trade" buttonClass="" />` : null)}
+                ${row('Stock Portfolio', aef.stocksPortfolioValue)}
+                ${row('Options Long/Short: Net Value', aef.optPortfolio)}
+                ${row('Govt. Bonds (@ Adjusted Cost)', aef.govBonds)}
+                ${row('Corp. Bonds (@ Adjusted Cost)', aef.corpBonds)}
+                ${aef.mortgageLoan > 0 ? row('Subprime Mortgage Securities', aef.mortgageLoan) : ''}
+                ${row('Index Futures: Marked to Mkt.', aef.commoditiesPortfolioValue)}
+                ${aef.commodMargin > 0 ? row('Commodity A/C Margin Balance', aef.commodMargin) : ''}
+            ` : isActiveEntityETF ? html`
+                ${row('Cash', aef.cash)}
+                ${row('Short-term T-Bills', aef.tBills)}
+                ${row('Stock Portfolio', aef.stocksPortfolioValue)}
+                ${row('Options Long/Short: Net Value', aef.optPortfolio)}
+                ${aef.govBonds > 0 ? row('Govt. Bonds (@ Market Value)', aef.govBonds) : ''}
+                ${aef.corpBonds > 0 ? row('Corp. Bonds (@ Market Value)', aef.corpBonds) : ''}
+                ${row('Commodities: Marked to Market', aef.commoditiesPortfolioValue)}
+                ${aef.commodMargin > 0 ? row('Commodity A/C Margin Balance', aef.commodMargin) : ''}
+            ` : html`
+                ${row('Cash', aef.cash)}
+                ${row('Short-term T-Bills', aef.tBills,
+                    controlsActiveEntity && !isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.tradeTbills} label="Trade" buttonClass="" />` : null)}
+                ${row('Working Capital (A/R, Inven.)', aef.workingCap)}
+                ${row('Business Assets/Equipment', aef.capAssets,
+                    controlsActiveEntity ? html`
+                        ${!isActiveEntityETF ? html`<${DisabledTooltipButton} ...${buttonProps.restructure} label="Restructure" buttonClass="" />` : ''}
+                        <${DisabledTooltipButton} ...${buttonProps.buyCorporateAssets} label="Buy" buttonClass="" />
+                        ${aef.capAssets > 0 ? html`<${DisabledTooltipButton} ...${buttonProps.sellCorporateAssets} label="Sell" buttonClass="" />` : ''}
+                    ` : null)}
+                ${row('Stock in Subsidiary Corps.', aef.stocksPortfolioValue)}
+                ${row('Options Long/Short: Net Value', aef.optPortfolio)}
+                ${row('Commodities: Marked to Market', aef.commoditiesPortfolioValue)}
+                ${aef.commodMargin > 0 ? row('Commodity A/C Margin Balance', aef.commodMargin) : ''}
+                ${aef.goodwill > 0 ? row('Unamortized Goodwill', aef.goodwill) : ''}
+            `;
+
+            // Liability rows — industry-specific
+            const loanLabel = isBank ? 'Interbank Debt — Fed Funds' : 'Bank Loan';
+            const liabRows = html`
+                ${row('Bonds Outstanding', aef.bondsOut,
+                    controlsActiveEntity && !isActiveEntityETF ? html`
+                        <${DisabledTooltipButton} ...${buttonProps.issueCorpBonds} label="Issue" buttonClass="" />
+                        <${DisabledTooltipButton} ...${buttonProps.redeemCorpBonds} label="Redeem" buttonClass="" />
+                    ` : null)}
+                ${isBank ? html`
+                    ${row('Demand Deposits', aef.demandDeposits)}
+                    ${row('Certificates of Deposit', aef.certDeposits)}
+                ` : isInsurer ? html`
+                    ${row('Insurance Policy Reserves', aef.insurReserves)}
+                ` : ''}
+                ${row(loanLabel, aef.loan,
+                    !isBank && controlsActiveEntity ? html`
+                        <${DisabledTooltipButton} ...${buttonProps.borrowMoney} label="Borrow" buttonClass="" />
+                        <${DisabledTooltipButton} ...${buttonProps.repayLoan} label="Repay" buttonClass="" />
+                    ` : null)}
+                ${row('Accrued Income Tax', aef.accTax)}
+                ${aef.capTax > 0 ? row('Accrued Taxes on Capital', aef.capTax) : ''}
+                ${aef.hidReserve > 0 ? row('Reserve for Contingencies', aef.hidReserve) : ''}
+            `;
+
+            return html`
+            <div style="display:flex; gap:6px; align-items:stretch; margin-bottom:14px;">
+
+                <!-- ── PANEL 1: Assets Breakdown ── -->
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                <div class="panel" style="flex:1;">
+                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Assets</span>
+                        ${controlsActiveEntity && !isActiveEntityETF ? html`
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <${DisabledTooltipButton} ...${buttonProps.taxFreeLiquidation}  buttonClass="" />
+                                <${DisabledTooltipButton} ...${buttonProps.taxableLiquidation}  buttonClass="" />
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="panel-body" style="display:flex; flex-direction:column;">
+                        ${assetRows}
+                        ${SEP}
+                        <div style="${RS}">
+                            <div style="${RL} font-weight:700;">Total Assets</div>
+                            <div style="font-size:var(--font-size-sm); color:var(--color-warning); font-weight:700;">${fmtM(aef.totalAssets)}</div>
                         </div>
-                    ` : ''}
+                    </div>
                 </div>
-                <div class="panel-body">
-
-                    <div style="${GRID_2_S}">
-
-                        <div style="${CELL_S}">
-                            <div style="${CELL_LABEL_S}">Cash</div>
-                            <div style="${CELL_NUM_S}">${fmtM(aef.cash)}</div>
-                        </div>
-
-                        <div style="${CELL_S}">
-                            <div style="display:flex; align-items:center; gap:4px;">
-                                <div style="${CELL_LABEL_S}">T-Bills</div>
-                                ${controlsActiveEntity && !isActiveEntityETF ? html`
-                                    <${DisabledTooltipButton}
-                                        ...${buttonProps.tradeTbills}
-                                        label="Trade"
-                                        buttonClass=""
-                                    />
-                                ` : ''}
-                            </div>
-                            <div style="${CELL_NUM_S}">${fmtM(aef.tBills)}</div>
-                        </div>
-
-                        <div style="${CELL_S}">
-                            <div style="display:flex; align-items:center; gap:4px;">
-                                <div style="${CELL_LABEL_S}">Assets/Equipment</div>
-                                ${controlsActiveEntity && !isBank && !isActiveEntityETF ? html`
-                                    <${DisabledTooltipButton}
-                                        ...${buttonProps.restructure}
-                                        label="Restructure"
-                                        buttonClass=""
-                                    />
-                                ` : ''}
-                            </div>
-                            <div style="display:flex; align-items:center; gap:4px;">
-                                <div style="${CELL_NUM_S}">${fmtM(aef.capAssets)}</div>
-                                ${controlsActiveEntity && !isBank ? html`
-                                    <${DisabledTooltipButton}
-                                        ...${buttonProps.buyCorporateAssets}
-                                        label="Buy"
-                                        buttonClass=""
-                                    />
-                                    ${aef.capAssets > 0 ? html`
-                                        <${DisabledTooltipButton}
-                                            ...${buttonProps.sellCorporateAssets}
-                                            label="Sell"
-                                            buttonClass=""
-                                        />
-                                    ` : ''}
-                                ` : ''}
-                            </div>
-                        </div>
-
-                        <div style="${CELL_S}">
-                            <div style="${CELL_LABEL_S}">Goodwill</div>
-                            <div style="${CELL_NUM_S}">${fmtM(aef.goodwill)}</div>
-                        </div>
-
-                        <div style="${CELL_S}">
-                            <div style="${CELL_LABEL_S}">Stocks Portfolio</div>
-                            <div style="${CELL_NUM_S}">${fmtM(aef.stocksPortfolioValue)}</div>
-                        </div>
-
-                        <div style="${CELL_S}">
-                            <div style="${CELL_LABEL_S}">Commodities</div>
-                            <div style="${CELL_NUM_S}">${fmtM(aef.commoditiesPortfolioValue)}</div>
-                        </div>
-
-                    </div>
-
-                    <!-- Total Assets footer row (bold) -->
-                    <div style="margin-top:6px; padding:4px 10px; background:var(--bg-secondary); border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="${CELL_LABEL_S} margin-bottom:0;">Total Assets</span>
-                        <span style="font-size:var(--font-size-sm); color:var(--color-warning); font-weight:700;">${fmtM(aef.totalAssets)}</span>
-                    </div>
-
                 </div>
-            </div>
-            </div>
 
-            <!-- ── PANEL 2: Liabilities Breakdown ── -->
-            <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
-            <div class="panel" style="flex:1;">
-                <div class="panel-header">Liabilities & Equity</div>
-                <div class="panel-body" style="display:flex; flex-direction:column;">
-
-                    <div style="${GRID_2_S}">
-
-                        <div style="${CELL_S}">
-                            <div style="display:flex; align-items:center; gap:4px;">
-                                <div style="${CELL_LABEL_S}">Bank Loan</div>
-                                ${controlsActiveEntity ? html`
-                                    <${DisabledTooltipButton}
-                                        ...${buttonProps.borrowMoney}
-                                        label="Borrow"
-                                        buttonClass=""
-                                    />
-                                    <${DisabledTooltipButton}
-                                        ...${buttonProps.repayLoan}
-                                        label="Repay"
-                                        buttonClass=""
-                                    />
-                                ` : ''}
-                            </div>
-                            <div style="${CELL_NUM_S}">${fmtM(aef.loan)}</div>
+                <!-- ── PANEL 2: Liabilities & Equity ── -->
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                <div class="panel" style="flex:1;">
+                    <div class="panel-header">Liabilities & Equity</div>
+                    <div class="panel-body" style="display:flex; flex-direction:column;">
+                        ${liabRows}
+                        ${SEP}
+                        <div style="${RS}">
+                            <div style="${RL} font-weight:700;">Total Liabilities</div>
+                            <div style="font-size:var(--font-size-sm); color:var(--color-warning); font-weight:700;">${fmtM(totalLiabilities)}</div>
                         </div>
-
-                        <div style="${CELL_S}">
-                            <div style="display:flex; align-items:center; gap:4px;">
-                                <div style="${CELL_LABEL_S}">Bonds Outstanding</div>
-                                ${controlsActiveEntity && !isActiveEntityETF ? html`
-                                    <${DisabledTooltipButton}
-                                        ...${buttonProps.issueCorpBonds}
-                                        label="Issue"
-                                        buttonClass=""
-                                    />
-                                    <${DisabledTooltipButton}
-                                        ...${buttonProps.redeemCorpBonds}
-                                        label="Redeem"
-                                        buttonClass=""
-                                    />
-                                ` : ''}
-                            </div>
-                            <div style="${CELL_NUM_S}">${fmtM(aef.bondsOut)}</div>
+                        <div style="${RS} margin-top:4px;">
+                            <div style="${RL} font-weight:700;">Equity</div>
+                            <div style="font-size:var(--font-size-sm); color:${equityColor}; font-weight:800;">${fmtM(aef.equity)}</div>
                         </div>
-
-                        <!-- Tax & other = totalDebt - loan - bondsOut (derived, no extra bridge needed) -->
-                        <div style="${CELL_S}">
-                            <div style="${CELL_LABEL_S}">Tax & Other</div>
-                            <div style="${CELL_NUM_S}">
-                                ${taxAndOther != null ? fmtM(taxAndOther) : '—'}
-                            </div>
-                        </div>
-
-                        ${isBank ? html`
-                            <div style="${CELL_S}">
-                                <div style="${CELL_LABEL_S}">Demand Dep.</div>
-                                <div style="${CELL_NUM_S}">${fmtM(aef.demandDeposits)}</div>
-                            </div>
-                            <div style="${CELL_S}">
-                                <div style="${CELL_LABEL_S}">Cert. of Deposit</div>
-                                <div style="${CELL_NUM_S}">${fmtM(aef.certDeposits)}</div>
-                            </div>
-                        ` : html`
-                            <div style="${CELL_S}">
-                                <div style="${CELL_LABEL_S}">Avail. Line of Credit</div>
-                                <div style="${CELL_NUM_S}">${fmtM(aef.loc)}</div>
-                            </div>
-                        `}
-
                     </div>
-
-                    <!-- Total Liabilities footer row (bold) -->
-                    <div style="margin-top:auto; padding:4px 10px; background:var(--bg-secondary); border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="${CELL_LABEL_S} margin-bottom:0;">Total Liabilities</span>
-                        <span style="font-size:var(--font-size-sm); color:var(--color-warning); font-weight:700;">${fmtM(aef.totalDebt)}</span>
-                    </div>
-
-                    <!-- Equity row (colored by sign) -->
-                    <div style="margin-top:4px; padding:4px 10px; background:var(--bg-secondary); border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="${CELL_LABEL_S} margin-bottom:0;">Equity</span>
-                        <span style="font-size:var(--font-size-sm); color:${equityColor}; font-weight:800;">${fmtM(aef.equity)}</span>
-                    </div>
-
                 </div>
-            </div>
-            </div>
+                </div>
 
-        </div>
-        <!-- END PANELS 2+3 -->
+            </div>`;
+        })()}
+        <!-- END PANELS 1+2 -->
 
         <!-- ══════════════════════════════════════════════
              PANEL 4: EPS Chart | Borrower Status | Quarterly Cashflow

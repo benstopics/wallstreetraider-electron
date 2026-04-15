@@ -91,7 +91,6 @@ function OptionsTab() {
                             />
                             ${!isShort && html`<${DisabledTooltipButton}
                                 disabledMessage=${exerciseDisabledMsg}
-                                onDisabledClick=${exerciseDisabledClick}
                                 onClick=${() => (
                                     type.includes('CALL') ? api.exerciseCallOptionsEarly
                                     : type.includes('PUT') ? api.exercisePutOptionsEarly
