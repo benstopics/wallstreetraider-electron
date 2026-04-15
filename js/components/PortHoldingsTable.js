@@ -124,6 +124,7 @@ function normaliseRow(r) {
                 optType: r.optType,
                 inTheMoney: r.inTheMoney ?? false,
                 isGrant: r.isGrant ?? false,
+                slot: r.slot ?? null,
             };
         }
         case 'GOVT_BOND': {
@@ -495,9 +496,9 @@ export default function PortHoldingsTable() {
                 else                        await api.exercisePutOptionsEarly(row.slot, actAs);
             }
         }
-        if (t === 'FUTURE' && kind === 'Close' && row.commodityId) {
-            if (row.position === 'SHORT') await api.coverShortCommodityFutures(row.commodityId, actAs);
-            else                          await api.sellCommodityFutures(row.commodityId, actAs);
+        if (t === 'FUTURE' && kind === 'Close' && row.slot) {
+            if (row.position === 'SHORT') await api.coverShortCommodityFuturesBySlot(row.slot, actAs);
+            else                          await api.closeLongCommodityFuturesBySlot(row.slot, actAs);
         }
         if (t === 'PHYSICAL' && kind === 'Sell' && row.commodityId) {
             await api.sellPhysicalCommodity(row.commodityId, actAs);

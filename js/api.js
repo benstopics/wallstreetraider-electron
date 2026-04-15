@@ -753,8 +753,10 @@ export async function sellShortGovtBonds(actingAsId = 0) { await postIdArgWithAc
 /* Commodity Futures */
 export async function buyCommodityFutures(id) { await postIdArg('/buy_commodity_futures', id); }
 export async function sellCommodityFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_commodity_futures', id, actingAsId); }
+export async function closeLongCommodityFuturesBySlot(slot, actingAsId = 0) { await postIdArgWithActingAs('/close_long_commodity_futures_by_slot', slot, actingAsId); }
 export async function shortCommodityFutures(id) { await postIdArg('/short_commodity_futures', id); }
 export async function coverShortCommodityFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/cover_short_commodity_futures', id, actingAsId); }
+export async function coverShortCommodityFuturesBySlot(slot, actingAsId = 0) { await postIdArgWithActingAs('/cover_short_commodity_futures_by_slot', slot, actingAsId); }
 
 /* Physical Commodities */
 export async function buyPhysicalCommodity(id) { await postIdArg('/buy_physical_commodity', id); }
