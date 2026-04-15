@@ -51,6 +51,10 @@ const COND_COLS = {
     SWAP:      { strike: false, notional: true,  inttype: true,  estprofit: true  },
 };
 
+// ─── Swap interest type maps (module-level — avoids per-render object creation) ─
+const SWAP_INT_TYPE_SHORT = { P: 'PRIME', L: 'LONG BOND', S: 'SHORT BOND' };
+const SWAP_INT_TYPE_NAME  = { P: 'Prime Interest Rate', L: 'Long Bond Rate', S: 'Short Bond Rate' };
+
 // ─── Row normaliser ──────────────────────────────────────────────────────────
 // Converts raw C++ JSON rows into a uniform display shape.
 function normaliseRow(r) {
@@ -92,6 +96,8 @@ function normaliseRow(r) {
         isDefaulted: false,
         slot: null,
         commodityId: null,
+        cashEstimate: null,
+        cashFlow:     null,
     };
 
     switch (dispType) {
@@ -107,6 +113,8 @@ function normaliseRow(r) {
                 pnl: r.pnl,
                 yield: r.divYield ?? null,
                 yieldLabel: 'Div Yield',
+                cashEstimate: r.compEstCash3Mo    ?? null,
+                cashFlow:     r.compCfAfterDebt  ?? null,
             };
         }
         case 'OPTION': {
@@ -125,6 +133,8 @@ function normaliseRow(r) {
                 inTheMoney: r.inTheMoney ?? false,
                 isGrant: r.isGrant ?? false,
                 slot: r.slot ?? null,
+                cashEstimate: r.compEstCash3Mo    ?? null,
+                cashFlow:     r.compCfAfterDebt  ?? null,
             };
         }
         case 'GOVT_BOND': {
@@ -155,6 +165,8 @@ function normaliseRow(r) {
                 notional: r.faceValue,
                 isConvertible: r.isConvertible ?? false,
                 isDefaulted: r.isDefaulted ?? false,
+                cashEstimate: r.compEstCash3Mo    ?? null,
+                cashFlow:     r.compCfAfterDebt  ?? null,
             };
         }
         case 'FUTURE': {
@@ -185,15 +197,16 @@ function normaliseRow(r) {
             };
         }
         case 'SWAP': {
-            const intTypeMap = { P: 'PRIME', L: 'LONG BOND', S: 'SHORT BOND' };
             return { ...base,
+                name: SWAP_INT_TYPE_NAME[r.intType] || r.name || '—',
                 position: r.posType || 'LONG',
                 yield: r.fixedRate, yieldLabel: 'Fixed Rate',
                 notional: r.notional,
-                interestType: intTypeMap[r.intType] || r.intType || null,
+                interestType: SWAP_INT_TYPE_SHORT[r.intType] || r.intType || null,
                 estProfit: r.pnl,
                 pnl: null,
                 marketValue: null,
+                expiry: r.expiry || null,
                 slot: r.slot ?? null,
             };
         }
@@ -296,6 +309,15 @@ function PortRow({ row, cond, onSymbolClick, onAction }) {
     const td  = (content) => html`<td>${content}</td>`;
     const tdR = (content, style='') => html`<td class="num" style=${style || undefined}>${content}</td>`;
 
+    // Cash Proj. cell: "$2.41B (-$41.0M)" — cash white, cashflow colored by sign
+    const cpEst = row.cashEstimate;
+    const cpCf  = row.cashFlow;
+    const cashProjCell = cpEst == null
+        ? html`<span style="color:var(--fg-muted)">—</span>`
+        : cpCf == null
+            ? html`<span style="color:#fff">${fmtM(cpEst)}</span>`
+            : html`<span style="color:#fff">${fmtM(cpEst)}</span><span style="color:var(--fg-muted)"> (</span><span style="color:${cpCf >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${cpCf >= 0 ? '+' : '-'}${fmtM(Math.abs(cpCf))}</span><span style="color:var(--fg-muted)">)</span>`;
+
     const trStyle = row.ownerCompanyId ? 'background:rgba(96,165,250,0.05)' : undefined;
     return html`<tr style=${trStyle}>
         ${td(html`<${TypeChip} type=${row.assetType} />`)}
@@ -312,6 +334,7 @@ function PortRow({ row, cond, onSymbolClick, onAction }) {
         ${tdR(row.yield != null ? fmtPct(row.yield) : '—')}
         ${td(ratingCell)}
         ${td(row.expiry || html`<span style="color:var(--fg-muted)">—</span>`)}
+        ${tdR(cashProjCell)}
         ${cond.strike    ? tdR(row.strike != null ? fmtPrice(row.strike) : '—') : null}
         ${cond.notional  ? tdR(row.notional != null ? fmtM(row.notional) : '—') : null}
         ${cond.inttype   ? td(row.interestType || html`<span style="color:var(--fg-muted)">—</span>`) : null}
@@ -356,7 +379,7 @@ function RowActions({ row, onAction }) {
             return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Cover','blue',false)}</div>`;
         case 'FUTURE':   return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Close','red',false)}</div>`;
         case 'PHYSICAL': return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}</div>`;
-        case 'SWAP':     return html`${btn('Details','',false)}${btn('Terminate','red',false)}`;
+        case 'SWAP':     return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Terminate','red',false)}</div>`;
         default:         return null;
     }
 }
@@ -611,6 +634,7 @@ export default function PortHoldingsTable() {
               ${tdHeader('yield',       'Yield/Rate',true)}
               ${tdHeader('creditRating','Rating',    false)}
               ${tdHeader('expiry',      'Expiry',    false)}
+              ${tdHeader('cashEstimate','Cash Proj.', true)}
               ${cond.strike    ? tdHeader('strike',      'Strike',   true) : null}
               ${cond.notional  ? tdHeader('notional',    'Notional', true) : null}
               ${cond.inttype   ? tdHeader('interestType','Int Type', false): null}
