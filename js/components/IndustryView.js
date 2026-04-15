@@ -1,12 +1,12 @@
 import { html, useEffect, useState, useRef } from '../lib/preact.standalone.module.js';
 import Tabs from './Tabs.js';
 import AdvisorySummary from './AdvisorySummary.js';
+import SubScreen from './SubScreen.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
 import AssetPriceChart from './AssetPriceChart.js';
 import MarketHeatMapTab from './MarketHeatMapTab.js';
 import SectorHeatMapTab from './SectorHeatMapTab.js';
-import Button from './Button.js';
 import { useCookie } from '../hooks/useCookie.js';
 
 const Tab = Tabs.Tab;
@@ -37,35 +37,55 @@ const IndustryView = () => {
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredIndustryTab);
     const [savedTab, setSavedTab] = useCookie('industryViewTab', 'Heat Maps');
     const [activeTab, setActiveTabInternal] = useState(preferredTab || savedTab);
+    const [industryDrilldown, setIndustryDrilldown] = useState(false);
+    const [industrySubTab, setIndustrySubTab] = useState('Summary');
 
-    const activeIndustryName = api.getIndustry(allIndustries, activeIndustryNum)?.name
+    const activeIndustryName = api.getIndustry(allIndustries, activeIndustryNum)?.name;
 
-    const { setGameState } = api.useWSRContext();
-
-    // Wrapper to also update navigation history when tab changes
     const setActiveTab = (tab) => {
         setActiveTabInternal(tab);
         setSavedTab(tab);
     };
 
-    // If a caller (e.g., the Menu) requested a specific IndustryView tab,
-    // honor it once and avoid auto-switching to the industry name.
     useEffect(() => {
         if (preferredTab && preferredTab !== activeTab) {
             setActiveTabInternal(preferredTab);
-            // clear one-shot preference
             const gs = api.gameStore.getState().gameState || {};
             api.gameStore.getState().setGameState({ ...gs, uiPreferredIndustryTab: null });
             return;
         }
-        if (activeIndustryName && activeIndustryName !== activeTab) {
-            setActiveTabInternal(activeIndustryName);
+        if (activeIndustryName) {
+            setIndustryDrilldown(true);
+            setIndustrySubTab('Summary');
         }
     }, [activeIndustryName, preferredTab]);
 
     const scopeActiveRef = useRef(false);
 
     const handleBack = () => api.setViewAsset(activeEntityNum || api.HUMAN1_ID);
+
+    const industryDrilldownContent = activeIndustryName && html`
+        <${SubScreen} title=${activeIndustryName} onBack=${() => setIndustryDrilldown(false)}>
+            <${Tabs} activeTab=${industrySubTab} onTabChange=${setIndustrySubTab}>
+                <${Tab} label="Summary" id=${api.UI_INDUSTRY_SUMMARY_REPORT}>
+                    <div class="flex justify-center items-center">
+                        ${renderLines(industrySummaryReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                    </div>
+                <//>
+                ${![1, 2, 70].includes(activeIndustryNum) ? html`<${Tab} label=${activeIndustryNum === 71 ? 'Fund Strategies' : 'Projection'} id=${api.UI_INDUSTRY_PROJECTIONS_REPORT}>
+                    <div class="flex justify-center items-center overflow-x-auto w-full">
+                        ${industryProjectionReport.some(l => l.trim() !== '')
+                            ? renderLines(industryProjectionReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)
+                            : html`No projections available for the currently selected industry group:<br/><br/>${activeIndustryName}`
+                        }
+                    </div>
+                <//>` : ''}
+                <${Tab} label="Heat Map" id=${api.UI_INDUSTRY_HEATMAP}>
+                    <${SectorHeatMapTab} />
+                <//>
+            <//>
+        <//>
+    `;
 
     return html`
     <div class="flex flex-col h-full">
@@ -80,128 +100,109 @@ const IndustryView = () => {
                 </div>
             </div>
             <div class="flex flex-col w-3/4 gap-2 h-full">
-                <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
-                    ${activeIndustryName ? html`<${Tab} label="${activeIndustryName}" hotkey="i">
-                        <div class="flex justify-center items-center w-full h-full">
-                            <${Tabs}>
-                                <${Tab} label="Summary" id=${api.UI_INDUSTRY_SUMMARY_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(industrySummaryReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                ${![1, 2, 70].includes(activeIndustryNum) ? html`<${Tab} label=${activeIndustryNum === 71 ? "Fund Strategies" : "Projection"} id=${api.UI_INDUSTRY_PROJECTIONS_REPORT}>
-                                    <div class="flex justify-center items-center overflow-x-auto w-full">
-                                        ${industryProjectionReport.some(l => l.trim() !== '')
-                                            ? renderLines(industryProjectionReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)
-                                            : html`No projections available for the currently selected industry group:<br/><br/>${activeIndustryName}`
-                                        }
-                                    </div>
-                                <//>` : ''}
-                                <${Tab} label="Heat Map" id=${api.UI_INDUSTRY_HEATMAP}>
-                                    <${SectorHeatMapTab} />
-                                <//>
-                            <//>
-                        </div>
-                    <//>` : ''}
-                    <${Tab} label="Heat Map" hotkey="h" id=${api.UI_MARKET_HEATMAP}>
-                        <${MarketHeatMapTab} />
-                    <//>
-                    <${Tab} label="Industry Growth Rates" hotkey="g" id=${api.UI_MARKET_REPORTS_INDUSTRY_GROWTH_RATES_REPORT}>
-                        <div class="flex justify-center items-center">
-                            ${renderLines(industryGrowthRatesReport, ({ id }) => {
-                                api.viewIndustry(id)
-                            }, null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                        </div>
-                    <//>
-                    <${Tab} label="Economic Data" hotkey="e" id=${api.UI_MARKET_REPORTS_ECON_STATS_REPORT}>
-                        <div class="flex justify-center items-center">
-                            ${renderLines(economicDataReport, ({ id }) => {
-                                api.viewIndustry(id)
-                            }, null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                        </div>
-                    <//>
-                    <${Tab} label="Interest Rates" hotkey="r" id=${api.UI_MARKET_REPORTS_INTEREST_RATES_REPORT}>
-                        <div class="flex justify-center items-center">
-                            ${renderLines(interestRatesReport, ({ id }) => {
-                                api.viewIndustry(id)
-                            }, null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                        </div>
-                    <//>
-                    <${Tab} label="Companies With Most..." hotkey="m">
-                        <div class="flex justify-center items-center w-full h-full">
-                            <${Tabs}>
-                                <${Tab} label="Market Share" id=${api.UI_MARKET_REPORTS_LARGEST_MARKET_SHARE_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(mostMarketShareReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                <${Tab} label="Tax Losses" id=${api.UI_MARKET_REPORTS_LARGEST_TAX_LOSSES_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(mostTaxLossReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                <${Tab} label="Market Cap" id=${api.UI_MARKET_REPORTS_MOST_MARKET_CAP_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(mostMarketCapReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                <${Tab} label="Cash" id=${api.UI_MARKET_REPORTS_MOST_CASH_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(mostCashReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                            <//>
-                        </div>
-                    <//>
-                    <${Tab} label="Who Owns What?" hotkey="o">
-                        <div class="flex flex-col w-full h-full">
-                            <div class="flex justify-center items-center flex-1 min-h-0">
-                            <${Tabs}>
-                                <${Tab} label="Futures" id=${api.UI_MARKET_REPORTS_COMMOD_FUTURES_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(whoOwnsFuturesReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                <${Tab} label="Commodities" id=${api.UI_MARKET_REPORTS_COMMOD_PHYSICAL_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(whoOwnsPhysicalCommoditiesReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                <${Tab} label="Swaps" id=${api.UI_MARKET_REPORTS_INTEREST_RATE_SWAPS_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(whoOwnsSwapsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                <${Tab} label="Options" id=${api.UI_MARKET_REPORTS_OPTIONS_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(whoOwnsOptionsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                <${Tab} label="Stocks" id=${api.UI_MARKET_REPORTS_STOCKS_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(whoOwnsStocksReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                                <${Tab} label="Management Contracts" id=${api.UI_MARKET_REPORTS_INVESTMENT_CONTRACTS_REPORT}>
-                                    <div class="flex justify-center items-center">
-                                        ${renderLines(whoOwnsInvestmentContractsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                                    </div>
-                                <//>
-                            <//>
+                ${industryDrilldown
+                    ? industryDrilldownContent
+                    : html`<${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
+                        <${Tab} label="Heat Map" hotkey="h" id=${api.UI_MARKET_HEATMAP}>
+                            <${MarketHeatMapTab} />
+                        <//>
+                        <${Tab} label="Industry Growth Rates" hotkey="g" id=${api.UI_MARKET_REPORTS_INDUSTRY_GROWTH_RATES_REPORT}>
+                            <div class="flex justify-center items-center">
+                                ${renderLines(industryGrowthRatesReport, ({ id }) => {
+                                    api.viewIndustry(id)
+                                }, null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
                             </div>
-                        </div>
+                        <//>
+                        <${Tab} label="Economic Data" hotkey="e" id=${api.UI_MARKET_REPORTS_ECON_STATS_REPORT}>
+                            <div class="flex justify-center items-center">
+                                ${renderLines(economicDataReport, ({ id }) => {
+                                    api.viewIndustry(id)
+                                }, null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                            </div>
+                        <//>
+                        <${Tab} label="Interest Rates" hotkey="r" id=${api.UI_MARKET_REPORTS_INTEREST_RATES_REPORT}>
+                            <div class="flex justify-center items-center">
+                                ${renderLines(interestRatesReport, ({ id }) => {
+                                    api.viewIndustry(id)
+                                }, null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                            </div>
+                        <//>
+                        <${Tab} label="Companies With Most..." hotkey="m">
+                            <div class="flex justify-center items-center w-full h-full">
+                                <${Tabs}>
+                                    <${Tab} label="Market Share" id=${api.UI_MARKET_REPORTS_LARGEST_MARKET_SHARE_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(mostMarketShareReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                    <${Tab} label="Tax Losses" id=${api.UI_MARKET_REPORTS_LARGEST_TAX_LOSSES_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(mostTaxLossReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                    <${Tab} label="Market Cap" id=${api.UI_MARKET_REPORTS_MOST_MARKET_CAP_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(mostMarketCapReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                    <${Tab} label="Cash" id=${api.UI_MARKET_REPORTS_MOST_CASH_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(mostCashReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                <//>
+                            </div>
+                        <//>
+                        <${Tab} label="Who Owns What?" hotkey="o">
+                            <div class="flex flex-col w-full h-full">
+                                <div class="flex justify-center items-center flex-1 min-h-0">
+                                <${Tabs}>
+                                    <${Tab} label="Futures" id=${api.UI_MARKET_REPORTS_COMMOD_FUTURES_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(whoOwnsFuturesReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                    <${Tab} label="Commodities" id=${api.UI_MARKET_REPORTS_COMMOD_PHYSICAL_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(whoOwnsPhysicalCommoditiesReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                    <${Tab} label="Swaps" id=${api.UI_MARKET_REPORTS_INTEREST_RATE_SWAPS_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(whoOwnsSwapsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                    <${Tab} label="Options" id=${api.UI_MARKET_REPORTS_OPTIONS_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(whoOwnsOptionsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                    <${Tab} label="Stocks" id=${api.UI_MARKET_REPORTS_STOCKS_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(whoOwnsStocksReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                    <${Tab} label="Management Contracts" id=${api.UI_MARKET_REPORTS_INVESTMENT_CONTRACTS_REPORT}>
+                                        <div class="flex justify-center items-center">
+                                            ${renderLines(whoOwnsInvestmentContractsReport, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                                        </div>
+                                    <//>
+                                <//>
+                                </div>
+                            </div>
+                        <//>
+                        <${Tab} label="Who's Ahead?" hotkey="w" id=${api.UI_MARKET_REPORTS_WHO_AHEAD_REPORT}>
+                            <div class="flex justify-center items-center">
+                                ${renderLines(whosAheadReport, ({ id }) => {
+                                    api.setViewAsset(id)
+                                }, null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
+                            </div>
+                        <//>
                     <//>
-                    <${Tab} label="Who's Ahead?" hotkey="w" id=${api.UI_MARKET_REPORTS_WHO_AHEAD_REPORT}>
-                        <div class="flex justify-center items-center">
-                            ${renderLines(whosAheadReport, ({ id }) => {
-                                api.setViewAsset(id)
-                            }, null, hyperlinkRegex, undefined, 1, scopeActiveRef)}
-                        </div>
-                    <//>
-                <//>
+                `}
             </div>
         </div>
-    </div>`
+    </div>`;
 };
 
 export default IndustryView;

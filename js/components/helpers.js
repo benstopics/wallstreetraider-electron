@@ -89,6 +89,8 @@ export const insertCurrencySymbols = (text) => {
     return result;
 };
 
+const CLICKABLE_LINE_CLASSES = 'fixed-width cursor-pointer text-blue-400 hover:bg-blue-700 rounded px-1';
+
 function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRegex, extrasCounter, selOpts) {
     if (text === '') return html`<div style="min-height:1.2em">\u00A0</div>`;
 
@@ -114,7 +116,7 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
 
         // Clickable line — always show active style, single click navigates
         const classes = idFound
-            ? 'fixed-width cursor-pointer text-blue-400'
+            ? CLICKABLE_LINE_CLASSES
             : 'fixed-width';
         const handler = idFound ? () => { onLink && onLink(link); } : null;
         const padded = (renderExtras && link) ? text.padEnd(maxLength, ' ') : text;
@@ -122,7 +124,7 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
             ? html`<span style="${prefixStyle};opacity:0.7;">${lineNumber})</span>`
             : '';
 
-        return html`<div class="flex flex-row" style="background:rgba(255,255,255,0.15);outline:1px solid rgba(255,255,255,0.3);border-radius:2px;">
+        return html`<div class="flex flex-row">
             <div class=${classes} style="${gutterStyle}" onClick=${handler}>
                 ${prefix}${padded}
             </div>
@@ -132,7 +134,7 @@ function renderLine({ text, link }, maxLength, onLink, renderExtras, hyperlinkRe
 
     // Original behavior (no selection mode)
     const classes = idFound && onLink
-        ? 'fixed-width cursor-pointer hover:bg-blue-900 text-blue-400'
+        ? CLICKABLE_LINE_CLASSES
         : 'fixed-width';
 
     const handler = idFound ? () => onLink && onLink(link) : null;

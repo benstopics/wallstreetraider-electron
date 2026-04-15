@@ -12,6 +12,7 @@
  */
 import { html, useRef, useState } from '../lib/preact.standalone.module.js';
 import { renderLines, LetterHotkeyButton } from './helpers.js';
+import SubScreen from './SubScreen.js';
 import {
     GRID_3_S, GRID_2_S,
     CELL_S, CELL_LABEL_S, CELL_NUM_S, CELL_TXT_S, CELL_MUT_S,
@@ -186,49 +187,37 @@ function FinancialsTab() {
 
     // ── Drill-down view — cash flow projection text ──────────
     if (showFullProjection) return html`
-        <div class="flex flex-col w-full h-full min-h-0">
-            <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-                <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowFullProjection(false)}>← Back</button>
-                <span>Cash Flow Projection — ${activeEntitySymbol || activeEntityNum}</span>
-            </div>
+        <${SubScreen} title="Cash Flow Projection — ${activeEntitySymbol || activeEntityNum}" onBack=${() => setShowFullProjection(false)}>
             <div class="flex flex-col items-center overflow-y-auto flex-1 min-h-0" style="padding:8px 10px;">
                 ${renderLines(cashflowProjection, ({ id }) => api.setViewAsset(id))}
             </div>
-        </div>
+        <//>
     `;
 
     // ── Drill-down view — earnings report text ───────────────
     if (showEarningsReport) return html`
-        <div class="flex flex-col w-full h-full min-h-0">
-            <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-                <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowEarningsReport(false)}>← Back</button>
-                <span>Earnings Report — ${activeEntitySymbol || activeEntityNum}</span>
-            </div>
+        <${SubScreen} title="Earnings Report — ${activeEntitySymbol || activeEntityNum}" onBack=${() => setShowEarningsReport(false)}>
             <div class="flex flex-col items-center overflow-y-auto flex-1 min-h-0" style="padding:8px 10px;">
                 ${renderLines(earningsReport, ({ id }) => api.setViewAsset(id))}
             </div>
-        </div>
+        <//>
     `;
 
     // ── Drill-down view — full BSTR financial profile text ──
     if (showFullProfile) return html`
-        <div class="flex flex-col w-full h-full min-h-0">
-            <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-                <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowFullProfile(false)}>← Back</button>
-                <span>Financial Profile — ${activeEntitySymbol || activeEntityNum}</span>
-            </div>
+        <${SubScreen} title="Financial Profile — ${activeEntitySymbol || activeEntityNum}" onBack=${() => setShowFullProfile(false)}>
             <div ref=${extrasContainerRef} class="flex flex-col items-center overflow-y-auto flex-1 min-h-0" style="padding:8px 10px;">
                 ${renderLines(
                     financialProfile,
                     ({ id }) => api.setViewAsset(id),
                     renderExtras(buttonProps.actingAs, controlsActiveEntity, activeEntityNum, activeEntitySymbol, buttonProps.redeemCorpBonds, scopeActiveRef),
                     hyperlinkRegex,
-                    (text) => text.includes('Bonds Due in') ? { type: 'BONDS_DUE', id: null } : null,
+                    null,
                     extrasStartNumber,
                     scopeActiveRef
                 )}
             </div>
-        </div>
+        <//>
     `;
 
     // ── Player entity view — original BSTR layout ──────────
@@ -539,6 +528,12 @@ function FinancialsTab() {
                                 <span style="${rowLabelS}">Before Debt</span>
                                 <span style="font-size:var(--font-size-sm); font-weight:600; color:${rowValColor(aef.cfBeforeDebt)};">${aef.cfBeforeDebt != null ? fmtM(aef.cfBeforeDebt) : '—'}</span>
                             </div>
+
+                            ${aef.normalCashFlo != null && Math.abs(aef.normalCashFlo - aef.cfAfterDebt) > 0.01 ? html`
+                            <div style="${rowS}">
+                                <span style="${rowLabelS}; font-style:italic; opacity:0.85;">Oper. Cash Flow</span>
+                                <span style="font-size:var(--font-size-sm); color:${rowValColor(aef.normalCashFlo)};">${fmtM(aef.normalCashFlo)}</span>
+                            </div>` : ''}
 
                             <div style="${rowS}">
                                 <span style="${rowLabelS}">After Debt</span>

@@ -13,6 +13,7 @@
  */
 import { html, useState } from '../lib/preact.standalone.module.js';
 import { formatCurrency, renderLines } from './helpers.js';
+import SubScreen from './SubScreen.js';
 import {
     GRID_3_S, GRID_2_S,
     CELL_S, CELL_LABEL_S, CELL_NUM_S, CELL_TXT_S, CELL_MUT_S,
@@ -130,15 +131,12 @@ export default function OverviewPanel() {
     // ── Render ─────────────────────────────────────────────
 
     if (showReport) return html`
-    <div class="flex flex-col w-full h-full min-h-0">
-        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-            <button class="btn" style="padding:1px 8px; font-size:var(--font-size-sm);" onClick=${() => setShowReport(false)}>← Back</button>
-            <span>Research Report — ${activeEntityName || '—'}</span>
-        </div>
-        <div class="flex flex-col items-center overflow-y-auto" style="flex:1; min-height:0; padding:8px 10px;">
-            ${renderLines(researchReport, ({ id }) => api.setViewAsset(parseInt(id)), null, hyperlinkRegex)}
-        </div>
-    </div>`;
+        <${SubScreen} title="Research Report — ${activeEntityName || '—'}" onBack=${() => setShowReport(false)}>
+            <div class="flex flex-col items-center overflow-y-auto" style="flex:1; min-height:0; padding:8px 10px;">
+                ${renderLines(researchReport, ({ id }) => api.setViewAsset(parseInt(id)), null, hyperlinkRegex)}
+            </div>
+        <//>
+    `;
 
     return html`
     <div class="flex flex-col w-full h-full min-h-0 overflow-y-auto" style="padding:6px;">
