@@ -16,7 +16,13 @@ const Tabs = ({ children, activeTab: externalActiveTab, onTabChange }) => {
 
     useEffect(() => {
         if (!tabLabels.includes(activeTab)) {
-            changeTab(tabLabels[0]);
+            // Prefer the externally-requested tab if it's valid; otherwise use the first tab.
+            // Avoids triggering side-effect navigation (e.g. Search → viewDbSearch) when a
+            // conditional tab disappears and the fallback would otherwise be tabLabels[0].
+            const fallback = (externalActiveTab && tabLabels.includes(externalActiveTab))
+                ? externalActiveTab
+                : tabLabels[0];
+            changeTab(fallback);
         }
     }, [children])
 

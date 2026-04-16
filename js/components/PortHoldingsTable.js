@@ -1,5 +1,17 @@
-import { html, useState, useMemo, useEffect, useRef } from '../lib/preact.standalone.module.js';
+import { h, html, useState, useMemo, useEffect, useRef, useCallback, Component } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
+
+// memo shim — preact/compat is not bundled here; replicate it via shouldComponentUpdate
+const memo = (Fn, areEqual) => {
+    class Memo extends Component {
+        shouldComponentUpdate(nextProps) {
+            return areEqual ? !areEqual(this.props, nextProps)
+                : Object.keys(nextProps).some(k => nextProps[k] !== this.props[k]);
+        }
+        render() { return h(Fn, this.props); }
+    }
+    return Memo;
+};
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 
@@ -98,6 +110,7 @@ function normaliseRow(r) {
         commodityId: null,
         cashEstimate: null,
         cashFlow:     null,
+        sparkId: r.companyId ?? null,
     };
 
     switch (dispType) {
@@ -149,6 +162,7 @@ function normaliseRow(r) {
                 creditRating: typeof r.credRating === 'string' ? r.credRating : null,  // A.2
                 expiry: r.maturity || null,
                 notional: r.faceValue,
+                sparkId: rawType === 'GOVT_BOND_S' ? api.SBOND_RATE_ID : api.TBOND_RATE_ID,
             };
         }
         case 'CORP_BOND': {
@@ -182,6 +196,7 @@ function normaliseRow(r) {
                 notional: r.costBasis,
                 slot: r.slot ?? null,
                 commodityId: r.commodityId ?? null,
+                sparkId: r.commodityId ?? null,
             };
         }
         case 'PHYSICAL': {
@@ -194,6 +209,7 @@ function normaliseRow(r) {
                 pnl: r.pnl,
                 slot: r.slot ?? null,
                 commodityId: r.commodityId ?? null,
+                sparkId: r.commodityId ?? null,
             };
         }
         case 'SWAP': {
@@ -208,6 +224,7 @@ function normaliseRow(r) {
                 marketValue: null,
                 expiry: r.expiry || null,
                 slot: r.slot ?? null,
+                sparkId: ({ P: api.PRIME_RATE_ID, L: api.TBOND_RATE_ID, S: api.SBOND_RATE_ID })[r.intType] ?? null,
             };
         }
         default:
@@ -219,27 +236,27 @@ function normaliseRow(r) {
 const HOLDING_SPARK_CACHE_MAX = 200;
 const holdingSparkCache = new Map();
 
-function PortSpark({ companyId, isUp }) {
+function PortSpark({ chartId, isUp }) {
     const [prices, setPrices] = useState(null);
 
     useEffect(() => {
-        if (!companyId) return;
-        if (holdingSparkCache.has(companyId)) { setPrices(holdingSparkCache.get(companyId)); return; }
+        if (!chartId) return;
+        if (holdingSparkCache.has(chartId)) { setPrices(holdingSparkCache.get(chartId)); return; }
         let active = true;
-        api.getAssetChart(companyId).then(data => {
+        api.getAssetChart(chartId).then(data => {
             if (!active) return;
             const p = data?.prices;
             if (p && p.length >= 2) {
                 if (holdingSparkCache.size >= HOLDING_SPARK_CACHE_MAX)
                     holdingSparkCache.delete(holdingSparkCache.keys().next().value);
-                holdingSparkCache.set(companyId, p);
+                holdingSparkCache.set(chartId, p);
                 setPrices(p);
             }
         }).catch(() => {});
         return () => { active = false; };
-    }, [companyId]);
+    }, [chartId]);
 
-    if (!companyId || !prices || prices.length < 2)
+    if (!chartId || !prices || prices.length < 2)
         return html`<span style="color:var(--fg-muted)">—</span>`;
 
     const min = Math.min(...prices), max = Math.max(...prices);
@@ -273,7 +290,7 @@ function TypeChip({ type }) {
 }
 
 // ─── Single table row ─────────────────────────────────────────────────────────
-function PortRow({ row, cond, onSymbolClick, onAction }) {
+const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction }) {
     const pnlV    = row.pnl;
     const pnlColor = pnlV == null ? 'var(--fg-muted)'
                    : pnlV > 0    ? 'var(--color-positive)'
@@ -316,7 +333,7 @@ function PortRow({ row, cond, onSymbolClick, onAction }) {
         ? html`<span style="color:var(--fg-muted)">—</span>`
         : cpCf == null
             ? html`<span style="color:#fff">${fmtM(cpEst)}</span>`
-            : html`<span style="color:#fff">${fmtM(cpEst)}</span><span style="color:var(--fg-muted)"> (</span><span style="color:${cpCf >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${cpCf >= 0 ? '+' : '-'}${fmtM(Math.abs(cpCf))}</span><span style="color:var(--fg-muted)">)</span>`;
+            : html`<span style="color:#fff">${fmtM(cpEst)}</span><span style="color:var(--fg-muted)"><br/>(</span><span style="color:${cpCf >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${cpCf >= 0 ? '+' : '-'}${fmtM(Math.abs(cpCf))}</span><span style="color:var(--fg-muted)">)</span>`;
 
     const trStyle = row.ownerCompanyId ? 'background:rgba(96,165,250,0.05)' : undefined;
     return html`<tr style=${trStyle}>
@@ -326,7 +343,7 @@ function PortRow({ row, cond, onSymbolClick, onAction }) {
         ${td(row.position ? html`<span style="color:${posColor}">${row.position}</span>` : html`<span style="color:var(--fg-muted)">—</span>`)}
         ${tdR(fmtQty(row.quantity, row.quantityUnit))}
         ${tdR(fmtPrice(row.price))}
-        ${td(html`<${PortSpark} companyId=${row.companyId ?? null} isUp=${row.pnl == null || row.pnl >= 0} />`)}
+        ${td(html`<${PortSpark} chartId=${row.sparkId} isUp=${(row.pnl ?? row.estProfit) == null || (row.pnl ?? row.estProfit) >= 0} />`)}
         ${tdR(absMarketVal != null ? fmtM(absMarketVal) : '—')}
         ${tdR(row.costBasis != null ? fmtM(Math.abs(row.costBasis)) : '—')}
         ${tdR(pnlV != null ? pnlSign(pnlV) + fmtM(pnlV) : '—', pnlV != null ? 'color:' + pnlColor : '')}
@@ -343,11 +360,16 @@ function PortRow({ row, cond, onSymbolClick, onAction }) {
             : '—') : null}
         ${td(actions)}
     </tr>`;
-}
+}, (prev, next) =>
+    prev.cond === next.cond &&
+    prev.onSymbolClick === next.onSymbolClick &&
+    prev.onAction === next.onAction &&
+    JSON.stringify(prev.row._raw) === JSON.stringify(next.row._raw)
+);
 
 // ─── Inline action buttons ────────────────────────────────────────────────────
 function RowActions({ row, onAction }) {
-    // F.1: pass label (not kind) so handleAction can match 'Sell', 'Buy More', etc.
+    // F.1: pass label (not kind) so handleAction can match 'Sell', 'For Sale', etc.
     // F.5A: use .btn color classes
     const btn = (label, color, disabled) => html`<button
         class=${'btn ' + color + (disabled ? ' disabled' : '')}
@@ -360,25 +382,25 @@ function RowActions({ row, onAction }) {
 
     switch (row.assetType) {
         case 'STOCK': {
-            const canBuy   = row.quantity < 100;
-            const canShort = row.quantity < 100 && !row.ownerCompanyId;
+            const canShort   = row.quantity < 100 && !row.ownerCompanyId;
+            const canBuyMore = row.quantity < 100;
             return html`<div style="display:flex;gap:3px">
-                ${btn('Details','',false)}
+                ${canBuyMore ? btn('Buy More','green',false) : null}
                 ${btn('Sell','red',false)}
-                ${canBuy   ? btn('Buy More','green',false) : null}
-                ${canShort ? btn('Short','red',false)      : null}
+                ${btn('For Sale','orange',false)}
+                ${canShort ? btn('Short','red',false) : null}
             </div>`;
         }
-        case 'SHORT':     return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Cover','blue',false)}</div>`;
-        case 'CORP_BOND': return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}</div>`;
-        case 'GOVT_BOND': return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}</div>`;
+        case 'SHORT':     return html`<div style="display:flex;gap:3px">${btn('Cover','blue',false)}</div>`;
+        case 'CORP_BOND': return html`<div style="display:flex;gap:3px">${btn('Sell','red',false)}</div>`;
+        case 'GOVT_BOND': return html`<div style="display:flex;gap:3px">${btn('Buy More','green',false)}${btn('Sell','red',false)}</div>`;
         case 'OPTION':
             if (row.position === 'LONG') {
-                return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}${btn('Exercise','blue',!row.inTheMoney)}</div>`;
+                return html`<div style="display:flex;gap:3px">${btn('Sell','red',false)}${btn('Exercise','blue',!row.inTheMoney)}</div>`;
             }
-            return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Cover','blue',false)}</div>`;
-        case 'FUTURE':   return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Close','red',false)}</div>`;
-        case 'PHYSICAL': return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Sell','red',false)}</div>`;
+            return html`<div style="display:flex;gap:3px">${btn('Cover','blue',false)}</div>`;
+        case 'FUTURE':   return html`<div style="display:flex;gap:3px">${row.position === 'SHORT' ? btn('Cover','blue',false) : btn('Sell','red',false)}</div>`;
+        case 'PHYSICAL': return html`<div style="display:flex;gap:3px">${btn('Buy More','green',false)}${btn('Sell','red',false)}</div>`;
         case 'SWAP':     return html`<div style="display:flex;gap:3px">${btn('Details','',false)}${btn('Terminate','red',false)}</div>`;
         default:         return null;
     }
@@ -409,6 +431,17 @@ function Th({ col, label, sortCol, sortDir, onSort, right }) {
 }
 
 const HOLDINGS_CUSTOM_KEY = 'holdingsCriteria';
+
+// Tab to navigate to when clicking Details, per asset type (module-level — stable reference)
+const DETAILS_TAB = {
+    STOCK:     'Stocks & Bonds',
+    SHORT:     'Stocks & Bonds',
+    CORP_BOND: 'Stocks & Bonds',
+    GOVT_BOND: 'Stocks & Bonds',
+    OPTION:    'Options',
+    FUTURE:    'Commodities & Crypto',
+    PHYSICAL:  'Commodities & Crypto',
+};
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function PortHoldingsTable() {
@@ -491,23 +524,12 @@ export default function PortHoldingsTable() {
 
     const handleFilter = (key) => setFilter(f => f === key && key !== 'ALL' ? 'ALL' : key);
 
-    const handleSymbolClick = async (companyId) => {
+    const handleSymbolClick = useCallback(async (companyId) => {
         await api.setViewAsset(companyId);
-    };
-
-    // Tab to navigate to when clicking Details, per asset type
-    const DETAILS_TAB = {
-        STOCK:     'Stocks & Bonds',
-        SHORT:     'Stocks & Bonds',
-        CORP_BOND: 'Stocks & Bonds',
-        GOVT_BOND: 'Stocks & Bonds',
-        OPTION:    'Options',
-        FUTURE:    'Commodities & Crypto',
-        PHYSICAL:  'Commodities & Crypto',
-    };
+    }, []);
 
     // Full action routing — passes ownerCompanyId as actingAsId for subsidiary rows
-    const handleAction = async (row, kind) => {
+    const handleAction = useCallback(async (row, kind) => {
         const t = row.assetType;
         // holderId is always populated by the backend with the exact entity that holds the asset.
         // Always pass it as actAs (intParam2) so ui.inc sets PlayCo& explicitly.
@@ -521,8 +543,9 @@ export default function PortHoldingsTable() {
         }
 
         if (t === 'STOCK') {
-            if (kind === 'Sell')     await api.sellStock(row.companyId, actAs);
             if (kind === 'Buy More') await api.buyStock(row.companyId, actAs);
+            if (kind === 'Sell')     await api.sellStock(row.companyId, actAs);
+            if (kind === 'For Sale') await api.sellSubsidiaryStock(row.companyId, actAs);
         }
         if (t === 'SHORT' && kind === 'Cover') {
             await api.coverShortStock(row.companyId, actAs);
@@ -530,9 +553,15 @@ export default function PortHoldingsTable() {
         if (t === 'CORP_BOND' && kind === 'Sell') {
             await api.sellCorporateBond(row.companyId, actAs);
         }
-        if (t === 'GOVT_BOND' && kind === 'Sell') {
-            if (row.rawAssetType === 'GOVT_BOND_L') await api.sellLongGovtBonds(actAs);
-            else                                    await api.sellShortGovtBonds(actAs);
+        if (t === 'GOVT_BOND') {
+            if (kind === 'Buy More') {
+                if (row.rawAssetType === 'GOVT_BOND_L') await api.buyLongGovtBonds(actAs);
+                else                                    await api.buyShortGovtBonds(actAs);
+            }
+            if (kind === 'Sell') {
+                if (row.rawAssetType === 'GOVT_BOND_L') await api.sellLongGovtBonds(actAs);
+                else                                    await api.sellShortGovtBonds(actAs);
+            }
         }
         if (t === 'OPTION') {
             if (kind === 'Sell') {
@@ -544,12 +573,13 @@ export default function PortHoldingsTable() {
                 else                        await api.exercisePutOptionsEarly(row.slot, actAs);
             }
         }
-        if (t === 'FUTURE' && kind === 'Close' && row.slot) {
-            if (row.position === 'SHORT') await api.coverShortCommodityFuturesBySlot(row.slot, actAs);
-            else                          await api.closeLongCommodityFuturesBySlot(row.slot, actAs);
+        if (t === 'FUTURE' && row.slot) {
+            if (kind === 'Cover') await api.coverShortCommodityFuturesBySlot(row.slot, actAs);
+            if (kind === 'Sell')  await api.closeLongCommodityFuturesBySlot(row.slot, actAs);
         }
-        if (t === 'PHYSICAL' && kind === 'Sell' && row.commodityId) {
-            await api.sellPhysicalCommodity(row.commodityId, actAs);
+        if (t === 'PHYSICAL' && row.commodityId) {
+            if (kind === 'Buy More') await api.buyPhysicalCommodity(row.commodityId);
+            if (kind === 'Sell')     await api.sellPhysicalCommodity(row.commodityId, actAs);
         }
         if (t === 'SWAP') {
             if (kind === 'Details')   await api.viewSwapDetails(row.slot, actAs);
@@ -558,7 +588,7 @@ export default function PortHoldingsTable() {
         if (t === 'STOCK' && kind === 'Short') {
             await api.shortStock(row.companyId, actAs);
         }
-    };
+    }, []);
 
     const cond = COND_COLS[filter] || COND_COLS.ALL;
     const ftCount = sorted.length;
@@ -605,13 +635,21 @@ export default function PortHoldingsTable() {
             ${p.label}
           </button>`;
         })}
-        <div style="margin-left:auto">
-          <button
-            class="db-input"
-            onClick=${() => setHideSubsid(v => !v)}
-            style="cursor:pointer;${hideSubsid ? 'border-color:var(--accent-secondary);color:var(--accent-secondary)' : ''}">
-            Hide Subsidiary Holdings
-          </button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <span style="font-size:0.75rem;color:var(--text-secondary)">Show Subsidiary Holdings</span>
+          <label style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer">
+            <input type="checkbox" checked=${!hideSubsid} onChange=${() => setHideSubsid(v => !v)}
+              style="opacity:0;width:0;height:0;position:absolute" />
+            <span style="
+              position:absolute;inset:0;border-radius:20px;transition:background 0.2s;
+              background:${!hideSubsid ? 'var(--accent-secondary)' : 'var(--border-primary)'};
+            ">
+              <span style="
+                position:absolute;top:3px;left:${!hideSubsid ? '18px' : '3px'};
+                width:14px;height:14px;border-radius:50%;background:#fff;transition:left 0.2s;
+              "></span>
+            </span>
+          </label>
         </div>
       </div>
 
@@ -634,7 +672,7 @@ export default function PortHoldingsTable() {
               ${tdHeader('yield',       'Yield/Rate',true)}
               ${tdHeader('creditRating','Rating',    false)}
               ${tdHeader('expiry',      'Expiry',    false)}
-              ${tdHeader('cashEstimate','Cash Proj.', true)}
+              ${tdHeader('cashEstimate','3-Mo Cash Proj', true)}
               ${cond.strike    ? tdHeader('strike',      'Strike',   true) : null}
               ${cond.notional  ? tdHeader('notional',    'Notional', true) : null}
               ${cond.inttype   ? tdHeader('interestType','Int Type', false): null}
@@ -644,7 +682,7 @@ export default function PortHoldingsTable() {
           </thead>
           <tbody>
             ${sorted.map((row, i) => html`<${PortRow}
-              key=${row._raw?.slot + '_' + row.assetType + '_' + i}
+              key=${`${row.rawAssetType ?? row.assetType}_${row.ownerCompanyId ?? 0}_${row.slot ?? row.companyId ?? row.commodityId ?? i}`}
               row=${row}
               cond=${cond}
               onSymbolClick=${handleSymbolClick}

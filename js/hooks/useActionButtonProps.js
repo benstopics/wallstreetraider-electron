@@ -576,6 +576,7 @@ export function useActionButtonProps() {
         // Context values for conditional rendering
         isActiveEntityETF,
         isActingAsBank,
+        isActingAsETFAdvisor,
         actingAs,
         actingAsId,
         playerName,

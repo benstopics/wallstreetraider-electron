@@ -790,7 +790,7 @@ export async function restructure() { await postNoArg('/restructure'); }
 export async function buyCorporateAssets() { await postNoArg('/buy_corporate_assets'); }
 export async function sellCorporateAssets() { await postNoArg('/sell_corporate_assets'); }
 export async function viewForSaleItems() { await postNoArg('/view_for_sale_items'); }
-export async function sellSubsidiaryStock() { await postNoArg('/sell_subsidiary_stock'); }
+export async function sellSubsidiaryStock(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_subsidiary_stock', id, actingAsId); }
 export async function rebrand() { await postNoArg('/rebrand'); }
 export async function toggleCompanyAutopilot(id) { await postIdArg('/toggle_company_autopilot', id); }
 export async function toggleGlobalAutopilot() { await postNoArg('/toggle_global_autopilot'); }

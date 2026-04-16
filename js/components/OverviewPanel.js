@@ -450,11 +450,11 @@ export default function OverviewPanel() {
                             color="neutral"
                         />
                     </div>
-                ` : html`
+                ` : (playerControlsActive && !isActiveEntityETF) ? html`
                     <div style="padding:6px;">
                         <${DisabledTooltipButton} ...${buttonProps.issueCorpBonds} buttonClass="" />
                     </div>
-                `}
+                ` : ''}
             </div>
         </div>
 

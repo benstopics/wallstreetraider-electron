@@ -26,11 +26,15 @@ export default function ActionBar({ entityLabel }) {
         actingAsSymbol,
         activeEntityNum,
         controlledCompanies,
+        controlsActiveEntity,
         isActiveEntityETF,
         isActingAsBank,
+        isActingAsETFAdvisor,
     } = props;
 
     const actingAsIndustryId = api.useGameStore(s => s.gameState.actingAsIndustryId);
+    const canTradeGovtBonds = [api.PLAYER_IND, api.BANK_IND, api.INSURANCE_IND].includes(actingAsIndustryId);
+    const canTradeOptions = !isActingAsBank && actingAsIndustryId !== api.INSURANCE_IND;
 
     // Build filter for target picker based on action
     const targetFilter = useMemo(() => {
@@ -106,6 +110,37 @@ export default function ActionBar({ entityLabel }) {
         props.electResignCeo,
     ];
 
+    // ==================== INVEST DROPDOWN ====================
+    const investItems = [
+        { header: 'Stocks' },
+        props.buyStock,
+        props.sellStock,
+        ...(!isActingAsETFAdvisor ? [props.shortStock] : []),
+        props.coverShort,
+        { divider: true },
+        { header: 'Bonds' },
+        props.buyCorpBond,
+        props.sellCorpBond,
+        ...(canTradeGovtBonds ? [
+            { divider: true },
+            { header: 'Govt Bonds' },
+            props.buyLongGovtBonds,
+            props.sellLongGovtBonds,
+            props.buyShortGovtBonds,
+            props.sellShortGovtBonds,
+        ] : []),
+        ...(canTradeOptions ? [
+            { divider: true },
+            { header: 'Options' },
+            props.buyCalls,
+            props.sellCalls,
+            props.buyPuts,
+            props.sellPuts,
+            { divider: true },
+            props.advancedOptions,
+        ] : []),
+    ];
+
     // ==================== HOSTILE DROPDOWN ====================
     const hostileItems = [
         { header: 'Legal' },
@@ -152,23 +187,33 @@ export default function ActionBar({ entityLabel }) {
     return html`
         <div class="action-bar" style="align-items: center;">
             ${entityLabel ? html`<span style="font-weight: bold; font-size: var(--font-size-sm); white-space: nowrap; opacity: 0.7;">${entityLabel}</span>` : ''}
-            ${!notActingAsCompany ? html`
-                <${DropdownMenu}
-                    label="Corporate"
-                    icon="🏢"
-                    items=${corporateItems}
-                    color="blue"
-                />
+            ${(activeEntityNum === api.HUMAN1_ID || (!notActingAsCompany && controlsActiveEntity)) ? html`
+                ${activeEntityNum !== api.HUMAN1_ID ? html`
+                    <${DropdownMenu}
+                        label="Corporate"
+                        icon="🏢"
+                        items=${corporateItems}
+                        color="blue"
+                    />
+                ` : ''}
+                ${activeEntityNum === api.HUMAN1_ID ? html`
+                    <${DropdownMenu}
+                        label="Invest"
+                        icon="📈"
+                        items=${investItems}
+                        color="green"
+                    />
+                ` : ''}
+                ${activeEntityNum !== api.HUMAN1_ID ? html`
+                    <${DropdownMenu}
+                        label="Hostile"
+                        icon="⚔️"
+                        items=${hostileItems}
+                        color="red"
+                    />
+                ` : ''}
             ` : ''}
             <div style="flex:1"><${CommandPrompt} /></div>
-            ${!notActingAsCompany ? html`
-                <${DropdownMenu}
-                    label="Hostile"
-                    icon="⚔️"
-                    items=${hostileItems}
-                    color="red"
-                />
-            ` : ''}
         </div>
         <${CompanySelectModal}
             show=${showTargetPicker}

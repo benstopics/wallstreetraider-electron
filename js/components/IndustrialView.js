@@ -53,6 +53,8 @@ const IndustrialView = () => {
     const eventString = api.useGameStore(s => s.gameState.eventString);
     const nextEarningsDate = api.useGameStore(s => s.gameState.nextEarningsDate);
     const preferredTab = api.useGameStore(s => s.gameState.uiPreferredCompanyTab);
+    const portHoldings = api.useGameStore(s => s.gameState.portHoldings) || [];
+    const hasHoldings = portHoldings.length > 0;
     const shareholderGraphSetting = api.useGameStore(s => s.gameState.shareholderGraphSetting);
     const shareholdersList = api.useGameStore(s => s.gameState.shareholdersList);
 
@@ -124,9 +126,11 @@ const IndustrialView = () => {
     }, [activeTab]);
 
     // When navigating to a new entity (without a preferred tab), restore the saved tab.
+    // If the saved tab is Holdings but this entity has no holdings, fall back to Overview.
     useEffect(() => {
         if (!preferredTab) {
-            setActiveTabInternal(savedTab);
+            const resolvedTab = (savedTab === 'Holdings' && !hasHoldings) ? 'Overview' : savedTab;
+            setActiveTabInternal(resolvedTab);
         }
     }, [activeEntityNum]);
 
@@ -135,8 +139,10 @@ const IndustrialView = () => {
     // preferredTab to null does NOT re-trigger the entity-change effect and revert the tab.
     useEffect(() => {
         if (preferredTab) {
-            setActiveTabInternal(preferredTab);
-            setSavedTab(preferredTab); // persist so entity-change effect doesn't revert it
+            // If Holdings was requested but this company has no holdings, fall back to Overview.
+            const resolvedTab = (preferredTab === 'Holdings' && !hasHoldings) ? 'Overview' : preferredTab;
+            setActiveTabInternal(resolvedTab);
+            setSavedTab(resolvedTab); // persist so entity-change effect doesn't revert it
             const gs = api.gameStore.getState().gameState || {};
             api.gameStore.getState().setGameState({ ...gs, uiPreferredCompanyTab: null });
         }
@@ -164,7 +170,7 @@ const IndustrialView = () => {
         <div class="flex flex-row gap-2 flex-1 min-h-0">
             <div class="flex flex-col w-full gap-2 h-full">
                 <${ActionBar} entityLabel="${activeEntitySymbol} - ${activeEntityName}" />
-                <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
+                <${Tabs} activeTab=${!hasHoldings && activeTab === 'Holdings' ? 'Overview' : activeTab} onTabChange=${setActiveTab}>
                     <${Tab} label="Search">
                     <//>
                     <${Tab} label="Market" hotkey="m">
@@ -229,9 +235,9 @@ const IndustrialView = () => {
                     ${activeIndustryId != api.BANK_IND ? html`<${Tab} label="Commodities & Crypto" hotkey="m" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
                         ${html`<${CommoditiesTab} />`}
                     <//>` : ''}
-                    <${Tab} label="Holdings" hotkey="h" id=${api.UI_CORP_HOLDINGS}>
+                    ${hasHoldings ? html`<${Tab} label="Holdings" hotkey="h" id=${api.UI_CORP_HOLDINGS}>
                         <${PortHoldingsTab} />
-                    <//>
+                    <//>` : ''}
                     <${Tab} label="Shareholders" hotkey="r" id=${api.UI_CORP_SHAREHOLDERS_LIST}>
                         <div class="flex flex-col h-full">
                             <${HotkeyButtonBar} buttons=${shareholdersBarButtons}

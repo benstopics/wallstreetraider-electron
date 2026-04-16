@@ -1,9 +1,7 @@
-import { html, useRef, useState } from '../lib/preact.standalone.module.js';
+import { html, useRef } from '../lib/preact.standalone.module.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
-import HotkeyButtonBar from './HotkeyButtonBar.js';
 import { renderLines } from './helpers.js';
 import * as api from '../api.js';
-import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
 function parseReportLine(line) {
     const data = {
@@ -27,35 +25,12 @@ function OptionsTab() {
     const optionsList = api.useGameStore(s => s.gameState.optionsList);
     const hyperlinkRegex = api.useGameStore(s => s.gameState.hyperlinkRegex);
 
-    // Get centralized button props
-    const buttonProps = useActionButtonProps();
-
-    // ETF check — only used for Advanced Options Trading Station, not for per-line buttons.
-    // ETFs can trade options through their advisor; the PB code handles ETF routing internally.
-    const isETF = buttonProps.isActiveEntityETF;
-
     // Extras hotkey refs
     const extrasContainerRef = useRef(null);
     const scopeActiveRef = useRef(false);
-    const [, setScopeRenderTick] = useState(0);
-    const barButtons = [
-        buttonProps.buyCalls,
-        buttonProps.sellCalls,
-        buttonProps.buyPuts,
-        buttonProps.sellPuts,
-        !isETF && buttonProps.advancedOptions,
-    ];
-    const extrasStartNumber = barButtons.filter(Boolean).length + 1;
 
     return html`
             <div class="flex flex-col w-full h-full min-h-0">
-                <div class="flex flex-col items-center mb-2">
-                    <${HotkeyButtonBar} buttons=${barButtons}
-                        extrasContainerRef=${extrasContainerRef}
-                        scopeActiveRef=${scopeActiveRef}
-                        onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
-                        class="flex flex-row justify-center gap-2 mt-2" style="height:30px" />
-                </div>
                 <div ref=${extrasContainerRef} class="flex flex-col flex-[3] items-center overflow-y-auto min-h-0">
                     ${renderLines(
                         optionsList,
@@ -105,7 +80,7 @@ function OptionsTab() {
                                 lineNumber=${lineNumber}
                             />`}
                         `}
-                    , hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
+                    , hyperlinkRegex, undefined, 1, scopeActiveRef)}
                 </div>
             </div>
     `;
