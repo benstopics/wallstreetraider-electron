@@ -120,14 +120,9 @@ export default function ActionBar({ entityLabel }) {
         { divider: true },
         { header: 'Bonds' },
         props.buyCorpBond,
-        props.sellCorpBond,
         ...(canTradeGovtBonds ? [
-            { divider: true },
-            { header: 'Govt Bonds' },
             props.buyLongGovtBonds,
-            props.sellLongGovtBonds,
             props.buyShortGovtBonds,
-            props.sellShortGovtBonds,
         ] : []),
         ...(canTradeOptions ? [
             { divider: true },
@@ -196,7 +191,7 @@ export default function ActionBar({ entityLabel }) {
                         color="blue"
                     />
                 ` : ''}
-                ${activeEntityNum === api.HUMAN1_ID ? html`
+                ${(activeEntityNum === api.HUMAN1_ID || activeEntityNum > 10) ? html`
                     <${DropdownMenu}
                         label="Invest"
                         icon="📈"

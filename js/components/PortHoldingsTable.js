@@ -17,10 +17,11 @@ const memo = (Fn, areEqual) => {
 
 const fmtM = v => {
     if (v == null || !Number.isFinite(v)) return '—';
+    const sign = v < 0 ? '-' : '';
     const a = Math.abs(v);
-    if (a >= 1e6) return '$' + (a / 1e6).toFixed(2) + 'T';
-    if (a >= 1e3) return '$' + (a / 1e3).toFixed(2) + 'B';
-    return '$' + a.toFixed(1) + 'M';
+    if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(2) + 'T';
+    if (a >= 1e3) return sign + '$' + (a / 1e3).toFixed(2) + 'B';
+    return sign + '$' + a.toFixed(1) + 'M';
 };
 const fmtPct = v => (v == null || !Number.isFinite(v)) ? '—' : v.toFixed(2) + '%';
 const fmtPrice = v => (v == null || !Number.isFinite(v)) ? '—' : '$' + v.toFixed(2);
@@ -332,8 +333,8 @@ const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction }) {
     const cashProjCell = cpEst == null
         ? html`<span style="color:var(--fg-muted)">—</span>`
         : cpCf == null
-            ? html`<span style="color:#fff">${fmtM(cpEst)}</span>`
-            : html`<span style="color:#fff">${fmtM(cpEst)}</span><span style="color:var(--fg-muted)"><br/>(</span><span style="color:${cpCf >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${cpCf >= 0 ? '+' : '-'}${fmtM(Math.abs(cpCf))}</span><span style="color:var(--fg-muted)">)</span>`;
+            ? html`<span style="color:${cpEst >= 0 ? '#fff' : 'var(--color-negative)'}">${fmtM(cpEst)}</span>`
+            : html`<span style="color:${cpEst >= 0 ? '#fff' : 'var(--color-negative)'}">${fmtM(cpEst)}</span><span style="color:var(--fg-muted)"><br/>(</span><span style="color:${cpCf >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${cpCf >= 0 ? '+' : '-'}${fmtM(Math.abs(cpCf))}</span><span style="color:var(--fg-muted)">)</span>`;
 
     const trStyle = row.ownerCompanyId ? 'background:rgba(96,165,250,0.05)' : undefined;
     return html`<tr style=${trStyle}>
