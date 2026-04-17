@@ -7,6 +7,10 @@ const NODE_HEIGHT = 50;  // Compact 2-row height
 const NODE_HEIGHT_TALL = 70;  // 3-row height for nodes with CEO/PLAYER indicator
 const NODE_PADDING = 15;
 const CENTER_GAP = 120;
+// Fixed SVG coordinate-space width: owners | gap | center | gap | subs
+const CONTENT_WIDTH = NODE_WIDTH * 3 + CENTER_GAP * 2;
+// Horizontal padding so node edges and number badges don't touch the SVG edge
+const HORIZONTAL_PADDING = 24;
 
 // Determine if a node needs the tall height (has 3rd row content)
 const needsTallHeight = (node, isCenter) => {
@@ -214,59 +218,77 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true, startNumbe
     const [subsidiariesData, setSubsidiariesData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [refreshTick, setRefreshTick] = useState(0);
     const containerRef = useRef(null);
-    const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
 
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const dlrSign = api.useGameStore(s => s.gameState.dlrSign) || '$';
     const euro = api.useGameStore(s => s.gameState.euro) || '';
 
-    // Fetch data when active entity changes
+    // Fetch ownership/subsidiary trees for the active entity.
+    //
+    // setViewAsset updates activeEntityNum optimistically in the store, but the
+    // PowerBASIC engine processes the navigation event asynchronously on its
+    // game loop. The backend's /ownership_tree reads its own activeEntityNum,
+    // so a fetch issued right after the optimistic update can return the
+    // PREVIOUS entity's tree. Worse, when the engine later catches up and the
+    // WS pushes activeEntityNum=B, the store already had B (optimistic), so
+    // useGameStore's Object.is check sees no change → no re-render → stale.
+    //
+    // Fix: poll with retry. Each response carries the engine's actual root
+    // entityId; if it doesn't match the entity we asked for, wait briefly and
+    // try again until the engine catches up (or we time out).
     useEffect(() => {
+        let cancelled = false;
+        const expectedEntity = activeEntityNum;
+
         const fetchData = async () => {
-            if (!activeEntityNum) return;
+            if (!expectedEntity) return;
 
             setLoading(true);
             setError(null);
 
-            try {
-                const [ownership, subsidiaries] = await Promise.all([
-                    showOwners ? api.getOwnershipTree() : Promise.resolve(null),
-                    showSubsidiaries ? api.getSubsidiariesTree() : Promise.resolve(null)
-                ]);
+            const maxAttempts = 20;
+            const delayMs = 50;
 
-                setOwnershipData(ownership);
-                setSubsidiariesData(subsidiaries);
+            try {
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    const [ownership, subsidiaries] = await Promise.all([
+                        showOwners ? api.getOwnershipTree() : Promise.resolve(null),
+                        showSubsidiaries ? api.getSubsidiariesTree() : Promise.resolve(null)
+                    ]);
+
+                    if (cancelled) return;
+
+                    const rootEntity = ownership?.entityId ?? subsidiaries?.entityId;
+                    if (rootEntity == null || rootEntity === expectedEntity) {
+                        setOwnershipData(ownership);
+                        setSubsidiariesData(subsidiaries);
+                        return;
+                    }
+
+                    // Engine hasn't processed the navigation event yet — wait and retry.
+                    await new Promise(r => setTimeout(r, delayMs));
+                    if (cancelled) return;
+                }
+
+                console.warn('OwnershipGraph: backend never confirmed entity', expectedEntity);
             } catch (err) {
+                if (cancelled) return;
                 console.error('Failed to fetch ownership data:', err);
                 setError(err.message);
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchData();
-    }, [activeEntityNum, showOwners, showSubsidiaries]);
+        return () => { cancelled = true; };
+    }, [activeEntityNum, refreshTick, showOwners, showSubsidiaries]);
 
-    // Update dimensions on resize
-    useEffect(() => {
-        const updateDimensions = () => {
-            if (containerRef.current) {
-                const rect = containerRef.current.getBoundingClientRect();
-                setDimensions({
-                    width: Math.max(rect.width, 600),
-                    height: Math.max(rect.height, 300)
-                });
-            }
-        };
-
-        updateDimensions();
-        window.addEventListener('resize', updateDimensions);
-        return () => window.removeEventListener('resize', updateDimensions);
-    }, []);
-
-    const handleNodeClick = (entityId) => {
-        api.setViewAsset(entityId);
+    const handleNodeClick = async (entityId) => {
+        await api.setViewAsset(entityId);
+        setRefreshTick(t => t + 1);
     };
 
     if (loading) {
@@ -322,8 +344,6 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true, startNumbe
         `;
     }
 
-    const { width, height } = dimensions;
-
     // Use tall height for layout spacing to ensure nodes don't overlap
     const layoutHeight = NODE_HEIGHT_TALL;
 
@@ -333,10 +353,10 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true, startNumbe
     // Calculate required height based on content
     const maxNodes = Math.max(owners.length, subsidiaries.length, 1);
     const requiredContentHeight = maxNodes * (layoutHeight + NODE_PADDING) + 60; // 60 for top/bottom padding
-    const svgHeight = Math.max(height, requiredContentHeight);
+    const svgHeight = Math.max(300, requiredContentHeight);
 
-    // Calculate positions
-    const centerX = width / 2 - NODE_WIDTH / 2;
+    // Calculate positions in fixed viewBox coordinate space
+    const centerX = (CONTENT_WIDTH - NODE_WIDTH) / 2;
     const centerY = svgHeight / 2 - centerNodeHeight / 2;
 
     // Calculate owner positions (left side)
@@ -348,10 +368,14 @@ const OwnershipGraph = ({ showOwners = true, showSubsidiaries = true, startNumbe
     const subX = centerX + NODE_WIDTH + CENTER_GAP;
 
     return html`
-        <div ref=${containerRef} class="ownership-graph-container" style="width: 100%; height: 100%; overflow: auto;">
-            <svg width=${width} height=${svgHeight} style="display: block;">
+        <div ref=${containerRef} class="ownership-graph-container" style="width: 100%; height: 100%; overflow-x: hidden; overflow-y: auto;">
+            <svg
+                width="100%"
+                viewBox="${-HORIZONTAL_PADDING} 0 ${CONTENT_WIDTH + HORIZONTAL_PADDING * 2} ${svgHeight}"
+                preserveAspectRatio="xMidYMin meet"
+                style="display: block;">
                 <!-- Background -->
-                <rect width=${width} height=${svgHeight} fill="transparent" />
+                <rect x=${-HORIZONTAL_PADDING} width=${CONTENT_WIDTH + HORIZONTAL_PADDING * 2} height=${svgHeight} fill="transparent" />
 
                 <!-- Connection lines from owners to center -->
                 ${owners.map((owner, i) => {
