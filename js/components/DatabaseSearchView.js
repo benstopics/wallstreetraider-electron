@@ -1,5 +1,4 @@
-import { html, useState, useEffect, useMemo, useCallback, useRef } from '../lib/preact.standalone.module.js';
-// useCallback still used for getIndustryName
+import { html, useState, useMemo, useCallback, useRef } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
 import { insertCurrencySymbols } from './helpers.js';
 
@@ -61,9 +60,7 @@ const DatabaseSearchView = () => {
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const customData = api.useGameStore(s => s.gameState?.customData ?? {});
 
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const data = api.useGameStore(s => s.gameState.allCompanies ?? []);
 
     // Filter states - using uncontrolled inputs with refs to avoid re-renders during typing
     // Only the debounced filter values are in state
@@ -128,41 +125,6 @@ const DatabaseSearchView = () => {
     const debouncedSaveCustomData = useMemo(() => api.debounce((criteria) => {
         api.setCustomData({ [CUSTOM_DATA_KEY]: criteria });
     }, SAVE_DEBOUNCE_MS), []);
-
-    // Fetch data on mount, retry if database not ready (all marketCaps are 0)
-    useEffect(() => {
-        let timeoutId = null;
-        let cancelled = false;
-
-        const fetchData = () => {
-            api.getDatabaseData()
-                .then(res => {
-                    if (cancelled) return;
-                    const entries = res?.entries || [];
-                    // Check if database is ready (at least one non-zero marketCap)
-                    const hasData = entries.some(e => e.marketCap > 0);
-                    if (!hasData && entries.length > 0) {
-                        // Database not ready yet, retry in 1 second
-                        timeoutId = setTimeout(fetchData, 1000);
-                    } else {
-                        setData(entries);
-                        setLoading(false);
-                    }
-                })
-                .catch(err => {
-                    if (cancelled) return;
-                    setError(err.message);
-                    setLoading(false);
-                });
-        };
-
-        fetchData();
-
-        return () => {
-            cancelled = true;
-            if (timeoutId) clearTimeout(timeoutId);
-        };
-    }, []);
 
     // Industry options
     const industryOptions = useMemo(() => {
@@ -412,18 +374,6 @@ const DatabaseSearchView = () => {
             apply: () => { clearFilters(); setMinAnalystRating('1'); setPositiveCashFlow(true); setSortCol('analystRating'); setSortDir('asc'); }
         }
     ];
-
-    if (loading) {
-        return html`<div class="panel h-full flex items-center justify-center">
-            <p>Loading database...</p>
-        </div>`;
-    }
-
-    if (error) {
-        return html`<div class="panel h-full flex items-center justify-center">
-            <p class="text-red-400">Error: ${error}</p>
-        </div>`;
-    }
 
     const handleBack = async () => {
         // Clear DB_SEARCH on the server first — poll will revert to -2 until this lands

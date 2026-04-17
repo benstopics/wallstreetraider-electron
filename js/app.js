@@ -1,6 +1,7 @@
 import { html, render, useState, useEffect, useRef } from './lib/preact.standalone.module.js';
 import './lib/tailwind.module.js';
 import * as api from './api.js';
+import { applyPatch } from './lib/fast-json-patch.module.js';
 
 const ipcRenderer = (typeof require !== 'undefined')
     ? require('electron').ipcRenderer
@@ -52,51 +53,112 @@ const AppInner = () => {
         }
     }, [readyToRestart, modalType]);
 
-    // useEffect(() => {
-    //     const connectWebSocket = (retryCount = 0) => {
-    //         const ws = new WebSocket('ws://127.0.0.1:9632');
+    useEffect(() => {
+        let wsRef = null;
 
-    //         ws.onopen = () => {
-    //             console.log('WebSocket connection established');
-    //             retryCount = 0; // Reset retry count on successful connection
+        const connectWebSocket = (retryCount = 0) => {
+            const ws = new WebSocket('ws://127.0.0.1:9632');
+            wsRef = ws;
 
-    //             api.getGameState().then((newGameState) => {
-    //                 setGameState(newGameState);
-    //             }).catch(console.error);
+            ws.onopen = () => {
+                console.log('[WS] Connected to port 9632');
+                wsConnectedRef.current = true;
+                retryCount = 0;
+                api.getGameState().then(newGameState => {
+                    if (newGameState.allCompanies?.length > 0) {
+                        newGameState.hyperlinkRegex = api.buildDictRegex(
+                            newGameState.allCompanies, newGameState.allIndustries);
+                    }
+                    setGameState(api.mergeGameState(newGameState));
+                }).catch(console.error);
+            };
 
-    //         };
+            ws.onmessage = (evt) => {
+                const msg = JSON.parse(evt.data);
+                if (msg.path === '/game_state_patch') {
+                    const prev = api.gameStore.getState().gameState;
+                    const ops = Array.isArray(msg.payload)
+                        ? msg.payload
+                        : JSON.parse(msg.payload);
+                    const patched = applyPatch(prev, ops, false, false).newDocument;
+                    if (patched.gameLoaded && patched.navHistory?.length > 0) {
+                        const navJson = JSON.stringify(patched.navHistory);
+                        if (navJson !== prevNavJsonRef.current) {
+                            prevNavJsonRef.current = navJson;
+                            try { localStorage.setItem(NAV_STORAGE_KEY, navJson); } catch (e) {}
+                        }
+                    }
+                    if (patched.allCompanies?.length > 0) {
+                        patched.hyperlinkRegex = api.buildDictRegex(
+                            patched.allCompanies, patched.allIndustries);
+                    }
+                    setGameState(api.mergeGameState(patched));
+                    if (!wasGameLoadedRef.current && patched.gameLoaded) {
+                        wasGameLoadedRef.current = true;
+                        try {
+                            const saved = localStorage.getItem(NAV_STORAGE_KEY);
+                            const history = saved ? JSON.parse(saved) : [];
+                            if (history.length > 0) {
+                                api.navSetHistory(history).catch(() => {});
+                            } else {
+                                const aeid = patched.activeEntityNum;
+                                if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
+                            }
+                        } catch (e) {
+                            const aeid = patched.activeEntityNum;
+                            if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
+                        }
+                    }
+                } else if (msg.path === '/game_state') {
+                    const newState = msg.payload;
+                    const justLoaded = !wasGameLoadedRef.current && newState.gameLoaded;
+                    wasGameLoadedRef.current = !!newState.gameLoaded;
+                    if (justLoaded) {
+                        try {
+                            const saved = localStorage.getItem(NAV_STORAGE_KEY);
+                            const history = saved ? JSON.parse(saved) : [];
+                            if (history.length > 0) {
+                                api.navSetHistory(history).catch(() => {});
+                            } else {
+                                const aeid = newState.activeEntityNum;
+                                if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
+                            }
+                        } catch (e) {
+                            const aeid = newState.activeEntityNum;
+                            if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
+                        }
+                    }
+                    if (newState.gameLoaded && newState.navHistory?.length > 0) {
+                        const navJson = JSON.stringify(newState.navHistory);
+                        if (navJson !== prevNavJsonRef.current) {
+                            prevNavJsonRef.current = navJson;
+                            try { localStorage.setItem(NAV_STORAGE_KEY, navJson); } catch (e) {}
+                        }
+                    }
+                    if (newState.allCompanies?.length > 0) {
+                        newState.hyperlinkRegex = api.buildDictRegex(
+                            newState.allCompanies, newState.allIndustries);
+                    }
+                    setGameState(api.mergeGameState(newState));
+                }
+            };
 
-    //         ws.onmessage = (evt) => {
-    //             const msg = JSON.parse(evt.data);
-    //             if (msg.path === '/game_state_patch') {
-    //                 // console.log('Patch received', msg.payload);
-    //                 setGameState(prev => {
-    //                     const ops = Array.isArray(msg.payload) ? msg.payload : JSON.parse(msg.payload);
-    //                     // non-mutating apply; prev remains untouched
-    //                     const { newDocument } = applyPatch(prev, ops, /* validate */ true, /* mutateDocument */ false);
-    //                     return newDocument;
-    //                 });
-    //             } else if (msg.path === '/game_state') {
-    //                 // console.log('Full patch', msg.payload);
-    //                 setGameState(prev => ({ ...prev, ...msg.payload }));
-    //             }
-    //         };
+            ws.onerror = (err) => {
+                console.error('[WS] Error:', err);
+            };
 
-    //         ws.onerror = (err) => {
-    //             console.error('WebSocket error:', err);
-    //         };
+            ws.onclose = () => {
+                wsConnectedRef.current = false;
+                console.warn('[WS] Closed, retrying with backoff...');
+                const delay = Math.min(1000 * Math.pow(2, retryCount), 30000);
+                setTimeout(() => connectWebSocket(retryCount + 1), delay);
+            };
+        };
 
-    //         ws.onclose = () => {
-    //             console.warn('WebSocket connection closed, retrying...');
-    //             const delay = Math.min(1000 * Math.pow(2, retryCount), 30000); // Exponential backoff with max delay of 30 seconds
-    //             setTimeout(() => connectWebSocket(retryCount + 1), delay);
-    //         };
-    //     };
+        connectWebSocket();
 
-    //     connectWebSocket();
-
-    //     return () => ws.close();
-    // }, []);
+        return () => { if (wsRef) wsRef.close(); };
+    }, []);
 
     const hideModal = () => {
         api.closeModal();
@@ -113,6 +175,10 @@ const AppInner = () => {
     const isTickerRunningRef = useRef(isTickerRunning);
     const modalTypeRef = useRef(modalType);
     const gameLoadedRef = useRef(gameLoaded);
+    const wsConnectedRef = useRef(false);
+    const wasGameLoadedRef = useRef(false);
+    const prevNavJsonRef = useRef('');
+    const NAV_STORAGE_KEY = 'wsr_navHistory';
     useEffect(() => { isTickerRunningRef.current = isTickerRunning; }, [isTickerRunning]);
     useEffect(() => { modalTypeRef.current = modalType; }, [modalType]);
     useEffect(() => { gameLoadedRef.current = gameLoaded; }, [gameLoaded]);
@@ -171,25 +237,26 @@ const AppInner = () => {
         let timeoutId;
         let pollSeq = 0;
         let consecutiveErrors = 0;
-        let wasGameLoaded = false;
-        let prevNavJson = '';           // last-seen navHistory JSON for change detection
-
-        const NAV_STORAGE_KEY = 'wsr_navHistory';
 
         const fetchGameState = () => {
+            if (wsConnectedRef.current) {
+                // WS is active — suspend polling, resume check in 500ms
+                timeoutId = setTimeout(fetchGameState, 500);
+                return;
+            }
             pollSeq++;
             const seq = pollSeq;
             api.getGameState().then((newGameState) => {
                 consecutiveErrors = 0;
 
                 // Detect game-load transition (false → true)
-                const justLoaded = !wasGameLoaded && newGameState.gameLoaded;
+                const justLoaded = !wasGameLoadedRef.current && newGameState.gameLoaded;
 
                 // Log sparingly: first 3 polls, every 100th, or game state transitions
-                if (seq <= 3 || seq % 100 === 0 || newGameState.gameLoaded !== wasGameLoaded) {
+                if (seq <= 3 || seq % 100 === 0 || newGameState.gameLoaded !== wasGameLoadedRef.current) {
                     console.log(`[POLL #${seq}] gameLoaded=${newGameState.gameLoaded} modalType=${newGameState.modalType} companies=${newGameState.allCompanies?.length}`);
                 }
-                wasGameLoaded = newGameState.gameLoaded;
+                wasGameLoadedRef.current = !!newGameState.gameLoaded;
 
                 // On game load: restore persisted nav history, or seed with current entity
                 if (justLoaded) {
@@ -211,8 +278,8 @@ const AppInner = () => {
                 // Persist nav history whenever it changes (only during gameplay)
                 if (newGameState.gameLoaded && newGameState.navHistory?.length > 0) {
                     const navJson = JSON.stringify(newGameState.navHistory);
-                    if (navJson !== prevNavJson) {
-                        prevNavJson = navJson;
+                    if (navJson !== prevNavJsonRef.current) {
+                        prevNavJsonRef.current = navJson;
                         try { localStorage.setItem(NAV_STORAGE_KEY, navJson); } catch (e) {}
                     }
                 }
@@ -244,7 +311,7 @@ const AppInner = () => {
             });
         };
 
-        console.log('[POLL] Starting gamestate polling loop');
+        console.log('[POLL] Starting gamestate polling loop (fallback mode)');
         fetchGameState();
 
         return () => clearTimeout(timeoutId);
