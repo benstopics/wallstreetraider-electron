@@ -1,4 +1,4 @@
-import { html, useState, useMemo, useCallback, useRef } from '../lib/preact.standalone.module.js';
+import { html, useState, useEffect, useMemo, useCallback, useRef } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
 import { insertCurrencySymbols } from './helpers.js';
 
