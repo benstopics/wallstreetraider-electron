@@ -53,15 +53,15 @@ const CRED_COLOR = {
 
 // ─── COND_COLS: which extra columns appear per filter ────────────────────────
 const COND_COLS = {
-    ALL:       { strike: false, notional: false, inttype: false, estprofit: false },
-    STOCK:     { strike: false, notional: false, inttype: false, estprofit: false },
-    SHORT:     { strike: false, notional: false, inttype: false, estprofit: false },
-    CORP_BOND: { strike: false, notional: true,  inttype: false, estprofit: false },
-    GOVT_BOND: { strike: false, notional: true,  inttype: false, estprofit: false },
-    OPTION:    { strike: true,  notional: false, inttype: false, estprofit: false },
-    FUTURE:    { strike: false, notional: true,  inttype: false, estprofit: false },
-    PHYSICAL:  { strike: false, notional: false, inttype: false, estprofit: false },
-    SWAP:      { strike: false, notional: true,  inttype: true,  estprofit: true  },
+    ALL:       { strike: false },
+    STOCK:     { strike: false },
+    SHORT:     { strike: false },
+    CORP_BOND: { strike: false },
+    GOVT_BOND: { strike: false },
+    OPTION:    { strike: true  },
+    FUTURE:    { strike: false },
+    PHYSICAL:  { strike: false },
+    SWAP:      { strike: false },
 };
 
 // ─── Swap interest type maps (module-level — avoids per-render object creation) ─
@@ -218,6 +218,8 @@ function normaliseRow(r) {
                 name: SWAP_INT_TYPE_NAME[r.intType] || r.name || '—',
                 position: r.posType || 'LONG',
                 yield: r.fixedRate, yieldLabel: 'Fixed Rate',
+                thresholdRate: r.fixedRate ?? null,
+                currentRate: r.currentRate ?? null,
                 notional: r.notional,
                 interestType: SWAP_INT_TYPE_SHORT[r.intType] || r.intType || null,
                 estProfit: r.pnl,
@@ -328,10 +330,22 @@ const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction }) {
     const tdR = (content, style='') => html`<td class="num" style=${style || undefined}>${content}</td>`;
 
     // Cash Proj. cell: "$2.41B (-$41.0M)" — cash white, cashflow colored by sign
+    // For swaps: show rate diff (fixed vs current) above quarterly profit, wrapped in parens
     const cpEst = row.cashEstimate;
     const cpCf  = row.cashFlow;
     const cashProjCell = cpEst == null
-        ? html`<span style="color:var(--fg-muted)">—</span>`
+        ? (row.assetType === 'SWAP' && row.estProfit != null
+            ? (() => {
+                const rateDiff = row.currentRate != null && row.thresholdRate != null
+                    ? (row.position === 'LONG' ? row.currentRate - row.thresholdRate : row.thresholdRate - row.currentRate)
+                    : null;
+                return html`<div>
+                    ${rateDiff != null ? html`<span style="color:${rateDiff >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${pnlSign(rateDiff)}${fmtPct(rateDiff)}</span>` : ''}
+                    <br/>
+                    <span style="color:var(--fg-muted)">(</span><span style="color:${row.estProfit >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${pnlSign(row.estProfit)}${fmtM(row.estProfit)}</span><span style="color:var(--fg-muted)">)</span>
+                </div>`;
+            })()
+            : html`<span style="color:var(--fg-muted)">—</span>`)
         : cpCf == null
             ? html`<span style="color:${cpEst >= 0 ? '#fff' : 'var(--color-negative)'}">${fmtM(cpEst)}</span>`
             : html`<span style="color:${cpEst >= 0 ? '#fff' : 'var(--color-negative)'}">${fmtM(cpEst)}</span><span style="color:var(--fg-muted)"><br/>(</span><span style="color:${cpCf >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${cpCf >= 0 ? '+' : '-'}${fmtM(Math.abs(cpCf))}</span><span style="color:var(--fg-muted)">)</span>`;
@@ -342,23 +356,35 @@ const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction }) {
         ${td(viaCell)}
         ${td(companyCell)}
         ${td(row.position ? html`<span style="color:${posColor}">${row.position}</span>` : html`<span style="color:var(--fg-muted)">—</span>`)}
-        ${tdR(fmtQty(row.quantity, row.quantityUnit))}
+        ${tdR(row.assetType === 'SWAP' && row.notional != null
+            ? html`<div>
+                <span>${fmtM(row.notional)}</span>
+              </div>`
+            : fmtQty(row.quantity, row.quantityUnit))}
         ${tdR(fmtPrice(row.price))}
         ${td(html`<${PortSpark} chartId=${row.sparkId} isUp=${(row.pnl ?? row.estProfit) == null || (row.pnl ?? row.estProfit) >= 0} />`)}
         ${tdR(absMarketVal != null ? fmtM(absMarketVal) : '—')}
         ${tdR(row.costBasis != null ? fmtM(Math.abs(row.costBasis)) : '—')}
         ${tdR(pnlV != null ? pnlSign(pnlV) + fmtM(pnlV) : '—', pnlV != null ? 'color:' + pnlColor : '')}
         ${tdR(pnlPctV != null ? pnlSign(pnlPctV) + fmtPct(pnlPctV) : '—', pnlPctV != null ? 'color:' + pnlColor : '')}
-        ${tdR(row.yield != null ? fmtPct(row.yield) : '—')}
+        ${tdR(row.assetType === 'SWAP'
+            ? (row.currentRate != null && row.thresholdRate != null
+                ? (() => {
+                    const fixedRate = row.thresholdRate ?? 0;
+                    const currentRate = row.currentRate ?? 0;
+                    const isShort = row.position === 'SHORT';
+                    const fixedSign = isShort ? '+' : '-';
+                    const currentSign = isShort ? '-' : '+';
+                    const fixedPct = fixedSign + fmtPct(fixedRate);
+                    const currentPct = currentSign + fmtPct(currentRate);
+                    return html`<span style="color:${isShort ? 'var(--color-positive)' : 'var(--color-negative)'}">${fixedPct}</span><span style="color:var(--fg-muted)">/</span><span style="color:${isShort ? 'var(--color-negative)' : 'var(--color-positive)'}">${currentPct}</span><br/>`;
+                })()
+                : html`<span style="color:var(--fg-muted)">—</span>`)
+            : (row.yield != null ? fmtPct(row.yield) : html`<span style="color:var(--fg-muted)">—</span>`))}
         ${td(ratingCell)}
         ${td(row.expiry || html`<span style="color:var(--fg-muted)">—</span>`)}
         ${tdR(cashProjCell)}
         ${cond.strike    ? tdR(row.strike != null ? fmtPrice(row.strike) : '—') : null}
-        ${cond.notional  ? tdR(row.notional != null ? fmtM(row.notional) : '—') : null}
-        ${cond.inttype   ? td(row.interestType || html`<span style="color:var(--fg-muted)">—</span>`) : null}
-        ${cond.estprofit ? tdR(row.estProfit != null
-            ? html`<span style="color:${row.estProfit >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${pnlSign(row.estProfit) + fmtM(row.estProfit)}</span>`
-            : '—') : null}
         ${td(actions)}
     </tr>`;
 }, (prev, next) =>
@@ -446,20 +472,14 @@ const DETAILS_TAB = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function PortHoldingsTable() {
-    const rawHoldings         = api.useGameStore(s => s.gameState?.portHoldings ?? []);
-    const controlledCompanies = api.useGameStore(s => s.gameState?.controlledCompanies ?? []);
-    const customData          = api.useGameStore(s => s.gameState?.customData ?? {});
+    const rawHoldings = api.useGameStore(s => s.gameState?.portHoldings ?? []);
+    const customData  = api.useGameStore(s => s.gameState?.customData ?? {});
 
-    const controlledIds = useMemo(
-        () => new Set((controlledCompanies || []).map(c => c.id)),
-        [controlledCompanies]
-    );
-
-    const [filter,       setFilter]       = useState('ALL');
-    const [sortCol,      setSortCol]      = useState('marketValue');
-    const [sortDir,      setSortDir]      = useState('desc');
-    const [hideSubsid,   setHideSubsid]   = useState(false);
-    const [search,       setSearch]       = useState('');
+    const [activeFilters, setActiveFilters] = useState(() => new Set());
+    const [sortCol,      setSortCol]        = useState('marketValue');
+    const [sortDir,      setSortDir]        = useState('desc');
+    const [hideSubsid,   setHideSubsid]     = useState(false);
+    const [search,       setSearch]         = useState('');
 
     const restoredRef = useRef(false);
 
@@ -469,7 +489,8 @@ export default function PortHoldingsTable() {
         const saved = customData?.[HOLDINGS_CUSTOM_KEY];
         if (!saved) return;
         restoredRef.current = true;
-        if (saved.filter)              setFilter(saved.filter);
+        if (Array.isArray(saved.filters))   setActiveFilters(new Set(saved.filters));
+        else if (saved.filter && saved.filter !== 'ALL') setActiveFilters(new Set([saved.filter]));
         if (saved.sortCol)             setSortCol(saved.sortCol);
         if (saved.sortDir)             setSortDir(saved.sortDir);
         if (saved.hideSubsid != null)  setHideSubsid(saved.hideSubsid);
@@ -478,18 +499,17 @@ export default function PortHoldingsTable() {
     // Persist criteria to customData on change
     useEffect(() => {
         if (!restoredRef.current) return;
-        api.setCustomData({ [HOLDINGS_CUSTOM_KEY]: { filter, sortCol, sortDir, hideSubsid } });
-    }, [filter, sortCol, sortDir, hideSubsid]);
+        api.setCustomData({ [HOLDINGS_CUSTOM_KEY]: { filters: [...activeFilters], sortCol, sortDir, hideSubsid } });
+    }, [activeFilters, sortCol, sortDir, hideSubsid]);
 
     // Normalise once per raw change
     const rows = useMemo(() => (rawHoldings || []).map(normaliseRow), [rawHoldings]);
 
     // Filter
     const filtered = useMemo(() => {
-        const base = filter === 'ALL' ? rows : rows.filter(r => r.assetType === filter);
+        const base = activeFilters.size === 0 ? rows : rows.filter(r => activeFilters.has(r.assetType));
         const q = search.trim().toLowerCase();
         return base.filter(r => {
-            if (r.ownerCompanyId !== null && !controlledIds.has(r.ownerCompanyId)) return false;
             if (hideSubsid && r.ownerCompanyId !== null) return false;
             if (q) {
                 const hit = (s) => s && s.toLowerCase().includes(q);
@@ -497,7 +517,7 @@ export default function PortHoldingsTable() {
             }
             return true;
         });
-    }, [rows, filter, controlledIds, hideSubsid, search]);
+    }, [rows, activeFilters, hideSubsid, search]);
 
     // Sort
     const sorted = useMemo(() => {
@@ -523,7 +543,14 @@ export default function PortHoldingsTable() {
         else { setSortCol(col); setSortDir(col === 'name' || col === 'assetType' ? 'asc' : 'desc'); }
     };
 
-    const handleFilter = (key) => setFilter(f => f === key && key !== 'ALL' ? 'ALL' : key);
+    const handleFilter = (key) => {
+        if (key === 'ALL') { setActiveFilters(new Set()); return; }
+        setActiveFilters(prev => {
+            const next = new Set(prev);
+            next.has(key) ? next.delete(key) : next.add(key);
+            return next;
+        });
+    };
 
     const handleSymbolClick = useCallback(async (companyId) => {
         await api.setViewAsset(companyId);
@@ -591,7 +618,12 @@ export default function PortHoldingsTable() {
         }
     }, []);
 
-    const cond = COND_COLS[filter] || COND_COLS.ALL;
+    const cond = useMemo(() => {
+        const keys = activeFilters.size === 0 ? ['ALL'] : [...activeFilters];
+        return {
+            strike: keys.some(k => (COND_COLS[k] || COND_COLS.ALL).strike),
+        };
+    }, [activeFilters]);
     const ftCount = sorted.length;
     const tdHeader = (col, label, right) => html`<${Th} col=${col} label=${label} sortCol=${sortCol} sortDir=${sortDir} onSort=${handleSort} right=${right} />`;
 
@@ -622,7 +654,7 @@ export default function PortHoldingsTable() {
           style="width:130px;padding:2px 6px" />
         ${PILLS.map(p => {
           const tc = TYPE_COLORS[p.key];
-          const active = filter === p.key;
+          const active = p.key === 'ALL' ? activeFilters.size === 0 : activeFilters.has(p.key);
           const activeStyle = tc
               ? `border-color:${tc.fg};color:${tc.fg};background:${tc.bg}`
               : 'border-color:var(--accent-secondary);color:var(--accent-secondary)';
@@ -675,9 +707,6 @@ export default function PortHoldingsTable() {
               ${tdHeader('expiry',      'Expiry',    false)}
               ${tdHeader('cashEstimate','3-Mo Cash Proj', true)}
               ${cond.strike    ? tdHeader('strike',      'Strike',   true) : null}
-              ${cond.notional  ? tdHeader('notional',    'Notional', true) : null}
-              ${cond.inttype   ? tdHeader('interestType','Int Type', false): null}
-              ${cond.estprofit ? tdHeader('estProfit',   'Est Qtr Profit', true) : null}
               <th>Actions</th>
             </tr>
           </thead>
