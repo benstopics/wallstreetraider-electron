@@ -4,6 +4,7 @@ import * as api from '../api.js';
 import { DEFAULT_ASSET_PRICE_CHART_THEME } from '../../css/chart-styles.js';
 import { insertCurrencySymbols } from './helpers.js';
 import Modal from './Modal.js';
+import AdvancedChartModal from './AdvancedChartModal.js';
 import {
     DEFAULT_LAYOUT_CONFIG,
     computeLayout,
@@ -21,6 +22,9 @@ import {
     calculateYAxisValues,
     calculateXAxisIndices,
 } from './assetPriceChartUtils.js';
+import { buildCandles, hasRealOHLC, calcPricePaneRange } from './advancedChartUtils.js';
+import { drawCandles as drawCandlesShared, drawOHLCBars as drawOHLCBarsShared } from './chartDrawing.js';
+import { useChartType, isSimpleAsset } from './chartPrefs.js';
 
 // Special security IDs (commodities, rates, crypto) that are in allSecurities
 const SECURITY_IDS = [
@@ -234,6 +238,8 @@ const AssetPriceChart = ({
     layoutConfig = DEFAULT_LAYOUT_CONFIG,
     baseMultiplier = 1,  // Multiplier for base unit (e.g., 1e6 if data is in millions)
     expandable = true,
+    advancedMode = true,  // When true + expandable, click opens AdvancedChartModal; false uses zoomed-copy Modal
+    forceLineOnly = false,  // Derived-scalar marker (e.g., Net Worth/Market Cap wrapper): forces line mode regardless of persisted chartType
 }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
@@ -246,6 +252,7 @@ const AssetPriceChart = ({
         price: null,
         dateInfo: null,
     });
+    const [chartType] = useChartType();
 
     const gameLoaded = api.useGameStore(s => s.gameState.gameLoaded);
     const currentMonth = api.useGameStore(s => s.gameState.currentMonth);
@@ -360,7 +367,20 @@ const AssetPriceChart = ({
                 hasChartTitle: !!chartTitle,
                 hasYAxisTitle: !!yAxisTitle,
             });
-            const priceRange = calculatePriceRange(prices);
+
+            // Decide whether to render candle/OHLC or line mode.
+            // Candle/OHLC requires: (1) the shared preference is not 'line',
+            // (2) real high/low data exists, AND (3) the asset isn't a simple
+            // scalar/derived quantity (net worth, rates) where OHLC is noise.
+            const tv = transformValue || ((v) => v);
+            const rawHighs = Array.isArray(chartData.highs) ? chartData.highs.map(tv) : [];
+            const rawLows = Array.isArray(chartData.lows) ? chartData.lows.map(tv) : [];
+            const canUseOHLC = chartType !== 'line'
+                && hasRealOHLC(rawHighs, rawLows)
+                && !isSimpleAsset(assetId)
+                && !forceLineOnly;
+            const candles = canUseOHLC ? buildCandles(prices, rawHighs, rawLows) : null;
+            const priceRange = candles ? calcPricePaneRange(candles) : calculatePriceRange(prices);
             const suffixInfo = determineSuffixForRange(priceRange.maxVal, baseMultiplier);
 
             // Prepare titles
@@ -383,7 +403,13 @@ const AssetPriceChart = ({
             ctx.clearRect(0, 0, w, h);
             drawBackground(ctx, w, h, theme);
             drawGrid(ctx, layout, theme, layoutConfig);
-            drawLineAndArea(ctx, prices, layout, priceRange, theme);
+            if (candles && chartType === 'candle') {
+                drawCandlesShared(ctx, theme, candles, layout.padL, layout.chartW, priceRange, layout.padT, layout.chartH, { maxBodyW: 18 });
+            } else if (candles && chartType === 'ohlc') {
+                drawOHLCBarsShared(ctx, theme, candles, layout.padL, layout.chartW, priceRange, layout.padT, layout.chartH, { maxTickW: 9 });
+            } else {
+                drawLineAndArea(ctx, prices, layout, priceRange, theme);
+            }
 
             // Draw axes
             ctx.fillStyle = theme.lineColor;
@@ -411,7 +437,7 @@ const AssetPriceChart = ({
         const ro = new ResizeObserver(draw);
         if (canvasRef.current) ro.observe(canvasRef.current);
         return () => ro.disconnect();
-    }, [chartData, prices, mouseState, theme, layoutConfig, chartTitle, yAxisTitle]);
+    }, [chartData, prices, mouseState, theme, layoutConfig, chartTitle, yAxisTitle, chartType, transformValue, baseMultiplier, forceLineOnly]);
 
     // Calculate tooltip position relative to container
     const tooltipStyle = useMemo(() => {
@@ -480,7 +506,16 @@ const AssetPriceChart = ({
                 </div>
             `}
         </div>
-        ${expanded && html`
+        ${expanded && advancedMode && html`
+            <${AdvancedChartModal}
+                assetId=${assetId}
+                chartTitle=${chartTitle}
+                baseMultiplier=${baseMultiplier}
+                forceLineOnly=${forceLineOnly}
+                onClose=${() => setExpanded(false)}
+            />
+        `}
+        ${expanded && !advancedMode && html`
             <${Modal} show=${true} onClose=${() => setExpanded(false)} style=${"--modal-w: 80vw; --modal-h: 70vh;"}>
                 <div style="width: 100%; height: 100%; padding: 8px;">
                     <${AssetPriceChart}

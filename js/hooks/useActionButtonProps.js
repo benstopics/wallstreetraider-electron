@@ -615,6 +615,7 @@ export function useActionButtonProps() {
         borrowMoney,
         repayLoan,
         changeBank,
+        creditInfo,
         tradeTbills,
         advanceFunds,
         interestRateSwaps,

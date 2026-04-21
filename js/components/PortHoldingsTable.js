@@ -415,7 +415,6 @@ function RowActions({ row, onAction }) {
                 ${canBuyMore ? btn('Buy More','green',false) : null}
                 ${btn('Sell','red',false)}
                 ${btn('For Sale','orange',false)}
-                ${canShort ? btn('Short','red',false) : null}
             </div>`;
         }
         case 'SHORT':     return html`<div style="display:flex;gap:3px">${btn('Cover','blue',false)}</div>`;
@@ -474,6 +473,7 @@ const DETAILS_TAB = {
 export default function PortHoldingsTable() {
     const rawHoldings = api.useGameStore(s => s.gameState?.portHoldings ?? []);
     const customData  = api.useGameStore(s => s.gameState?.customData ?? {});
+    const gameLoaded  = api.useGameStore(s => s.gameState != null);
 
     const [activeFilters, setActiveFilters] = useState(() => new Set());
     const [sortCol,      setSortCol]        = useState('marketValue');
@@ -483,18 +483,21 @@ export default function PortHoldingsTable() {
 
     const restoredRef = useRef(false);
 
-    // Restore from customData on first load (save-persistent)
+    // Restore from customData on first load (save-persistent). Flip the ref once
+    // gameState is loaded regardless of whether saved data exists — otherwise the
+    // persist effect below stays gated off forever for fresh saves, and user
+    // toggles (Hide Subsidiaries, sort, filter chips) never get written back.
     useEffect(() => {
-        if (restoredRef.current) return;
+        if (restoredRef.current || !gameLoaded) return;
+        restoredRef.current = true;
         const saved = customData?.[HOLDINGS_CUSTOM_KEY];
         if (!saved) return;
-        restoredRef.current = true;
         if (Array.isArray(saved.filters))   setActiveFilters(new Set(saved.filters));
         else if (saved.filter && saved.filter !== 'ALL') setActiveFilters(new Set([saved.filter]));
         if (saved.sortCol)             setSortCol(saved.sortCol);
         if (saved.sortDir)             setSortDir(saved.sortDir);
         if (saved.hideSubsid != null)  setHideSubsid(saved.hideSubsid);
-    }, [customData]);
+    }, [customData, gameLoaded]);
 
     // Persist criteria to customData on change
     useEffect(() => {

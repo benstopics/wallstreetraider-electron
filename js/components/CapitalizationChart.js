@@ -13,6 +13,7 @@ function CapitalizationChart({ assetId, chartTitle }) {
         chartTitle=${chartTitle}
         theme=${DEFAULT_CAPITALIZATION_CHART_THEME}
         baseMultiplier=${baseMultiplier}
+        forceLineOnly=${true}
     />`;
 }
 

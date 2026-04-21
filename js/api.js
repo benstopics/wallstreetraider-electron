@@ -702,6 +702,8 @@ export async function getAssetChart(id) {
 
         return {
             prices: [v, v, v, v, v, v],
+            highs: [],
+            lows: [],
             baseMonth: month,
             baseYear: year,
         };
@@ -720,6 +722,8 @@ export async function getAssetChart(id) {
                     data.prices[i] = fillValue;
                 }
             }
+            if (!Array.isArray(data.highs)) data.highs = [];
+            if (!Array.isArray(data.lows)) data.lows = [];
             return data;
         }
         return buildFallback();
@@ -752,21 +756,21 @@ export async function buyShortGovtBonds(actingAsId = 0) { await postIdArgWithAct
 export async function sellShortGovtBonds(actingAsId = 0) { await postIdArgWithActingAs('/sell_short_govt_bonds', 0, actingAsId); }
 
 /* Commodity Futures */
-export async function buyCommodityFutures(id) { await postIdArg('/buy_commodity_futures', id); }
+export async function buyCommodityFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_commodity_futures', id, actingAsId); }
 export async function sellCommodityFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_commodity_futures', id, actingAsId); }
 export async function closeLongCommodityFuturesBySlot(slot, actingAsId = 0) { await postIdArgWithActingAs('/close_long_commodity_futures_by_slot', slot, actingAsId); }
-export async function shortCommodityFutures(id) { await postIdArg('/short_commodity_futures', id); }
+export async function shortCommodityFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/short_commodity_futures', id, actingAsId); }
 export async function coverShortCommodityFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/cover_short_commodity_futures', id, actingAsId); }
 export async function coverShortCommodityFuturesBySlot(slot, actingAsId = 0) { await postIdArgWithActingAs('/cover_short_commodity_futures_by_slot', slot, actingAsId); }
 
 /* Physical Commodities */
-export async function buyPhysicalCommodity(id) { await postIdArg('/buy_physical_commodity', id); }
+export async function buyPhysicalCommodity(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_physical_commodity', id, actingAsId); }
 export async function sellPhysicalCommodity(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_physical_commodity', id, actingAsId); }
 
 /* Crypto */
-export async function buyPhysicalCrypto(id) { await postIdArg('/buy_physical_crypto', id); }
+export async function buyPhysicalCrypto(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_physical_crypto', id, actingAsId); }
 export async function sellPhysicalCrypto(id) { await postIdArg('/sell_physical_crypto', id); }
-export async function buyCryptoFutures(id) { await postIdArg('/buy_crypto_futures', id); }
+export async function buyCryptoFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_crypto_futures', id, actingAsId); }
 export async function sellCryptoFutures(id) { await postIdArg('/sell_crypto_futures', id); }
 
 /* Options */
@@ -798,9 +802,9 @@ export async function becomeEtfAdvisor() { await postNoArg('/become_etf_advisor'
 export async function setAdvisoryFee() { await postNoArg('/set_advisory_fee'); }
 
 /* Deals & Funding */
-export async function merger(targetId = 0) { await postIdArg('/merger', targetId); }
-export async function greenmail(targetId = 0) { await postIdArg('/greenmail', targetId); }
-export async function lbo(targetId = 0) { await postIdArg('/lbo', targetId); }
+export async function merger(targetId = 0, actingAsId = 0) { await postIdArgWithActingAs('/merger', targetId, actingAsId); }
+export async function greenmail(targetId = 0, actingAsId = 0) { await postIdArgWithActingAs('/greenmail', targetId, actingAsId); }
+export async function lbo(targetId = 0, actingAsId = 0) { await postIdArgWithActingAs('/lbo', targetId, actingAsId); }
 export async function startup() { await postNoArg('/startup'); }
 export async function capitalContribution() { await postNoArg('/capital_contribution'); }
 export async function publicStockOffering(entityId = 0) { await postIdArgWithActingAs('/public_stock_offering', 0, entityId); }
@@ -861,10 +865,10 @@ export async function setWhoOwnsFilter(value) {
         body: JSON.stringify({ value })
     });
 }
-export async function antitrustLawsuit(id) { await postIdArg('/antitrust_lawsuit', id); }
+export async function antitrustLawsuit(id, actingAsId = 0) { await postIdArgWithActingAs('/antitrust_lawsuit', id, actingAsId); }
 
-export async function harrassingLawsuit(id) { await postIdArg('/harrassing_lawsuit', id); }
-export async function spreadRumors(id) { await postIdArg('/spread_rumors', id); }
+export async function harrassingLawsuit(id, actingAsId = 0) { await postIdArgWithActingAs('/harrassing_lawsuit', id, actingAsId); }
+export async function spreadRumors(id, actingAsId = 0) { await postIdArgWithActingAs('/spread_rumors', id, actingAsId); }
 
 // Menu/Settings
 export async function suppEarnSelect() { await postNoArg('/supp_earn_select'); }

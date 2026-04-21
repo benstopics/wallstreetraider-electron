@@ -19,6 +19,7 @@ import InterestRateSwapsModal from './components/InterestRateSwapsModal.js';
 import BankAllocationModal from './components/BankAllocationModal.js';
 import TextAnnounceModal from './components/TextAnnounceModal.js';
 import CompanySelectModal from './components/CompanySelectModal.js';
+import CommoditySelectModal from './components/CommoditySelectModal.js';
 import TutorialModal from './components/TutorialModal.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
 import PriceAlertModal from './components/PriceAlertModal.js';
@@ -404,6 +405,13 @@ const AppInner = () => {
             defaultValue=${modalDefault}
             onSubmit=${(value) => { api.modalResult(value); }}
             onCancel=${hideModal}
+        />
+        <${CommoditySelectModal}
+            show=${modalType === 12}
+            title=${modalTitle}
+            text=${modalText}
+            defaultValue=${modalDefault}
+            onSubmit=${(value) => { api.modalResult(value); }}
         />
         <${TutorialModal} />
         <${PriceAlertModal} show=${modalType === 11} onClose=${hideModal} />

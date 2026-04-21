@@ -1,8 +1,20 @@
-import { html, useState, useEffect, useMemo, useCallback, useRef } from '../lib/preact.standalone.module.js';
+import { h, html, useState, useEffect, useMemo, useCallback, useRef, Component } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
 import { insertCurrencySymbols } from './helpers.js';
 
 const DEBOUNCE_DELAY = 500;
+
+// memo shim — preact/compat is not bundled; same pattern used in PortHoldingsTable.js
+const memo = (Fn, areEqual) => {
+    class Memo extends Component {
+        shouldComponentUpdate(nextProps) {
+            return areEqual ? !areEqual(this.props, nextProps)
+                : Object.keys(nextProps).some(k => nextProps[k] !== this.props[k]);
+        }
+        render() { return h(Fn, this.props); }
+    }
+    return Memo;
+};
 
 // Formatting helpers
 const fmt = (n, decimals = 1) => {
@@ -55,12 +67,52 @@ const getShortScoreText = (score) => {
 const CUSTOM_DATA_KEY = 'dbSearchCriteria';
 const SAVE_DEBOUNCE_MS = 1000;
 
+// Shared frozen fallbacks — selectors must return stable references, otherwise
+// `x ?? []` / `x ?? {}` in a useGameStore selector returns a fresh literal every
+// subscription call and forces a re-render on every websocket message.
+const EMPTY_COMPANIES = Object.freeze([]);
+const EMPTY_CUSTOM_DATA = Object.freeze({});
+
+// Virtualization constants — every row is forced to exactly ROW_HEIGHT px so we can
+// compute which slice of `sorted` is visible without measuring every row.
+const ROW_HEIGHT = 24;
+const OVERSCAN = 10;
+const DEFAULT_VIEWPORT_H = 800;
+const ROW_TR_STYLE = `height:${ROW_HEIGHT}px;max-height:${ROW_HEIGHT}px`;
+
+// Memoized single row — skips VDOM rebuild + diff when its company data and the
+// passed handlers are referentially stable. This is what keeps the table responsive
+// when the GameUI parent re-renders (clock tick, etc.).
+const DbRow = memo(function DbRow({ c, industryName, onViewAsset, onViewIndustry }) {
+    const pctBook = (c.bookValue > 0 && c.price > 0) ? (c.marketCap / c.bookValue) * 100 : null;
+    return html`<tr style=${ROW_TR_STYLE}>
+        <td><span class="hover:underline" style="color:#60a5fa;cursor:pointer;font-weight:600" onClick=${() => onViewAsset(c.id)}>${c.symbol}</span></td>
+        <td class="truncate" style="max-width:120px" title=${c.name}><span class="hover:underline" style="color:#60a5fa;cursor:pointer" onClick=${() => onViewAsset(c.id)}>${c.name}</span></td>
+        <td class="truncate" style="max-width:60px" title=${industryName}><span class="hover:underline" style="color:#60a5fa;cursor:pointer" onClick=${() => onViewIndustry(c.industryId)}>${industryName}</span></td>
+        <td class="num">$ ${fmt(c.price, 2)}</td>
+        <td class="num">$ ${fmtInt(c.marketCap)} M</td>
+        <td class="num">${c.pe > 0 ? fmt(c.pe) : '-'}</td>
+        <td class="num">$ ${c.bookValue > 0 ? fmt(c.bookValue, 2) : '-'} M</td>
+        <td class="num">${pctBook != null ? fmt(pctBook) + '%' : '-'}</td>
+        <td class="num">${c.divYield > 0 ? fmt(c.divYield) + '%' : '-'}</td>
+        <td class="num">${c.roe ? fmt(c.roe) + '%' : '-'}</td>
+        <td class="num">${c.convPrem > 0 ? fmt(c.convPrem) + '%' : '-'}</td>
+        <td class="num">${getCreditRating(c.credRating)}</td>
+        <td class="num">${getAnalystRating(c.analystRating)}</td>
+        <td class="num">${getMgmtRating(c.mgmtRating)}</td>
+        <td class="num">${getCashFlowText(c.cashFlow)}</td>
+        <td class="num">${getShortScoreText(c.shortScore)}</td>
+        <td class="num">$ ${c.jBondsPublic > 0 ? fmtInt(c.jBondsPublic) : '-'} M</td>
+        <td class="num">${c.bondYield > 0 ? fmt(c.bondYield) + '%' : '-'}</td>
+    </tr>`;
+});
+
 const DatabaseSearchView = () => {
     const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
-    const customData = api.useGameStore(s => s.gameState?.customData ?? {});
+    const customData = api.useGameStore(s => s.gameState?.customData ?? EMPTY_CUSTOM_DATA);
 
-    const data = api.useGameStore(s => s.gameState.allCompanies ?? []);
+    const data = api.useGameStore(s => s.gameState.allCompanies ?? EMPTY_COMPANIES);
 
     // Filter states - using uncontrolled inputs with refs to avoid re-renders during typing
     // Only the debounced filter values are in state
@@ -381,6 +433,87 @@ const DatabaseSearchView = () => {
         api.setViewAsset(activeEntityNum || api.HUMAN1_ID);
     };
 
+    // Stable row handlers — prevents memo'd DbRow from re-rendering on every parent tick
+    const onViewAsset = useCallback((id) => api.setViewAsset(id), []);
+    const onViewIndustry = useCallback((id) => api.viewIndustry(id), []);
+
+    // Data is still loading until the first company list arrives from the bridge.
+    // Shown while allCompanies is empty — distinguishes "loading" from "no matches".
+    const isDataLoading = data.length === 0;
+
+    // ── Virtualization ─────────────────────────────────────────────────────────
+    // 1600 <tr> elements is too many for a browser to layout/paint smoothly on every
+    // GameUI clock tick. We render only the visible slice (+ overscan) into the DOM
+    // and preserve scrollbar geometry with two spacer <tr> rows.
+    const scrollContainerRef = useRef(null);
+    const [scrollTop, setScrollTop] = useState(0);
+    const [viewportHeight, setViewportHeight] = useState(DEFAULT_VIEWPORT_H);
+
+    useEffect(() => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        setViewportHeight(el.clientHeight || DEFAULT_VIEWPORT_H);
+
+        let rafPending = false;
+        const onScroll = () => {
+            if (rafPending) return;
+            rafPending = true;
+            requestAnimationFrame(() => {
+                rafPending = false;
+                setScrollTop(el.scrollTop);
+            });
+        };
+        el.addEventListener('scroll', onScroll, { passive: true });
+
+        let resizeObs = null;
+        if (typeof ResizeObserver !== 'undefined') {
+            resizeObs = new ResizeObserver(() => setViewportHeight(el.clientHeight || DEFAULT_VIEWPORT_H));
+            resizeObs.observe(el);
+        }
+
+        return () => {
+            el.removeEventListener('scroll', onScroll);
+            if (resizeObs) resizeObs.disconnect();
+        };
+    }, []);
+
+    // Reset scroll to top whenever filtering shrinks/expands the list, so the user
+    // isn't stuck on phantom scroll offset that falls outside the new list length.
+    useEffect(() => {
+        if (scrollContainerRef.current && scrollTop > sorted.length * ROW_HEIGHT) {
+            scrollContainerRef.current.scrollTop = 0;
+            setScrollTop(0);
+        }
+    }, [sorted.length]);
+
+    const { startIdx, endIdx } = useMemo(() => {
+        const s = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+        const count = Math.ceil(viewportHeight / ROW_HEIGHT) + 2 * OVERSCAN;
+        const e = Math.min(sorted.length, s + count);
+        return { startIdx: s, endIdx: e };
+    }, [scrollTop, viewportHeight, sorted.length]);
+
+    const topPad = startIdx * ROW_HEIGHT;
+    const bottomPad = Math.max(0, (sorted.length - endIdx) * ROW_HEIGHT);
+
+    // Cache the visible row vnodes — when the parent re-renders but sorted/slice is
+    // unchanged, we reuse the same vnode refs and Preact short-circuits the diff.
+    const visibleRowVnodes = useMemo(() => {
+        if (isDataLoading || sorted.length === 0) return null;
+        const out = new Array(endIdx - startIdx);
+        for (let i = 0; i < out.length; i++) {
+            const c = sorted[startIdx + i];
+            out[i] = h(DbRow, {
+                key: c.id,
+                c,
+                industryName: getIndustryName(c.industryId),
+                onViewAsset,
+                onViewIndustry,
+            });
+        }
+        return out;
+    }, [sorted, startIdx, endIdx, getIndustryName, onViewAsset, onViewIndustry, isDataLoading]);
+
     return html`
         <div class="flex flex-col h-full gap-2 min-h-0">
             <!-- Filters -->
@@ -508,7 +641,7 @@ const DatabaseSearchView = () => {
             </div>
 
             <!-- Table -->
-            <div class="panel flex-1 overflow-auto min-h-0">
+            <div class="panel flex-1 overflow-auto min-h-0" ref=${scrollContainerRef}>
                 <table class="db-table">
                     <thead>
                         <tr>
@@ -533,30 +666,18 @@ const DatabaseSearchView = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        ${sorted.length === 0 ? html`
+                        ${isDataLoading ? html`
+                            <tr><td colspan="18" class="text-center text-gray-400 py-4">
+                                <img src="assets/loading.gif" alt="Loading..." style="display:inline-block;vertical-align:middle;height:28px" />
+                                <span style="margin-left:8px">Loading companies…</span>
+                            </td></tr>
+                        ` : sorted.length === 0 ? html`
                             <tr><td colspan="18" class="text-center text-gray-400 py-4">No results</td></tr>
-                        ` : sorted.map(c => html`
-                            <tr onClick=${() => api.setViewAsset(c.id)}>
-                                <td><span class="symbol-chip">${c.symbol}</span></td>
-                                <td class="truncate" style="max-width:120px" title=${c.name}>${c.name}</td>
-                                <td class="truncate" style="max-width:60px" title=${getIndustryName(c.industryId)}>${getIndustryName(c.industryId)}</td>
-                                <td class="num">$ ${fmt(c.price, 2)}</td>
-                                <td class="num">$ ${fmtInt(c.marketCap)} M</td>
-                                <td class="num">${c.pe > 0 ? fmt(c.pe) : '-'}</td>
-                                <td class="num">$ ${c.bookValue > 0 ? fmt(c.bookValue, 2) : '-'} M</td>
-                                <td class="num">${c.bookValue > 0 && c.price > 0 ? fmt((c.marketCap / c.bookValue) * 100) + '%' : '-'}</td>
-                                <td class="num">${c.divYield > 0 ? fmt(c.divYield) + '%' : '-'}</td>
-                                <td class="num">${c.roe ? fmt(c.roe) + '%' : '-'}</td>
-                                <td class="num">${c.convPrem > 0 ? fmt(c.convPrem) + '%' : '-'}</td>
-                                <td class="num">${getCreditRating(c.credRating)}</td>
-                                <td class="num">${getAnalystRating(c.analystRating)}</td>
-                                <td class="num">${getMgmtRating(c.mgmtRating)}</td>
-                                <td class="num">${getCashFlowText(c.cashFlow)}</td>
-                                <td class="num">${getShortScoreText(c.shortScore)}</td>
-                                <td class="num">$ ${c.jBondsPublic > 0 ? fmtInt(c.jBondsPublic) : '-'} M</td>
-                                <td class="num">${c.bondYield > 0 ? fmt(c.bondYield) + '%' : '-'}</td>
-                            </tr>
-                        `)}
+                        ` : html`
+                            ${topPad > 0 ? html`<tr aria-hidden="true" style=${`height:${topPad}px`}><td colspan="18" style="padding:0;border:0"></td></tr>` : null}
+                            ${visibleRowVnodes}
+                            ${bottomPad > 0 ? html`<tr aria-hidden="true" style=${`height:${bottomPad}px`}><td colspan="18" style="padding:0;border:0"></td></tr>` : null}
+                        `}
                     </tbody>
                 </table>
             </div>
