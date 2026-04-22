@@ -24,7 +24,6 @@ import {
 } from './panelStyles.js';
 import * as api from '../api.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
-import HotkeyButtonBar from './HotkeyButtonBar.js';
 import EPSChart from './EPSChart.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
@@ -138,10 +137,9 @@ function FinancialsTab() {
     const isInsurer = activeIndustryId === api.INSURANCE_IND;
     const isPlayer = activeEntityNum > 0 && activeEntityNum <= 10;
 
-    // Extras hotkey refs (used in both player view and drill-down)
+    // Extras hotkey refs (used in the Financial Disclosure drill-down's renderLines)
     const extrasContainerRef = useRef(null);
     const scopeActiveRef     = useRef(false);
-    const [, setScopeRenderTick] = useState(0);
 
     // ── Formatters ─────────────────────────────────────────
     const fmtM = (v) => {
@@ -152,21 +150,11 @@ function FinancialsTab() {
         return `${dlrSign}${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} million${euro}`;
     };
 
-    // ── Button bars ────────────────────────────────────────
-    // Corp button bar — shown only when player controls the active corp entity
-    const corpBarButtons = [].filter(Boolean);
-
-    // Player button bar (always shown for player entity)
-    const playerBarButtons = [
-        buttonProps.borrowMoney,
-        buttonProps.repayLoan,
-        buttonProps.advanceFunds,
-        buttonProps.prepayTaxes,
-        buttonProps.changeBank,
-        buttonProps.tradeTbills,
-    ].filter(Boolean);
-
-    const extrasStartNumber = (isPlayer ? playerBarButtons : corpBarButtons).length + 1;
+    // ── Drill-down hotkey numbering ─────────────────────────
+    // All corp + player action buttons now live in the ActionBar dropdowns,
+    // not in the tab itself, so the Financial Disclosure drill-down starts
+    // numbering its inline extras buttons at 1.
+    const extrasStartNumber = 1;
 
     // ── Derived financials ─────────────────────────────────
     const { credRating, cashFlow } = activeEntityData;
@@ -227,8 +215,8 @@ function FinancialsTab() {
 
     // ── Player entity view — Phase 1 typed-panel layout ─────
     // Replaces the prior inline BSTR renderer. The BSTR text is still available
-    // via the "View Full Financial Disclosure" SubScreen button. 6 action
-    // buttons (HotkeyButtonBar) preserved verbatim.
+    // via the "View Full Financial Disclosure" SubScreen button. Player action
+    // buttons live in the ActionBar Finance dropdown (not duplicated here).
     if (isPlayer) {
         // Player-typed struct + Bucket 1 root fields subscribed at top of component
         // (Phase 1 Layers A+B+addenda). PLAYER1-specific limitation: Bucket 1 root
@@ -266,16 +254,9 @@ function FinancialsTab() {
         return html`
         <div class="flex flex-col w-full h-full min-h-0 overflow-y-auto" style="padding:6px;">
 
-            <!-- Action button bar (6 buttons preserved verbatim) -->
-            <${HotkeyButtonBar}
-                buttons=${playerBarButtons}
-                extrasContainerRef=${extrasContainerRef}
-                scopeActiveRef=${scopeActiveRef}
-                onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
-                class="flex flex-row items-center gap-5 mb-2"
-            />
-
-            <!-- SubScreen drill-down button (Cash Flow moved into Qtrly Cashflow panel header below) -->
+            <!-- SubScreen drill-down button (Cash Flow moved into Qtrly Cashflow panel header below).
+                 Player action buttons (Borrow, Repay, Advance, Prepay Tax, Change Bank, Trade T-Bills)
+                 removed from this tab -- all six are available in the ActionBar Finance dropdown. -->
             <div class="flex flex-row justify-center gap-2 mb-2">
                 <button class="btn blue" style="padding:2px 10px; font-size:var(--font-size-sm);"
                     onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_FINANCIAL_PROFILE); setShowFullProfile(true); }}>
