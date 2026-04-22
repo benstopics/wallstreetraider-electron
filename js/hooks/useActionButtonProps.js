@@ -250,7 +250,7 @@ export function useActionButtonProps() {
 
     const shortFutures = (id) => ({
         label: 'Short Futures',
-        onClick: () => api.shortCommodityFutures(id, activeEntityNum),
+        onClick: () => (isCryptoAsset(id) ? api.sellCryptoFutures : api.shortCommodityFutures)(id, activeEntityNum),
         disabled: !!commodityShortFuturesDisabled(id),
         disabledMessage: commodityShortFuturesDisabled(id),
         color: 'red',

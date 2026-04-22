@@ -771,7 +771,7 @@ export async function sellPhysicalCommodity(id, actingAsId = 0) { await postIdAr
 export async function buyPhysicalCrypto(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_physical_crypto', id, actingAsId); }
 export async function sellPhysicalCrypto(id) { await postIdArg('/sell_physical_crypto', id); }
 export async function buyCryptoFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_crypto_futures', id, actingAsId); }
-export async function sellCryptoFutures(id) { await postIdArg('/sell_crypto_futures', id); }
+export async function sellCryptoFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_crypto_futures', id, actingAsId); }
 
 /* Options */
 export async function buyCalls(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_calls', id, actingAsId); }

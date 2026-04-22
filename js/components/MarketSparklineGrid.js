@@ -94,7 +94,7 @@ function actionButtonsForAsset(hook, assetId) {
     const btns = [];
     if (assetId !== api.STOCK_INDEX_ID) btns.push(hook.buyPhysical(assetId));
     btns.push(hook.buyFutures(assetId));
-    if (assetId !== api.BITCOIN_ID && assetId !== api.ETHEREUM_ID) btns.push(hook.shortFutures(assetId));
+    btns.push(hook.shortFutures(assetId));
     return btns;
 }
 
