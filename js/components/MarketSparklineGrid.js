@@ -3,6 +3,7 @@ import * as api from '../api.js';
 import { MiniSpark } from './StockTicker.js';
 import { formatCurrency } from './helpers.js';
 import AdvancedChartModal from './AdvancedChartModal.js';
+import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
 const RATE_IDS = new Set([api.PRIME_RATE_ID, api.TBOND_RATE_ID, api.SBOND_RATE_ID, api.GNP_RATE_ID]);
 
@@ -78,8 +79,28 @@ const GROUPS = [
     },
 ];
 
+function actionButtonsForAsset(hook, assetId) {
+    if (assetId === api.GNP_RATE_ID) return [];
+    if (assetId === api.PRIME_RATE_ID) return [hook.createSwapForRate(api.PRIME_RATE_ID)];
+    if (assetId === api.TBOND_RATE_ID) return [
+        { ...hook.buyLongGovtBonds, label: 'Buy' },
+        hook.createSwapForRate(api.TBOND_RATE_ID),
+    ];
+    if (assetId === api.SBOND_RATE_ID) return [
+        { ...hook.buyShortGovtBonds, label: 'Buy' },
+        { ...hook.tradeTbills, label: 'T-Bills' },
+        hook.createSwapForRate(api.SBOND_RATE_ID),
+    ];
+    const btns = [];
+    if (assetId !== api.STOCK_INDEX_ID) btns.push(hook.buyPhysical(assetId));
+    btns.push(hook.buyFutures(assetId));
+    if (assetId !== api.BITCOIN_ID && assetId !== api.ETHEREUM_ID) btns.push(hook.shortFutures(assetId));
+    return btns;
+}
+
 export default function MarketSparklineGrid() {
     const [expanded, setExpanded] = useState(null);
+    const hook = useActionButtonProps();
 
     return html`
         <div class="panel market-indicators-panel" data-testid="market-sparkline-grid">
@@ -105,6 +126,7 @@ export default function MarketSparklineGrid() {
                 <${AdvancedChartModal}
                     assetId=${expanded.assetId}
                     chartTitle=${expanded.title}
+                    actionButtons=${actionButtonsForAsset(hook, expanded.assetId)}
                     onClose=${() => setExpanded(null)}
                 />
             `}

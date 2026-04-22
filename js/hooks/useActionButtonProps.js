@@ -197,7 +197,7 @@ export function useActionButtonProps() {
 
     const interestRateSwaps = {
         label: 'Interest Rate Swaps',
-        onClick: () => api.interestRateSwaps(activeEntityNum),
+        onClick: () => api.interestRateSwaps(0, activeEntityNum),
         color: 'blue'
     };
 
@@ -206,6 +206,63 @@ export function useActionButtonProps() {
         onClick: () => api.prepayTaxes(activeEntityNum),
         color: 'green'
     };
+
+    // ==================== COMMODITY / CRYPTO FACTORIES ====================
+    // Factories return button props parameterized by assetId. Used by
+    // MarketSparklineGrid's AdvancedChartModal to surface position-creation
+    // actions per indicator tile. Permission logic mirrors CommoditiesTab.js
+    // (which is being sunset) so PB game rules are preserved exactly.
+    const isCryptoAsset = (id) => id === api.BITCOIN_ID || id === api.ETHEREUM_ID;
+    const isStockIndex = (id) => id === api.STOCK_INDEX_ID;
+
+    const commodityBuyDisabled = (id) =>
+        isActiveEntityETF ? (isCryptoAsset(id) ? "ETFs cannot trade cryptocurrencies" : "ETFs cannot trade physical commodities")
+        : isActingAsBank ? "Banks cannot trade commodities, indexes or crypto."
+        : false;
+
+    const commodityBuyFuturesDisabled = (id) =>
+        isActiveEntityETF ? (isCryptoAsset(id) ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot trade commodity futures")
+        : isActingAsBank ? "Banks cannot trade futures."
+        : (isActingAsInsurance && !isStockIndex(id)) ? "Insurance companies can only trade stock index futures."
+        : false;
+
+    const commodityShortFuturesDisabled = (id) =>
+        isActiveEntityETF ? (isCryptoAsset(id) ? "ETFs cannot trade cryptocurrency futures" : "ETFs cannot short futures")
+        : isActingAsBank ? "Banks cannot trade futures."
+        : isActingAsInsurance ? "Insurance companies can only buy (long) stock index futures, not short."
+        : false;
+
+    const buyPhysical = (id) => ({
+        label: 'Buy',
+        onClick: () => (isCryptoAsset(id) ? api.buyPhysicalCrypto : api.buyPhysicalCommodity)(id, activeEntityNum),
+        disabled: !!commodityBuyDisabled(id),
+        disabledMessage: commodityBuyDisabled(id),
+        color: 'green',
+    });
+
+    const buyFutures = (id) => ({
+        label: 'Buy Futures',
+        onClick: () => (isCryptoAsset(id) ? api.buyCryptoFutures : api.buyCommodityFutures)(id, activeEntityNum),
+        disabled: !!commodityBuyFuturesDisabled(id),
+        disabledMessage: commodityBuyFuturesDisabled(id),
+        color: 'green',
+    });
+
+    const shortFutures = (id) => ({
+        label: 'Short Futures',
+        onClick: () => api.shortCommodityFutures(id, activeEntityNum),
+        disabled: !!commodityShortFuturesDisabled(id),
+        disabledMessage: commodityShortFuturesDisabled(id),
+        color: 'red',
+    });
+
+    const createSwapForRate = (rateId) => ({
+        label: 'Create Swap',
+        onClick: () => api.interestRateSwaps(rateId, activeEntityNum),
+        disabled: isActiveEntityETF,
+        disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
+        color: 'blue',
+    });
 
     // ==================== CORPORATE BUTTONS ====================
 
@@ -615,6 +672,12 @@ export function useActionButtonProps() {
         advanceFunds,
         interestRateSwaps,
         prepayTaxes,
+
+        // Commodity / Crypto / Rate-Swap factories (parameterized by assetId)
+        buyPhysical,
+        buyFutures,
+        shortFutures,
+        createSwapForRate,
 
         // Corporate - Leadership
         electResignCeo,

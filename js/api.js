@@ -823,7 +823,7 @@ export async function borrowMoney(actingAsId = 0) { await postIdArgWithActingAs(
 export async function repayLoan(actingAsId = 0) { await postIdArgWithActingAs('/repay_loan', 0, actingAsId); }
 export async function advanceFunds(actingAsId = 0) { await postIdArgWithActingAs('/advance_funds', 0, actingAsId); }
 export async function callInAdvance(id) { await postIdArg('/call_in_advance', id); }
-export async function interestRateSwaps(actingAsId = 0) { await postIdArgWithActingAs('/interest_rate_swaps', 0, actingAsId); }
+export async function interestRateSwaps(assetId = 0, actingAsId = 0) { await postIdArgWithActingAs('/interest_rate_swaps', assetId, actingAsId); }
 export async function viewSwapDetails(id, actingAsId = 0) { await postIdArgWithActingAs('/view_swap_details', id, actingAsId); }
 export async function terminateSwap(id, actingAsId = 0) { await postIdArgWithActingAs('/terminate_swap', id, actingAsId); }
 
