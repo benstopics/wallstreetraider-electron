@@ -7,6 +7,7 @@ import * as api from '../api.js';
 import PortfolioTab from './PortfolioTab.js';
 import PortHoldingsTab from './PortHoldingsTab.js';
 import FinancialsTab from './FinancialsTab.js';
+import PlayerOverviewPanel from './PlayerOverviewPanel.js';
 import InterestRateSwapsTab from './InterestRateSwapsTab.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
 import HotkeyButtonBar from './HotkeyButtonBar.js';
@@ -96,6 +97,9 @@ const PlayerView = () => {
                 <div class="flex flex-col w-full gap-2 h-full">
                     <${ActionBar} entityLabel=${playerName} />
                     <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
+                        <${Tab} label="Overview" hotkey="v">
+                            <${PlayerOverviewPanel} />
+                        <//>
                         <${Tab} label="Financials" hotkey="f" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
                             <${FinancialsTab} />
                         <//>
