@@ -38,6 +38,79 @@ const LORE_SNIPPETS = [
 // ── Changelog data ──
 const CHANGELOG = [
     {
+        ver: "v10.0.16",
+        sections: [
+            {
+                heading: "New Features",
+                items: [
+                    "Advanced Chart subscreen \u2014 candle / OHLC / line modes with Bollinger Bands, MACD, RSI, and synthetic volume overlays",
+                    "Market Sparkline Grid on Quick Look \u2014 grid of mini charts for stocks, bonds, rates, and commodities with inline Buy/Sell action buttons",
+                    "Unified Portfolio Holdings table \u2014 single tab replaces per-instrument drill-downs with multi-select filters, a Cash Projection column, and swap rate/profit display",
+                    "Player Overview tab \u2014 live capital gains, quarterly cashflow, and borrower status matching the corporate view",
+                    "Financials tab redesign \u2014 full asset/liability breakdown with 13 newly bridged fields (T-Bills, commodity margin, prepaid tax, cap gain/loss) and single-click hyperlines",
+                    "Quick Look Net Worth sparkline expands into the Advanced Chart modal on click",
+                    "Buy/Sell toolbar on every Advanced Chart \u2014 trade directly from the chart view",
+                    "Invest dropdown on ActionBar \u2014 grouped Stocks / Bonds / Options shortcuts",
+                    "Nice-number chart axes \u2014 Y-axis labels snap to round values, X-axis labels anchor to calendar-month boundaries at adaptive density",
+                    "Company Research panel on Industry and Company views",
+                    "SubScreen wrapper standardises drill-down views with back navigation",
+                ]
+            },
+            {
+                heading: "UI/UX Improvements",
+                items: [
+                    "Acting-As invariant \u2014 every ActionBar action (management, deals, lender services, legal, banking, accounting) now threads the acting-as entity through the C++ bridge; the PromptActingAsIfZero fallback is gone",
+                    "ActionBar hides corporation-only actions (Merger, ETF Advisory, Public Stock Offering, Corp Bond Issue/Redeem) when viewing the human player, matching PB's PlayCo<11 guards",
+                    "Legacy instrument tabs being sunset \u2014 Commodities & Crypto tab removed from Industrial view; trading now routes through ActionBar or the Market Sparkline Grid, review via the unified Holdings tab",
+                    "PlayerView Borrower Status and Quarterly Cashflow panels restyled to match the corporate view",
+                    "PlayerView Financials action buttons removed \u2014 ActionBar now owns them",
+                    "LoansTab hides its extras bar when the player doesn't control the bank entity",
+                    "OwnershipGraph is now responsive via SVG viewBox",
+                    "Year-1 \"HOW TO USE THIS MENU\" instructional preamble suppressed in PB menus \u2014 redundant with modern UI affordances",
+                    "Market Indicator chart modal now includes position-creation buttons",
+                    "Centralised panel styling via panelStyles.js",
+                    "Hotkey system retired for now \u2014 bindings, chord bindings, and the Keybinds modal removed pending a redesign",
+                ]
+            },
+            {
+                heading: "Bug Fixes",
+                items: [
+                    "Fix Merger / Greenmail / LBO target picker not wiring targetId through to the bridge",
+                    "Fix sell_subsidiary_stock missing target corp ID routing",
+                    "Fix Options sell crash and Futures show-all-contracts bug",
+                    "Fix Holdings tab subsidiary-holding drill-down",
+                    "Fix OwnershipGraph retaining the stale entity after navigation",
+                    "Fix 3-Month Cash Projection showing wrong sign and color for negative balances",
+                    "Fix Swap quarterly profit calculation; add currentRate / swapPnl fields to swap holdings",
+                    "Fix Crypto shorting via futures \u2014 BTC/ETH no longer excluded from the Short Futures button",
+                    "Fix DatabaseSearch deadlock on results fetch; add 11 missing db-search fields to the Company struct",
+                    "Fix Capital Contribution button incorrectly enabled",
+                    "Fix chart throttle and ipcRenderer guards for non-Electron browser access",
+                    "Fix Commodity PnL and market value calculation",
+                    "Fix SwapTypeSelect default in CASE 720",
+                    "Fix calc_cashflow.inc LF-only line endings causing PB error 407",
+                    "Fix hyperlink regex lastIndex not resetting between renderHyperlinks runs",
+                    "Fix UI_PLAYER_CORPORATIONS_LIST refresh so controlled-company lines emit @C#### hyperlink tokens",
+                ]
+            },
+            {
+                heading: "Performance & Infrastructure",
+                items: [
+                    "WebSocket game-state sync with JSON-patch \u2014 replaces REST polling for most updates and eliminates the DatabaseSearch fetch deadlock",
+                    "PB persprofile refactor Waves 1\u20134 \u2014 extract pure Calc_IndivTax, Calc_OtherTaxes, Calc_PlrDivIncome, Calc_PlrGovBondAnnualInterest, Calc_PlrJunkBondProjection, Calc_PlrCeoSalaryBonus",
+                    "PB unit-test harness resurrected with 43 Calc_* tax tests",
+                    "activeEntityPlayerFinancials JSON bridge (Phase 1 Layer A\u2013D) surfaces player scalars to Electron",
+                    "Monthly high/low arrays exposed via /asset_chart for candle and OHLC rendering",
+                    "Batch cash projection arrays (DbEstCashIn3Mo, DbCfAfterDebt) bridged for Cash Proj columns",
+                    "GROWTH_THROTTLE event (1100) wired through GameEvent.h and GameServer.h",
+                    "Swap/RestoreActingAs event-code ranges consolidated into a single authoritative list in ui.inc",
+                    "src/ui/ui/Release intermediate build artifacts added to .gitignore",
+                    "Browser-compatible api.js \u2014 stubs ipcRenderer so the UI can run over plain HTTP for phone access",
+                ]
+            },
+        ]
+    },
+    {
         ver: "v10.0.15",
         sections: [
             {
