@@ -31,8 +31,8 @@ const PlayerView = () => {
     // Get centralized button props
     const buttonProps = useActionButtonProps();
 
-    // Local state for corporations view mode (initialized from global setting)
-    const [showCorporationsGraph, setShowCorporationsGraph] = useState(shareholderGraphSetting);
+    // Persisted local state for corporations view mode (default from global setting)
+    const [showCorporationsGraph, setShowCorporationsGraph] = useCookie('playerCorporationsShowGraph', shareholderGraphSetting);
 
     // My Corporations tab hotkey refs
     const corpsExtrasRef = useRef(null);
@@ -96,10 +96,6 @@ const PlayerView = () => {
                 <div class="flex flex-col w-full gap-2 h-full">
                     <${ActionBar} entityLabel=${playerName} />
                     <${Tabs} activeTab=${activeTab} onTabChange=${setActiveTab}>
-                        <${Tab} label="Search">
-                        <//>
-                        <${Tab} label="Market" hotkey="m">
-                        <//>
                         <${Tab} label="Financials" hotkey="f" id=${api.UI_PLAYER_FINANCIAL_PROFILE}>
                             <${FinancialsTab} />
                         <//>
@@ -111,18 +107,18 @@ const PlayerView = () => {
                                 ${renderLines(cashflowProjection, ({ id }) => api.setViewAsset(id), null, hyperlinkRegex)}
                             </div>
                         <//>
-                        <${Tab} label="Stocks & Bonds" hotkey="s" id=${api.UI_PLAYER_STOCKS_BONDS_PORTFOLIO}>
+                        <!--<${Tab} label="Stocks & Bonds" hotkey="s" id=${api.UI_PLAYER_STOCKS_BONDS_PORTFOLIO}>
                             <${PortfolioTab} />
-                        <//>
-                        <${Tab} label="Swaps" hotkey="w" id=${api.UI_PLAYER_SWAPS_PORTFOLIO}>
+                        <//>-->
+                        <!--<${Tab} label="Swaps" hotkey="w" id=${api.UI_PLAYER_SWAPS_PORTFOLIO}>
                             <${InterestRateSwapsTab} />
-                        <//>
-                        <${Tab} label="Options" hotkey="o" id=${api.UI_PLAYER_OPTIONS_PORTFOLIO}>
+                        <//>-->
+                        <!--<${Tab} label="Options" hotkey="o" id=${api.UI_PLAYER_OPTIONS_PORTFOLIO}>
                             ${html`<${OptionsTab} />`}
-                        <//>
-                        <${Tab} label="Commodities & Crypto" hotkey="m" id=${api.UI_PLAYER_COMMODITY_CONTRACTS_LIST}>
+                        <//>-->
+                        <!--<${Tab} label="Commodities & Crypto" hotkey="m" id=${api.UI_PLAYER_COMMODITY_CONTRACTS_LIST}>
                             ${html`<${CommoditiesTab} />`}
-                        <//>
+                        <//>-->
                         <${Tab} label="Advances" hotkey="d" id=${api.UI_PLAYER_ADVANCES_LIST}>
                             <div class="flex flex-col items-center">
                                 <${HotkeyButtonBar} buttons=${advancesBarButtons}
@@ -184,6 +180,10 @@ const PlayerView = () => {
                                     </div>
                                 `}
                             </div>
+                        <//>
+                        <${Tab} label="Market" hotkey="m">
+                        <//>
+                        <${Tab} label="Search">
                         <//>
                     <//>
                 </div>

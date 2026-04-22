@@ -1,5 +1,6 @@
 import { h, html, useState, useMemo, useEffect, useRef, useCallback, Component } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
+import AdvancedChartModal from './AdvancedChartModal.js';
 
 // memo shim — preact/compat is not bundled here; replicate it via shouldComponentUpdate
 const memo = (Fn, areEqual) => {
@@ -293,7 +294,7 @@ function TypeChip({ type }) {
 }
 
 // ─── Single table row ─────────────────────────────────────────────────────────
-const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction }) {
+const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction, onSparkClick }) {
     const pnlV    = row.pnl;
     const pnlColor = pnlV == null ? 'var(--fg-muted)'
                    : pnlV > 0    ? 'var(--color-positive)'
@@ -362,7 +363,9 @@ const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction }) {
               </div>`
             : fmtQty(row.quantity, row.quantityUnit))}
         ${tdR(fmtPrice(row.price))}
-        ${td(html`<${PortSpark} chartId=${row.sparkId} isUp=${(row.pnl ?? row.estProfit) == null || (row.pnl ?? row.estProfit) >= 0} />`)}
+        ${td(row.sparkId
+            ? html`<span class="hover:opacity-80" style="cursor:pointer;display:inline-block" title="Open advanced chart" onClick=${() => onSparkClick(row)}><${PortSpark} chartId=${row.sparkId} isUp=${(row.pnl ?? row.estProfit) == null || (row.pnl ?? row.estProfit) >= 0} /></span>`
+            : html`<${PortSpark} chartId=${row.sparkId} isUp=${(row.pnl ?? row.estProfit) == null || (row.pnl ?? row.estProfit) >= 0} />`)}
         ${tdR(absMarketVal != null ? fmtM(absMarketVal) : '—')}
         ${tdR(row.costBasis != null ? fmtM(Math.abs(row.costBasis)) : '—')}
         ${tdR(pnlV != null ? pnlSign(pnlV) + fmtM(pnlV) : '—', pnlV != null ? 'color:' + pnlColor : '')}
@@ -391,8 +394,65 @@ const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction }) {
     prev.cond === next.cond &&
     prev.onSymbolClick === next.onSymbolClick &&
     prev.onAction === next.onAction &&
+    prev.onSparkClick === next.onSparkClick &&
     JSON.stringify(prev.row._raw) === JSON.stringify(next.row._raw)
 );
+
+// Build actionButtons array for the AdvancedChartModal opened from the sparkline.
+// Mirrors RowActions button set so the chart modal exposes the same actions as
+// the inline Actions column for the row.
+function getHoldingChartActionButtons(row, onAction) {
+    const { assetType, inTheMoney, position, quantity } = row;
+    switch (assetType) {
+        case 'STOCK': {
+            const canBuyMore = quantity < 100;
+            return [
+                canBuyMore && { label: 'Buy More', onClick: () => onAction(row, 'Buy More'), color: 'green' },
+                { label: 'Sell',     onClick: () => onAction(row, 'Sell'),     color: 'red' },
+                { label: 'For Sale', onClick: () => onAction(row, 'For Sale'), color: 'orange' },
+            ].filter(Boolean);
+        }
+        case 'SHORT':
+            return [{ label: 'Cover', onClick: () => onAction(row, 'Cover'), color: 'blue' }];
+        case 'CORP_BOND':
+            return [{ label: 'Sell', onClick: () => onAction(row, 'Sell'), color: 'red' }];
+        case 'GOVT_BOND':
+            return [
+                { label: 'Buy More', onClick: () => onAction(row, 'Buy More'), color: 'green' },
+                { label: 'Sell',     onClick: () => onAction(row, 'Sell'),     color: 'red' },
+            ];
+        case 'OPTION':
+            if (position === 'LONG') {
+                return [
+                    { label: 'Sell',     onClick: () => onAction(row, 'Sell'),     color: 'red' },
+                    { label: 'Exercise', onClick: () => onAction(row, 'Exercise'), color: 'blue',
+                        disabled: !inTheMoney,
+                        disabledMessage: !inTheMoney ? 'Not in the money' : false },
+                ];
+            }
+            return [{ label: 'Cover', onClick: () => onAction(row, 'Cover'), color: 'blue' }];
+        case 'FUTURE': {
+            const isShort = position === 'SHORT';
+            return [{
+                label: isShort ? 'Cover' : 'Sell',
+                onClick: () => onAction(row, isShort ? 'Cover' : 'Sell'),
+                color: isShort ? 'blue' : 'red',
+            }];
+        }
+        case 'PHYSICAL':
+            return [
+                { label: 'Buy More', onClick: () => onAction(row, 'Buy More'), color: 'green' },
+                { label: 'Sell',     onClick: () => onAction(row, 'Sell'),     color: 'red' },
+            ];
+        case 'SWAP':
+            return [
+                { label: 'Details',   onClick: () => onAction(row, 'Details'),   color: '' },
+                { label: 'Terminate', onClick: () => onAction(row, 'Terminate'), color: 'red' },
+            ];
+        default:
+            return [];
+    }
+}
 
 // ─── Inline action buttons ────────────────────────────────────────────────────
 function RowActions({ row, onAction }) {
@@ -480,6 +540,7 @@ export default function PortHoldingsTable() {
     const [sortDir,      setSortDir]        = useState('desc');
     const [hideSubsid,   setHideSubsid]     = useState(false);
     const [search,       setSearch]         = useState('');
+    const [chartRow,     setChartRow]       = useState(null);
 
     const restoredRef = useRef(false);
 
@@ -557,6 +618,10 @@ export default function PortHoldingsTable() {
 
     const handleSymbolClick = useCallback(async (companyId) => {
         await api.setViewAsset(companyId);
+    }, []);
+
+    const handleSparkClick = useCallback((row) => {
+        if (row?.sparkId) setChartRow(row);
     }, []);
 
     // Full action routing — passes ownerCompanyId as actingAsId for subsidiary rows
@@ -720,10 +785,21 @@ export default function PortHoldingsTable() {
               cond=${cond}
               onSymbolClick=${handleSymbolClick}
               onAction=${handleAction}
+              onSparkClick=${handleSparkClick}
             />`)}
           </tbody>
         </table>
       </div>
+
+      ${chartRow ? html`<${AdvancedChartModal}
+        assetId=${chartRow.sparkId}
+        chartTitle=${chartRow.name || ''}
+        actionButtons=${getHoldingChartActionButtons(chartRow, (row, kind) => {
+            setChartRow(null);
+            handleAction(row, kind);
+        })}
+        onClose=${() => setChartRow(null)}
+      />` : ''}
 
     </div>`;
 }

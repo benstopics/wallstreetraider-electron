@@ -43,7 +43,7 @@ function IndexPanel({ title, bondId, panelNumber, isSelected = false }) {
         <div class="flex flex-col w-full" style="position:relative;${borderStyle}">
             ${shiftBadge}
             <div class="flex flex-col" style="height: 100px">
-                <${AssetPriceChart} chartTitle=${title} assetId=${bondId} />
+                <${AssetPriceChart} chartTitle=${title} assetId=${bondId} actionButtons=${[{ ...buyProps, label: 'Buy' }]} />
             </div>
             <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
                 <${DisabledTooltipButton}

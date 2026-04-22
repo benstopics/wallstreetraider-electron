@@ -53,11 +53,32 @@ function IndexPanel({ title, commodityId, panelNumber, isSelected = false }) {
         ? html`<span style="position:absolute;top:2px;left:4px;opacity:0.7;font-size:11px;z-index:1;">${panelNumber})</span>`
         : '';
 
+    const chartActionButtons = [
+        showBuyButton && {
+            label: 'Buy',
+            onClick: () => buy(commodityId),
+            color: 'green',
+            disabledMessage: buyDisabledInfo.message,
+        },
+        {
+            label: 'Buy Futures',
+            onClick: () => buyFutures(commodityId),
+            color: 'green',
+            disabledMessage: buyFuturesDisabledInfo.message,
+        },
+        {
+            label: 'Short Futures',
+            onClick: () => shortFutures(commodityId),
+            color: 'red',
+            disabledMessage: shortFuturesDisabledInfo.message,
+        },
+    ].filter(Boolean);
+
     return html`
         <div class="flex flex-col w-full" style="position:relative;${borderStyle}">
             ${shiftBadge}
             <div class="flex flex-col" style="height: 100px">
-                <${AssetPriceChart} chartTitle=${title} assetId=${commodityId} />
+                <${AssetPriceChart} chartTitle=${title} assetId=${commodityId} actionButtons=${chartActionButtons} />
             </div>
             <div class="flex flex-row justify-around mt-2 w-full" style="height:25px">
                 ${showBuyButton ? html`<${DisabledTooltipButton}

@@ -54,6 +54,11 @@ function SettingsModal({ children }) {
         setShowDisplayModal(true);
     };
 
+    const handleGrowthThrottleClick = () => {
+        setIsOpen(false);
+        api.growthThrottle();
+    };
+
     return html`
         <div class="settings-modal-container" style="position: relative; display: inline-block;">
             <${DisplayModal} show=${showDisplayModal} onClose=${() => setShowDisplayModal(false)} />
@@ -63,7 +68,7 @@ function SettingsModal({ children }) {
             ${isOpen ? html`
                 <div ref=${popoverRef} class="toolbar-menu-popover" style="position: absolute; top: 100%; right: 0; z-index: 99999999 !important;">
                     <${Button} class="toolbar-menu-item" data-tutorial="display-button" onClick=${handleDisplayClick}>${insertCurrencySymbols("Display")}</button>
-                    {/* <${Button} class="toolbar-menu-item" onClick=${handleHotkeysClick}>${insertCurrencySymbols("Hotkeys")}</button> */}
+                    <${Button} class="toolbar-menu-item" onClick=${handleGrowthThrottleClick}>${insertCurrencySymbols("Growth Throttle…")}</button>
                     <div class="toolbar-menu-sep"></div>
                     <${SettingItem} label="${insertCurrencySymbols("Suppress Earnings")}" isOn=${suppEarnSetting} onToggle=${() => api.suppEarnSelect()} />
                     <${SettingItem} label="${insertCurrencySymbols("Suppress Warnings")}" isOn=${suppWarnSetting} onToggle=${() => api.suppWarnSelect()} />

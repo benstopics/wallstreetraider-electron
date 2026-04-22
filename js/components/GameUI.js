@@ -1,4 +1,4 @@
-import { html, render, useState, useEffect, useMemo } from '../lib/preact.standalone.module.js';
+import { html, render, useState, useMemo } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import BalanceSheet from './BalanceSheet.js';
@@ -8,13 +8,13 @@ import View from './View.js';
 import Toolbar from './Toolbar.js';
 import { NewspaperIcon, NotificationIcon } from '../icons.js';
 import Modal from './Modal.js';
-import AssetPriceChart from './AssetPriceChart.js';
+import MarketSparklineGrid from './MarketSparklineGrid.js';
 import Button from './Button.js';
 import StockTicker from './StockTicker.js';
+import Tabs from './Tabs.js';
 import { insertCurrencySymbols } from './helpers.js';
 
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
+const Tab = Tabs.Tab;
 
 const GameUI = () => {
 
@@ -22,11 +22,6 @@ const GameUI = () => {
     const [showMyNews, setShowMyNews] = useState(false);
 
     const newsHeadlines = api.useGameStore(s => s.gameState.newsHeadlines);
-    const currentYear = api.useGameStore(s => s.gameState.currentYear);
-    const currentMonth = api.useGameStore(s => s.gameState.currentMonth);
-    const currentDay = api.useGameStore(s => s.gameState.currentDay);
-    const currentTime = api.useGameStore(s => s.gameState.currentTime);
-    const currentQuarter = api.useGameStore(s => s.gameState.currentQuarter);
     const cash = api.useGameStore(s => s.gameState.cash);
     const otherAssets = api.useGameStore(s => s.gameState.otherAssets);
     const totalAssets = api.useGameStore(s => s.gameState.totalAssets);
@@ -62,104 +57,65 @@ const GameUI = () => {
         });
     }, [newsHeadlines, showMyNews, myEntityNames]);
 
-    const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString());
-    useEffect(() => {
-        const id = setInterval(() => {
-            setLocalTime(new Date().toLocaleTimeString());
-        }, 1000);
-        return () => clearInterval(id);
-    }, []);
-
-    // Market hours are open 9:30am to 4:00pm. I want to divide that by currentTime (which is 0-16 or 17) and map that to the time of day.
-    const marketOpen = 9.5; // 9:30am
-    const marketClose = 16; // 4:00pm
-    const totalMarketHours = marketClose - marketOpen;
-    const timeFrac = totalMarketHours / 17;
-    const timeOfDayHoursFloat = marketOpen + (currentTime * timeFrac);
-    const timeOfDayHours = Math.floor(timeOfDayHoursFloat) % 12 || 12; // Convert to 12-hour format
-    const timeOfDayMinutes = Math.floor((timeOfDayHoursFloat - Math.floor(timeOfDayHoursFloat)) * 60);
-    const formattedTimeOfDay = `${timeOfDayHours}:${timeOfDayMinutes.toString().padStart(2, '0')} ${timeOfDayHours >= 12 ? 'PM' : 'AM'}`;
-    const timeOfDayPct = currentTime / 17;
-
-    const gameDate = `${months[currentMonth - 1]} ${currentDay}, ${currentYear} (Q${currentQuarter})`;
-
     return html`
     <div class="flex flex-col h-full" data-testid="game-ui">
         <!-- Toolbar -->
         <${Toolbar} />
         <${StockTicker} />
         <div class="game-view flex flex-row gap-2 p-2">
-            ${!isFullscreen ? html`
-            <!-- Left Column (sidebar) — isolated in its own flex child so view/news changes never affect its width -->
-            <div class="game-col-sidebar flex flex-col gap-2" style="flex: 1 1 0%; min-width: 0;">
-                <!-- Date and Time -->
-                <div class="flex flex-col fixed-width date-display justify-center items-center w-full" style="height: 35px;">
-                    ${gameDate}
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-1">
-                        <div class="bg-blue-600 h-2.5 rounded-full" style=${`width: ${timeOfDayPct * 100}%;`}></div>
-                    </div>
-                </div>
-
-                <!-- Balance Sheet -->
-                <div>
-                    ${html`<${BalanceSheet}
-                        cash=${cash}
-                        otherAssets=${otherAssets}
-                        totalAssets=${totalAssets}
-                        totalDebt=${totalDebt}
-                        netWorth=${netWorth}
-                    />`}
-                </div>
-
-                <!-- Asset Price Chart -->
-                <div class="flex-[2.75] min-h-0">
-                    ${html`<${CapitalizationChart} assetId=${api.HUMAN1_ID} chartTitle="Net Worth" />`}
-                </div>
-
-                <div class="flex flex-row flex-[2] min-h-0 gap-2">
-                    <div class="flex-1">
-                        <${AssetPriceChart} assetId=${api.GNP_RATE_ID} chartTitle="GDP" />
-                    </div>
-                    <div class="flex-1">
-                        <${AssetPriceChart} assetId=${api.PRIME_RATE_ID} chartTitle="Prime Rate" />
-                    </div>
-                </div>
-
-                <!-- Streaming Quotes -->
-                <div class="flex-[7] min-h-0">
-                    <${StreamingQuotes} />
-                </div>
-            </div>
-            ` : ''}
-
-            <!-- View + News wrapper: view and news resize between themselves; sidebar is unaffected -->
-            <div class="flex flex-row gap-2 min-h-0" style=${`flex: ${isFullscreen ? '1 1 100%' : '6 1 0%'}; min-width: 0;`}>
-                <div class="game-col-view flex flex-col gap-2 h-full" style="flex: 4 1 0%; min-width: 0;">
-                    ${html`<${View} />`}
-                </div>
-
+            <!-- News + View wrapper: Quick Look/News sidebar sits on the LEFT, View on the RIGHT -->
+            <div class="flex flex-row gap-2 min-h-0" style="flex: 1 1 100%; min-width: 0;">
                 ${!isFullscreen ? html`
                 <div class="game-col-news flex flex-col gap-2 min-h-0" style=${`flex: ${holdingsTabActive ? '0 0 0px' : '2 1 0%'}; overflow: hidden; min-width: 0;`}>
-                    <div class="panel flex-[4] flex min-h-0 flex-col">
-                        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>Financial News Headlines</span>
-                            <${Button} class="btn text-xs px-2 py-0 ${showMyNews ? 'yellow' : ''}" data-testid="btn-my-news" onClick=${() => setShowMyNews(!showMyNews)} title="Filter to show only news about your stocks and companies">My News</button>
-                        </div>
-                        <div class="p-1 panel-body">
-                            <div class="flex flex-col h-full overflow-y-auto">
-                                ${filteredHeadlines.map(h => html`
-                                    <div class="news-headline">
-                                        ${api.renderHyperlinks(h, ({ id, type }) => {
-                                            if (type === 'C')  api.setViewAsset(id);
-                                            else if (type === 'I') api.viewIndustry(id);
-                                        }, hyperlinkRegex)}
+                    <${Tabs}>
+                        <${Tab} label="Quick Look">
+                            <div class="flex flex-col h-full min-h-0 gap-2">
+                                <div class="flex flex-row gap-2" style="min-height: 110px;">
+                                    <div class="flex-1 min-w-0">
+                                        <${CapitalizationChart} assetId=${api.HUMAN1_ID} chartTitle="Net Worth" />
                                     </div>
-                                `)}
+                                    <div class="flex-1 min-w-0">
+                                        ${html`<${BalanceSheet}
+                                            cash=${cash}
+                                            otherAssets=${otherAssets}
+                                            totalAssets=${totalAssets}
+                                            totalDebt=${totalDebt}
+                                            netWorth=${netWorth}
+                                        />`}
+                                    </div>
+                                </div>
+                                <div class="min-h-0 overflow-y-auto">
+                                    <${MarketSparklineGrid} />
+                                </div>
+                                <div class="flex-[7] min-h-0">
+                                    <${StreamingQuotes} />
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </${Tab}>
+                        <${Tab} label="News">
+                            <div class="flex flex-col h-full min-h-0">
+                                <div class="flex flex-row justify-end mb-1">
+                                    <${Button} class="btn text-xs px-2 py-0 ${showMyNews ? 'yellow' : ''}" data-testid="btn-my-news" onClick=${() => setShowMyNews(!showMyNews)} title="Filter to show only news about your stocks and companies">My News</button>
+                                </div>
+                                <div class="flex flex-col flex-1 overflow-y-auto min-h-0">
+                                    ${filteredHeadlines.map(h => html`
+                                        <div class="news-headline">
+                                            ${api.renderHyperlinks(h, ({ id, type }) => {
+                                                if (type === 'C')  api.setViewAsset(id);
+                                                else if (type === 'I') api.viewIndustry(id);
+                                            }, hyperlinkRegex)}
+                                        </div>
+                                    `)}
+                                </div>
+                            </div>
+                        </${Tab}>
+                    </${Tabs}>
                 </div>
                 ` : ''}
+
+                <div class="game-col-view flex flex-col gap-2 h-full" style="flex: 5 1 0%; min-width: 0;">
+                    ${html`<${View} />`}
+                </div>
             </div>
         </div>
         <div class="panel-footer flex flex-row border items-center justify-between gap-2 mx-2" style="min-height: 25px; flex-shrink: 0;">

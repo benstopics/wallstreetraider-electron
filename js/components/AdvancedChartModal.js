@@ -8,6 +8,7 @@ const AdvancedChartModal = ({
     baseMultiplier = 1,
     theme,
     forceLineOnly = false,
+    actionButtons = [],
     onClose,
 }) => {
     return html`
@@ -24,6 +25,7 @@ const AdvancedChartModal = ({
                     baseMultiplier=${baseMultiplier}
                     theme=${theme}
                     forceLineOnly=${forceLineOnly}
+                    actionButtons=${actionButtons}
                 />
             </div>
         <//>

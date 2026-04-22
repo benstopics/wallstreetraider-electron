@@ -61,8 +61,8 @@ const IndustrialView = () => {
     // Get centralized button props
     const buttonProps = useActionButtonProps();
 
-    // Local state for shareholders view mode (initialized from global setting)
-    const [showShareholdersGraph, setShowShareholdersGraph] = useState(shareholderGraphSetting);
+    // Persisted local state for shareholders view mode (default from global setting)
+    const [showShareholdersGraph, setShowShareholdersGraph] = useCookie('industrialShareholdersShowGraph', shareholderGraphSetting);
 
     // Shareholders tab hotkey refs
     const shareholdersExtrasRef = useRef(null);
@@ -171,14 +171,10 @@ const IndustrialView = () => {
             <div class="flex flex-col w-full gap-2 h-full">
                 <${ActionBar} entityLabel="${activeEntitySymbol} - ${activeEntityName}" />
                 <${Tabs} activeTab=${!hasHoldings && activeTab === 'Holdings' ? 'Overview' : activeTab} onTabChange=${setActiveTab}>
-                    <${Tab} label="Search">
-                    <//>
-                    <${Tab} label="Market" hotkey="m">
-                    <//>
                     <${Tab} label="Overview" hotkey="v" id=${api.UI_CORP_OVERVIEW}>
                         <${OverviewPanel} />
                     <//>
-                    <${Tab} label="General" hotkey="g" id=${api.UI_CORP_RESEARCH_REPORT}>
+                    <!--<${Tab} label="General" hotkey="g" id=${api.UI_CORP_RESEARCH_REPORT}>
                         <div class="flex flex-row w-full h-full gap-2 min-h-0">
                             <div class="flex w-1/4 flex-col gap-2 h-full min-h-0 overflow-hidden">
                                 <div class="earnings-date-badge mb-1 font-text-sm text-center" style="display: flex; justify-content: space-between; align-items: center;">
@@ -186,7 +182,16 @@ const IndustrialView = () => {
                                     <button class="text-xs" style="opacity: 0.6; cursor: pointer; background: none; border: none; padding: 0 2px;" data-testid="btn-clear-chart" onClick=${() => api.clearChart()} title="Clear chart history for this entity">Clear Chart</button>
                                 </div>
                                 <div class="flex flex-2 flex-col w-full">
-                                    ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" />`}
+                                    ${html`<${AssetPriceChart} assetId=${activeEntityNum} chartTitle="${activeEntitySymbol} Stock Price" actionButtons=${[
+                                        wrapTradeButton(buttonProps.buyStock, () => api.buyStock(activeEntityNum)),
+                                        wrapTradeButton(buttonProps.shortStock, () => api.shortStock(activeEntityNum)),
+                                        !isActiveEntityETF && wrapTradeButton({ ...buttonProps.buyCorpBond, label: "Buy Bonds" }, () => api.buyCorporateBond(activeEntityNum)),
+                                        wrapTradeButton(buttonProps.buyCalls, () => api.buyCalls(0)),
+                                        wrapTradeButton(buttonProps.sellCalls, () => api.sellCalls(0)),
+                                        wrapTradeButton(buttonProps.buyPuts, () => api.buyPuts(0)),
+                                        wrapTradeButton(buttonProps.sellPuts, () => api.sellPuts(0)),
+                                        !isActiveEntityETF && wrapTradeButton(buttonProps.advancedOptions, api.advancedOptionsTrading),
+                                    ].filter(Boolean)} />`}
                                 </div>
                                 ${!isActiveEntityETF ? html`<div class="flex flex-[1.5] min-h-0">
                                     ${html`<${EPSChart} epsData=${extractEPSData(financialProfile)} />`}
@@ -216,22 +221,22 @@ const IndustrialView = () => {
                                 </div>
                             </div>
                         </div>
-                    <//>
+                    <//>-->
                     <${Tab} label="Financials" hotkey="f" id=${api.UI_CORP_FINANCIAL_PROFILE}>
                         <${FinancialsTab} />
                     <//>
                     ${activeIndustryId === api.BANK_IND ? html`<${Tab} label="Loans" hotkey="l" id=${api.UI_BANK_LOANS_LIST}>
                         ${html`<${LoansTab} />`}
                     <//>` : ''}
-                    <${Tab} label="Stocks & Bonds" hotkey="s" id=${api.UI_CORP_STOCKS_BONDS_PORTFOLIO}>
+                    <!--<${Tab} label="Stocks & Bonds" hotkey="s" id=${api.UI_CORP_STOCKS_BONDS_PORTFOLIO}>
                         <${PortfolioTab} />
-                    <//>
-                    <${Tab} label="Swaps" hotkey="w" id=${api.UI_CORP_SWAPS_PORTFOLIO}>
+                    <//>-->
+                    <!--<${Tab} label="Swaps" hotkey="w" id=${api.UI_CORP_SWAPS_PORTFOLIO}>
                         <${InterestRateSwapsTab} />
-                    <//>
-                    <${Tab} label="Options" hotkey="o" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
+                    <//>-->
+                    <!--<${Tab} label="Options" hotkey="o" id=${api.UI_CORP_OPTIONS_PORTFOLIO}>
                         <${OptionsTab} />
-                    <//>
+                    <//>-->
                     ${activeIndustryId != api.BANK_IND ? html`<${Tab} label="Commodities & Crypto" hotkey="m" id=${api.UI_CORP_COMMODITY_CONTRACTS_LIST}>
                         ${html`<${CommoditiesTab} />`}
                     <//>` : ''}
@@ -255,6 +260,10 @@ const IndustrialView = () => {
                                 </div>
                             `}
                         </div>
+                    <//>
+                    <${Tab} label="Market" hotkey="m">
+                    <//>
+                    <${Tab} label="Search">
                     <//>
                 <//>
             </div>

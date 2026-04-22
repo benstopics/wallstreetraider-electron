@@ -101,3 +101,110 @@
 .stock-ticker-item + .stock-ticker-item {
   border-left: 1px solid rgba(255,255,255,0.08);
 }
+
+/* =========================================================
+   Market Sparkline Grid - Quick Look tab market scan
+   ========================================================= */
+
+/* Panel wrapper: size to content rather than filling parent */
+.market-indicators-panel {
+  height: auto;
+}
+
+/* Panel body: zero padding so the black grid reaches edge-to-edge */
+.market-indicators-panel-body {
+  padding: 0;
+  overflow-y: visible;
+}
+
+.market-sparkline-grid {
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+  font-family: "Nimbus Mono", "Roboto Mono", "IBM Plex Mono", "Source Code Pro", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.spark-group-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 6px 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.spark-group-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.spark-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 6px;
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-size: 11px;
+  min-width: 0;
+  transition: background 0.12s;
+}
+
+.spark-tile:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Vertical divider between the left and right column, same style as
+   stock-ticker-item + stock-ticker-item */
+.spark-tile:nth-child(2n) {
+  border-left: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Horizontal divider between rows within a group (applies to tiles
+   starting from row 2 of each 2-column grid) */
+.spark-group-grid .spark-tile:nth-child(n+3) {
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.spark-tile-label {
+  color: var(--color-warning);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+.spark-tile-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.spark-tile-price {
+  color: var(--fg-primary);
+  font-weight: 600;
+}
+
+.spark-tile-change {
+  font-weight: 800;
+  font-size: 10px;
+  min-width: 38px;
+  text-align: right;
+}
+
+.spark-tile-change.positive { color: var(--color-positive); }
+.spark-tile-change.negative { color: var(--color-negative); }
+.spark-tile-change.neutral  { color: var(--fg-muted); }
+
+.spark-tile-spark {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}

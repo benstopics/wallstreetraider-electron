@@ -180,7 +180,6 @@ function NavigationPanel() {
 
             <!-- Row 2: Viewing / Navigation -->
             <div class="flex flex-row items-center gap-2">
-                <small class="whitespace-nowrap" style="width: 70px;">Viewing:</small>
                 <div class="flex items-center gap-1">
                     ${currentIndustry
                         ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-industry" onclick=${() => api.viewIndustry(activeIndustryId)}>${currentIndustry.name}</button>`
@@ -188,31 +187,37 @@ function NavigationPanel() {
                     ${activeEntityNum !== api.HUMAN1_ID
                         ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-tutorial="view-player" data-testid="btn-view-player" onclick=${() => api.setViewAsset(api.HUMAN1_ID)}>${insertCurrencySymbols('Player')}</button>`
                         : ''}
+                    ${controlledCompanies.length > 0
+                        ? html`<${Button} class="btn px-2 py-1 text-xs whitespace-nowrap" data-testid="btn-my-corps" onclick=${() => api.setViewAssetWithTab(api.HUMAN1_ID, 'My Corporations')}>${insertCurrencySymbols('My Corps')}</button>`
+                        : ''}
                 </div>
-                <${Button}
-                    class="btn px-3 py-1 ${!hasNavHistory || !canGoBack ? 'invisible' : ''}"
-                    style="font-size:16px; line-height:1;"
-                    onClick=${() => api.goBack()}>
-                    <b>←</b>
-                </button>
-                <select
-                    class="basic text-left"
-                    style="width: 180px;"
-                    value=${activePage}
-                    onChange=${onNavChange}
-                    disabled=${!hasNavHistory}
-                >
-                    ${hasNavHistory
-                        ? navOptions.map(opt => html`<option value="${opt.type}-${opt.id}">${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)
-                        : html`<option value="">—</option>`
-                    }
-                </select>
-                <${Button}
-                    class="btn px-3 py-1 ${!hasNavHistory || !canGoForward ? 'invisible' : ''}"
-                    style="font-size:16px; line-height:1;"
-                    onClick=${() => api.goForward()}>
-                    <b>→</b>
-                </button>
+                <div class="flex items-center gap-2 ml-auto">
+                    <small class="whitespace-nowrap">Viewing:</small>
+                    <${Button}
+                        class="btn px-3 py-1 ${!hasNavHistory || !canGoBack ? 'invisible' : ''}"
+                        style="font-size:16px; line-height:1;"
+                        onClick=${() => api.goBack()}>
+                        <b>←</b>
+                    </button>
+                    <select
+                        class="basic text-left"
+                        style="width: 180px;"
+                        value=${activePage}
+                        onChange=${onNavChange}
+                        disabled=${!hasNavHistory}
+                    >
+                        ${hasNavHistory
+                            ? navOptions.map(opt => html`<option value="${opt.type}-${opt.id}">${opt.name}${opt.symbol ? ` (${opt.symbol})` : ''}</option>`)
+                            : html`<option value="">—</option>`
+                        }
+                    </select>
+                    <${Button}
+                        class="btn px-3 py-1 ${!hasNavHistory || !canGoForward ? 'invisible' : ''}"
+                        style="font-size:16px; line-height:1;"
+                        onClick=${() => api.goForward()}>
+                        <b>→</b>
+                    </button>
+                </div>
             </div>
         </div>
     `;

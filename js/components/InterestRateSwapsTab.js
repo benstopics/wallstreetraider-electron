@@ -17,7 +17,7 @@ function IndexPanel({ title, bondId }) {
     return html`
         <div class="flex flex-col w-full">
             <div class="flex flex-col" style="height: 100px">
-                ${html`<${AssetPriceChart} chartTitle=${title} assetId=${bondId} />`}
+                ${html`<${AssetPriceChart} chartTitle=${title} assetId=${bondId} actionButtons=${[{ ...buyProps, label: 'Buy' }]} />`}
             </div>
             <div class="flex flex-row justify-between mt-2 w-full" style="height:25px">
                 <${DisabledTooltipButton}

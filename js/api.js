@@ -778,81 +778,81 @@ export async function buyCalls(id, actingAsId = 0) { await postIdArgWithActingAs
 export async function sellCalls(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_calls', id, actingAsId); }
 export async function buyPuts(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_puts', id, actingAsId); }
 export async function sellPuts(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_puts', id, actingAsId); }
-export async function advancedOptionsTrading() { await postNoArg('/advanced_options_trading'); }
+export async function advancedOptionsTrading(actingAsId = 0) { await postIdArgWithActingAs('/advanced_options_trading', 0, actingAsId); }
 export async function exerciseCallOptionsEarly(id, actingAsId = 0) { await postIdArgWithActingAs('/exercise_call_options_early', id, actingAsId); }
 export async function exercisePutOptionsEarly(id, actingAsId = 0) { await postIdArgWithActingAs('/exercise_put_options_early', id, actingAsId); }
 
 /* Management */
-export async function prepayTaxes() { await postNoArg('/prepay_taxes'); }
-export async function electCeo() { await postNoArg('/elect_ceo'); }
-export async function resignAsCeo() { await postNoArg('/resign_as_ceo'); }
-export async function changeManagers() { await postNoArg('/change_managers'); }
-export async function setDividend() { await postNoArg('/set_dividend'); }
-export async function setProductivity() { await postNoArg('/set_productivity'); }
-export async function setGrowthRate() { await postNoArg('/set_growth_rate'); }
-export async function restructure() { await postNoArg('/restructure'); }
-export async function buyCorporateAssets() { await postNoArg('/buy_corporate_assets'); }
-export async function sellCorporateAssets() { await postNoArg('/sell_corporate_assets'); }
-export async function viewForSaleItems() { await postNoArg('/view_for_sale_items'); }
+export async function prepayTaxes(actingAsId = 0) { await postIdArgWithActingAs('/prepay_taxes', 0, actingAsId); }
+export async function electCeo(actingAsId = 0) { await postIdArgWithActingAs('/elect_ceo', 0, actingAsId); }
+export async function resignAsCeo(actingAsId = 0) { await postIdArgWithActingAs('/resign_as_ceo', 0, actingAsId); }
+export async function changeManagers(actingAsId = 0) { await postIdArgWithActingAs('/change_managers', 0, actingAsId); }
+export async function setDividend(actingAsId = 0) { await postIdArgWithActingAs('/set_dividend', 0, actingAsId); }
+export async function setProductivity(actingAsId = 0) { await postIdArgWithActingAs('/set_productivity', 0, actingAsId); }
+export async function setGrowthRate(actingAsId = 0) { await postIdArgWithActingAs('/set_growth_rate', 0, actingAsId); }
+export async function restructure(actingAsId = 0) { await postIdArgWithActingAs('/restructure', 0, actingAsId); }
+export async function buyCorporateAssets(actingAsId = 0) { await postIdArgWithActingAs('/buy_corporate_assets', 0, actingAsId); }
+export async function sellCorporateAssets(actingAsId = 0) { await postIdArgWithActingAs('/sell_corporate_assets', 0, actingAsId); }
+export async function viewForSaleItems(actingAsId = 0) { await postIdArgWithActingAs('/view_for_sale_items', 0, actingAsId); }
 export async function sellSubsidiaryStock(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_subsidiary_stock', id, actingAsId); }
-export async function rebrand() { await postNoArg('/rebrand'); }
+export async function rebrand(actingAsId = 0) { await postIdArgWithActingAs('/rebrand', 0, actingAsId); }
 export async function toggleCompanyAutopilot(id) { await postIdArg('/toggle_company_autopilot', id); }
-export async function toggleGlobalAutopilot() { await postNoArg('/toggle_global_autopilot'); }
-export async function becomeEtfAdvisor() { await postNoArg('/become_etf_advisor'); }
-export async function setAdvisoryFee() { await postNoArg('/set_advisory_fee'); }
+export async function toggleGlobalAutopilot(actingAsId = 0) { await postIdArgWithActingAs('/toggle_global_autopilot', 0, actingAsId); }
+export async function becomeEtfAdvisor(actingAsId = 0) { await postIdArgWithActingAs('/become_etf_advisor', 0, actingAsId); }
+export async function setAdvisoryFee(actingAsId = 0) { await postIdArgWithActingAs('/set_advisory_fee', 0, actingAsId); }
 
 /* Deals & Funding */
 export async function merger(targetId = 0, actingAsId = 0) { await postIdArgWithActingAs('/merger', targetId, actingAsId); }
 export async function greenmail(targetId = 0, actingAsId = 0) { await postIdArgWithActingAs('/greenmail', targetId, actingAsId); }
 export async function lbo(targetId = 0, actingAsId = 0) { await postIdArgWithActingAs('/lbo', targetId, actingAsId); }
-export async function startup() { await postNoArg('/startup'); }
-export async function capitalContribution() { await postNoArg('/capital_contribution'); }
-export async function publicStockOffering(entityId = 0) { await postIdArgWithActingAs('/public_stock_offering', 0, entityId); }
-export async function privateStockOffering(entityId = 0) { await postIdArgWithActingAs('/private_stock_offering', 0, entityId); }
-export async function issueNewCorpBonds() { await postNoArg('/issue_new_corp_bonds'); }
-export async function redeemCorpBonds() { await postNoArg('/redeem_corp_bonds'); }
-export async function extraordinaryDividend() { await postNoArg('/extraordinary_dividend'); }
-export async function taxFreeLiquidation() { await postNoArg('/tax_free_liquidation'); }
-export async function taxableLiquidation() { await postNoArg('/taxable_liquidation'); }
+export async function startup(actingAsId = 0) { await postIdArgWithActingAs('/startup', 0, actingAsId); }
+export async function capitalContribution(actingAsId = 0) { await postIdArgWithActingAs('/capital_contribution', 0, actingAsId); }
+export async function publicStockOffering(actingAsId = 0) { await postIdArgWithActingAs('/public_stock_offering', 0, actingAsId); }
+export async function privateStockOffering(actingAsId = 0) { await postIdArgWithActingAs('/private_stock_offering', 0, actingAsId); }
+export async function issueNewCorpBonds(actingAsId = 0) { await postIdArgWithActingAs('/issue_new_corp_bonds', 0, actingAsId); }
+export async function redeemCorpBonds(actingAsId = 0) { await postIdArgWithActingAs('/redeem_corp_bonds', 0, actingAsId); }
+export async function extraordinaryDividend(actingAsId = 0) { await postIdArgWithActingAs('/extraordinary_dividend', 0, actingAsId); }
+export async function taxFreeLiquidation(actingAsId = 0) { await postIdArgWithActingAs('/tax_free_liquidation', 0, actingAsId); }
+export async function taxableLiquidation(actingAsId = 0) { await postIdArgWithActingAs('/taxable_liquidation', 0, actingAsId); }
 export async function spinOff(id) { await postIdArg('/spin_off', id); }
-export async function splitStock() { await postNoArg('/split_stock'); }
-export async function reverseSplitStock() { await postNoArg('/reverse_split_stock'); }
+export async function splitStock(actingAsId = 0) { await postIdArgWithActingAs('/split_stock', 0, actingAsId); }
+export async function reverseSplitStock(actingAsId = 0) { await postIdArgWithActingAs('/reverse_split_stock', 0, actingAsId); }
 
 /* Lender Services */
-export async function borrowMoney() { await postNoArg('/borrow_money'); }
-export async function repayLoan() { await postNoArg('/repay_loan'); }
-export async function advanceFunds() { await postNoArg('/advance_funds'); }
+export async function borrowMoney(actingAsId = 0) { await postIdArgWithActingAs('/borrow_money', 0, actingAsId); }
+export async function repayLoan(actingAsId = 0) { await postIdArgWithActingAs('/repay_loan', 0, actingAsId); }
+export async function advanceFunds(actingAsId = 0) { await postIdArgWithActingAs('/advance_funds', 0, actingAsId); }
 export async function callInAdvance(id) { await postIdArg('/call_in_advance', id); }
-export async function interestRateSwaps() { await postNoArg('/interest_rate_swaps'); }
+export async function interestRateSwaps(actingAsId = 0) { await postIdArgWithActingAs('/interest_rate_swaps', 0, actingAsId); }
 export async function viewSwapDetails(id, actingAsId = 0) { await postIdArgWithActingAs('/view_swap_details', id, actingAsId); }
 export async function terminateSwap(id, actingAsId = 0) { await postIdArgWithActingAs('/terminate_swap', id, actingAsId); }
 
 /* Bank/Insurance Specific */
-export async function setBankAllocation() { await postNoArg('/set_bank_allocation'); }
-export async function tradeTbills() { await postNoArg('/trade_tbills'); }
-export async function listBankLoans() { await postNoArg('/list_bank_loans'); }
-export async function changeBank() { await postNoArg('/change_bank'); }
+export async function setBankAllocation(actingAsId = 0) { await postIdArgWithActingAs('/set_bank_allocation', 0, actingAsId); }
+export async function tradeTbills(actingAsId = 0) { await postIdArgWithActingAs('/trade_tbills', 0, actingAsId); }
+export async function listBankLoans(actingAsId = 0) { await postIdArgWithActingAs('/list_bank_loans', 0, actingAsId); }
+export async function changeBank(actingAsId = 0) { await postIdArgWithActingAs('/change_bank', 0, actingAsId); }
 export async function callInLoan(id) { await postIdArg('/call_in_loan', id); }
 export async function buyBankLoans() { await postNoArg('/buy_bank_loans'); }
-export async function buyBusinessLoans() { await postNoArg('/buy_business_loans'); }
+export async function buyBusinessLoans(actingAsId = 0) { await postIdArgWithActingAs('/buy_business_loans', 0, actingAsId); }
 export async function sellBusinessLoan(id) { await postIdArg('/sell_business_loan', id); }
-export async function buyConsumerLoans() { await postNoArg('/buy_consumer_loans'); }
-export async function sellConsumerLoans() { await postNoArg('/sell_consumer_loans'); }
-export async function buyPrimeMortgages() { await postNoArg('/buy_prime_mortgages'); }
-export async function sellPrimeMortgages() { await postNoArg('/sell_prime_mortgages'); }
-export async function buySubprimeMortgages() { await postNoArg('/buy_subprime_mortgages'); }
-export async function sellSubprimeMortgages() { await postNoArg('/sell_subprime_mortgages'); }
+export async function buyConsumerLoans(actingAsId = 0) { await postIdArgWithActingAs('/buy_consumer_loans', 0, actingAsId); }
+export async function sellConsumerLoans(actingAsId = 0) { await postIdArgWithActingAs('/sell_consumer_loans', 0, actingAsId); }
+export async function buyPrimeMortgages(actingAsId = 0) { await postIdArgWithActingAs('/buy_prime_mortgages', 0, actingAsId); }
+export async function sellPrimeMortgages(actingAsId = 0) { await postIdArgWithActingAs('/sell_prime_mortgages', 0, actingAsId); }
+export async function buySubprimeMortgages(actingAsId = 0) { await postIdArgWithActingAs('/buy_subprime_mortgages', 0, actingAsId); }
+export async function sellSubprimeMortgages(actingAsId = 0) { await postIdArgWithActingAs('/sell_subprime_mortgages', 0, actingAsId); }
 export async function listEtfs() { await postNoArg('/list_etfs'); }
-export async function freezeAllLoans() { await postNoArg('/freeze_all_loans'); }
+export async function freezeAllLoans(actingAsId = 0) { await postIdArgWithActingAs('/freeze_all_loans', 0, actingAsId); }
 export async function freezeLoan(id) { await postIdArg('/freeze_loan', id); }
 
 /* Accounting */
-export async function decreaseEarnings() { await postNoArg('/decrease_earnings'); }
-export async function increaseEarnings() { await postNoArg('/increase_earnings'); }
+export async function decreaseEarnings(actingAsId = 0) { await postIdArgWithActingAs('/decrease_earnings', 0, actingAsId); }
+export async function increaseEarnings(actingAsId = 0) { await postIdArgWithActingAs('/increase_earnings', 0, actingAsId); }
 
 /* Legal */
-export async function changeLawFirm() { await postNoArg('/change_law_firm'); }
-export async function creditInfo() { await postNoArg('/credit_info'); }
+export async function changeLawFirm(actingAsId = 0) { await postIdArgWithActingAs('/change_law_firm', 0, actingAsId); }
+export async function creditInfo(actingAsId = 0) { await postIdArgWithActingAs('/credit_info', 0, actingAsId); }
 export async function clearChart() { await postNoArg('/clear_chart'); }
 export async function growthThrottle() { await postNoArg('/growth_throttle'); }
 export async function clearStreamList() { await postNoArg('/clear_stream_list'); }

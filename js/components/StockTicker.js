@@ -7,19 +7,21 @@ import InputStringModal from './InputStringModal.js';
 const CARD_WIDTH = 180; // px, matches CSS .stock-ticker-item width
 const SCROLL_INTERVAL = 20; // ms between scroll steps
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 // --- Inline SVG spark chart ---
 
 // Cache for self-fetched spark data (keyed by company id), bounded to prevent unbounded growth
 const SPARK_CACHE_MAX = 200;
 const sparkCache = new Map();
 
-function MiniSpark({ prices, assetId, isUp }) {
+export function MiniSpark({ prices, assetId, isUp, width = 40, height = 16, strokeWidth = 1.5, className = 'stock-ticker-spark' }) {
     const [fetched, setFetched] = useState(null);
 
     // Self-fetch when prices aren't provided by backend
     useEffect(() => {
         if (prices && prices.length >= 2) return;
-        if (!assetId) return;
+        if (assetId == null) return;
         if (sparkCache.has(assetId)) {
             setFetched(sparkCache.get(assetId));
             return;
@@ -46,15 +48,14 @@ function MiniSpark({ prices, assetId, isUp }) {
     const min = Math.min(...data);
     const max = Math.max(...data);
     const range = max - min || 1;
-    const w = 40, h = 16;
     const points = data.map((p, i) => {
-        const x = (i / (data.length - 1)) * w;
-        const y = h - ((p - min) / range) * h;
+        const x = (i / (data.length - 1)) * width;
+        const y = height - ((p - min) / range) * height;
         return `${x},${y}`;
     }).join(' ');
     const color = isUp ? 'var(--color-positive)' : 'var(--color-negative)';
-    return html`<svg class="stock-ticker-spark" width=${w} height=${h} viewBox="0 0 ${w} ${h}">
-        <polyline points=${points} fill="none" stroke=${color} stroke-width="1.5" />
+    return html`<svg class=${className} width=${width} height=${height} viewBox="0 0 ${width} ${height}">
+        <polyline points=${points} fill="none" stroke=${color} stroke-width=${strokeWidth} />
     </svg>`;
 }
 
@@ -86,6 +87,14 @@ export default function StockTicker() {
     const tickSpeed = api.useGameStore(s => s.gameState.tickSpeed) || 50;
     const isTickerRunning = api.useGameStore(s => s.gameState.isTickerRunning);
     const modalType = api.useGameStore(s => s.gameState.modalType) || 0;
+    const currentYear = api.useGameStore(s => s.gameState.currentYear);
+    const currentMonth = api.useGameStore(s => s.gameState.currentMonth);
+    const currentDay = api.useGameStore(s => s.gameState.currentDay);
+    const currentTime = api.useGameStore(s => s.gameState.currentTime);
+    const currentQuarter = api.useGameStore(s => s.gameState.currentQuarter);
+
+    const gameDate = `${MONTHS[currentMonth - 1]} ${currentDay}, ${currentYear} (Q${currentQuarter})`;
+    const timeOfDayPct = currentTime / 17;
 
     const hasBackend = !!(backendQueue && backendQueue.length > 0);
 
@@ -191,6 +200,15 @@ export default function StockTicker() {
         />
         <div class="stock-ticker">
             <div class="stock-ticker-controls">
+                <div class="stock-ticker-date date-display flex flex-col justify-center items-center"
+                     style="line-height: 1; font-size: 11px; min-width: 110px;">
+                    <div>${gameDate}</div>
+                    <div class="bg-gray-200 rounded-full dark:bg-gray-700 mt-0.5"
+                         style="width: 100%; height: 4px;">
+                        <div class="bg-blue-600 rounded-full"
+                             style=${`width: ${timeOfDayPct * 100}%; height: 100%;`}></div>
+                    </div>
+                </div>
                 <div class="btn ${isTickerRunning ? 'stop' : 'play'}"
                      style="width: 25px; height: 20px"
                      onClick=${toggleTicker}>

@@ -240,6 +240,7 @@ const AssetPriceChart = ({
     expandable = true,
     advancedMode = true,  // When true + expandable, click opens AdvancedChartModal; false uses zoomed-copy Modal
     forceLineOnly = false,  // Derived-scalar marker (e.g., Net Worth/Market Cap wrapper): forces line mode regardless of persisted chartType
+    actionButtons = [],  // Forwarded to the expanded AdvancedChartModal's toolbar.
 }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
@@ -512,6 +513,7 @@ const AssetPriceChart = ({
                 chartTitle=${chartTitle}
                 baseMultiplier=${baseMultiplier}
                 forceLineOnly=${forceLineOnly}
+                actionButtons=${actionButtons}
                 onClose=${() => setExpanded(false)}
             />
         `}

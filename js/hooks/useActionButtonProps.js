@@ -9,9 +9,10 @@ import * as api from '../api.js';
  *   const { buyStock, shortStock, buyCalls } = useActionButtonProps();
  *   <${DisabledTooltipButton} ...${buyStock} />
  *
- * Acting-as is handled by the PB-side override (ui.inc) which prompts the user to
- * select a controlled company when an action is triggered. Buttons are therefore
- * never disabled solely because of wrong acting-as state.
+ * Acting-as = activeEntityNum (the viewed entity). Every onClick threads
+ * activeEntityNum as the acting-as arg; the PB dispatcher's SwapActingAs
+ * handles the PlayCo swap for the duration of the event. Buttons are never
+ * disabled solely because of wrong acting-as state.
  */
 export function useActionButtonProps() {
     // ==================== Game State ====================
@@ -50,20 +51,20 @@ export function useActionButtonProps() {
 
     const buyStock = {
         label: 'Buy Stock',
-        onClick: () => api.buyStock(actingAs ? 0 : activeEntityNum, actingAsId),
+        onClick: () => api.buyStock(actingAs ? 0 : activeEntityNum, activeEntityNum),
         color: 'green',
         dataTutorial: 'buy-stock'
     };
 
     const sellStock = {
         label: 'Sell Stock',
-        onClick: () => api.sellStock(0, actingAsId),
+        onClick: () => api.sellStock(0, activeEntityNum),
         color: 'red'
     };
 
     const shortStock = {
         label: 'Short Stock',
-        onClick: () => api.shortStock(actingAs ? 0 : activeEntityNum, actingAsId),
+        onClick: () => api.shortStock(actingAs ? 0 : activeEntityNum, activeEntityNum),
         disabled: isActingAsETFAdvisor,
         disabledMessage: isActingAsETFAdvisor ? "ETFs cannot short stocks" : false,
         color: 'red'
@@ -71,19 +72,19 @@ export function useActionButtonProps() {
 
     const coverShort = {
         label: 'Cover Short',
-        onClick: () => api.coverShortStock(0, actingAsId),
+        onClick: () => api.coverShortStock(0, activeEntityNum),
         color: 'green'
     };
 
     const buyCorpBond = {
         label: 'Buy Corp Bond',
-        onClick: () => api.buyCorporateBond(actingAs ? 0 : activeEntityNum, actingAsId),
+        onClick: () => api.buyCorporateBond(actingAs ? 0 : activeEntityNum, activeEntityNum),
         color: 'green'
     };
 
     const sellCorpBond = {
         label: 'Sell Corp Bond',
-        onClick: () => api.sellCorporateBond(0, actingAsId),
+        onClick: () => api.sellCorporateBond(0, activeEntityNum),
         color: 'red'
     };
 
@@ -94,7 +95,7 @@ export function useActionButtonProps() {
 
     const buyLongGovtBonds = {
         label: 'Buy Long Govt Bonds',
-        onClick: () => api.buyLongGovtBonds(actingAsId),
+        onClick: () => api.buyLongGovtBonds(activeEntityNum),
         disabled: !!govtBondDisabled,
         disabledMessage: govtBondDisabled,
         color: 'green'
@@ -102,7 +103,7 @@ export function useActionButtonProps() {
 
     const sellLongGovtBonds = {
         label: 'Sell Long Govt Bonds',
-        onClick: () => api.sellLongGovtBonds(actingAsId),
+        onClick: () => api.sellLongGovtBonds(activeEntityNum),
         disabled: !!govtBondDisabled,
         disabledMessage: govtBondDisabled,
         color: 'red'
@@ -110,7 +111,7 @@ export function useActionButtonProps() {
 
     const buyShortGovtBonds = {
         label: 'Buy Short Govt Bonds',
-        onClick: () => api.buyShortGovtBonds(actingAsId),
+        onClick: () => api.buyShortGovtBonds(activeEntityNum),
         disabled: !!govtBondDisabled,
         disabledMessage: govtBondDisabled,
         color: 'green'
@@ -118,7 +119,7 @@ export function useActionButtonProps() {
 
     const sellShortGovtBonds = {
         label: 'Sell Short Govt Bonds',
-        onClick: () => api.sellShortGovtBonds(actingAsId),
+        onClick: () => api.sellShortGovtBonds(activeEntityNum),
         disabled: !!govtBondDisabled,
         disabledMessage: govtBondDisabled,
         color: 'red'
@@ -128,31 +129,31 @@ export function useActionButtonProps() {
 
     const buyCalls = {
         label: 'Buy Calls',
-        onClick: () => api.buyCalls(0, actingAsId),
+        onClick: () => api.buyCalls(0, activeEntityNum),
         color: 'green'
     };
 
     const sellCalls = {
         label: 'Sell Calls',
-        onClick: () => api.sellCalls(0, actingAsId),
+        onClick: () => api.sellCalls(0, activeEntityNum),
         color: 'red'
     };
 
     const buyPuts = {
         label: 'Buy Puts',
-        onClick: () => api.buyPuts(0, actingAsId),
+        onClick: () => api.buyPuts(0, activeEntityNum),
         color: 'green'
     };
 
     const sellPuts = {
         label: 'Sell Puts',
-        onClick: () => api.sellPuts(0, actingAsId),
+        onClick: () => api.sellPuts(0, activeEntityNum),
         color: 'red'
     };
 
     const advancedOptions = {
         label: 'Advanced Options',
-        onClick: api.advancedOptionsTrading,
+        onClick: () => api.advancedOptionsTrading(activeEntityNum),
         disabled: isActiveEntityETF || isActingAsBank || isActingAsInsurance,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs"
             : (isActingAsBank || isActingAsInsurance) ? "Not available for banks/insurers"
@@ -164,25 +165,25 @@ export function useActionButtonProps() {
 
     const borrowMoney = {
         label: 'Borrow Money',
-        onClick: api.borrowMoney,
+        onClick: () => api.borrowMoney(activeEntityNum),
         color: 'green'
     };
 
     const repayLoan = {
         label: 'Repay Loan',
-        onClick: api.repayLoan,
+        onClick: () => api.repayLoan(activeEntityNum),
         color: ''
     };
 
     const changeBank = {
         label: 'Change Bank',
-        onClick: api.changeBank,
+        onClick: () => api.changeBank(activeEntityNum),
         color: 'blue'
     };
 
     const tradeTbills = {
         label: 'Trade T-Bills',
-        onClick: api.tradeTbills,
+        onClick: () => api.tradeTbills(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'brown'
@@ -190,19 +191,19 @@ export function useActionButtonProps() {
 
     const advanceFunds = {
         label: 'Advance Funds',
-        onClick: api.advanceFunds,
+        onClick: () => api.advanceFunds(activeEntityNum),
         color: 'green'
     };
 
     const interestRateSwaps = {
         label: 'Interest Rate Swaps',
-        onClick: api.interestRateSwaps,
+        onClick: () => api.interestRateSwaps(activeEntityNum),
         color: 'blue'
     };
 
     const prepayTaxes = {
         label: 'Prepay Taxes',
-        onClick: api.prepayTaxes,
+        onClick: () => api.prepayTaxes(activeEntityNum),
         color: 'green'
     };
 
@@ -210,7 +211,7 @@ export function useActionButtonProps() {
 
     const electResignCeo = {
         label: playerIsCEO ? 'Resign as CEO' : 'Elect as CEO',
-        onClick: playerIsCEO ? api.resignAsCeo : api.electCeo,
+        onClick: () => (playerIsCEO ? api.resignAsCeo : api.electCeo)(activeEntityNum),
         disabled: isActiveEntityETF || !playerControlsActive,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs"
             : (!playerControlsActive ? "Must control this company" : false),
@@ -219,7 +220,7 @@ export function useActionButtonProps() {
 
     const changeManagers = {
         label: 'Fire Management',
-        onClick: api.changeManagers,
+        onClick: () => api.changeManagers(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'red'
@@ -227,7 +228,7 @@ export function useActionButtonProps() {
 
     const setDividend = {
         label: 'Set Dividend',
-        onClick: api.setDividend,
+        onClick: () => api.setDividend(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'green'
@@ -235,7 +236,7 @@ export function useActionButtonProps() {
 
     const setProductivity = {
         label: 'Set Productivity',
-        onClick: api.setProductivity,
+        onClick: () => api.setProductivity(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'brown'
@@ -243,21 +244,15 @@ export function useActionButtonProps() {
 
     const setGrowthRate = {
         label: 'Set Growth Rate',
-        onClick: api.setGrowthRate,
+        onClick: () => api.setGrowthRate(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'orange'
     };
 
-    const growthThrottle = {
-        label: 'Growth Throttle',
-        onClick: api.growthThrottle,
-        color: 'orange'
-    };
-
     const rebrand = {
         label: 'Rebrand',
-        onClick: api.rebrand,
+        onClick: () => api.rebrand(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'blue'
@@ -265,7 +260,7 @@ export function useActionButtonProps() {
 
     const restructure = {
         label: 'Restructure',
-        onClick: api.restructure,
+        onClick: () => api.restructure(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'blue'
@@ -273,13 +268,13 @@ export function useActionButtonProps() {
 
     const publicStockOffering = {
         label: 'Public Stock Offering',
-        onClick: api.publicStockOffering,
+        onClick: () => api.publicStockOffering(activeEntityNum),
         color: 'green'
     };
 
     const privateStockOffering = {
         label: 'Private Stock Offering',
-        onClick: api.privateStockOffering,
+        onClick: () => api.privateStockOffering(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'brown'
@@ -287,37 +282,37 @@ export function useActionButtonProps() {
 
     const issueCorpBonds = {
         label: 'Issue Corp Bonds',
-        onClick: api.issueNewCorpBonds,
+        onClick: () => api.issueNewCorpBonds(activeEntityNum),
         color: 'brown'
     };
 
     const redeemCorpBonds = {
         label: 'Redeem Corp Bonds',
-        onClick: api.redeemCorpBonds,
+        onClick: () => api.redeemCorpBonds(activeEntityNum),
         color: 'brown'
     };
 
     const extraordinaryDividend = {
         label: 'Extraordinary Dividend',
-        onClick: api.extraordinaryDividend,
+        onClick: () => api.extraordinaryDividend(activeEntityNum),
         color: 'green'
     };
 
     const splitStock = {
         label: 'Split Stock',
-        onClick: api.splitStock,
+        onClick: () => api.splitStock(activeEntityNum),
         color: 'green'
     };
 
     const reverseSplit = {
         label: 'Reverse Split',
-        onClick: api.reverseSplitStock,
+        onClick: () => api.reverseSplitStock(activeEntityNum),
         color: 'red'
     };
 
     const buyCorporateAssets = {
         label: 'Buy Corporate Assets',
-        onClick: api.buyCorporateAssets,
+        onClick: () => api.buyCorporateAssets(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'green'
@@ -325,7 +320,7 @@ export function useActionButtonProps() {
 
     const sellCorporateAssets = {
         label: 'Sell Corporate Assets',
-        onClick: api.sellCorporateAssets,
+        onClick: () => api.sellCorporateAssets(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'red'
@@ -333,7 +328,7 @@ export function useActionButtonProps() {
 
     const sellSubsidiaryStock = {
         label: 'Offer to Sell Subsidiary Stock',
-        onClick: api.sellSubsidiaryStock,
+        onClick: () => api.sellSubsidiaryStock(0, activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'red'
@@ -347,13 +342,13 @@ export function useActionButtonProps() {
 
     const browseForSaleItems = {
         label: 'Browse For Sale Items',
-        onClick: api.viewForSaleItems,
+        onClick: () => api.viewForSaleItems(activeEntityNum),
         color: 'green'
     };
 
     const taxFreeLiquidation = {
         label: 'Tax-Free Liquidation',
-        onClick: api.taxFreeLiquidation,
+        onClick: () => api.taxFreeLiquidation(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'green'
@@ -361,7 +356,7 @@ export function useActionButtonProps() {
 
     const taxableLiquidation = {
         label: 'Taxable Liquidation',
-        onClick: api.taxableLiquidation,
+        onClick: () => api.taxableLiquidation(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'green'
@@ -369,13 +364,13 @@ export function useActionButtonProps() {
 
     const startup = {
         label: 'Startup',
-        onClick: api.startup,
+        onClick: () => api.startup(activeEntityNum),
         color: 'green'
     };
 
     const capitalContribution = {
         label: 'Capital Contribution',
-        onClick: api.capitalContribution,
+        onClick: () => api.capitalContribution(activeEntityNum),
         disabled: isActiveEntityETF && isActingAsETFAdvisor,
         disabledMessage: isActiveEntityETF && isActingAsETFAdvisor ? "Not available for ETFs" : false,
         color: 'green'
@@ -383,7 +378,7 @@ export function useActionButtonProps() {
 
     const becomeEtfAdvisor = {
         label: 'Become ETF Advisor',
-        onClick: api.becomeEtfAdvisor,
+        onClick: () => api.becomeEtfAdvisor(activeEntityNum),
         disabled: !(isActingAsInsurance || isActingAsBroker),
         disabledMessage: !(isActingAsInsurance || isActingAsBroker) ? "Only for insurance/broker companies" : false,
         color: 'green'
@@ -391,7 +386,7 @@ export function useActionButtonProps() {
 
     const setAdvisoryFee = {
         label: 'Set Advisory Fee',
-        onClick: api.setAdvisoryFee,
+        onClick: () => api.setAdvisoryFee(activeEntityNum),
         disabled: !(isActingAsInsurance || isActingAsBroker),
         disabledMessage: !(isActingAsInsurance || isActingAsBroker) ? "Only for insurance/broker companies" : false,
         color: 'blue'
@@ -399,7 +394,7 @@ export function useActionButtonProps() {
 
     const toggleGlobalAutopilot = {
         label: 'Toggle Global Autopilot',
-        onClick: api.toggleGlobalAutopilot,
+        onClick: () => api.toggleGlobalAutopilot(activeEntityNum),
         color: 'blue'
     };
 
@@ -407,25 +402,25 @@ export function useActionButtonProps() {
 
     const setBankAllocation = {
         label: 'Set Allocation',
-        onClick: api.setBankAllocation,
+        onClick: () => api.setBankAllocation(activeEntityNum),
         color: 'brown'
     };
 
     const listBankLoans = {
         label: 'List Bank Loans',
-        onClick: api.listBankLoans,
+        onClick: () => api.listBankLoans(activeEntityNum),
         color: 'blue'
     };
 
     const freezeAllLoans = {
         label: 'Freeze All Loans',
-        onClick: api.freezeAllLoans,
+        onClick: () => api.freezeAllLoans(activeEntityNum),
         color: 'blue'
     };
 
     const buyBusinessLoans = {
         label: 'Buy Business Loans',
-        onClick: api.buyBusinessLoans,
+        onClick: () => api.buyBusinessLoans(activeEntityNum),
         color: 'green'
     };
 
@@ -437,37 +432,37 @@ export function useActionButtonProps() {
 
     const buyConsumerLoans = {
         label: 'Buy Consumer Loans',
-        onClick: api.buyConsumerLoans,
+        onClick: () => api.buyConsumerLoans(activeEntityNum),
         color: 'green'
     };
 
     const sellConsumerLoans = {
         label: 'Sell Consumer Loans',
-        onClick: api.sellConsumerLoans,
+        onClick: () => api.sellConsumerLoans(activeEntityNum),
         color: 'red'
     };
 
     const buyPrimeMortgages = {
         label: 'Buy Prime Mortgages',
-        onClick: api.buyPrimeMortgages,
+        onClick: () => api.buyPrimeMortgages(activeEntityNum),
         color: 'green'
     };
 
     const sellPrimeMortgages = {
         label: 'Sell Prime Mortgages',
-        onClick: api.sellPrimeMortgages,
+        onClick: () => api.sellPrimeMortgages(activeEntityNum),
         color: 'red'
     };
 
     const buySubprimeMortgages = {
         label: 'Buy Subprime Mortgages',
-        onClick: api.buySubprimeMortgages,
+        onClick: () => api.buySubprimeMortgages(activeEntityNum),
         color: 'green'
     };
 
     const sellSubprimeMortgages = {
         label: 'Sell Subprime Mortgages',
-        onClick: api.sellSubprimeMortgages,
+        onClick: () => api.sellSubprimeMortgages(activeEntityNum),
         color: 'red'
     };
 
@@ -475,7 +470,7 @@ export function useActionButtonProps() {
 
     const changeLawFirm = {
         label: 'Change Law Firm',
-        onClick: api.changeLawFirm,
+        onClick: () => api.changeLawFirm(activeEntityNum),
         color: 'blue'
     };
 
@@ -549,13 +544,13 @@ export function useActionButtonProps() {
 
     const creditInfo = {
         label: 'Credit Info',
-        onClick: api.creditInfo,
+        onClick: () => api.creditInfo(activeEntityNum),
         color: 'blue'
     };
 
     const increaseEarnings = {
         label: 'Increase Earnings',
-        onClick: api.increaseEarnings,
+        onClick: () => api.increaseEarnings(activeEntityNum),
         disabled: isActiveEntityETF || isActingAsBank,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs"
             : isActingAsBank ? "Banks cannot draw from bad debt reserves"
@@ -565,7 +560,7 @@ export function useActionButtonProps() {
 
     const decreaseEarnings = {
         label: 'Decrease Earnings',
-        onClick: api.decreaseEarnings,
+        onClick: () => api.decreaseEarnings(activeEntityNum),
         disabled: isActiveEntityETF,
         disabledMessage: isActiveEntityETF ? "Not available for ETFs" : false,
         color: 'red'
@@ -629,7 +624,6 @@ export function useActionButtonProps() {
         setDividend,
         setProductivity,
         setGrowthRate,
-        growthThrottle,
         rebrand,
         restructure,
 

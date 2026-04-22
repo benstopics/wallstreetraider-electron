@@ -1,7 +1,8 @@
-import { html, useState, useCallback, useMemo } from '../lib/preact.standalone.module.js';
+import { html, useState, useCallback } from '../lib/preact.standalone.module.js';
 import DropdownMenu from './DropdownMenu.js';
 import CommandPrompt from './CommandPrompt.js';
 import CompanySelectModal from './CompanySelectModal.js';
+import CommoditySelectModal from './CommoditySelectModal.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 import * as api from '../api.js';
 
@@ -9,15 +10,14 @@ import * as api from '../api.js';
  * ActionBar — five dropdowns of game actions driven by the viewed entity.
  *
  * Semantic model:
- *   - intParam2 = activeEntityNum (always, for ActionBar)
- *       The viewed entity is the executor / acting-as for every action.
- *   - intParam1 = 0 for target-requiring trades/hostile actions
- *       PB-side SelectCompanyModal picks the target (e.g. "whose stock?").
- *       Hostile actions use a JS-side CompanySelectModal picker with filtering
- *       (non-controlled, same-industry for Antitrust) before firing the API.
- *   - Type 3 self-actions (Set Dividend, Rebrand, etc.) use the hook's no-arg
- *       onClick and rely on the top-level gate (`viewing == acting-as`) so PB
- *       sees PlayCo& = activeEntityNum without an explicit swap.
+ *   - intParam2 = activeEntityNum (always, for ActionBar). Every endpoint call
+ *       threads the viewed entity as acting-as. The PB dispatcher swaps
+ *       PlayCo via SwapActingAs for the duration of the event.
+ *   - Target-requiring actions (Buy Stock, Merger, Antitrust, etc.) open a
+ *       frontend picker (CompanySelectModal or CommoditySelectModal) and
+ *       fire the api.* fn with (targetId, activeEntityNum).
+ *   - Self-actions (Set Dividend, Rebrand, etc.) call api.* fn(activeEntityNum)
+ *       with intParam1 = 0.
  *
  * Industry-inapplicable buttons are HIDDEN (conditional spreads) rather than
  * greyed out. Position-closing buttons (Sell Stock, Cover Short, etc.) are
@@ -55,99 +55,119 @@ export default function ActionBar({ entityLabel }) {
     const hostileVisible = !viewingHuman && !isActiveEntityETF && !notActingAsCompany;
     const bankingVisible = isActingAsBank;
 
-    // ==================== Hostile Target Picker State ====================
-    const [hostileAction, setHostileAction] = useState(null);
-    const [showTargetPicker, setShowTargetPicker] = useState(false);
+    // ==================== Picker State (company | commodity) ====================
+    // pendingAction: { kind: 'company'|'commodity', title, text?, filter?, onResolve }
+    const [pendingAction, setPendingAction] = useState(null);
 
-    const targetFilter = useMemo(() => {
-        const controlledIds = new Set((controlledCompanies || []).map(c => c.id));
-        if (hostileAction === 'antitrust') {
-            return (c) => !controlledIds.has(c.id) && c.industryId === actingAsIndustryId;
-        }
-        return (c) => !controlledIds.has(c.id);
-    }, [hostileAction, controlledCompanies, actingAsIndustryId]);
-
-    const openPicker = useCallback((action) => {
-        setHostileAction(action);
-        setShowTargetPicker(true);
+    const openCompanyPicker = useCallback((cfg) => {
+        setPendingAction({ kind: 'company', ...cfg });
     }, []);
 
-    const handleTargetSelected = useCallback(async (targetIdStr) => {
-        setShowTargetPicker(false);
-        if (!targetIdStr) { setHostileAction(null); return; }
-        const targetId = parseInt(targetIdStr, 10);
-        if (!targetId || isNaN(targetId)) { setHostileAction(null); return; }
-        const action = hostileAction;
-        setHostileAction(null);
-        const acting = activeEntityNum;
-        if (action === 'antitrust')     api.antitrustLawsuit(targetId, acting);
-        else if (action === 'harassing')  api.harrassingLawsuit(targetId, acting);
-        else if (action === 'spreadRumors') api.spreadRumors(targetId, acting);
-        else if (action === 'greenmail')    api.greenmail(targetId, acting);
-        else if (action === 'lbo')          api.lbo(targetId, acting);
-        else if (action === 'merger')       api.merger(targetId, acting);
-    }, [hostileAction, activeEntityNum]);
+    const openCommodityPicker = useCallback((cfg) => {
+        setPendingAction({ kind: 'commodity', ...cfg });
+    }, []);
 
-    const actionLabels = {
-        antitrust: 'Antitrust Lawsuit',
-        harassing: 'Harassing Lawsuit',
-        spreadRumors: 'Spread Rumors',
-        greenmail: 'Greenmail',
-        lbo: 'Leveraged Buyout',
-        merger: 'Merger',
-    };
+    const handlePickerResolved = useCallback((resultStr) => {
+        const current = pendingAction;
+        setPendingAction(null);
+        if (!current || !resultStr) return;
+        const targetId = parseInt(resultStr, 10);
+        if (!targetId || isNaN(targetId)) return;
+        current.onResolve(targetId);
+    }, [pendingAction]);
 
     // ==================== Helpers ====================
-    // Wrap a hook button so its onClick fires with (0, activeEntityNum) —
-    // target picker on PB side, acting-as = viewed entity.
-    const withPickerTarget = (hookBtn, apiFn) => ({
+    // Build an acting-as suffix for picker titles.
+    const actingSuffix = actingAsSymbol ? ` (acting as ${actingAsSymbol})` : '';
+
+    // Wrap a hook button so clicking opens a CompanySelectModal, and on resolve
+    // fires apiFn(targetId, activeEntityNum).
+    const withCompanyPicker = (hookBtn, apiFn, { title, text, filter } = {}) => ({
         ...hookBtn,
-        onClick: () => apiFn(0, activeEntityNum),
+        onClick: () => openCompanyPicker({
+            title: title || `${hookBtn.label || 'Select Company'}${actingSuffix}`,
+            text: text || 'Choose a company:',
+            filter,
+            onResolve: (targetId) => apiFn(targetId, activeEntityNum),
+        }),
     });
-    // Wrap a hook button with a specific target id.
-    const withTarget = (hookBtn, apiFn, targetId) => ({
+
+    // Wrap a hook button so clicking opens a CommoditySelectModal.
+    const withCommodityPicker = (hookBtn, apiFn, { title, text, filter } = {}) => ({
         ...hookBtn,
-        onClick: () => apiFn(targetId, activeEntityNum),
+        onClick: () => openCommodityPicker({
+            title: title || `${hookBtn.label || 'Select Commodity'}${actingSuffix}`,
+            text: text || 'Choose a commodity:',
+            filter,
+            onResolve: (targetId) => apiFn(targetId, activeEntityNum),
+        }),
     });
+
+    // Default filters.
+    const excludeSelf = (c) => c.id !== activeEntityNum;
+    const controlledIdSet = new Set((controlledCompanies || []).map(c => c.id));
+    const hostileFilter = (c) => !controlledIdSet.has(c.id);
+    const antitrustFilter = (c) => !controlledIdSet.has(c.id) && c.industryId === actingAsIndustryId;
 
     // ==================== TRADE DROPDOWN (Multi-Column) ====================
     // Col 1: Stocks / Corp Bonds / Govt Bonds (opening positions only).
     const tradeColumn1 = [
         { header: 'Stocks' },
-        withPickerTarget(props.buyStock, api.buyStock),
-        ...(!isActingAsETFAdvisor ? [withPickerTarget(props.shortStock, api.shortStock)] : []),
+        withCompanyPicker(props.buyStock, api.buyStock,
+            { title: `Buy Stock${actingSuffix}`, text: "Which company's stock?", filter: excludeSelf }),
+        ...(!isActingAsETFAdvisor ? [
+            withCompanyPicker(props.shortStock, api.shortStock,
+                { title: `Short Stock${actingSuffix}`, text: "Which company's stock to short?", filter: excludeSelf }),
+        ] : []),
         { divider: true },
         { header: 'Corporate Bonds' },
-        withPickerTarget(props.buyCorpBond, api.buyCorporateBond),
+        withCompanyPicker(props.buyCorpBond, api.buyCorporateBond,
+            { title: `Buy Corporate Bond${actingSuffix}`, text: "Which company's bond?", filter: excludeSelf }),
         ...(canTradeGovtBonds ? [
             { divider: true },
             { header: 'Government Bonds' },
-            { ...props.buyLongGovtBonds,  onClick: () => api.buyLongGovtBonds(activeEntityNum) },
-            { ...props.buyShortGovtBonds, onClick: () => api.buyShortGovtBonds(activeEntityNum) },
+            props.buyLongGovtBonds,
+            props.buyShortGovtBonds,
         ] : []),
     ];
 
     // Col 2: Commodities (opening positions only).
+    const nonCryptoCommodity = (c) => c.kind !== 'crypto';
+    const physOnly = (c) => c.kind === 'phys';
+    const cryptoOnly = (c) => c.kind === 'crypto';
     const tradeColumn2 = canTradeCommodities ? [
         { header: 'Commodities' },
-        { label: 'Buy Futures',   onClick: () => api.buyCommodityFutures(0, activeEntityNum),   color: 'green' },
-        { label: 'Short Futures', onClick: () => api.shortCommodityFutures(0, activeEntityNum), color: 'red'   },
-        { label: 'Buy Physical',  onClick: () => api.buyPhysicalCommodity(0, activeEntityNum),  color: 'green' },
+        withCommodityPicker({ label: 'Buy Futures',   color: 'green' }, api.buyCommodityFutures,
+            { title: `Buy Futures${actingSuffix}`, filter: nonCryptoCommodity }),
+        withCommodityPicker({ label: 'Short Futures', color: 'red' }, api.shortCommodityFutures,
+            { title: `Short Futures${actingSuffix}`, filter: nonCryptoCommodity }),
+        withCommodityPicker({ label: 'Buy Physical', color: 'green' }, api.buyPhysicalCommodity,
+            { title: `Buy Physical${actingSuffix}`, filter: physOnly }),
         { divider: true },
         { header: 'Crypto' },
-        { label: 'Buy Crypto',         onClick: () => api.buyPhysicalCrypto(0, activeEntityNum), color: 'green' },
-        { label: 'Buy Crypto Futures', onClick: () => api.buyCryptoFutures(0, activeEntityNum),  color: 'green' },
+        withCommodityPicker({ label: 'Buy Crypto', color: 'green' }, api.buyPhysicalCrypto,
+            { title: `Buy Crypto${actingSuffix}`, filter: cryptoOnly }),
+        withCommodityPicker({ label: 'Buy Crypto Futures', color: 'green' }, api.buyCryptoFutures,
+            { title: `Buy Crypto Futures${actingSuffix}`, filter: cryptoOnly }),
     ] : [];
 
     // Col 3: Options (naked writes kept).
     const tradeColumn3 = canTradeOptions ? [
         { header: 'Options' },
-        withPickerTarget(props.buyCalls,  api.buyCalls),
-        withPickerTarget(props.sellCalls, api.sellCalls),
-        withPickerTarget(props.buyPuts,   api.buyPuts),
-        withPickerTarget(props.sellPuts,  api.sellPuts),
+        withCompanyPicker(props.buyCalls,  api.buyCalls,
+            { title: `Buy Calls${actingSuffix}`, text: 'Underlying company?', filter: excludeSelf }),
+        withCompanyPicker(props.sellCalls, api.sellCalls,
+            { title: `Sell Calls${actingSuffix}`, text: 'Underlying company?', filter: excludeSelf }),
+        withCompanyPicker(props.buyPuts,   api.buyPuts,
+            { title: `Buy Puts${actingSuffix}`, text: 'Underlying company?', filter: excludeSelf }),
+        withCompanyPicker(props.sellPuts,  api.sellPuts,
+            { title: `Sell Puts${actingSuffix}`, text: 'Underlying company?', filter: excludeSelf }),
         { divider: true },
-        { ...props.advancedOptions, label: 'Advanced Options...' },
+        {
+            ...props.advancedOptions,
+            label: 'Advanced Options...',
+            onClick: () => api.advancedOptionsTrading(activeEntityNum),
+        },
     ] : [];
 
     const tradeColumns = [tradeColumn1, tradeColumn2, tradeColumn3].filter(c => c.length > 0);
@@ -161,14 +181,21 @@ export default function ActionBar({ entityLabel }) {
         { header: 'Strategy' },
         props.setProductivity,
         props.setGrowthRate,
-        props.growthThrottle,
         props.rebrand,
         props.restructure,
     ] : [];
 
     const corporateColumn2 = [
         { header: 'M&A' },
-        { label: 'Merger', onClick: () => openPicker('merger'), color: 'green' },
+        {
+            label: 'Merger', color: 'green',
+            onClick: () => openCompanyPicker({
+                title: `Merger${actingSuffix}`,
+                text: 'Merge with which company?',
+                filter: hostileFilter,
+                onResolve: (targetId) => api.merger(targetId, activeEntityNum),
+            }),
+        },
         props.startup,
         props.capitalContribution,
         ...(canActOnSelf ? [
@@ -219,7 +246,6 @@ export default function ActionBar({ entityLabel }) {
         { divider: true },
         { header: 'Banking' },
         props.changeBank,
-        props.creditInfo,
         props.advanceFunds,
         { divider: true },
         { header: 'Swaps' },
@@ -240,15 +266,55 @@ export default function ActionBar({ entityLabel }) {
     const hostileItems = [
         { header: 'Legal' },
         props.changeLawFirm,
-        { label: 'Antitrust Lawsuit', onClick: () => openPicker('antitrust'), color: 'red' },
-        { label: 'Harassing Lawsuit', onClick: () => openPicker('harassing'), color: 'red' },
+        {
+            label: 'Antitrust Lawsuit', color: 'red',
+            onClick: () => openCompanyPicker({
+                title: `Antitrust Lawsuit${actingSuffix}`,
+                text: 'Sue which company? (same industry)',
+                filter: antitrustFilter,
+                onResolve: (targetId) => api.antitrustLawsuit(targetId, activeEntityNum),
+            }),
+        },
+        {
+            label: 'Harassing Lawsuit', color: 'red',
+            onClick: () => openCompanyPicker({
+                title: `Harassing Lawsuit${actingSuffix}`,
+                text: 'Sue which company?',
+                filter: hostileFilter,
+                onResolve: (targetId) => api.harrassingLawsuit(targetId, activeEntityNum),
+            }),
+        },
         { divider: true },
         { header: 'Reputation' },
-        { label: 'Spread Rumors',     onClick: () => openPicker('spreadRumors'), color: 'red' },
+        {
+            label: 'Spread Rumors', color: 'red',
+            onClick: () => openCompanyPicker({
+                title: `Spread Rumors${actingSuffix}`,
+                text: 'Target which company?',
+                filter: hostileFilter,
+                onResolve: (targetId) => api.spreadRumors(targetId, activeEntityNum),
+            }),
+        },
         { divider: true },
         { header: 'Takeovers' },
-        { label: 'Greenmail',         onClick: () => openPicker('greenmail'), color: 'red' },
-        { label: 'Leveraged Buyout',  onClick: () => openPicker('lbo'),       color: 'red' },
+        {
+            label: 'Greenmail', color: 'red',
+            onClick: () => openCompanyPicker({
+                title: `Greenmail${actingSuffix}`,
+                text: 'Greenmail which company?',
+                filter: hostileFilter,
+                onResolve: (targetId) => api.greenmail(targetId, activeEntityNum),
+            }),
+        },
+        {
+            label: 'Leveraged Buyout', color: 'red',
+            onClick: () => openCompanyPicker({
+                title: `Leveraged Buyout${actingSuffix}`,
+                text: 'LBO which company?',
+                filter: hostileFilter,
+                onResolve: (targetId) => api.lbo(targetId, activeEntityNum),
+            }),
+        },
     ];
 
     // ==================== BANKING DROPDOWN ====================
@@ -317,11 +383,18 @@ export default function ActionBar({ entityLabel }) {
             <div style="flex:1"><${CommandPrompt} /></div>
         </div>
         <${CompanySelectModal}
-            show=${showTargetPicker}
-            title=${`Select target for ${actionLabels[hostileAction] || 'action'}${actingAsSymbol ? ` (acting as ${actingAsSymbol})` : ''}`}
-            text="Choose a company to target:"
-            onSubmit=${handleTargetSelected}
-            filter=${targetFilter}
+            show=${pendingAction?.kind === 'company'}
+            title=${pendingAction?.title || ''}
+            text=${pendingAction?.text || ''}
+            onSubmit=${handlePickerResolved}
+            filter=${pendingAction?.kind === 'company' ? pendingAction.filter : undefined}
+        />
+        <${CommoditySelectModal}
+            show=${pendingAction?.kind === 'commodity'}
+            title=${pendingAction?.title || ''}
+            text=${pendingAction?.text || ''}
+            onSubmit=${handlePickerResolved}
+            filter=${pendingAction?.kind === 'commodity' ? pendingAction.filter : undefined}
         />
     `;
 }

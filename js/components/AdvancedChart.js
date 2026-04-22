@@ -37,6 +37,7 @@ import {
     drawOHLCBars,
 } from './chartDrawing.js';
 import { useChartType, isSimpleAsset } from './chartPrefs.js';
+import DisabledTooltipButton from './DisabledTooltipButton.js';
 
 const SECURITY_IDS = [
     api.STOCK_INDEX_ID, api.OIL_ID, api.GOLD_ID, api.SILVER_ID,
@@ -250,6 +251,7 @@ const AdvancedChart = ({
     baseMultiplier = 1,
     theme = DEFAULT_ADVANCED_CHART_THEME,
     forceLineOnly = false,
+    actionButtons = [],
 }) => {
     const canvasRef = useRef(null);
     const [cachedChartData, setCachedChartData] = useState(null);
@@ -592,6 +594,11 @@ const AdvancedChart = ({
                         <button class=${btnCls(panels.volume)} onClick=${() => togglePanel('volume')}>Vol</button>
                         <button class=${btnCls(panels.rsi)} onClick=${() => togglePanel('rsi')}>RSI</button>
                         <button class=${btnCls(panels.macd)} onClick=${() => togglePanel('macd')}>MACD</button>
+                    </div>
+                `}
+                ${actionButtons.length > 0 && html`
+                    <div class="flex items-center gap-2 ml-auto advanced-chart-actions">
+                        ${actionButtons.map(btn => html`<${DisabledTooltipButton} ...${btn} />`)}
                     </div>
                 `}
             </div>
