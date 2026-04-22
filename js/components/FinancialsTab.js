@@ -4,8 +4,10 @@
  * For corp entities (activeEntityNum > 10): renders 5 structured panels backed by
  * activeEntityFinancials bridge data, plus a drill-down to the full BSTR text report.
  *
- * For player entities (activeEntityNum <= 10): renders the original BSTR layout
- * (CapitalizationChart + AdvisorySummary + financialProfile text).
+ * For player entities (activeEntityNum <= 10): renders a typed-panel layout
+ * with Assets, Liabilities & Equity, Tax Position, Borrower Status, and
+ * Quarterly Cashflow panels (Phase 1). BSTR text still accessible via
+ * SubScreen drill-downs.
  *
  * Styling: .panel/.panel-header/.panel-body + inline styles from panelStyles.js.
  * No custom CSS file. See app-style-guide.md.
@@ -23,8 +25,6 @@ import {
 import * as api from '../api.js';
 import DisabledTooltipButton from './DisabledTooltipButton.js';
 import HotkeyButtonBar from './HotkeyButtonBar.js';
-import CapitalizationChart from './CapitalizationChart.js';
-import AdvisorySummary from './AdvisorySummary.js';
 import EPSChart from './EPSChart.js';
 import { useActionButtonProps } from '../hooks/useActionButtonProps.js';
 
@@ -275,15 +275,11 @@ function FinancialsTab() {
                 class="flex flex-row items-center gap-5 mb-2"
             />
 
-            <!-- SubScreen drill-down buttons -->
+            <!-- SubScreen drill-down button (Cash Flow moved into Qtrly Cashflow panel header below) -->
             <div class="flex flex-row justify-center gap-2 mb-2">
                 <button class="btn blue" style="padding:2px 10px; font-size:var(--font-size-sm);"
                     onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_FINANCIAL_PROFILE); setShowFullProfile(true); }}>
                     View Full Financial Disclosure
-                </button>
-                <button class="btn blue" style="padding:2px 10px; font-size:var(--font-size-sm);"
-                    onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_CASH_FLOW_PROJECTION); setShowFullProjection(true); }}>
-                    View Cash Flow Projection
                 </button>
             </div>
 
@@ -368,14 +364,7 @@ function FinancialsTab() {
                             </div>
                             <div style="${CELL_S}">
                                 <div style="${CELL_LABEL_S}">Total Liabilities</div>
-                                <div style="${CELL_TXT_S}">
-                                    <span class="hover:underline"
-                                        style="color:var(--fg-muted); cursor:pointer; text-decoration:underline dotted;"
-                                        title="Open Financial Disclosure"
-                                        onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_FINANCIAL_PROFILE); setShowFullProfile(true); }}>
-                                        See breakdown →
-                                    </span>
-                                </div>
+                                <div style="${CELL_NUM_S}">${playerTotalDebt != null ? fmtM(playerTotalDebt) : '—'}</div>
                             </div>
                             <div style="${CELL_S}">
                                 <div style="${CELL_LABEL_S}">Net Worth</div>
@@ -422,12 +411,77 @@ function FinancialsTab() {
                 </div>
             </div>
 
-            <!-- Row 3: Net Worth history chart, full width -->
-            <div class="panel" style="flex:1; min-height:140px;">
-                <div class="panel-header">Net Worth History</div>
-                <div class="panel-body flex flex-col w-full" style="padding:0;">
-                    <${CapitalizationChart} assetId=${activeEntityNum} chartTitle="Net Worth" />
+            <!-- Row 3: Borrower Status + Quarterly Cashflow (mirrors IndustrialView corp layout) -->
+            <div style="display:flex; gap:6px;">
+
+                <!-- Borrower Status (mirrors corp-side panel at FinancialsTab.js:652) -->
+                <div class="panel" style="flex:1;">
+                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Borrower Status</span>
+                        <${DisabledTooltipButton} ...${buttonProps.changeBank}
+                            label="Switch Banks" buttonClass=""
+                            style="padding:1px 8px; font-size:var(--font-size-sm);"
+                        />
+                    </div>
+                    <div class="panel-body" style="padding:0;">
+                        <div style="display:flex; flex-direction:column; gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Bank</span>
+                                ${bank ? html`
+                                    <span class="hover:underline" style="font-size:var(--font-size-sm); font-weight:600; color:#60a5fa; cursor:pointer;"
+                                        onClick=${() => api.setViewAsset(bankId)} title="Navigate to ${bank.name}">${bank.name}</span>
+                                ` : html`<span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-warning);">—</span>`}
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Debt / Equity</span>
+                                <span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-${(playerNetWorth != null && playerNetWorth > 0 && playerTotalDebt != null) ? (() => { const d = playerTotalDebt/playerNetWorth; return d < 1 ? 'green' : d < 3 ? 'yellow' : 'red'; })() : 'neutral'});">
+                                    ${(playerNetWorth != null && playerNetWorth > 0 && playerTotalDebt != null) ? (playerTotalDebt/playerNetWorth).toFixed(2) + 'x' : '—'}
+                                </span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Credit Rating</span>
+                                <span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-${credRating != null ? getCreditColor(credRating) : 'neutral'});">
+                                    ${credRating != null ? getCreditLabel(credRating) : '—'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Quarterly Cashflow (mirrors corp-side panel at FinancialsTab.js:689;
+                     player cashflow scalars not yet bridged in Phase 1 -- rows show em-dash
+                     until a later phase, but the View Breakdown button opens the authoritative
+                     PersProfile cash-flow text) -->
+                <div class="panel" style="flex:1;">
+                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Quarterly Cashflow</span>
+                        <button class="btn blue" style="padding:1px 8px; font-size:var(--font-size-sm);"
+                            onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_CASH_FLOW_PROJECTION); setShowFullProjection(true); }}>
+                            View Breakdown
+                        </button>
+                    </div>
+                    <div class="panel-body" style="padding:0;">
+                        <div style="display:flex; flex-direction:column; gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Operating Profit</span>
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">— <span style="font-size:11px; opacity:0.7;">(see breakdown)</span></span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Before Debt</span>
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">—</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">After Debt</span>
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">—</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Est. Cash in 3 Mo.</span>
+                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>
@@ -746,10 +800,11 @@ function FinancialsTab() {
                         <div style="${CELL_NUM_S}">${fmtM(aef.loc)}</div>
                     </div>
 
-                    <!-- TODO: Bridge Calc_LoanPortfolio result for bank loan portfolio total -->
+                    <!-- Loan Portfolio = business + consumer + mortgage (mortgage already
+                         includes subprime per SYNCGAMEDATA.INC line 261 aggregation) -->
                     <div style="${CELL_S}">
                         <div style="${CELL_LABEL_S}">Loan Portfolio</div>
-                        <div style="${CELL_MUT_S}">—</div>
+                        <div style="${CELL_NUM_S}">${fmtM((aef.bizLoan||0) + (aef.consumerLoan||0) + (aef.mortgageLoan||0))}</div>
                     </div>
 
                     <div style="${CELL_S}">

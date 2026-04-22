@@ -154,26 +154,22 @@ function LoansTab() {
     const scopeActiveRef = useRef(false);
     const [, setScopeRenderTick] = useState(0);
     const barButtons = [
-        { ...buttonProps.buyBusinessLoans, containerClass: "flex flex-row justify-between w-full", buttonClass: "btn flex-1 mx-1" },
-        { ...buttonProps.freezeAllLoans, label: `${frozenAllLoans ? "Unfreeze" : "Freeze"} All Loans`, containerClass: "flex flex-row justify-between w-full", buttonClass: "btn flex-1 mx-1" },
-        { ...buttonProps.setBankAllocation, containerClass: "flex flex-row justify-between w-full", buttonClass: "btn flex-1 mx-1" },
+        buttonProps.buyBusinessLoans,
+        { ...buttonProps.freezeAllLoans, label: `${frozenAllLoans ? "Unfreeze" : "Freeze"} All Loans` },
+        buttonProps.setBankAllocation,
     ];
     const extrasStartNumber = barButtons.filter(Boolean).length + 1;
 
     return html`
-        <div class="flex flex-col w-full items-center h-full min-h-0">
+        <div class="flex flex-col items-center w-full h-full min-h-0">
             <${HotkeyButtonBar} buttons=${barButtons}
                 extrasContainerRef=${extrasContainerRef}
                 scopeActiveRef=${scopeActiveRef}
                 onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
-                class="flex flex-col items-center mt-2 w-full" style="" />
+                class="flex flex-row items-center gap-2 mb-2" />
 
-            <br />
-
-            <div class="flex flex-col flex-[3] justify-center items-center overflow-y-auto min-h-0">
-                <div ref=${extrasContainerRef} class="flex flex-col items-center w-full">
-                    ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, scopeActiveRef), hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
-                </div>
+            <div ref=${extrasContainerRef} class="flex flex-col items-center overflow-y-auto flex-1 min-h-0 w-full">
+                ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, scopeActiveRef), hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
             </div>
         </div>
     `;

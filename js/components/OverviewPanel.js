@@ -417,8 +417,11 @@ export default function OverviewPanel() {
         </div>
 
         <!-- ══════════════════════════════════════════════
-             Corporate Bonds (only when bonds are outstanding)
+             Corporate Bonds (rendered only when bonds are outstanding OR
+             when player-controlled non-ETF can issue new bonds; otherwise
+             hidden entirely so the right column doesn't show an empty panel)
              ══════════════════════════════════════════════ -->
+        ${(hasBonds || (playerControlsActive && !isActiveEntityETF)) ? html`
         <div class="panel" style="height:auto; flex-shrink:0;">
             <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Corporate Bonds</span>
@@ -450,13 +453,14 @@ export default function OverviewPanel() {
                             color="neutral"
                         />
                     </div>
-                ` : (playerControlsActive && !isActiveEntityETF) ? html`
+                ` : html`
                     <div style="padding:6px;">
                         <${DisabledTooltipButton} ...${buttonProps.issueCorpBonds} buttonClass="" />
                     </div>
-                ` : ''}
+                `}
             </div>
         </div>
+        ` : ''}
 
         <!-- Advisory Summary — grows to fill remaining space in right column -->
         <div style="flex:1; min-height:0; overflow:hidden; border-radius:var(--radius-md);">
