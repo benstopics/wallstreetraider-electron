@@ -9,7 +9,7 @@ import LocalizationDropdown from './LocalizationDropdown.js';
 import localeManager from '../locale/localeManager.js';
 
 // Read version from version.txt (single source of truth)
-let APP_VERSION = '10.0.15';
+let APP_VERSION = '10.0.16';
 try {
     if (typeof require === 'undefined') throw new Error('no require');
     const _fs = require('fs'), _path = require('path');
