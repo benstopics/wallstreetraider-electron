@@ -54,6 +54,10 @@ export default function ActionBar({ entityLabel }) {
     const canActOnSelf = !isActiveEntityETF && controlsActiveEntity && !viewingHuman;
     const hostileVisible = !viewingHuman && !isActiveEntityETF && !notActingAsCompany;
     const bankingVisible = isActingAsBank;
+    // Actions that PB rejects for a human player (PlayCo < 11). Merger, ETF
+    // advisory role, public stock offering, and corporate bond issue/redeem
+    // are all guarded corporation-only on the engine side.
+    const corporateOnly = !viewingHuman;
 
     // ==================== Picker State (company | commodity) ====================
     // pendingAction: { kind: 'company'|'commodity', title, text?, filter?, onResolve }
@@ -187,7 +191,7 @@ export default function ActionBar({ entityLabel }) {
 
     const corporateColumn2 = [
         { header: 'M&A' },
-        {
+        ...(corporateOnly ? [{
             label: 'Merger', color: 'green',
             onClick: () => openCompanyPicker({
                 title: `Merger${actingSuffix}`,
@@ -195,7 +199,7 @@ export default function ActionBar({ entityLabel }) {
                 filter: hostileFilter,
                 onResolve: (targetId) => api.merger(targetId, activeEntityNum),
             }),
-        },
+        }] : []),
         props.startup,
         props.capitalContribution,
         ...(canActOnSelf ? [
@@ -206,10 +210,12 @@ export default function ActionBar({ entityLabel }) {
             props.sellSubsidiaryStock,
             props.browseForSaleItems,
         ] : [props.browseForSaleItems]),
-        { divider: true },
-        { header: 'ETF / Advisory' },
-        props.becomeEtfAdvisor,
-        props.setAdvisoryFee,
+        ...(corporateOnly ? [
+            { divider: true },
+            { header: 'ETF / Advisory' },
+            props.becomeEtfAdvisor,
+            props.setAdvisoryFee,
+        ] : []),
         { divider: true },
         { header: 'Autopilot' },
         props.toggleGlobalAutopilot,
@@ -219,31 +225,35 @@ export default function ActionBar({ entityLabel }) {
 
     // ==================== FINANCE DROPDOWN ====================
     const financeColumn1 = [
-        { header: 'Equity' },
-        props.publicStockOffering,
-        ...(canActOnSelf ? [
-            props.privateStockOffering,
-            props.splitStock,
-            props.reverseSplit,
+        ...(corporateOnly ? [
+            { header: 'Equity' },
+            props.publicStockOffering,
+            ...(canActOnSelf ? [
+                props.privateStockOffering,
+                props.splitStock,
+                props.reverseSplit,
+            ] : []),
+            { divider: true },
         ] : []),
-        { divider: true },
         { header: 'Debt' },
-        props.issueCorpBonds,
-        props.redeemCorpBonds,
+        ...(corporateOnly ? [
+            props.issueCorpBonds,
+            props.redeemCorpBonds,
+        ] : []),
         props.borrowMoney,
         props.repayLoan,
         ...(!isActiveEntityETF ? [props.tradeTbills] : []),
     ];
 
     const financeColumn2 = [
-        { header: 'Returns' },
         ...(canActOnSelf ? [
+            { header: 'Returns' },
             props.setDividend,
             props.extraordinaryDividend,
             props.taxFreeLiquidation,
             props.taxableLiquidation,
+            { divider: true },
         ] : []),
-        { divider: true },
         { header: 'Banking' },
         props.changeBank,
         props.advanceFunds,

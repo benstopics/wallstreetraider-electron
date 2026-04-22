@@ -63,16 +63,29 @@ const MACD_SIGNAL = 9;
 // Pane drawing helpers (specific to this component's layout)
 // ---------------------------------------------------------------------------
 
-function drawGrid(ctx, theme, paneTop, paneH, chartLeft, chartW, divisions = 4) {
+function drawGrid(ctx, theme, paneTop, paneH, chartLeft, chartW, divisions = 4, range = null) {
     ctx.strokeStyle = theme.gridColor;
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 3]);
-    for (let i = 0; i <= divisions; i++) {
-        const y = paneTop + (paneH / divisions) * i;
-        ctx.beginPath();
-        ctx.moveTo(chartLeft, y);
-        ctx.lineTo(chartLeft + chartW, y);
-        ctx.stroke();
+    // When range has a `step` (nice-number ticks), draw grid lines at each tick
+    // so the grid aligns with the Y-axis labels. Otherwise fall back to even
+    // divisions of the pane.
+    if (range && range.step != null && range.step > 0) {
+        for (let v = range.minVal; v <= range.maxVal + range.step / 2; v += range.step) {
+            const y = priceToY(v, range, paneTop, paneH);
+            ctx.beginPath();
+            ctx.moveTo(chartLeft, y);
+            ctx.lineTo(chartLeft + chartW, y);
+            ctx.stroke();
+        }
+    } else {
+        for (let i = 0; i <= divisions; i++) {
+            const y = paneTop + (paneH / divisions) * i;
+            ctx.beginPath();
+            ctx.moveTo(chartLeft, y);
+            ctx.lineTo(chartLeft + chartW, y);
+            ctx.stroke();
+        }
     }
     ctx.setLineDash([]);
 }
@@ -91,6 +104,15 @@ function drawYAxisLabels(ctx, theme, paneTop, paneH, chartLeft, chartW, range, b
     ctx.font = '11px Helvetica, Arial, sans-serif';
     ctx.textAlign = 'left';
     const suffix = fixed ? { suffix: '', divisor: 1 } : determineSuffixForRange(range.maxVal, baseMultiplier);
+    // Nice-step path: one label per tick at the step boundaries.
+    if (!fixed && range.step != null && range.step > 0) {
+        for (let v = range.minVal; v <= range.maxVal + range.step / 2; v += range.step) {
+            const y = priceToY(v, range, paneTop, paneH);
+            const label = formatWithSuffix(v, suffix.suffix, suffix.divisor, baseMultiplier);
+            ctx.fillText(label, chartLeft + chartW + 5, y + 3);
+        }
+        return suffix;
+    }
     for (let i = 0; i <= divisions; i++) {
         const y = paneTop + (paneH / divisions) * i;
         const v = range.maxVal - (range.range / divisions) * i;
@@ -100,12 +122,32 @@ function drawYAxisLabels(ctx, theme, paneTop, paneH, chartLeft, chartW, range, b
     return suffix;
 }
 
-function drawXAxisLabels(ctx, theme, n, baseMonth, baseYear, chartLeft, chartW, canvasH, divisions = 6) {
+// Candidate month-steps that divide 12 evenly, smallest first: one label per
+// month / 2 months / quarter / 4 months / half / year. We pick the finest step
+// whose resulting label count still fits the available width without crowding.
+const X_AXIS_STEP_CANDIDATES = [1, 2, 3, 4, 6, 12];
+const X_AXIS_MIN_LABEL_PX = 36;  // min pixels per label (keeps "Mar" and "2025" from touching)
+
+function drawXAxisLabels(ctx, theme, n, baseMonth, baseYear, chartLeft, chartW, canvasH) {
     ctx.fillStyle = theme.lineColor;
     ctx.font = '11px Helvetica, Arial, sans-serif';
     ctx.textAlign = 'center';
-    for (let i = 0; i <= divisions; i++) {
-        const idx = Math.round(((n - 1) * i) / divisions);
+
+    // Pick a month-step that produces as many labels as can fit comfortably.
+    const maxLabels = Math.max(2, Math.floor(chartW / X_AXIS_MIN_LABEL_PX));
+    let step = 12;
+    for (const s of X_AXIS_STEP_CANDIDATES) {
+        const labelCount = Math.floor((n - 1) / s) + 1;
+        if (labelCount <= maxLabels) { step = s; break; }
+    }
+
+    // Anchor labels to calendar months divisible by `step` so January (the
+    // year-tick) always falls on a label position. For each bar, compute its
+    // calendar month modulo step — label only the bars that align.
+    for (let idx = 0; idx < n; idx++) {
+        const rawMonth = baseMonth + (idx - (n - 1));
+        const monthMod = ((rawMonth % 12) + 12) % 12;
+        if (monthMod % step !== 0) continue;
         const x = indexToX(idx, n, chartLeft, chartW);
         const label = dateLabel(idx, baseMonth, baseYear, n);
         ctx.fillText(label.axisLabel, x, canvasH - 8);
@@ -408,7 +450,7 @@ const AdvancedChart = ({
         }
         const priceRange = calcPricePaneRange(candles, overlaySeriesForRange);
 
-        drawGrid(ctx, theme, pricePaneTop, pricePaneH, chartLeft, chartW, 4);
+        drawGrid(ctx, theme, pricePaneTop, pricePaneH, chartLeft, chartW, 4, priceRange);
         drawYAxisLabels(ctx, theme, pricePaneTop, pricePaneH, chartLeft, chartW, priceRange, baseMultiplier, 4, false);
 
         if (overlays.bollinger) {
@@ -518,7 +560,7 @@ const AdvancedChart = ({
             paneTop += paneH + PAD.PANE_GAP;
         }
 
-        drawXAxisLabels(ctx, theme, n, baseMonth, baseYear, chartLeft, chartW, H, 6);
+        drawXAxisLabels(ctx, theme, n, baseMonth, baseYear, chartLeft, chartW, H);
 
         if (hoverIndex != null && hoverIndex >= 0 && hoverIndex < n) {
             const x = indexToX(hoverIndex, n, chartLeft, chartW);

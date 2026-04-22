@@ -55,9 +55,10 @@ function drawBackground(ctx, w, h, theme) {
 }
 
 /**
- * Draw grid lines
+ * Draw grid lines. When `priceRange.step` is present, horizontal lines align
+ * with the nice-number Y-axis ticks so grid and labels match.
  */
-function drawGrid(ctx, layout, theme, config) {
+function drawGrid(ctx, layout, theme, config, priceRange = null) {
     if (!theme.gridColor) return;
 
     const { horizontal, vertical } = generateGridLines(layout, config.grid.divisions);
@@ -66,15 +67,23 @@ function drawGrid(ctx, layout, theme, config) {
     ctx.strokeStyle = theme.gridColor;
     ctx.lineWidth = 1;
 
-    // Horizontal grid lines
-    for (const y of horizontal) {
-        ctx.beginPath();
-        ctx.moveTo(layout.padL, y);
-        ctx.lineTo(layout.chartRight, y);
-        ctx.stroke();
+    if (priceRange && priceRange.step != null && priceRange.step > 0) {
+        for (let v = priceRange.minVal; v <= priceRange.maxVal + priceRange.step / 2; v += priceRange.step) {
+            const y = priceToY(v, priceRange, layout);
+            ctx.beginPath();
+            ctx.moveTo(layout.padL, y);
+            ctx.lineTo(layout.chartRight, y);
+            ctx.stroke();
+        }
+    } else {
+        for (const y of horizontal) {
+            ctx.beginPath();
+            ctx.moveTo(layout.padL, y);
+            ctx.lineTo(layout.chartRight, y);
+            ctx.stroke();
+        }
     }
 
-    // Vertical grid lines
     for (const x of vertical) {
         ctx.beginPath();
         ctx.moveTo(x, layout.padT);
@@ -127,15 +136,25 @@ function drawLineAndArea(ctx, prices, layout, priceRange, theme) {
 }
 
 /**
- * Draw Y-axis labels (price values)
+ * Draw Y-axis labels (price values). When `priceRange.step` is present, labels
+ * land on nice-round values at each step boundary (10/20/30…) instead of the
+ * arbitrary fractions produced by even division of an unrounded range.
  */
 function drawYAxisLabels(ctx, layout, priceRange, suffixInfo, theme, config, baseMultiplier = 1) {
-    const values = calculateYAxisValues(priceRange, config.grid.divisions);
-
     ctx.fillStyle = theme.lineColor;
     ctx.font = config.labels.font;
     ctx.textAlign = 'left';
 
+    if (priceRange.step != null && priceRange.step > 0) {
+        for (let v = priceRange.minVal; v <= priceRange.maxVal + priceRange.step / 2; v += priceRange.step) {
+            const y = priceToY(v, priceRange, layout);
+            const label = formatWithSuffix(v, suffixInfo.suffix, suffixInfo.divisor, baseMultiplier);
+            ctx.fillText(label, layout.chartRight + config.labels.yAxisOffset, y + 3);
+        }
+        return;
+    }
+
+    const values = calculateYAxisValues(priceRange, config.grid.divisions);
     for (let i = 0; i < values.length; i++) {
         const y = layout.padT + layout.chartH * i / config.grid.divisions;
         const label = formatWithSuffix(values[i], suffixInfo.suffix, suffixInfo.divisor, baseMultiplier);
@@ -403,7 +422,7 @@ const AssetPriceChart = ({
             // Clear and draw
             ctx.clearRect(0, 0, w, h);
             drawBackground(ctx, w, h, theme);
-            drawGrid(ctx, layout, theme, layoutConfig);
+            drawGrid(ctx, layout, theme, layoutConfig, priceRange);
             if (candles && chartType === 'candle') {
                 drawCandlesShared(ctx, theme, candles, layout.padL, layout.chartW, priceRange, layout.padT, layout.chartH, { maxBodyW: 18 });
             } else if (candles && chartType === 'ohlc') {

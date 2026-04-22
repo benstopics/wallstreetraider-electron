@@ -1,5 +1,6 @@
 export const DEFAULT_CAPITALIZATION_CHART_THEME = {
     // Bloomberg-ish: white line/text on black with subtle cyan shading
+    background: '#000000',
     lineColor: '#ffffff',
     shadedAreaTopColor: 'rgba(0,255,0,1)',
     shadedAreaBottomColor: '#006400',

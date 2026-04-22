@@ -226,9 +226,36 @@ export function synthVolume(candles, k = 1) {
 // Axis helpers (indicator-specific ranges)
 // ---------------------------------------------------------------------------
 
+/** Round a number to a "nice" value (1, 2, 5, 10) × 10^n — the standard
+ *  algorithm (Heckbert 1990) for producing human-readable axis ticks.
+ *  `round=true` snaps to the nearest nice value; `round=false` rounds up. */
+function niceNum(range, round) {
+    if (!(range > 0) || !Number.isFinite(range)) return 1;
+    const exp = Math.floor(Math.log10(range));
+    const fraction = range / Math.pow(10, exp);
+    let niceFraction;
+    if (round) {
+        if (fraction < 1.5) niceFraction = 1;
+        else if (fraction < 3) niceFraction = 2;
+        else if (fraction < 7) niceFraction = 5;
+        else niceFraction = 10;
+    } else {
+        if (fraction <= 1) niceFraction = 1;
+        else if (fraction <= 2) niceFraction = 2;
+        else if (fraction <= 5) niceFraction = 5;
+        else niceFraction = 10;
+    }
+    return niceFraction * Math.pow(10, exp);
+}
+
 /** Union of price + candle high/low + overlay lines for y-axis autoscaling.
- *  Skips null candle slots (empty positions in a left-padded array). */
-export function calcPricePaneRange(candles, overlaySeries = []) {
+ *  Skips null candle slots (empty positions in a left-padded array).
+ *
+ *  `targetTicks` is the desired number of tick labels (default 5). The returned
+ *  `step` is a nice round value (1/2/5 × 10^n) and `minVal`/`maxVal` are snapped
+ *  to multiples of `step`, so iterating `minVal, minVal+step, …, maxVal` yields
+ *  human-readable axis labels (e.g. 100, 110, 120, 130 instead of 97.4, 107.1, …). */
+export function calcPricePaneRange(candles, overlaySeries = [], targetTicks = 5) {
     let lo = Infinity;
     let hi = -Infinity;
     for (const c of candles) {
@@ -244,13 +271,18 @@ export function calcPricePaneRange(candles, overlaySeries = []) {
             if (v < lo) lo = v;
         }
     }
-    if (!Number.isFinite(lo) || !Number.isFinite(hi)) return { minVal: 0, maxVal: 1, range: 1 };
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) return { minVal: 0, maxVal: 1, range: 1, step: 1 };
     if (lo === hi) { lo -= 1; hi += 1; }
-    // Add 3% headroom/footroom.
-    const pad = (hi - lo) * 0.03;
-    lo -= pad;
-    hi += pad;
-    return { minVal: lo, maxVal: hi, range: hi - lo };
+
+    // Nice-number snap naturally contributes its own headroom/footroom (the
+    // `ceil`/`floor` step-alignment), so no extra pre-padding is needed —
+    // adding it pushes the min/max across an extra step boundary and wastes
+    // vertical space (e.g. a $100–$247 range would land on 50..300 instead of
+    // the tighter 100..250).
+    const step = niceNum((hi - lo) / Math.max(1, targetTicks - 1), true);
+    const niceMin = Math.floor(lo / step) * step;
+    const niceMax = Math.ceil(hi / step) * step;
+    return { minVal: niceMin, maxVal: niceMax, range: niceMax - niceMin, step };
 }
 
 /** For RSI: fixed 0..100 range. */

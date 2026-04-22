@@ -2,7 +2,6 @@ import { html, render, useState, useMemo } from '../lib/preact.standalone.module
 import '../lib/tailwind.module.js';
 import * as api from '../api.js';
 import BalanceSheet from './BalanceSheet.js';
-import CapitalizationChart from './CapitalizationChart.js';
 import StreamingQuotes from './StreamingQuotes.js';
 import View from './View.js';
 import Toolbar from './Toolbar.js';
@@ -10,8 +9,9 @@ import { NewspaperIcon, NotificationIcon } from '../icons.js';
 import Modal from './Modal.js';
 import MarketSparklineGrid from './MarketSparklineGrid.js';
 import Button from './Button.js';
-import StockTicker from './StockTicker.js';
+import StockTicker, { MiniSpark } from './StockTicker.js';
 import Tabs from './Tabs.js';
+import AdvancedChartModal from './AdvancedChartModal.js';
 import { insertCurrencySymbols } from './helpers.js';
 
 const Tab = Tabs.Tab;
@@ -20,6 +20,10 @@ const GameUI = () => {
 
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMyNews, setShowMyNews] = useState(false);
+    const [expandedNW, setExpandedNW] = useState(false);
+
+    const mil = api.useGameStore(s => s.gameState.mil) || 'M';
+    const nwBaseMultiplier = mil === 'B' ? 1e9 : 1e6;
 
     const newsHeadlines = api.useGameStore(s => s.gameState.newsHeadlines);
     const cash = api.useGameStore(s => s.gameState.cash);
@@ -70,11 +74,14 @@ const GameUI = () => {
                     <${Tabs}>
                         <${Tab} label="Quick Look">
                             <div class="flex flex-col h-full min-h-0 gap-2">
-                                <div class="flex flex-row gap-2" style="min-height: 110px;">
-                                    <div class="flex-1 min-w-0">
-                                        <${CapitalizationChart} assetId=${api.HUMAN1_ID} chartTitle="Net Worth" />
+                                <div class="flex flex-row gap-2" style="height: 140px; flex-shrink: 0; align-items: stretch;">
+                                    <div class="panel flex-1 min-w-0" style="display:flex; flex-direction:column; cursor:pointer;" onClick=${() => setExpandedNW(true)}>
+                                        <div class="panel-header">Net Worth History</div>
+                                        <div class="panel-body flex flex-col w-full" style="padding:0; flex:1; min-height:0; background:#000;">
+                                            <${MiniSpark} assetId=${api.HUMAN1_ID} strokeWidth=${1.5} fill=${true} className="net-worth-sparkline" />
+                                        </div>
                                     </div>
-                                    <div class="flex-1 min-w-0">
+                                    <div class="flex-[2] min-w-0">
                                         ${html`<${BalanceSheet}
                                             cash=${cash}
                                             otherAssets=${otherAssets}
@@ -132,6 +139,13 @@ const GameUI = () => {
                 </div>` : html`<div></div>`}
             </div>
         </div>
+        ${expandedNW && html`<${AdvancedChartModal}
+            assetId=${api.HUMAN1_ID}
+            chartTitle="Net Worth"
+            baseMultiplier=${nwBaseMultiplier}
+            forceLineOnly=${true}
+            onClose=${() => setExpandedNW(false)}
+        />`}
         <${Modal} show=${showNotifications} onClose=${() => setShowNotifications(false)}>
             <div class="flex justify-between items-center mb-4">
                 <div class="text-lg font-bold">Notifications</div>

@@ -148,6 +148,7 @@ function LoansTab() {
 
     // Get centralized button props
     const buttonProps = useActionButtonProps();
+    const playerControlsBank = buttonProps.controlsActiveEntity;
 
     // Extras hotkey refs
     const extrasContainerRef = useRef(null);
@@ -160,16 +161,20 @@ function LoansTab() {
     ];
     const extrasStartNumber = barButtons.filter(Boolean).length + 1;
 
+    const extrasFn = playerControlsBank
+        ? renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, scopeActiveRef)
+        : undefined;
+
     return html`
         <div class="flex flex-col items-center w-full h-full min-h-0">
-            <${HotkeyButtonBar} buttons=${barButtons}
+            ${playerControlsBank ? html`<${HotkeyButtonBar} buttons=${barButtons}
                 extrasContainerRef=${extrasContainerRef}
                 scopeActiveRef=${scopeActiveRef}
                 onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
-                class="flex flex-row items-center gap-2 mb-2" />
+                class="flex flex-row items-center gap-2 mb-2" />` : ''}
 
             <div ref=${extrasContainerRef} class="flex flex-col items-center overflow-y-auto flex-1 min-h-0 w-full">
-                ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), renderExtras(buttonProps.actingAs, buttonProps.controlledCompanies, scopeActiveRef), hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
+                ${renderLines(loansReport, ({ id }) => id && api.setViewAsset(id), extrasFn, hyperlinkRegex, undefined, extrasStartNumber, scopeActiveRef)}
             </div>
         </div>
     `;

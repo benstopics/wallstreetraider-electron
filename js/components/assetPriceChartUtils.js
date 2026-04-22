@@ -75,18 +75,54 @@ export function computeLayout(canvasWidth, canvasHeight, config, options = {}) {
 }
 
 /**
- * Calculate price range from data array
- * @param {number[]} prices - Array of price values
- * @returns {{ minVal: number, maxVal: number, range: number }}
+ * Round a number to a "nice" value (1, 2, 5, 10) × 10^n — Heckbert 1990.
+ * `round=true` snaps to the nearest nice value; `round=false` rounds up.
  */
-export function calculatePriceRange(prices) {
-    if (!prices || prices.length === 0) {
-        return { minVal: 0, maxVal: 1, range: 1 };
+function niceNum(range, round) {
+    if (!(range > 0) || !Number.isFinite(range)) return 1;
+    const exp = Math.floor(Math.log10(range));
+    const fraction = range / Math.pow(10, exp);
+    let niceFraction;
+    if (round) {
+        if (fraction < 1.5) niceFraction = 1;
+        else if (fraction < 3) niceFraction = 2;
+        else if (fraction < 7) niceFraction = 5;
+        else niceFraction = 10;
+    } else {
+        if (fraction <= 1) niceFraction = 1;
+        else if (fraction <= 2) niceFraction = 2;
+        else if (fraction <= 5) niceFraction = 5;
+        else niceFraction = 10;
     }
-    const minVal = Math.floor(Math.min(...prices));
-    const maxVal = Math.ceil(Math.max(...prices));
-    const range = maxVal - minVal || 1;
-    return { minVal, maxVal, range };
+    return niceFraction * Math.pow(10, exp);
+}
+
+/**
+ * Calculate price range from data array, snapped to nice-number tick boundaries
+ * so axis labels land on round values (e.g. 10/20/30/40 instead of 14/21/28/35).
+ *
+ * @param {number[]} prices - Array of price values
+ * @param {number} [targetTicks=5] - Desired tick count for the axis
+ * @returns {{ minVal: number, maxVal: number, range: number, step: number }}
+ */
+export function calculatePriceRange(prices, targetTicks = 5) {
+    if (!prices || prices.length === 0) {
+        return { minVal: 0, maxVal: 1, range: 1, step: 1 };
+    }
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const p of prices) {
+        if (p == null || !Number.isFinite(p)) continue;
+        if (p < lo) lo = p;
+        if (p > hi) hi = p;
+    }
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) return { minVal: 0, maxVal: 1, range: 1, step: 1 };
+    if (lo === hi) { lo -= 1; hi += 1; }
+
+    const step = niceNum((hi - lo) / Math.max(1, targetTicks - 1), true);
+    const minVal = Math.floor(lo / step) * step;
+    const maxVal = Math.ceil(hi / step) * step;
+    return { minVal, maxVal, range: maxVal - minVal, step };
 }
 
 /**

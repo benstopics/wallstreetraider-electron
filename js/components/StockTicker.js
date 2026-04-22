@@ -15,7 +15,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const SPARK_CACHE_MAX = 200;
 const sparkCache = new Map();
 
-export function MiniSpark({ prices, assetId, isUp, width = 40, height = 16, strokeWidth = 1.5, className = 'stock-ticker-spark' }) {
+export function MiniSpark({ prices, assetId, isUp, width = 40, height = 16, strokeWidth = 1.5, className = 'stock-ticker-spark', fill = false }) {
     const [fetched, setFetched] = useState(null);
 
     // Self-fetch when prices aren't provided by backend
@@ -53,7 +53,13 @@ export function MiniSpark({ prices, assetId, isUp, width = 40, height = 16, stro
         const y = height - ((p - min) / range) * height;
         return `${x},${y}`;
     }).join(' ');
-    const color = isUp ? 'var(--color-positive)' : 'var(--color-negative)';
+    const effectiveIsUp = (typeof isUp === 'boolean') ? isUp : (data[data.length - 1] >= data[0]);
+    const color = effectiveIsUp ? 'var(--color-positive)' : 'var(--color-negative)';
+    if (fill) {
+        return html`<svg class=${className} style="width:100%;height:100%;display:block" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+            <polyline points=${points} fill="none" stroke=${color} stroke-width=${strokeWidth} vector-effect="non-scaling-stroke" />
+        </svg>`;
+    }
     return html`<svg class=${className} width=${width} height=${height} viewBox="0 0 ${width} ${height}">
         <polyline points=${points} fill="none" stroke=${color} stroke-width=${strokeWidth} />
     </svg>`;
