@@ -106,6 +106,11 @@ function FinancialsTab() {
     const activeIndustryId   = api.useGameStore(s => s.gameState.activeIndustryId);
     const activeEntityData   = api.useGameStore(s => s.gameState.activeEntityData)   || {};
     const aef                = api.useGameStore(s => s.gameState.activeEntityFinancials) || {};
+    const aep                = api.useGameStore(s => s.gameState.activeEntityPlayerFinancials) || {};
+    const playerCash         = api.useGameStore(s => s.gameState.cash);
+    const playerTotalAssets  = api.useGameStore(s => s.gameState.totalAssets);
+    const playerTotalDebt    = api.useGameStore(s => s.gameState.totalDebt);
+    const playerNetWorth     = api.useGameStore(s => s.gameState.netWorth);
     const allCompanies       = api.useGameStore(s => s.gameState.allCompanies) || [];
     const financialProfile      = api.useGameStore(s => s.gameState.financialProfile);
     const cashflowProjection    = api.useGameStore(s => s.gameState.cashflowProjection);
@@ -220,9 +225,48 @@ function FinancialsTab() {
         <//>
     `;
 
-    // ── Player entity view — original BSTR layout ──────────
-    if (isPlayer) return html`
-        <div class="flex flex-col w-full h-full min-h-0 items-center">
+    // ── Player entity view — Phase 1 typed-panel layout ─────
+    // Replaces the prior inline BSTR renderer. The BSTR text is still available
+    // via the "View Full Financial Disclosure" SubScreen button. 6 action
+    // buttons (HotkeyButtonBar) preserved verbatim.
+    if (isPlayer) {
+        // Player-typed struct + Bucket 1 root fields subscribed at top of component
+        // (Phase 1 Layers A+B+addenda). PLAYER1-specific limitation: Bucket 1 root
+        // fields reflect PLAYER1 only, not arbitrary active player.
+
+        // Lending bank lookup (reuses corp-struct bankId which derives from bankNum[aeNum-1])
+        const bankId = aef.bankId && aef.bankId > 0 ? aef.bankId : null;
+        const bank = bankId ? allCompanies.find(c => c.id === bankId) : null;
+
+        // Net Worth color
+        const nwColor = (playerNetWorth == null) ? 'neutral' : playerNetWorth > 0 ? 'green' : playerNetWorth < 0 ? 'red' : 'yellow';
+
+        // Realized Cap Gains — signed display
+        const rcg = aep.realizedCapGainLoss;
+        const rcgColor = rcg == null ? 'neutral' : rcg > 0 ? 'green' : rcg < 0 ? 'red' : 'neutral';
+        const rcgLabel = rcg == null
+            ? '—'
+            : rcg > 0
+                ? `${fmtM(rcg)} Gains`
+                : rcg < 0
+                    ? `${fmtM(Math.abs(rcg))} Losses`
+                    : fmtM(0);
+
+        // Income Tax Owed / Refund — PB convention: +refund, -owed
+        const ito = aep.incomeTaxOwed;
+        const itoColor = ito == null ? 'neutral' : ito >= 0 ? 'green' : 'red';
+        const itoLabel = ito == null
+            ? '—'
+            : ito > 0
+                ? `(${fmtM(ito)}) Refund`
+                : ito < 0
+                    ? `${fmtM(Math.abs(ito))} Owed`
+                    : fmtM(0);
+
+        return html`
+        <div class="flex flex-col w-full h-full min-h-0 overflow-y-auto" style="padding:6px;">
+
+            <!-- Action button bar (6 buttons preserved verbatim) -->
             <${HotkeyButtonBar}
                 buttons=${playerBarButtons}
                 extrasContainerRef=${extrasContainerRef}
@@ -230,31 +274,165 @@ function FinancialsTab() {
                 onScopeActiveChange=${() => setScopeRenderTick(n => n + 1)}
                 class="flex flex-row items-center gap-5 mb-2"
             />
-            <div class="flex flex-row w-full h-full gap-2 min-h-0">
-                <div class="flex flex-col w-1/4 gap-2 h-full min-h-0">
-                    <div>
-                        <${CapitalizationChart} assetId=${activeEntityNum} chartTitle="Net Worth" />
-                    </div>
-                    <div class="flex flex-1 min-h-0">
-                        <${AdvisorySummary} />
+
+            <!-- SubScreen drill-down buttons -->
+            <div class="flex flex-row justify-center gap-2 mb-2">
+                <button class="btn blue" style="padding:2px 10px; font-size:var(--font-size-sm);"
+                    onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_FINANCIAL_PROFILE); setShowFullProfile(true); }}>
+                    View Full Financial Disclosure
+                </button>
+                <button class="btn blue" style="padding:2px 10px; font-size:var(--font-size-sm);"
+                    onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_CASH_FLOW_PROJECTION); setShowFullProjection(true); }}>
+                    View Cash Flow Projection
+                </button>
+            </div>
+
+            <!-- Row 1: Assets panel + Liabilities panel -->
+            <div style="display:flex; gap:6px; margin-bottom:6px;">
+
+                <!-- Assets panel (GRID_2_S, 10 cells) -->
+                <div class="panel" style="flex:1;">
+                    <div class="panel-header">Assets</div>
+                    <div class="panel-body">
+                        <div style="${GRID_2_S}">
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Cash</div>
+                                <div style="${CELL_NUM_S}">${playerCash != null ? fmtM(playerCash) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">T-Bills</div>
+                                <div style="${CELL_NUM_S}">${aep.tBills != null ? fmtM(aep.tBills) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Stock Portfolio</div>
+                                <div style="${CELL_NUM_S}">${aep.stocksPortfolioValue != null ? fmtM(aep.stocksPortfolioValue) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Options Net</div>
+                                <div style="${CELL_NUM_S}">${aep.optionsNetValue != null ? fmtM(aep.optionsNetValue) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Gov Bonds</div>
+                                <div style="${CELL_NUM_S}">${aep.govBondPortfolio != null ? fmtM(aep.govBondPortfolio) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Corp Bonds</div>
+                                <div style="${CELL_NUM_S}">${aep.corpBondPortfolio != null ? fmtM(aep.corpBondPortfolio) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Commodities MTM</div>
+                                <div style="${CELL_NUM_S}">${aep.commoditiesMtm != null ? fmtM(aep.commoditiesMtm) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Commod Margin</div>
+                                <div style="${CELL_NUM_S}">${aep.commodMargin != null ? fmtM(aep.commodMargin) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Advances to Corps</div>
+                                <div style="${CELL_NUM_S}">${aep.advancesToCompanies != null ? fmtM(aep.advancesToCompanies) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Total Assets</div>
+                                <div style="${CELL_NUM_S}">${playerTotalAssets != null ? fmtM(playerTotalAssets) : '—'}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="flex w-3/4">
-                    <div ref=${extrasContainerRef} class="flex flex-col items-center overflow-y-auto w-full max-h-full">
-                        ${renderLines(
-                            financialProfile,
-                            ({ id }) => api.setViewAsset(id),
-                            renderExtras(buttonProps.actingAs, controlsActiveEntity, activeEntityNum, activeEntitySymbol, buttonProps.redeemCorpBonds, scopeActiveRef),
-                            hyperlinkRegex,
-                            (text) => text.includes('Bonds Due in') ? { type: 'BONDS_DUE', id: null } : null,
-                            extrasStartNumber,
-                            scopeActiveRef
-                        )}
+
+                <!-- Liabilities & Equity panel (GRID_2_S, 6 cells) -->
+                <div class="panel" style="flex:1;">
+                    <div class="panel-header">Liabilities & Equity</div>
+                    <div class="panel-body">
+                        <div style="${GRID_2_S}">
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Bank Loan</div>
+                                <div style="${CELL_NUM_S}">${playerTotalDebt != null ? fmtM(playerTotalDebt) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Unused Line of Credit</div>
+                                <div style="${CELL_NUM_S}">${aep.lineOfCredit != null ? fmtM(aep.lineOfCredit) : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Lending Bank</div>
+                                <div style="${CELL_TXT_S}">
+                                    ${bank ? html`<span class="hover:underline"
+                                        style="color:#60a5fa; cursor:pointer;"
+                                        title="Navigate to ${bank.name}"
+                                        onClick=${() => api.setViewAsset(bankId)}>${bank.name}</span>`
+                                        : (bankId ? `Bank #${bankId}` : '—')}
+                                </div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Borrowing Rate</div>
+                                <div style="${CELL_NUM_S}">${aep.borrowRate != null ? `${parseFloat(aep.borrowRate).toFixed(2)}%` : '—'}</div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Total Liabilities</div>
+                                <div style="${CELL_TXT_S}">
+                                    <span class="hover:underline"
+                                        style="color:var(--fg-muted); cursor:pointer; text-decoration:underline dotted;"
+                                        title="Open Financial Disclosure"
+                                        onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_FINANCIAL_PROFILE); setShowFullProfile(true); }}>
+                                        See breakdown →
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="${CELL_S}">
+                                <div style="${CELL_LABEL_S}">Net Worth</div>
+                                <div style="${CELL_NUM_S}; color:var(--color-${nwColor}); font-weight:600;">
+                                    ${playerNetWorth != null ? fmtM(playerNetWorth) : '—'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Row 2: Tax Position panel (GRID_3_S, 6 cells) -->
+            <div class="panel" style="margin-bottom:6px;">
+                <div class="panel-header">Tax Position</div>
+                <div class="panel-body">
+                    <div style="${GRID_3_S}">
+                        <div style="${CELL_S}">
+                            <div style="${CELL_LABEL_S}">YTD Taxable Ordinary</div>
+                            <div style="${CELL_NUM_S}">${aep.ytdTaxableOrdinary != null ? fmtM(aep.ytdTaxableOrdinary) : '—'}</div>
+                        </div>
+                        <div style="${CELL_S}">
+                            <div style="${CELL_LABEL_S}">Realized Cap Gains</div>
+                            <div style="${CELL_NUM_S}; color:var(--color-${rcgColor});">${rcgLabel}</div>
+                        </div>
+                        <div style="${CELL_S}">
+                            <div style="${CELL_LABEL_S}">Prepaid Tax YTD</div>
+                            <div style="${CELL_NUM_S}">${aep.prepaidTax != null ? fmtM(aep.prepaidTax) : '—'}</div>
+                        </div>
+                        <div style="${CELL_S}">
+                            <div style="${CELL_LABEL_S}">Wealth Tax</div>
+                            <div style="${CELL_NUM_S}">${aep.wealthTaxProjected != null ? (aep.wealthTaxProjected > 0 ? fmtM(aep.wealthTaxProjected) : '—') : '—'}</div>
+                        </div>
+                        <div style="${CELL_S}">
+                            <div style="${CELL_LABEL_S}">Corp Shares Tax</div>
+                            <div style="${CELL_NUM_S}">${aep.corpSharesTax != null ? (aep.corpSharesTax > 0 ? fmtM(aep.corpSharesTax) : '—') : '—'}</div>
+                        </div>
+                        <div style="${CELL_S}">
+                            <div style="${CELL_LABEL_S}">Tax Owed / (Refund)</div>
+                            <div style="${CELL_NUM_S}; color:var(--color-${itoColor}); font-weight:600;">${itoLabel}</div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Row 3: Net Worth history chart, full width -->
+            <div class="panel" style="flex:1; min-height:140px;">
+                <div class="panel-header">Net Worth History</div>
+                <div class="panel-body flex flex-col w-full" style="padding:0;">
+                    <${CapitalizationChart} assetId=${activeEntityNum} chartTitle="Net Worth" />
+                </div>
+            </div>
+
         </div>
-    `;
+        `;
+    }
 
     // ── Corp entity view — 5 structured panels ──────────────
 

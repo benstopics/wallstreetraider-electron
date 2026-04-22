@@ -84,6 +84,18 @@ export default function PlayerOverviewPanel() {
     // until a year-start baseline is bridged (Phase 2 candidate).
     const netWorthDirection = '—';
 
+    // YTD Realized Cap Gain/Loss (bridged via Phase 1 addendum a47ca21):
+    // signed — positive = gains, negative = losses.
+    const rcg = aep.realizedCapGainLoss;
+    const rcgColor = rcg == null ? 'neutral' : rcg > 0 ? 'green' : rcg < 0 ? 'red' : 'neutral';
+    const rcgLabel = rcg == null
+        ? '—'
+        : rcg > 0
+            ? `${fmtM(rcg)} Gains`
+            : rcg < 0
+                ? `${fmtM(Math.abs(rcg))} Losses`
+                : fmtM(0);
+
     // Country: not currently bridged for players. Render em-dash.
     const country = activeEntityData.country || '—';
 
@@ -228,9 +240,8 @@ export default function PlayerOverviewPanel() {
 
                         <div style="${CELL_S}">
                             <div style="${CELL_LABEL_S}">YTD Realized Cap Gains</div>
-                            <div style="${CELL_NUM_S}">
-                                <!-- TODO(Phase 2): bridge CapGainLoss#(N&) into activeEntityPlayerFinancials -->
-                                —
+                            <div style="${CELL_NUM_S}; color:var(--color-${rcgColor});">
+                                ${rcgLabel}
                             </div>
                         </div>
 
