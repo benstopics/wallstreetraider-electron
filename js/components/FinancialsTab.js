@@ -411,78 +411,102 @@ function FinancialsTab() {
                 </div>
             </div>
 
-            <!-- Row 3: Borrower Status + Quarterly Cashflow (mirrors IndustrialView corp layout) -->
-            <div style="display:flex; gap:6px;">
+            <!-- Row 3: Borrower Status + Quarterly Cashflow
+                 Mirrors IndustrialView corp-side panels at FinancialsTab.js:652+689 verbatim,
+                 using the same rowS / rowLabelS / creditCssColor / deCssColor helpers. -->
+            ${(() => {
+                const rowS       = 'flex:1; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--bg-primary);';
+                const rowLabelS  = 'font-size:var(--font-size-sm); color:var(--fg-muted); text-transform:uppercase; letter-spacing:0.4px;';
+                const creditCssColor = (r) => {
+                    if (r == null) return 'var(--color-warning)';
+                    if (r <= 4) return 'var(--color-negative)';
+                    if (r <= 6) return 'var(--color-warning)';
+                    return 'var(--color-positive)';
+                };
+                const deVal      = (playerNetWorth != null && playerNetWorth > 0 && playerTotalDebt != null) ? (playerTotalDebt / playerNetWorth) : null;
+                const deLabel    = deVal != null ? deVal.toFixed(2) + 'x' : '—';
+                const deCssColor = deVal == null ? 'var(--color-warning)' : deVal < 1 ? 'var(--color-positive)' : deVal < 3 ? 'var(--color-warning)' : 'var(--color-negative)';
+                const bid        = bankId;
+                const bankDisplayLabel = bank ? bank.name : (bid ? `#${bid}` : '—');
 
-                <!-- Borrower Status (mirrors corp-side panel at FinancialsTab.js:652) -->
-                <div class="panel" style="flex:1;">
-                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>Borrower Status</span>
-                        <${DisabledTooltipButton} ...${buttonProps.changeBank}
-                            label="Switch Banks" buttonClass=""
-                            style="padding:1px 8px; font-size:var(--font-size-sm);"
-                        />
-                    </div>
-                    <div class="panel-body" style="padding:0;">
-                        <div style="display:flex; flex-direction:column; gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Bank</span>
-                                ${bank ? html`
-                                    <span class="hover:underline" style="font-size:var(--font-size-sm); font-weight:600; color:#60a5fa; cursor:pointer;"
-                                        onClick=${() => api.setViewAsset(bankId)} title="Navigate to ${bank.name}">${bank.name}</span>
-                                ` : html`<span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-warning);">—</span>`}
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Debt / Equity</span>
-                                <span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-${(playerNetWorth != null && playerNetWorth > 0 && playerTotalDebt != null) ? (() => { const d = playerTotalDebt/playerNetWorth; return d < 1 ? 'green' : d < 3 ? 'yellow' : 'red'; })() : 'neutral'});">
-                                    ${(playerNetWorth != null && playerNetWorth > 0 && playerTotalDebt != null) ? (playerTotalDebt/playerNetWorth).toFixed(2) + 'x' : '—'}
-                                </span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Credit Rating</span>
-                                <span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-${credRating != null ? getCreditColor(credRating) : 'neutral'});">
-                                    ${credRating != null ? getCreditLabel(credRating) : '—'}
-                                </span>
+                return html`
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px;">
+
+                    <!-- Borrower Status -->
+                    <div class="panel" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                            <span>Borrower Status</span>
+                            <${DisabledTooltipButton} ...${buttonProps.changeBank}
+                                label="Switch Banks" buttonClass=""
+                                style="padding:1px 8px; font-size:var(--font-size-sm);"
+                            />
+                        </div>
+                        <div class="panel-body" style="padding:0; flex:1; display:flex; flex-direction:column;">
+                            <div style="display:flex; flex-direction:column; flex:1; gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden;">
+
+                                <div style="${rowS}">
+                                    <span style="${rowLabelS}">Bank</span>
+                                    ${bid ? html`
+                                        <span class="hover:underline" style="font-size:var(--font-size-sm); font-weight:600; color:#60a5fa; cursor:pointer;"
+                                            onClick=${() => api.setViewAsset(bid)} title="Navigate to ${bankDisplayLabel}">${bankDisplayLabel}</span>
+                                    ` : html`<span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-warning);">—</span>`}
+                                </div>
+
+                                <div style="${rowS}">
+                                    <span style="${rowLabelS}">Debt / Equity</span>
+                                    <span style="font-size:var(--font-size-sm); font-weight:600; color:${deCssColor};">${deLabel}</span>
+                                </div>
+
+                                <div style="${rowS}">
+                                    <span style="${rowLabelS}">Credit Rating</span>
+                                    <span style="font-size:var(--font-size-sm); font-weight:600; color:${creditCssColor(credRating)};">${credRating != null ? getCreditLabel(credRating) : '—'}</span>
+                                </div>
+
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Quarterly Cashflow (mirrors corp-side panel at FinancialsTab.js:689;
-                     player cashflow scalars not yet bridged in Phase 1 -- rows show em-dash
-                     until a later phase, but the View Breakdown button opens the authoritative
-                     PersProfile cash-flow text) -->
-                <div class="panel" style="flex:1;">
-                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>Quarterly Cashflow</span>
-                        <button class="btn blue" style="padding:1px 8px; font-size:var(--font-size-sm);"
-                            onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_CASH_FLOW_PROJECTION); setShowFullProjection(true); }}>
-                            View Breakdown
-                        </button>
-                    </div>
-                    <div class="panel-body" style="padding:0;">
-                        <div style="display:flex; flex-direction:column; gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Operating Profit</span>
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">— <span style="font-size:11px; opacity:0.7;">(see breakdown)</span></span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Before Debt</span>
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">—</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">After Debt</span>
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">—</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-panel);">
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">Est. Cash in 3 Mo.</span>
-                                <span style="font-size:var(--font-size-sm); color:var(--fg-muted);">—</span>
+                    <!-- Quarterly Cashflow
+                         Player cashflow scalars not bridged yet; rows show em-dash while the
+                         View Breakdown button opens the PersProfile cash-flow SubScreen. -->
+                    <div class="panel" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                            <span>Quarterly Cashflow</span>
+                            <button class="btn blue" style="padding:1px 8px; font-size:var(--font-size-sm);"
+                                onClick=${() => { api.setActiveUIReport(api.UI_PLAYER_CASH_FLOW_PROJECTION); setShowFullProjection(true); }}>
+                                View Breakdown
+                            </button>
+                        </div>
+                        <div class="panel-body" style="padding:0; flex:1; display:flex; flex-direction:column;">
+                            <div style="display:flex; flex-direction:column; flex:1; gap:1px; background:var(--border-color); border-radius:6px; overflow:hidden;">
+
+                                <div style="${rowS}">
+                                    <span style="${rowLabelS}">Operating Profit</span>
+                                    <span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-warning);">—</span>
+                                </div>
+
+                                <div style="${rowS}">
+                                    <span style="${rowLabelS}">Before Debt</span>
+                                    <span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-warning);">—</span>
+                                </div>
+
+                                <div style="${rowS}">
+                                    <span style="${rowLabelS}">After Debt</span>
+                                    <span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-warning);">—</span>
+                                </div>
+
+                                <div style="${rowS}">
+                                    <span style="${rowLabelS}">Est. Cash in 3 Mo.</span>
+                                    <span style="font-size:var(--font-size-sm); font-weight:600; color:var(--color-warning);">—</span>
+                                </div>
+
                             </div>
                         </div>
                     </div>
-                </div>
 
-            </div>
+                </div>
+                `;
+            })()}
 
         </div>
         `;
