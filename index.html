@@ -11,10 +11,11 @@
     <div id="app"></div>
 
     <script>
-      const _h = location.hostname;
-      if (_h && _h !== '127.0.0.1' && _h !== 'localhost') {
-        window.__WSR_API_BASE_OVERRIDE = 'http://' + _h + ':9631';
-      }
+      // Phone/remote-host access: api.js reads ?restPort=N&wsPort=M from
+      // location.search (backend ports are OS-assigned; the remote browser
+      // can't read the local runtime.json handshake file). Nothing to do
+      // here — this block used to set __WSR_API_BASE_OVERRIDE to a hardcoded
+      // :9631, which no longer works now that ports are dynamic.
     </script>
     <script type="module" src="./js/app.js"></script>
 </body>

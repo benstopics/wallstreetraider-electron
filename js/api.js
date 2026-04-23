@@ -9,7 +9,71 @@ const ipcRenderer = (typeof require !== 'undefined')
     ? require('electron').ipcRenderer
     : { invoke: () => Promise.resolve(null), send: () => {}, on: () => {} };
 
-export const apiBase = window.__WSR_API_BASE_OVERRIDE || 'http://127.0.0.1:9631';
+// Bridge handshake: REST + WebSocket ports are OS-assigned at wsr.exe startup
+// and delivered here via the 'bridge-ports' IPC message from electron/main.js,
+// which reads them from %LOCALAPPDATA%\Wall Street Raider\runtime.json.
+// No REST or WebSocket call may fire until bridgeReady resolves — fetchWithRetry
+// awaits it at the top, so all POST/GET helpers below are port-safe.
+let apiBase = null;
+let wsUrl = null;
+let _resolveBridge;
+export const bridgeReady = new Promise(resolve => { _resolveBridge = resolve; });
+export const getApiBase = () => apiBase;
+export const getWsUrl = () => wsUrl;
+
+// Phone/remote-access override: browsers loading index.html from a non-loopback
+// host can't read the local handshake file. They pass the backend ports via URL
+// params (e.g. ?restPort=54321&wsPort=54322) from a manual discovery step.
+(function applyUrlOverride() {
+    try {
+        if (typeof location === 'undefined') return;
+        const h = location.hostname;
+        if (!h || h === '127.0.0.1' || h === 'localhost') return;
+        const params = new URLSearchParams(location.search || '');
+        const rest = Number(params.get('restPort'));
+        const ws = Number(params.get('wsPort'));
+        if (Number.isInteger(rest) && rest > 0) {
+            apiBase = `http://${h}:${rest}`;
+            if (Number.isInteger(ws) && ws > 0) wsUrl = `ws://${h}:${ws}`;
+            _resolveBridge();
+        }
+    } catch (e) { /* best effort */ }
+})();
+
+function _applyPorts(ports) {
+    if (!ports) return false;
+    apiBase = `http://127.0.0.1:${ports.restPort}`;
+    wsUrl = `ws://127.0.0.1:${ports.wsPort}`;
+    console.log('[api] bridge-ports:', ports);
+    _resolveBridge();
+    return true;
+}
+
+if (ipcRenderer && typeof ipcRenderer.on === 'function') {
+    // Catches send('bridge-ports') from main on wsr.exe restarts. Note this
+    // would miss the initial handshake if the IPC fires before this listener
+    // registers — the invoke() call below is the race-free primary path.
+    ipcRenderer.on('bridge-ports', (_evt, ports) => _applyPorts(ports));
+}
+
+// Race-free initial pull: renderer asks main for the ports. If they're
+// already known, main returns them synchronously. If not (handshake still
+// in flight), main returns a promise it resolves when the handshake arrives.
+// On wsr-restart, main rejects outstanding invokes with null so we retry.
+if (ipcRenderer && typeof ipcRenderer.invoke === 'function') {
+    const pullPorts = () => {
+        ipcRenderer.invoke('get-bridge-ports').then(ports => {
+            if (_applyPorts(ports)) return;
+            // null response = stale request on restart; retry once the new
+            // child has started the next handshake cycle.
+            setTimeout(pullPorts, 200);
+        }).catch(err => {
+            console.warn('[api] get-bridge-ports failed, retrying:', err?.message || err);
+            setTimeout(pullPorts, 500);
+        });
+    };
+    pullPorts();
+}
 
 // Detect addon mode: WSR_NO_REST=1 means no REST server, use IPC for everything
 const useIPC = typeof process !== 'undefined' && process.env && process.env.WSR_NO_REST === '1';
@@ -174,9 +238,18 @@ const REPORT_PATH_TO_EVENT = {
 let _networkFailCount = 0;
 const NETWORK_FAIL_THRESHOLD = 5;
 
-async function fetchWithRetry(url, options = {}) {
+async function fetchWithRetry(pathOrUrl, options = {}) {
+    // Must await bridgeReady BEFORE building the URL — apiBase is null until
+    // the handshake arrives, so constructing "null/foo" synchronously at the
+    // caller would produce a broken URL.
+    await bridgeReady;
+    const url = (typeof pathOrUrl === 'string' && pathOrUrl.startsWith('/'))
+        ? apiBase + pathOrUrl
+        : pathOrUrl;
     const method = options.method || 'GET';
-    const pathOnly = url.replace(apiBase, '');
+    const pathOnly = (typeof pathOrUrl === 'string' && pathOrUrl.startsWith('/'))
+        ? pathOrUrl
+        : String(pathOrUrl).replace(apiBase || '', '');
     const t0 = performance.now();
     try {
         const response = await fetch(url, options);
@@ -276,8 +349,7 @@ export async function postNoArg(path) {
         }
         console.warn('[api] No IPC mapping for POST', path);
     }
-    const url = `${apiBase}${path}`;
-    const response = await fetchWithRetry(url, {
+    const response = await fetchWithRetry(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: '{}'
@@ -309,8 +381,7 @@ export async function postIdArg(path, id) {
         }
         console.warn('[api] No IPC mapping for POST', path, 'id=', id);
     }
-    const url = `${apiBase}${path}`;
-    const response = await fetchWithRetry(url, {
+    const response = await fetchWithRetry(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
@@ -332,9 +403,8 @@ export async function postIdArgWithActingAs(path, id, actingAsId = 0) {
         }
         console.warn('[api] No IPC mapping for POST', path, 'id=', id);
     }
-    const url = `${apiBase}${path}`;
     const body = (actingAsId > 0) ? { id, intParam2: actingAsId } : { id };
-    const response = await fetchWithRetry(url, {
+    const response = await fetchWithRetry(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -358,8 +428,7 @@ export async function postStringArg(path, str) {
         }
         console.warn('[api] No IPC mapping for POST string', path);
     }
-    const url = `${apiBase}${path}`;
-    const response = await fetchWithRetry(url, {
+    const response = await fetchWithRetry(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ str })
@@ -379,8 +448,7 @@ export async function getJSON(path) {
         if (path === '/quote') return ipcRenderer.invoke('game:getQuote');
         console.warn('[api] No IPC mapping for GET', path);
     }
-    const url = `${apiBase}${path}`;
-    const response = await fetchWithRetry(url);
+    const response = await fetchWithRetry(path);
     if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
     }
@@ -603,8 +671,7 @@ export async function saveGameAs(filename) {
         // SAVE_GAME_AS = 41, filename in strParam1
         return ipcRenderer.invoke('game:dispatch', 41, 0, filename || '');
     }
-    const url = `${apiBase}/savegameas`;
-    await fetchWithRetry(url, {
+    await fetchWithRetry('/savegameas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename })
@@ -628,8 +695,7 @@ export async function loadSpecificSave(filename) {
         return ipcRenderer.invoke('game:dispatch', 21, 0, filename || '');
     }
     // First set the filename, then trigger load
-    const url = `${apiBase}/load_specific_save`;
-    await fetchWithRetry(url, {
+    await fetchWithRetry('/load_specific_save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename })
@@ -858,8 +924,7 @@ export async function growthThrottle() { await postNoArg('/growth_throttle'); }
 export async function clearStreamList() { await postNoArg('/clear_stream_list'); }
 export async function fillStreamList() { await postNoArg('/fill_stream_list'); }
 export async function setWhoOwnsFilter(value) {
-    const url = `${apiBase}/set_who_owns_filter`;
-    await fetchWithRetry(url, {
+    await fetchWithRetry('/set_who_owns_filter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value })
@@ -947,8 +1012,7 @@ export async function modalResult(result) {
             return ipcRenderer.invoke('game:modalResult', 0, result || '');
         }
     }
-    const url = `${apiBase}/modal_result`;
-    const response = await fetchWithRetry(url, {
+    const response = await fetchWithRetry('/modal_result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: typeof result === 'number' ? JSON.stringify({ answer: result }) : JSON.stringify({ str: result })
@@ -964,8 +1028,7 @@ export async function setCustomData(blob) {
     if (useIPC) {
         return ipcRenderer.invoke('game:setCustomData', JSON.stringify(blob));
     }
-    const url = `${apiBase}/set_custom_data`;
-    const response = await fetchWithRetry(url, {
+    const response = await fetchWithRetry('/set_custom_data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(blob)
@@ -981,8 +1044,7 @@ export async function showPriceAlerts() { await postNoArg('/show_price_alerts');
 
 export async function createPriceAlert(entityId, direction, targetPrice) {
     const str = `${entityId}|${direction}|${targetPrice}`;
-    const url = `${apiBase}/create_price_alert`;
-    const response = await fetchWithRetry(url, {
+    const response = await fetchWithRetry('/create_price_alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ str })
@@ -994,8 +1056,7 @@ export async function createPriceAlert(entityId, direction, targetPrice) {
 }
 
 export async function deletePriceAlert(slot) {
-    const url = `${apiBase}/delete_price_alert`;
-    const response = await fetchWithRetry(url, {
+    const response = await fetchWithRetry('/delete_price_alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: slot })
@@ -1219,7 +1280,7 @@ export async function navGotoIndex(index) {
 // Restore nav history from localStorage — called on game load.
 // entries: [{id, type}] ordered most-recent-first.
 export async function navSetHistory(entries) {
-    await fetchWithRetry(`${apiBase}/nav_set_history`, {
+    await fetchWithRetry('/nav_set_history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entries)

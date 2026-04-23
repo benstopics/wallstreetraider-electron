@@ -56,13 +56,23 @@ const AppInner = () => {
 
     useEffect(() => {
         let wsRef = null;
+        let cancelled = false;
 
-        const connectWebSocket = (retryCount = 0) => {
-            const ws = new WebSocket('ws://127.0.0.1:9632');
+        const connectWebSocket = async (retryCount = 0) => {
+            // Wait for electron/main.js to deliver the OS-assigned WS port via
+            // IPC (bridge-ports). Until then getWsUrl() returns null.
+            await api.bridgeReady;
+            if (cancelled) return;
+            const url = api.getWsUrl();
+            if (!url) {
+                console.warn('[WS] bridgeReady resolved but wsUrl missing; aborting');
+                return;
+            }
+            const ws = new WebSocket(url);
             wsRef = ws;
 
             ws.onopen = () => {
-                console.log('[WS] Connected to port 9632');
+                console.log('[WS] Connected:', url);
                 wsConnectedRef.current = true;
                 retryCount = 0;
                 api.getGameState().then(newGameState => {
@@ -158,7 +168,10 @@ const AppInner = () => {
 
         connectWebSocket();
 
-        return () => { if (wsRef) wsRef.close(); };
+        return () => {
+            cancelled = true;
+            if (wsRef) wsRef.close();
+        };
     }, []);
 
     const hideModal = () => {
