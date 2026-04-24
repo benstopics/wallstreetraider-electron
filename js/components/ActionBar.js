@@ -156,16 +156,16 @@ export default function ActionBar({ entityLabel }) {
     ] : [];
 
     // Col 3: Options (naked writes kept).
+    // No withCompanyPicker: the PB dispatcher for these events re-types a
+    // nonzero IntParam1 as ContractNum& (1..1000), so a picked company id
+    // would be rejected as an invalid/nonexistent contract. Sending
+    // IntParam1=0 lets PB drive SelectCompanyModal$ for the underlying.
     const tradeColumn3 = canTradeOptions ? [
         { header: 'Options' },
-        withCompanyPicker(props.buyCalls,  api.buyCalls,
-            { title: `Buy Calls${actingSuffix}`, text: 'Underlying company?', filter: excludeSelf }),
-        withCompanyPicker(props.sellCalls, api.sellCalls,
-            { title: `Sell Calls${actingSuffix}`, text: 'Underlying company?', filter: excludeSelf }),
-        withCompanyPicker(props.buyPuts,   api.buyPuts,
-            { title: `Buy Puts${actingSuffix}`, text: 'Underlying company?', filter: excludeSelf }),
-        withCompanyPicker(props.sellPuts,  api.sellPuts,
-            { title: `Sell Puts${actingSuffix}`, text: 'Underlying company?', filter: excludeSelf }),
+        props.buyCalls,
+        props.sellCalls,
+        props.buyPuts,
+        props.sellPuts,
         { divider: true },
         {
             ...props.advancedOptions,
