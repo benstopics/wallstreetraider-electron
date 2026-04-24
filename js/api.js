@@ -415,6 +415,34 @@ export async function postIdArgWithActingAs(path, id, actingAsId = 0) {
     return response.json();
 }
 
+// Variant for options-trade endpoints (buy/sell calls/puts). Same shape as
+// postIdArgWithActingAs, plus an optional `underlyingId`: when id=0 and
+// underlyingId>0, the C++ bridge stashes it in strParam1 and PB uses it as
+// TGT — skipping SelectCompanyModal$. Lets CLI "CALL ABC" resolve the symbol
+// up front without colliding with IntParam1's ContractNum& semantics.
+export async function postOptionsTradeWithActingAs(path, id, actingAsId = 0, underlyingId = 0) {
+    if (useIPC) {
+        const eventType = REST_TO_EVENT[path];
+        if (eventType !== undefined) {
+            const strParam1 = underlyingId > 0 ? String(underlyingId) : '';
+            return ipcRenderer.invoke('game:dispatch', eventType, id || 0, strParam1, actingAsId || 0);
+        }
+        console.warn('[api] No IPC mapping for POST', path, 'id=', id);
+    }
+    const body = { id };
+    if (actingAsId > 0) body.intParam2 = actingAsId;
+    if (underlyingId > 0) body.underlyingId = underlyingId;
+    const response = await fetchWithRetry(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.json();
+}
+
 export async function postStringArg(path, str) {
     if (useIPC) {
         // String-arg endpoints: map to event + strParam1
@@ -840,10 +868,10 @@ export async function buyCryptoFutures(id, actingAsId = 0) { await postIdArgWith
 export async function sellCryptoFutures(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_crypto_futures', id, actingAsId); }
 
 /* Options */
-export async function buyCalls(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_calls', id, actingAsId); }
-export async function sellCalls(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_calls', id, actingAsId); }
-export async function buyPuts(id, actingAsId = 0) { await postIdArgWithActingAs('/buy_puts', id, actingAsId); }
-export async function sellPuts(id, actingAsId = 0) { await postIdArgWithActingAs('/sell_puts', id, actingAsId); }
+export async function buyCalls(id, actingAsId = 0, underlyingId = 0) { await postOptionsTradeWithActingAs('/buy_calls', id, actingAsId, underlyingId); }
+export async function sellCalls(id, actingAsId = 0, underlyingId = 0) { await postOptionsTradeWithActingAs('/sell_calls', id, actingAsId, underlyingId); }
+export async function buyPuts(id, actingAsId = 0, underlyingId = 0) { await postOptionsTradeWithActingAs('/buy_puts', id, actingAsId, underlyingId); }
+export async function sellPuts(id, actingAsId = 0, underlyingId = 0) { await postOptionsTradeWithActingAs('/sell_puts', id, actingAsId, underlyingId); }
 export async function advancedOptionsTrading(actingAsId = 0) { await postIdArgWithActingAs('/advanced_options_trading', 0, actingAsId); }
 export async function exerciseCallOptionsEarly(id, actingAsId = 0) { await postIdArgWithActingAs('/exercise_call_options_early', id, actingAsId); }
 export async function exercisePutOptionsEarly(id, actingAsId = 0) { await postIdArgWithActingAs('/exercise_put_options_early', id, actingAsId); }
@@ -1334,10 +1362,15 @@ export const commandMap = {
     'SELLSGOV':     { description: 'Sell short govt bonds',           fn: sellShortGovtBonds,          takesId: false },
 
     // === Trading - Options ===
-    'CALLS':        { description: 'Buy calls',                       fn: buyCalls,                    takesId: true },
-    'SELLCALLS':    { description: 'Sell calls',                      fn: sellCalls,                   takesId: true },
-    'PUTS':         { description: 'Buy puts',                        fn: buyPuts,                     takesId: true },
-    'SELLPUTS':     { description: 'Sell puts',                       fn: sellPuts,                    takesId: true },
+    // CLI passes a resolved underlying company id (e.g. "CALL AAPL" → AAPL's id).
+    // Route through the underlying-aware path: IntParam1=0, actingAs=viewed
+    // entity, picked id travels in strParam1 so PB uses it as TGT without a
+    // prompt. Typing the command alone (no operand) sends underlying=0 and
+    // PB's SelectCompanyModal$ fires normally.
+    'CALL':         { description: 'Buy calls',                       fn: (underlying) => buyCalls(0, gameStore.getState().gameState?.activeEntityNum || 0, underlying),   takesId: true },
+    'SELLCALL':     { description: 'Sell calls',                      fn: (underlying) => sellCalls(0, gameStore.getState().gameState?.activeEntityNum || 0, underlying),  takesId: true },
+    'PUT':          { description: 'Buy puts',                        fn: (underlying) => buyPuts(0, gameStore.getState().gameState?.activeEntityNum || 0, underlying),    takesId: true },
+    'SELLPUT':      { description: 'Sell puts',                       fn: (underlying) => sellPuts(0, gameStore.getState().gameState?.activeEntityNum || 0, underlying),   takesId: true },
     'ADVOPTS':      { description: 'Advanced options trading',        fn: advancedOptionsTrading,      takesId: false },
 
     // === Trading - Commodity Futures ===

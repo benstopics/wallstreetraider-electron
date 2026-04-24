@@ -7,7 +7,7 @@ const COMMAND_CATEGORIES = [
     { label: 'Trading - Stocks',          keys: ['BUY','SELL','SHORT','COVER'] },
     { label: 'Trading - Corp Bonds',      keys: ['BUYBOND','SELLBOND'] },
     { label: 'Trading - Govt Bonds',      keys: ['BUYLGOV','SELLLGOV','BUYSGOV','SELLSGOV'] },
-    { label: 'Trading - Options',         keys: ['CALLS','SELLCALLS','PUTS','SELLPUTS','ADVOPTS'] },
+    { label: 'Trading - Options',         keys: ['CALL','SELLCALL','PUT','SELLPUT','ADVOPTS'] },
     { label: 'Trading - Commodity Futures',keys: ['BUYFUT','SELLFUT','SHORTFUT','COVERFUT'] },
     { label: 'Trading - Physical Commodities', keys: ['BUYCOMM','SELLCOMM'] },
     { label: 'Trading - Crypto',          keys: ['BUYCRYPTO','SELLCRYPTO','BUYCFUT','SELLCFUT'] },
