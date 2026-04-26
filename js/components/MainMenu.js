@@ -9,7 +9,7 @@ import LocalizationDropdown from './LocalizationDropdown.js';
 import localeManager from '../locale/localeManager.js';
 
 // Read version from version.txt (single source of truth)
-let APP_VERSION = '10.0.16';
+let APP_VERSION = '10.0.16.1';
 try {
     if (typeof require === 'undefined') throw new Error('no require');
     const _fs = require('fs'), _path = require('path');
@@ -37,6 +37,45 @@ const LORE_SNIPPETS = [
 
 // ── Changelog data ──
 const CHANGELOG = [
+    {
+        ver: "v10.0.16.1",
+        sections: [
+            {
+                heading: "Bug Fixes",
+                items: [
+                    "Fix \"Error number 0 (Unspecified error)\" modal cascade after a 1% buy — close the PlayCo=0 race in the transaction dispatcher so BUYER never lands on entity 0",
+                    "Fix Trade dropdown's Buy/Sell Calls and Buy/Sell Puts erroring on the picked company (\"Invalid options contract number specified\") — defer the underlying picker to PB so the id arrives as TGT, not ContractNum",
+                    "Fix Cash Projection column blank for bank entities — bank cashflow now feeds the same /gamestate field as non-banks via the new pure Calc_CashFlowBankProj",
+                    "Fix Swap rate sign on portfolio holdings to match the PB engine convention",
+                    "Fix Save-As with no filename writing an empty filename — now opens the prompt and preserves the existing filename on cancel",
+                    "Fix loading-state UI flicker — Load / New / Save / Exit flush isLoading=1 to the renderer before the slow PB call blocks",
+                ]
+            },
+            {
+                heading: "New Features",
+                items: [
+                    "CLI: CALL / PUT / SELLCALL / SELLPUT take a company symbol (e.g. \"CALL ABC\") and trade options on that underlying without a separate picker prompt",
+                    "Per-machine UI prefs (chart type, locale) persist to CFIG.WSR via new /set_chart_type and /set_locale endpoints — survive restart",
+                ]
+            },
+            {
+                heading: "UI/UX Improvements",
+                items: [
+                    "ActionBar target/commodity pickers route through PB-blocking modals — game ticks can no longer race with user input during a picker, closing the bug-01 PlayCo=0 window for buy_stock, buy_corp_bond, M&A targets, hostile actions, and commodity opens",
+                    "Commodity picker scoping: PB publishes a modalFilter (\"crypto\" / \"phys\" / \"noncrypto\") so each per-button context shows the right subset",
+                    "Holdings table hides per-row actions when the holder is not the player or a player-controlled entity",
+                    "MarketSparklineGrid actions disabled when not viewing self or a controlled entity",
+                ]
+            },
+            {
+                heading: "Performance & Infrastructure",
+                items: [
+                    "OS-assigned REST/WS ports via runtime.json handshake — replaces hardcoded 9631/9632, which Windows winnat / Hyper-V / Docker port reservations were silently swallowing on some customer machines. Main process polls %LOCALAPPDATA%\\Wall Street Raider\\runtime.json and pushes the ports to the renderer; remote browsers read them from ?restPort=&wsPort= URL params",
+                    "New game events SET_CHART_TYPE (4200) and SET_LOCALE (4201); new gameState fields chartType and locale",
+                ]
+            },
+        ]
+    },
     {
         ver: "v10.0.16",
         sections: [
