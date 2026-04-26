@@ -1,15 +1,17 @@
 /**
- * Persisted chart preferences.
+ * Chart preferences.
  *
  * Chart TYPE (line / candle / ohlc) is shared between the small thumbnail and
  * the advanced subscreen — when the user picks one in the subscreen, every
- * thumbnail on the page updates to match, and the choice survives restarts.
+ * thumbnail on the page updates to match.
+ *
+ * Persistence lives in PB (ChartType global, persisted to CFIG.WSR via
+ * WriteConfig). Frontend reads gameState.chartType and writes via /set_chart_type.
  *
  * Advanced-only settings (overlays, panels) are NOT persisted here — they
  * reset per session because they don't apply to thumbnails.
  */
 
-import { useEffect, useState } from '../lib/preact.standalone.module.js';
 import * as api from '../api.js';
 
 /**
@@ -31,32 +33,31 @@ export function isSimpleAsset(id) {
     return SIMPLE_ASSET_ID_SET.has(Number(id));
 }
 
-const CHART_TYPE_KEY = 'wsr.chartType';
 const VALID_TYPES = ['line', 'candle', 'ohlc'];
 const DEFAULT_TYPE = 'candle';
-const CHANGE_EVENT = 'wsr-chart-type-changed';
+
+// PB stores ChartType as 0=line, 1=candle, 2=ohlc — keep this map in sync with
+// the CASE 4200 handler in src/main/wsr/ui.inc.
+const INT_TO_TYPE = ['line', 'candle', 'ohlc'];
+const TYPE_TO_INT = { line: 0, candle: 1, ohlc: 2 };
+
+function intToType(n) {
+    if (typeof n !== 'number' || n < 0 || n > 2) return DEFAULT_TYPE;
+    return INT_TO_TYPE[n];
+}
 
 export function getChartType() {
-    try {
-        const v = localStorage.getItem(CHART_TYPE_KEY);
-        if (VALID_TYPES.includes(v)) return v;
-    } catch (_) { /* localStorage may be unavailable in sandboxed contexts */ }
-    return DEFAULT_TYPE;
+    const n = api.gameStore.getState().gameState?.chartType;
+    return intToType(n);
 }
 
 export function setChartType(type) {
     if (!VALID_TYPES.includes(type)) return;
-    try { localStorage.setItem(CHART_TYPE_KEY, type); } catch (_) { /* ignore */ }
-    window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: type }));
+    api.setChartType(TYPE_TO_INT[type]).catch(() => {});
 }
 
 /** Subscribe to chart-type changes. Returns [type, setType]. */
 export function useChartType() {
-    const [type, setType] = useState(getChartType);
-    useEffect(() => {
-        const handler = (e) => setType(e.detail || getChartType());
-        window.addEventListener(CHANGE_EVENT, handler);
-        return () => window.removeEventListener(CHANGE_EVENT, handler);
-    }, []);
+    const type = api.useGameStore(s => intToType(s.gameState?.chartType));
     return [type, setChartType];
 }

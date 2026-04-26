@@ -57,6 +57,9 @@ const AppInner = () => {
     const modalDefault = api.useGameStore(s => s.gameState.modalDefault);
     const modalFilter = api.useGameStore(s => s.gameState.modalFilter);
     const readyToRestart = api.useGameStore(s => s.gameState.readyToRestart);
+    const customData = api.useGameStore(s => s.gameState?.customData);
+    const navHistory = api.useGameStore(s => s.gameState?.navHistory);
+    const activeEntityNum = api.useGameStore(s => s.gameState?.activeEntityNum);
 
     // Detect ready to restart signal and restart WSR to return to main menu
     // This flag is set AFTER all end-game dialogs are closed
@@ -105,13 +108,6 @@ const AppInner = () => {
                         ? msg.payload
                         : JSON.parse(msg.payload);
                     const patched = applyPatch(prev, ops, false, false).newDocument;
-                    if (patched.gameLoaded && patched.navHistory?.length > 0) {
-                        const navJson = JSON.stringify(patched.navHistory);
-                        if (navJson !== prevNavJsonRef.current) {
-                            prevNavJsonRef.current = navJson;
-                            try { localStorage.setItem(NAV_STORAGE_KEY, navJson); } catch (e) {}
-                        }
-                    }
                     if (patched.allCompanies?.length > 0) {
                         patched.hyperlinkRegex = api.buildDictRegex(
                             patched.allCompanies, patched.allIndustries);
@@ -119,46 +115,10 @@ const AppInner = () => {
                     setGameState(api.mergeGameState(patched));
                     if (!wasGameLoadedRef.current && patched.gameLoaded) {
                         wasGameLoadedRef.current = true;
-                        try {
-                            const saved = localStorage.getItem(NAV_STORAGE_KEY);
-                            const history = saved ? JSON.parse(saved) : [];
-                            if (history.length > 0) {
-                                api.navSetHistory(history).catch(() => {});
-                            } else {
-                                const aeid = patched.activeEntityNum;
-                                if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
-                            }
-                        } catch (e) {
-                            const aeid = patched.activeEntityNum;
-                            if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
-                        }
                     }
                 } else if (msg.path === '/game_state') {
                     const newState = msg.payload;
-                    const justLoaded = !wasGameLoadedRef.current && newState.gameLoaded;
                     wasGameLoadedRef.current = !!newState.gameLoaded;
-                    if (justLoaded) {
-                        try {
-                            const saved = localStorage.getItem(NAV_STORAGE_KEY);
-                            const history = saved ? JSON.parse(saved) : [];
-                            if (history.length > 0) {
-                                api.navSetHistory(history).catch(() => {});
-                            } else {
-                                const aeid = newState.activeEntityNum;
-                                if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
-                            }
-                        } catch (e) {
-                            const aeid = newState.activeEntityNum;
-                            if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
-                        }
-                    }
-                    if (newState.gameLoaded && newState.navHistory?.length > 0) {
-                        const navJson = JSON.stringify(newState.navHistory);
-                        if (navJson !== prevNavJsonRef.current) {
-                            prevNavJsonRef.current = navJson;
-                            try { localStorage.setItem(NAV_STORAGE_KEY, navJson); } catch (e) {}
-                        }
-                    }
                     if (newState.allCompanies?.length > 0) {
                         newState.hyperlinkRegex = api.buildDictRegex(
                             newState.allCompanies, newState.allIndustries);
@@ -204,8 +164,8 @@ const AppInner = () => {
     const gameLoadedRef = useRef(gameLoaded);
     const wsConnectedRef = useRef(false);
     const wasGameLoadedRef = useRef(false);
+    const navRestoredRef = useRef(false);
     const prevNavJsonRef = useRef('');
-    const NAV_STORAGE_KEY = 'wsr_navHistory';
     useEffect(() => { isTickerRunningRef.current = isTickerRunning; }, [isTickerRunning]);
     useEffect(() => { modalTypeRef.current = modalType; }, [modalType]);
     useEffect(() => { gameLoadedRef.current = gameLoaded; }, [gameLoaded]);
@@ -260,6 +220,34 @@ const AppInner = () => {
         return () => document.removeEventListener('keydown', onKeyDown);
     }, []);
 
+    // Restore nav history from customData on game load. Wait for gameLoaded so
+    // customData has hydrated from the .WSR file. Flip navRestoredRef once so we
+    // don't overwrite live nav state on subsequent customData updates.
+    useEffect(() => {
+        if (navRestoredRef.current || !gameLoaded) return;
+        navRestoredRef.current = true;
+        const saved = customData?.navHistory;
+        if (Array.isArray(saved) && saved.length > 0) {
+            prevNavJsonRef.current = JSON.stringify(saved);
+            api.navSetHistory(saved).catch(() => {});
+        } else if (activeEntityNum > 0) {
+            const seed = [{ id: activeEntityNum, type: 'asset' }];
+            prevNavJsonRef.current = JSON.stringify(seed);
+            api.navSetHistory(seed).catch(() => {});
+        }
+    }, [customData, gameLoaded, activeEntityNum]);
+
+    // Persist nav history to customData whenever it changes. Gate on the restore
+    // having run so the empty pre-restore navHistory doesn't wipe the saved data.
+    useEffect(() => {
+        if (!navRestoredRef.current || !gameLoaded) return;
+        if (!navHistory?.length) return;
+        const json = JSON.stringify(navHistory);
+        if (json === prevNavJsonRef.current) return;
+        prevNavJsonRef.current = json;
+        api.setCustomData({ navHistory }).catch(() => {});
+    }, [navHistory, gameLoaded]);
+
     useEffect(() => {
         let timeoutId;
         let pollSeq = 0;
@@ -276,40 +264,11 @@ const AppInner = () => {
             api.getGameState().then((newGameState) => {
                 consecutiveErrors = 0;
 
-                // Detect game-load transition (false → true)
-                const justLoaded = !wasGameLoadedRef.current && newGameState.gameLoaded;
-
                 // Log sparingly: first 3 polls, every 100th, or game state transitions
                 if (seq <= 3 || seq % 100 === 0 || newGameState.gameLoaded !== wasGameLoadedRef.current) {
                     console.log(`[POLL #${seq}] gameLoaded=${newGameState.gameLoaded} modalType=${newGameState.modalType} companies=${newGameState.allCompanies?.length}`);
                 }
                 wasGameLoadedRef.current = !!newGameState.gameLoaded;
-
-                // On game load: restore persisted nav history, or seed with current entity
-                if (justLoaded) {
-                    try {
-                        const saved = localStorage.getItem(NAV_STORAGE_KEY);
-                        const history = saved ? JSON.parse(saved) : [];
-                        if (history.length > 0) {
-                            api.navSetHistory(history).catch(() => {});
-                        } else {
-                            const aeid = newGameState.activeEntityNum;
-                            if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
-                        }
-                    } catch (e) {
-                        const aeid = newGameState.activeEntityNum;
-                        if (aeid > 0) api.navSetHistory([{ id: aeid, type: 'asset' }]).catch(() => {});
-                    }
-                }
-
-                // Persist nav history whenever it changes (only during gameplay)
-                if (newGameState.gameLoaded && newGameState.navHistory?.length > 0) {
-                    const navJson = JSON.stringify(newGameState.navHistory);
-                    if (navJson !== prevNavJsonRef.current) {
-                        prevNavJsonRef.current = navJson;
-                        try { localStorage.setItem(NAV_STORAGE_KEY, navJson); } catch (e) {}
-                    }
-                }
 
                 // Only build hyperlink regex when there are companies to link
                 if (newGameState.allCompanies?.length > 0) {

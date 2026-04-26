@@ -2,8 +2,6 @@ import { html } from "../lib/preact.standalone.module.js";
 import { useEffect, useRef, useState } from "../lib/preact.standalone.module.js";
 import * as api from '../api.js';
 
-localStorage.setItem('wsr_intro_v1', 'false');
-
 /**
  * Props:
  *  - images: string[]              // required

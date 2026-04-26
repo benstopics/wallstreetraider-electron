@@ -195,6 +195,8 @@ const REST_TO_EVENT = {
     // '/set_active_ui_report' — handled as special case in postIdArg (direct pointer write, not an event)
     '/set_tutorial_step': 4100,
     '/set_tutorial_enabled': 4101,
+    '/set_chart_type': 4200,
+    '/set_locale': 4201,
     '/supp_earn_select': 2100,
     '/currency_select': 2101,
     '/supp_warn_select': 2102,
@@ -757,10 +759,19 @@ ipcRenderer.on('wsr-restarting', () => {
     }));
 });
 
-// Listen for wsr.exe restart completion - reset game state to show main menu
+// Listen for wsr.exe restart completion - reset game state to show main menu.
+// Preserve splashScreenPlayed across restart so the splash overlay doesn't briefly
+// flash when the previous value (true) is wiped to undefined and the selector
+// evaluates !undefined === true before the new gameState broadcast arrives.
 ipcRenderer.on('wsr-restarted', () => {
     console.log('wsr.exe restarted, returning to main menu...');
-    gameStore.setState({ gameState: { gameLoaded: false, isLoading: false } });
+    gameStore.setState(state => ({
+        gameState: {
+            gameLoaded: false,
+            isLoading: false,
+            splashScreenPlayed: state.gameState?.splashScreenPlayed,
+        },
+    }));
 });
 export async function checkScoreboard() { await postNoArg('/check_scoreboard'); }
 export async function getQuoteOfTheDay() { return getJSON('/quote'); }
@@ -978,6 +989,21 @@ export async function shareholderGraphSelect() { await postNoArg('/shareholdergr
 export async function unethicalSelect() { await postNoArg('/unethical_select'); }
 export async function disableHotkeysSelect() { await postNoArg('/disablehotkeys_select'); }
 export async function autoAddSelect() { await postNoArg('/autoadd_select'); }
+
+// Per-machine UI prefs (PB persists to CFIG.WSR via WriteConfig)
+export async function setChartType(typeInt) { await postIdArg('/set_chart_type', typeInt); }
+export async function setLocale(localeCode) {
+    if (useIPC) {
+        return ipcRenderer.invoke('game:dispatch', REST_TO_EVENT['/set_locale'], 0, localeCode);
+    }
+    const response = await fetchWithRetry('/set_locale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ str: localeCode })
+    });
+    if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+    return response.text();
+}
 
 // Cheat Menu
 export async function cheatDisableLawsuits() { await postNoArg('/cheat_disable_lawsuits'); }

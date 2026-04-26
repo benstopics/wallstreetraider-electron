@@ -1,15 +1,39 @@
-import { html, useEffect, useState, useRef } from '../lib/preact.standalone.module.js';
+import { html, useEffect, useState, useRef, useMemo } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
+import * as api from '../api.js';
 import Modal from './Modal.js';
 import Button from './Button.js';
 
+const SAVE_DEBOUNCE_MS = 500;
+const EMPTY_CUSTOM_DATA = Object.freeze({});
+
 export default function NotesModal({ show, onClose }) {
-  const [value, setValue] = useState(() => localStorage.getItem('wsr_notes') || '');
+  const customData = api.useGameStore(s => s.gameState?.customData ?? EMPTY_CUSTOM_DATA);
+  const gameLoaded = api.useGameStore(s => s.gameState?.gameLoaded);
+
+  const [value, setValue] = useState('');
+  const restoredRef = useRef(false);
   const textareaRef = useRef(null);
 
+  const debouncedSave = useMemo(() => api.debounce((notes) => {
+    api.setCustomData({ notes }).catch(() => {});
+  }, SAVE_DEBOUNCE_MS), []);
+
+  // Restore notes from customData once gameLoaded so customData has hydrated from .WSR.
+  // Flip restoredRef unconditionally so the persist effect can fire even when there's
+  // nothing saved yet (first-time users).
   useEffect(() => {
-    localStorage.setItem('wsr_notes', value);
-  }, [value]);
+    if (restoredRef.current || !gameLoaded) return;
+    restoredRef.current = true;
+    const saved = customData?.notes;
+    if (typeof saved === 'string') setValue(saved);
+  }, [customData, gameLoaded]);
+
+  // Persist notes to customData on change (debounced)
+  useEffect(() => {
+    if (!restoredRef.current || !gameLoaded) return;
+    debouncedSave(value);
+  }, [value, gameLoaded]);
 
   // Auto-focus textarea when modal shows
   useEffect(() => {

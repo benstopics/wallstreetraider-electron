@@ -111,6 +111,7 @@ const DatabaseSearchView = () => {
     const allIndustries = api.useGameStore(s => s.gameState.allIndustries);
     const activeEntityNum = api.useGameStore(s => s.gameState.activeEntityNum);
     const customData = api.useGameStore(s => s.gameState?.customData ?? EMPTY_CUSTOM_DATA);
+    const gameLoaded = api.useGameStore(s => s.gameState?.gameLoaded);
 
     const data = api.useGameStore(s => s.gameState.allCompanies ?? EMPTY_COMPANIES);
 
@@ -298,9 +299,6 @@ const DatabaseSearchView = () => {
         setShortCandidates(false); setHasPublicShares(false);
     };
 
-    // Recall last DB Search criteria from localStorage
-    const DB_SEARCH_KEY = 'wsr_db_search_criteria';
-
     const applyCriteria = useCallback((c) => {
         clearFilters();
         if (c.searchFilter) { if (searchRef.current) searchRef.current.value = c.searchFilter; setSearchFilter(c.searchFilter); }
@@ -328,30 +326,21 @@ const DatabaseSearchView = () => {
     }, []);
 
     const recallSearch = useCallback(() => {
-        try {
-            const saved = localStorage.getItem(DB_SEARCH_KEY);
-            if (saved) applyCriteria(JSON.parse(saved));
-        } catch (e) { /* ignore corrupt data */ }
-    }, [applyCriteria]);
-
-    // Restore criteria: prefer customData (save-persistent), fall back to localStorage
-    useEffect(() => {
-        if (restoredRef.current) return;
-        const fromCustom = customData?.[CUSTOM_DATA_KEY];
-        if (fromCustom) {
-            restoredRef.current = true;
-            applyCriteria(fromCustom);
-            return;
-        }
-        // Fall back to localStorage for saves that predate customData persistence
-        try {
-            const saved = localStorage.getItem(DB_SEARCH_KEY);
-            if (saved) {
-                restoredRef.current = true;
-                applyCriteria(JSON.parse(saved));
-            }
-        } catch (e) { /* ignore */ }
+        const saved = customData?.[CUSTOM_DATA_KEY];
+        if (saved) applyCriteria(saved);
     }, [customData, applyCriteria]);
+
+    // Restore criteria from customData on first load. Wait for gameLoaded so customData
+    // has had its chance to hydrate from the .WSR file — otherwise we'd flip restoredRef
+    // on an empty pre-load customData and start saving defaults over the real saved data.
+    // Flip the gate unconditionally after the check so the auto-save effect can fire even
+    // when there's nothing to restore (first-time users).
+    useEffect(() => {
+        if (restoredRef.current || !gameLoaded) return;
+        restoredRef.current = true;
+        const fromCustom = customData?.[CUSTOM_DATA_KEY];
+        if (fromCustom) applyCriteria(fromCustom);
+    }, [customData, gameLoaded, applyCriteria]);
 
     // Auto-save criteria whenever filters or sort change
     useEffect(() => {
@@ -364,7 +353,6 @@ const DatabaseSearchView = () => {
             positiveCashFlow, cashFlowBeforeDebt, shortCandidates, hasPublicShares,
             sortCol, sortDir
         };
-        try { localStorage.setItem(DB_SEARCH_KEY, JSON.stringify(criteria)); } catch (e) { /* ignore */ }
         debouncedSaveCustomData(criteria);
     }, [searchFilter, industry, minROEFilter, maxPEFilter, maxPctBookFilter,
         minDivFilter, minMarketCapFilter, maxMarketCapFilter, maxConvPremFilter,

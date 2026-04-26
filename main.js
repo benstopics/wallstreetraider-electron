@@ -271,6 +271,26 @@ app.whenReady().then(() => {
         });
     });
 
+    // Bootstrap UI locale by parsing CFIG.WSR before the renderer mounts.
+    // localeManager calls this synchronously at module load so the first
+    // render is in the user's persisted language — without this, every
+    // launch would briefly flash English while we wait for gameState to
+    // arrive over the WebSocket. PB owns the file; we only read field 31.
+    ipcMain.on('prefs:get-locale', (event) => {
+        try {
+            const dir = process.env.WSR_SAVE_DIR ||
+                path.join(process.env.LOCALAPPDATA || '', 'Wall Street Raider');
+            const cfigPath = path.join(dir, 'cfig.wsr');
+            const line = fs.readFileSync(cfigPath, 'utf8').split(/\r?\n/)[0] || '';
+            const fields = line.split('|');
+            // Field 31 (1-indexed) is the locale; index 30 in zero-indexed split.
+            const locale = (fields[30] || '').trim();
+            event.returnValue = locale || 'en-US';
+        } catch (e) {
+            event.returnValue = 'en-US';
+        }
+    });
+
     ipcMain.on('zoom-in', () => {
         const currentZoom = mainWindow.webContents.getZoomLevel();
         mainWindow.webContents.setZoomLevel(currentZoom + 1);

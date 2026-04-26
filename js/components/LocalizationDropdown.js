@@ -1,5 +1,6 @@
-import { html, useState, useEffect } from '../lib/preact.standalone.module.js';
+import { html } from '../lib/preact.standalone.module.js';
 import '../lib/tailwind.module.js';
+import * as api from '../api.js';
 import localeManager, { LANGUAGE_OPTIONS } from '../locale/localeManager.js';
 
 // Convert LANGUAGE_OPTIONS to array format for dropdown
@@ -8,67 +9,21 @@ const LANGUAGES = Object.entries(LANGUAGE_OPTIONS).map(([code, config]) => ({
     label: config.name
 }));
 
-const STORAGE_KEY = 'wsr_locale';
-
-const getStoredLocale = () => {
-    try {
-        return localStorage.getItem(STORAGE_KEY);
-    } catch (e) {
-        console.error('Error reading locale from localStorage:', e);
-        return null;
-    }
-};
-
-const setStoredLocale = (value) => {
-    try {
-        localStorage.setItem(STORAGE_KEY, value);
-    } catch (e) {
-        console.error('Error saving locale to localStorage:', e);
-    }
-};
-
 const LocalizationDropdown = ({ onChange = () => {} }) => {
-    const [selectedLocale, setSelectedLocale] = useState('en-US');
-
-    useEffect(() => {
-        // Sync with localeManager's current locale
-        const currentLocale = localeManager.getCurrentLocale();
-        console.log('LocalizationDropdown mounted. Current locale from manager:', currentLocale);
-
-        const savedLocale = getStoredLocale();
-        console.log('LocalizationDropdown stored value:', savedLocale);
-
-        if (savedLocale && LANGUAGES.some(lang => lang.code === savedLocale)) {
-            setSelectedLocale(savedLocale);
-            // Ensure localeManager is also set to this locale
-            if (currentLocale !== savedLocale) {
-                console.log('Syncing localeManager to stored value:', savedLocale);
-                localeManager.setCurrentLocale(savedLocale);
-            }
-        } else if (currentLocale) {
-            // Use localeManager's current locale if no valid stored value
-            setSelectedLocale(currentLocale);
-        }
-    }, []);
+    // Source of truth is gameState.locale (broadcast from PB). Falls back to
+    // 'en-US' until first broadcast arrives.
+    const selectedLocale = api.useGameStore(s => s.gameState?.locale || 'en-US');
 
     const handleChange = (event) => {
         const newLocale = event.target.value;
-        console.log('Switching locale to:', newLocale);
-        setSelectedLocale(newLocale);
-        setStoredLocale(newLocale);
+        if (!LANGUAGE_OPTIONS[newLocale] || newLocale === selectedLocale) return;
 
-        // Verify storage was set
-        const verifyLocale = getStoredLocale();
-        console.log('Locale stored, verified value:', verifyLocale);
-
+        // Push to PB (which persists via WriteConfig). Reload after a brief
+        // delay so the persisted value is in flight before module-level
+        // translators re-init from a fresh import.
         localeManager.setCurrentLocale(newLocale);
         onChange(newLocale);
-
-        // Use setTimeout to ensure storage is persisted before reload
-        setTimeout(() => {
-            console.log('Reloading page...');
-            window.location.reload();
-        }, 100);
+        setTimeout(() => window.location.reload(), 100);
     };
 
     return html`
