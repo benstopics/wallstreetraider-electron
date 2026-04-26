@@ -294,7 +294,7 @@ function TypeChip({ type }) {
 }
 
 // ─── Single table row ─────────────────────────────────────────────────────────
-const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction, onSparkClick }) {
+const PortRow = memo(function PortRow({ row, cond, showActions, actable, onSymbolClick, onAction, onSparkClick }) {
     const pnlV    = row.pnl;
     const pnlColor = pnlV == null ? 'var(--fg-muted)'
                    : pnlV > 0    ? 'var(--color-positive)'
@@ -324,7 +324,9 @@ const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction, onSp
         ? html`<span class="hover:underline" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:130px;color:#60a5fa;cursor:pointer" onClick=${() => onSymbolClick(row.ownerCompanyId)}>${row.ownerName}</span>`
         : html`<span style="color:var(--fg-muted)">—</span>`;
 
-    const actions = html`<${RowActions} row=${row} onAction=${onAction} />`;
+    const actions = actable
+        ? html`<${RowActions} row=${row} onAction=${onAction} />`
+        : html`<span style="color:var(--fg-muted)">—</span>`;
 
     // C.2: use db-table td/th classes; num class for right-aligned
     const td  = (content) => html`<td>${content}</td>`;
@@ -388,10 +390,12 @@ const PortRow = memo(function PortRow({ row, cond, onSymbolClick, onAction, onSp
         ${td(row.expiry || html`<span style="color:var(--fg-muted)">—</span>`)}
         ${tdR(cashProjCell)}
         ${cond.strike    ? tdR(row.strike != null ? fmtPrice(row.strike) : '—') : null}
-        ${td(actions)}
+        ${showActions ? td(actions) : null}
     </tr>`;
 }, (prev, next) =>
     prev.cond === next.cond &&
+    prev.showActions === next.showActions &&
+    prev.actable === next.actable &&
     prev.onSymbolClick === next.onSymbolClick &&
     prev.onAction === next.onAction &&
     prev.onSparkClick === next.onSparkClick &&
@@ -534,6 +538,16 @@ export default function PortHoldingsTable() {
     const rawHoldings = api.useGameStore(s => s.gameState?.portHoldings ?? []);
     const customData  = api.useGameStore(s => s.gameState?.customData ?? {});
     const gameLoaded  = api.useGameStore(s => s.gameState != null);
+    const controlledCompanies = api.useGameStore(s => s.gameState?.controlledCompanies ?? []);
+    const playerId    = api.useGameStore(s => s.gameState?.playerId);
+
+    // A row is actable if its holder is the player or a player-controlled company.
+    // Computed as a Set so per-row lookup is O(1) and memo-stable.
+    const actableHolderIds = useMemo(() => {
+        const s = new Set((controlledCompanies || []).map(c => c.id));
+        if (playerId != null) s.add(playerId);
+        return s;
+    }, [controlledCompanies, playerId]);
 
     const [activeFilters, setActiveFilters] = useState(() => new Set());
     const [sortCol,      setSortCol]        = useState('marketValue');
@@ -692,6 +706,10 @@ export default function PortHoldingsTable() {
             strike: keys.some(k => (COND_COLS[k] || COND_COLS.ALL).strike),
         };
     }, [activeFilters]);
+    const showActions = useMemo(
+        () => sorted.some(r => actableHolderIds.has(r.holderId)),
+        [sorted, actableHolderIds]
+    );
     const ftCount = sorted.length;
     const tdHeader = (col, label, right) => html`<${Th} col=${col} label=${label} sortCol=${sortCol} sortDir=${sortDir} onSort=${handleSort} right=${right} />`;
 
@@ -775,7 +793,7 @@ export default function PortHoldingsTable() {
               ${tdHeader('expiry',      'Expiry',    false)}
               ${tdHeader('cashEstimate','3-Mo Cash Proj', true)}
               ${cond.strike    ? tdHeader('strike',      'Strike',   true) : null}
-              <th>Actions</th>
+              ${showActions ? html`<th>Actions</th>` : null}
             </tr>
           </thead>
           <tbody>
@@ -783,6 +801,8 @@ export default function PortHoldingsTable() {
               key=${`${row.rawAssetType ?? row.assetType}_${row.ownerCompanyId ?? 0}_${row.slot ?? row.companyId ?? row.commodityId ?? i}`}
               row=${row}
               cond=${cond}
+              showActions=${showActions}
+              actable=${actableHolderIds.has(row.holderId)}
               onSymbolClick=${handleSymbolClick}
               onAction=${handleAction}
               onSparkClick=${handleSparkClick}
@@ -794,10 +814,12 @@ export default function PortHoldingsTable() {
       ${chartRow ? html`<${AdvancedChartModal}
         assetId=${chartRow.sparkId}
         chartTitle=${chartRow.name || ''}
-        actionButtons=${getHoldingChartActionButtons(chartRow, (row, kind) => {
-            setChartRow(null);
-            handleAction(row, kind);
-        })}
+        actionButtons=${actableHolderIds.has(chartRow.holderId)
+            ? getHoldingChartActionButtons(chartRow, (row, kind) => {
+                setChartRow(null);
+                handleAction(row, kind);
+            })
+            : []}
         onClose=${() => setChartRow(null)}
       />` : ''}
 

@@ -646,7 +646,7 @@ const MainMenu = () => {
 
         <!-- ── Footer ── -->
         <footer class="wsr-footer glass">
-          <span class="wsr-footer-copy">Copyright \u00a9 1986-${new Date().getFullYear()}, All Rights Reserved, Ben Ward and HackJack Games</span>
+          <span class="wsr-footer-copy">Copyright \u00a9 1986-${new Date().getFullYear()}, All Rights Reserved, Roninsoft and Hackjack Games</span>
           ${localeWarning}
           <div class="wsr-social-bar">
             <a class="wsr-social-link" href=${REDDIT_URL} target="_blank" rel="noopener">

@@ -32,6 +32,18 @@ const logos = [
 
 const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV?.trim() == 'development';
 
+// Translate PB's ModalFilter string into a CommoditySelectModal filter fn.
+// Empty/unknown = no filter (show all). Matches the FilterStr arg passed by
+// SelectCommodityModal$ in ui.inc.
+function commodityFilterFromString(filterStr) {
+    switch (filterStr) {
+        case 'crypto':    return (c) => c.kind === 'crypto';
+        case 'phys':      return (c) => c.kind === 'phys';
+        case 'noncrypto': return (c) => c.kind !== 'crypto';
+        default:          return undefined;
+    }
+}
+
 const AppInner = () => {
     const { helpShown, helpSectionId, hideHelp, setGameState } = api.useWSRContext();
 
@@ -43,6 +55,7 @@ const AppInner = () => {
     const modalTitle = api.useGameStore(s => s.gameState.modalTitle);
     const modalText = api.useGameStore(s => s.gameState.modalText);
     const modalDefault = api.useGameStore(s => s.gameState.modalDefault);
+    const modalFilter = api.useGameStore(s => s.gameState.modalFilter);
     const readyToRestart = api.useGameStore(s => s.gameState.readyToRestart);
 
     // Detect ready to restart signal and restart WSR to return to main menu
@@ -424,6 +437,7 @@ const AppInner = () => {
             title=${modalTitle}
             text=${modalText}
             defaultValue=${modalDefault}
+            filter=${commodityFilterFromString(modalFilter)}
             onSubmit=${(value) => { api.modalResult(value); }}
         />
         <${TutorialModal} />

@@ -16,7 +16,7 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
         if (show && gameState.allCompanies?.length > 0) {
             setQuery('');
             setActiveIdx(0);
-            const defaultCompany = defaultValue ? gameState.allCompanies.find(c => c.id.toString() === defaultValue.trim()) : null;
+            const defaultCompany = defaultValue ? entities.find(c => c.id.toString() === defaultValue.trim()) : null;
             setSelectedCompany(defaultCompany);
             setQuery(defaultCompany ? defaultCompany.name?.toUpperCase() || '' : '');
             setTimeout(() => inputRef.current?.focus(), 50);
