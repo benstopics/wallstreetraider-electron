@@ -101,6 +101,7 @@ function actionButtonsForAsset(hook, assetId) {
 export default function MarketSparklineGrid() {
     const [expanded, setExpanded] = useState(null);
     const hook = useActionButtonProps();
+    const canIssueTrades = hook.activeEntityNum === api.HUMAN1_ID || hook.controlsActiveEntity;
 
     return html`
         <div class="panel market-indicators-panel" data-testid="market-sparkline-grid">
@@ -126,7 +127,7 @@ export default function MarketSparklineGrid() {
                 <${AdvancedChartModal}
                     assetId=${expanded.assetId}
                     chartTitle=${expanded.title}
-                    actionButtons=${actionButtonsForAsset(hook, expanded.assetId)}
+                    actionButtons=${canIssueTrades ? actionButtonsForAsset(hook, expanded.assetId) : []}
                     onClose=${() => setExpanded(null)}
                 />
             `}
