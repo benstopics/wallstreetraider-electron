@@ -340,7 +340,7 @@ const PortRow = memo(function PortRow({ row, cond, showActions, actable, onSymbo
         ? (row.assetType === 'SWAP' && row.estProfit != null
             ? (() => {
                 const rateDiff = row.currentRate != null && row.thresholdRate != null
-                    ? (row.position === 'LONG' ? row.currentRate - row.thresholdRate : row.thresholdRate - row.currentRate)
+                    ? (row.position === 'LONG' ? row.thresholdRate - row.currentRate : row.currentRate - row.thresholdRate)
                     : null;
                 return html`<div>
                     ${rateDiff != null ? html`<span style="color:${rateDiff >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'}">${pnlSign(rateDiff)}${fmtPct(rateDiff)}</span>` : ''}
@@ -377,12 +377,15 @@ const PortRow = memo(function PortRow({ row, cond, showActions, actable, onSymbo
                 ? (() => {
                     const fixedRate = row.thresholdRate ?? 0;
                     const currentRate = row.currentRate ?? 0;
+                    // LONG receives fixed (+/green), pays floating (−/red).
+                    // SHORT is mirrored. Matches PB engine convention
+                    // (peek.inc:450-452, swaps.inc:108-111, swaps.inc:724).
                     const isShort = row.position === 'SHORT';
-                    const fixedSign = isShort ? '+' : '-';
-                    const currentSign = isShort ? '-' : '+';
+                    const fixedSign = isShort ? '-' : '+';
+                    const currentSign = isShort ? '+' : '-';
                     const fixedPct = fixedSign + fmtPct(fixedRate);
                     const currentPct = currentSign + fmtPct(currentRate);
-                    return html`<span style="color:${isShort ? 'var(--color-positive)' : 'var(--color-negative)'}">${fixedPct}</span><span style="color:var(--fg-muted)">/</span><span style="color:${isShort ? 'var(--color-negative)' : 'var(--color-positive)'}">${currentPct}</span><br/>`;
+                    return html`<span style="color:${isShort ? 'var(--color-negative)' : 'var(--color-positive)'}">${fixedPct}</span><span style="color:var(--fg-muted)">/</span><span style="color:${isShort ? 'var(--color-positive)' : 'var(--color-negative)'}">${currentPct}</span><br/>`;
                 })()
                 : html`<span style="color:var(--fg-muted)">—</span>`)
             : (row.yield != null ? fmtPct(row.yield) : html`<span style="color:var(--fg-muted)">—</span>`))}
