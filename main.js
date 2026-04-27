@@ -418,24 +418,15 @@ function killWSR() {
             );
         } catch (e) { /* ignore - REST may not be running */ }
     }
-    // Force kill via TerminateProcess (libuv) instead of `taskkill /F /IM`.
-    // Norton SONAR flags an app shelling out to taskkill against a sibling
-    // image as a malware-self-defense pattern; calling kill() on the handle
-    // (or process.kill(pid)) stays inside the Electron process.
-    if (wsrProcess && !wsrProcess.killed) {
-        try { wsrProcess.kill('SIGKILL'); }
-        catch (e) { console.error('Failed to kill wsr.exe handle:', e.message); }
-    } else {
-        // Startup-cleanup: no live handle. Pull pid from the prior
-        // runtime.json before deleteStaleRuntimeFile() removes it.
-        // Bound the PID-reuse window with started_at freshness.
-        const stale = readStaleRuntime();
-        if (stale && Number.isInteger(stale.pid) &&
-            Number.isInteger(stale.started_at) &&
-            (Math.floor(Date.now() / 1000) - stale.started_at) < 86400) {
-            try { process.kill(stale.pid, 'SIGKILL'); }
-            catch (_) { /* ESRCH = orphan already gone */ }
-        }
+    // Force kill as fallback. NOTE: previous attempts to replace this with
+    // wsrProcess.kill('SIGKILL') / process.kill(stale.pid) caused the deployed
+    // build to enter a wsr.exe respawn loop on first launch (users stuck on
+    // main menu spinner). Keep `taskkill /IM wsr.exe /F` until the
+    // TerminateProcess-via-libuv path is properly diagnosed.
+    try {
+        execSync('taskkill /IM wsr.exe /F', { stdio: 'ignore' });
+    } catch (error) {
+        console.error('Failed to kill existing wsr.exe processes:', error.message);
     }
     bridgePorts = null;
     bridgePortsDispatched = false;
