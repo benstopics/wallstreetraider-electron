@@ -70,7 +70,9 @@ export default function ActionBar({ entityLabel }) {
     const tradeColumn1 = [
         { header: 'Stocks' },
         props.buyStock,
-        ...(!isActingAsETFAdvisor ? [props.shortStock] : []),
+        // Short Stock is player-only — ShortMargAcct# is dimmed (1 TO 5) in PB,
+        // so corporate shorts have no margin account and Error 9 fires.
+        ...(viewingHuman && !isActingAsETFAdvisor ? [props.shortStock] : []),
         { divider: true },
         { header: 'Corporate Bonds' },
         props.buyCorpBond,

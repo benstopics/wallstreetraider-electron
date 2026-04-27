@@ -89,6 +89,13 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
         onSubmit("");
     };
 
+    const handleClear = () => {
+        setQuery('');
+        setActiveIdx(0);
+        setSelectedCompany(null);
+        inputRef.current?.focus();
+    };
+
     // Overlay/hint computation (like CommandPrompt)
     function getOverlayAndHint() {
         if (selectedCompany) {
@@ -221,6 +228,7 @@ export default function CompanySelectModal({ show, title, text, onSubmit, defaul
         </div>
         <div class="flex justify-between items-center p-3 flex-shrink-0">
             <${Button} class="btn modal green" onClick=${handleSubmit}>Submit</button>
+            <${Button} class="btn modal" onClick=${handleClear}>Clear</button>
             <${Button} class="btn modal" data-testid="btn-cancel" onClick=${handleCancel}>Cancel</button>
         </div>
     <//>`;

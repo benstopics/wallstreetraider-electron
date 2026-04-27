@@ -9,7 +9,7 @@ import LocalizationDropdown from './LocalizationDropdown.js';
 import localeManager from '../locale/localeManager.js';
 
 // Read version from version.txt (single source of truth)
-let APP_VERSION = '10.0.16.1';
+let APP_VERSION = '10.0.16.2';
 try {
     if (typeof require === 'undefined') throw new Error('no require');
     const _fs = require('fs'), _path = require('path');
@@ -37,6 +37,33 @@ const LORE_SNIPPETS = [
 
 // ── Changelog data ──
 const CHANGELOG = [
+    {
+        ver: "v10.0.16.2",
+        sections: [
+            {
+                heading: "Bug Fixes",
+                items: [
+                    "Fix shorts/covers acting-as routing",
+                    "Fix buy/sell stock index futures",
+                    "Fix entity drill-down surfacing subsidiaries of corps the player only partially owned",
+                    "Fix CorpInfoItems zero error",
+                ]
+            },
+            {
+                heading: "UI/UX Improvements",
+                items: [
+                    "Hide Short Stock on the ActionBar when acting as a corporation",
+                    "Clear button on the company select dialog",
+                ]
+            },
+            {
+                heading: "Performance & Infrastructure",
+                items: [
+                    "Exit workflow `taskkill /F /IM wsr.exe` flagged by Nortan SONAR, replace with libuv TerminateProcess via wsrProcess.kill / process.kill(pid)",
+                ]
+            },
+        ]
+    },
     {
         ver: "v10.0.16.1",
         sections: [

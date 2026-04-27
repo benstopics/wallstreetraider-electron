@@ -19,7 +19,7 @@ const RUNTIME_JSON_PATH = path.join(
 );
 
 // Read version from version.txt (single source of truth)
-let APP_VERSION = '10.0.15';
+let APP_VERSION = '10.0.16.2';
 try {
     APP_VERSION = fs.readFileSync(path.join(__dirname, 'version.txt'), 'utf8').trim();
 } catch (e) { /* fallback */ }
@@ -39,6 +39,14 @@ function deleteStaleRuntimeFile() {
         if (e.code !== 'ENOENT') {
             console.warn('[handshake] could not delete stale runtime.json:', e.message);
         }
+    }
+}
+
+function readStaleRuntime() {
+    try {
+        return JSON.parse(fs.readFileSync(RUNTIME_JSON_PATH, 'utf8'));
+    } catch (_) {
+        return null;
     }
 }
 
@@ -410,11 +418,24 @@ function killWSR() {
             );
         } catch (e) { /* ignore - REST may not be running */ }
     }
-    // Force kill as fallback
-    try {
-        execSync('taskkill /IM wsr.exe /F', { stdio: 'ignore' });
-    } catch (error) {
-        console.error('Failed to kill existing wsr.exe processes:', error.message);
+    // Force kill via TerminateProcess (libuv) instead of `taskkill /F /IM`.
+    // Norton SONAR flags an app shelling out to taskkill against a sibling
+    // image as a malware-self-defense pattern; calling kill() on the handle
+    // (or process.kill(pid)) stays inside the Electron process.
+    if (wsrProcess && !wsrProcess.killed) {
+        try { wsrProcess.kill('SIGKILL'); }
+        catch (e) { console.error('Failed to kill wsr.exe handle:', e.message); }
+    } else {
+        // Startup-cleanup: no live handle. Pull pid from the prior
+        // runtime.json before deleteStaleRuntimeFile() removes it.
+        // Bound the PID-reuse window with started_at freshness.
+        const stale = readStaleRuntime();
+        if (stale && Number.isInteger(stale.pid) &&
+            Number.isInteger(stale.started_at) &&
+            (Math.floor(Date.now() / 1000) - stale.started_at) < 86400) {
+            try { process.kill(stale.pid, 'SIGKILL'); }
+            catch (_) { /* ESRCH = orphan already gone */ }
+        }
     }
     bridgePorts = null;
     bridgePortsDispatched = false;

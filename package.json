@@ -1,6 +1,6 @@
 {
     "name": "wsr10",
-    "version": "10.0.16.1",
+    "version": "10.0.16.2",
     "main": "main.js",
     "description": "Wall $treet Raider Electron UI",
     "author": "Ben Ward",
