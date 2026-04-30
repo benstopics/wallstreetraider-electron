@@ -20,6 +20,7 @@
         },
         "files": [
             "main.js",
+            "win32-job.js",
             "index.html"
         ],
         "asar": false,
