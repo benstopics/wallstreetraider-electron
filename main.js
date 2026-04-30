@@ -1,7 +1,8 @@
 const { app, BrowserWindow, dialog, ipcMain, powerMonitor } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { spawn, execSync } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
+const { createKillOnCloseJob, assignProcessToJob } = require('./win32-job');
 
 // Get the save path - matches wsr.bas SavePath$
 function getSavePath() {
@@ -18,8 +19,15 @@ const RUNTIME_JSON_PATH = path.join(
     'runtime.json'
 );
 
+// Absolute paths to system binaries. Using absolute paths instead of relying
+// on PATH avoids hijack scenarios and makes the spawn AV-friendlier.
+const SYSTEM32 = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32');
+const CURL_EXE = path.join(SYSTEM32, 'curl.exe');
+const TASKLIST_EXE = path.join(SYSTEM32, 'tasklist.exe');
+const TASKKILL_EXE = path.join(SYSTEM32, 'taskkill.exe');
+
 // Read version from version.txt (single source of truth)
-let APP_VERSION = '10.0.16.2';
+let APP_VERSION = '10.0.16.3';
 try {
     APP_VERSION = fs.readFileSync(path.join(__dirname, 'version.txt'), 'utf8').trim();
 } catch (e) { /* fallback */ }
@@ -31,6 +39,10 @@ let bridgePorts = null; // { restPort, wsPort } once handshake arrives
 let bridgePortsDispatched = false;
 let pendingBackendFailure = null; // { reason, runtimePath } queued for renderer
 let bridgePortsRequestResolvers = []; // invoke('get-bridge-ports') callers awaiting
+// Win32 Job Object handle. Every wsr.exe we spawn is assigned to it. When
+// Electron exits (clean OR crash), the kernel reaps every member of the Job —
+// no orphans possible, no manual taskkill needed. See win32-job.js.
+let killOnCloseJob = null;
 
 function deleteStaleRuntimeFile() {
     try {
@@ -47,6 +59,25 @@ function readStaleRuntime() {
         return JSON.parse(fs.readFileSync(RUNTIME_JSON_PATH, 'utf8'));
     } catch (_) {
         return null;
+    }
+}
+
+// Used by the startup-only Tier C orphan-reap (see killWSR). Job Objects
+// make orphans impossible going forward; this is for users upgrading from
+// older builds whose wsr.exe wasn't kernel-bound to Electron's lifetime.
+function anyWsrAlive() {
+    try {
+        const out = execFileSync(TASKLIST_EXE, [
+            '/FI', 'IMAGENAME eq wsr.exe',
+            '/FO', 'CSV', '/NH',
+        ], {
+            stdio: ['ignore', 'pipe', 'ignore'],
+            timeout: 5000,
+            windowsHide: true,
+        }).toString();
+        return /^"wsr\.exe"/im.test(out);
+    } catch (_) {
+        return false;
     }
 }
 
@@ -193,6 +224,18 @@ app.whenReady().then(() => {
         ? path.join(__dirname, 'wsr.exe')
         : path.join(__dirname, '..', 'src', 'main', 'wsr', 'wsr.exe');
 
+    // Create the kernel-enforced lifetime binding BEFORE spawning anything.
+    // Every wsr.exe we spawn is assigned to this Job; when Electron exits
+    // (clean OR crash), Windows tears down the Job and reaps every member.
+    // If koffi/Win32 fails (returns null), we degrade to the manual reap
+    // in killWSR — same behavior as before this refactor.
+    killOnCloseJob = createKillOnCloseJob();
+    if (killOnCloseJob) {
+        console.log('[lifecycle] kill-on-close Job Object active');
+    } else {
+        console.warn('[lifecycle] Job Object unavailable — relying on killWSR fallback');
+    }
+
     killWSR();
 
     function runWSRProcess() {
@@ -217,6 +260,13 @@ app.whenReady().then(() => {
         });
 
         wsrProcess.unref();
+        // Bind the child to Electron's lifetime via the Win32 Job Object.
+        // Once assigned, the kernel guarantees the child cannot outlive
+        // Electron — even if Electron crashes. assignProcessToJob is a
+        // no-op if the job wasn't created (koffi load failure).
+        if (killOnCloseJob) {
+            assignProcessToJob(killOnCloseJob, wsrProcess.pid);
+        }
 
         const myWsr = wsrProcess;
 
@@ -405,29 +455,78 @@ app.whenReady().then(() => {
 });
 
 function killWSR() {
-    // Graceful shutdown only when we know the current REST port from the
-    // handshake. At startup-cleanup time (no live handshake), we skip the
-    // curl — any leftover wsr.exe is orphaned and we're force-killing it
-    // regardless, so there's no save-in-progress to preserve.
+    // Architecture (read before changing — these constraints are load-bearing):
+    //
+    //   ui.cpp's SteamInit single-instances the AppID, so an orphan wsr.exe
+    //   (one Electron didn't reap on its way out — crash, BSOD, taskkilled
+    //   Electron) blocks the next launch: Steam returns failure, the new
+    //   wsr.exe exit(-1)s, the on('exit') handler respawns, infinite loop.
+    //   That's the spinner from commit d134a94.
+    //
+    //   Historical workarounds (all rejected):
+    //     - cmd.exe → taskkill /F /IM <sibling> : the chain Norton SONAR
+    //       flags as self-defense malware. Quarantined cmd.exe on the user.
+    //     - hidden powershell.exe Stop-Process : same SONAR family.
+    //
+    //   Current strategy:
+    //     1. Win32 Job Object (createKillOnCloseJob) created at app startup,
+    //        every spawned wsr.exe is assigned to it. When Electron exits
+    //        for ANY reason, the kernel terminates every member of the Job.
+    //        No orphans possible. No syscall by Electron, no AV signal.
+    //     2. killWSR() handles only the cases the Job Object can't:
+    //          A. Live handle: wsrProcess.kill() — libuv TerminateProcess,
+    //             needed for restart-wsr (Exit-to-Main-Menu) which kills
+    //             wsr.exe but keeps Electron running.
+    //          C. Startup-only fallback for users upgrading from an older
+    //             build whose wsr.exe wasn't kernel-bound: taskkill.exe
+    //             direct (NO cmd.exe). Gated on `!wsrProcess` so it only
+    //             fires at startup-cleanup, never on close.
+    //
+    // Graceful shutdown ping. Only when we have a live handshake — at
+    // startup-cleanup any orphan is being force-killed regardless, no
+    // save-in-progress to preserve. execFileSync (not execSync) bypasses
+    // %ComSpec%; curl.exe ships in System32 on Win10 1803+.
     if (bridgePorts && bridgePorts.restPort) {
         try {
-            execSync(
-                `curl -s -m 2 -X POST -H "Content-Type: application/json" -d "{}" ` +
+            execFileSync(CURL_EXE, [
+                '-s', '-m', '2',
+                '-X', 'POST',
+                '-H', 'Content-Type: application/json',
+                '-d', '{}',
                 `http://127.0.0.1:${bridgePorts.restPort}/exit_game`,
-                { stdio: 'ignore', timeout: 3000 }
-            );
+            ], { stdio: 'ignore', timeout: 3000, windowsHide: true });
         } catch (e) { /* ignore - REST may not be running */ }
     }
-    // Force kill as fallback. NOTE: previous attempts to replace this with
-    // wsrProcess.kill('SIGKILL') / process.kill(stale.pid) caused the deployed
-    // build to enter a wsr.exe respawn loop on first launch (users stuck on
-    // main menu spinner). Keep `taskkill /IM wsr.exe /F` until the
-    // TerminateProcess-via-libuv path is properly diagnosed.
-    try {
-        execSync('taskkill /IM wsr.exe /F', { stdio: 'ignore' });
-    } catch (error) {
-        console.error('Failed to kill existing wsr.exe processes:', error.message);
+
+    // Tier A: live handle. Common case during restart-wsr; also fires on
+    // window-all-closed but the Job Object would handle that on its own.
+    if (wsrProcess && !wsrProcess.killed && wsrProcess.exitCode === null) {
+        try {
+            wsrProcess.kill();
+        } catch (e) {
+            console.warn('[killWSR] live-handle kill failed:', e.message);
+        }
     }
+
+    // Tier C: startup-only orphan reap. Only fires when there's no live
+    // handle (i.e. the killWSR call from app.whenReady before runWSRProcess)
+    // AND something named wsr.exe is alive. taskkill.exe is invoked
+    // directly via execFileSync — no cmd.exe in the process tree.
+    // taskkill.exe alone is a Microsoft-signed admin utility used by every
+    // legitimate uninstaller; the loud SONAR signal is the cmd→taskkill
+    // chain, not taskkill itself.
+    if (!wsrProcess && anyWsrAlive()) {
+        try {
+            execFileSync(TASKKILL_EXE, ['/F', '/IM', 'wsr.exe'], {
+                stdio: 'ignore', timeout: 5000, windowsHide: true,
+            });
+        } catch (e) {
+            if (e.status !== 128) {
+                console.warn('[killWSR] startup orphan reap failed:', e.message);
+            }
+        }
+    }
+
     bridgePorts = null;
     bridgePortsDispatched = false;
 }

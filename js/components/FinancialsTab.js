@@ -297,8 +297,8 @@ function FinancialsTab() {
                                 <div style="${CELL_NUM_S}">${aep.corpBondPortfolio != null ? fmtM(aep.corpBondPortfolio) : '—'}</div>
                             </div>
                             <div style="${CELL_S}">
-                                <div style="${CELL_LABEL_S}">Commodities MTM</div>
-                                <div style="${CELL_NUM_S}">${aep.commoditiesMtm != null ? fmtM(aep.commoditiesMtm) : '—'}</div>
+                                <div style="${CELL_LABEL_S}">Commodities</div>
+                                <div style="${CELL_NUM_S}">${(aep.commoditiesMtm != null || aep.physicalCommodValue != null) ? fmtM((aep.commoditiesMtm || 0) + (aep.physicalCommodValue || 0)) : '—'}</div>
                             </div>
                             <div style="${CELL_S}">
                                 <div style="${CELL_LABEL_S}">Commod Margin</div>

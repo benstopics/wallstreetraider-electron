@@ -16,16 +16,20 @@ const memo = (Fn, areEqual) => {
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 
-const fmtM = v => {
+// Money formatters take the locale's currency prefix/suffix from gameState
+// (dlrSign = "$"/"£ "/"¥ ", euro = ""/" Euros"/" cr") so non-USD saves render
+// correctly. Built per-row inside PortRow; same pattern as FinancialsTab.js.
+const makeFmtM = (dlrSign, euro) => v => {
     if (v == null || !Number.isFinite(v)) return '—';
     const sign = v < 0 ? '-' : '';
     const a = Math.abs(v);
-    if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(2) + 'T';
-    if (a >= 1e3) return sign + '$' + (a / 1e3).toFixed(2) + 'B';
-    return sign + '$' + a.toFixed(1) + 'M';
+    if (a >= 1e6) return sign + dlrSign + (a / 1e6).toFixed(2) + 'T' + euro;
+    if (a >= 1e3) return sign + dlrSign + (a / 1e3).toFixed(2) + 'B' + euro;
+    return sign + dlrSign + a.toFixed(1) + 'M' + euro;
 };
 const fmtPct = v => (v == null || !Number.isFinite(v)) ? '—' : v.toFixed(2) + '%';
-const fmtPrice = v => (v == null || !Number.isFinite(v)) ? '—' : '$' + v.toFixed(2);
+const makeFmtPrice = (dlrSign, euro) => v =>
+    (v == null || !Number.isFinite(v)) ? '—' : dlrSign + v.toFixed(2) + euro;
 const fmtQty = (v, unit) => {
     if (v == null) return '—';
     if (unit === 'pct') return Math.abs(v).toFixed(1) + '%';
@@ -154,7 +158,7 @@ function normaliseRow(r) {
         }
         case 'GOVT_BOND': {
             return { ...base,
-                position: rawType === 'GOVT_BOND_S' ? 'SHORT' : 'LONG',
+                position: 'LONG',
                 quantity: r.faceValue, quantityUnit: 'units',   // A.3
                 price: r.price,
                 marketValue: r.marketValue,
@@ -295,6 +299,11 @@ function TypeChip({ type }) {
 
 // ─── Single table row ─────────────────────────────────────────────────────────
 const PortRow = memo(function PortRow({ row, cond, showActions, actable, onSymbolClick, onAction, onSparkClick }) {
+    const dlrSign = api.useGameStore(s => s.gameState.dlrSign) || '$';
+    const euro    = api.useGameStore(s => s.gameState.euro) || '';
+    const fmtM     = makeFmtM(dlrSign, euro);
+    const fmtPrice = makeFmtPrice(dlrSign, euro);
+
     const pnlV    = row.pnl;
     const pnlColor = pnlV == null ? 'var(--fg-muted)'
                    : pnlV > 0    ? 'var(--color-positive)'

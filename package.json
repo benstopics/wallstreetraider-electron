@@ -1,6 +1,6 @@
 {
     "name": "wsr10",
-    "version": "10.0.16.2",
+    "version": "10.0.16.3",
     "main": "main.js",
     "description": "Wall $treet Raider Electron UI",
     "author": "Ben Ward",
@@ -61,8 +61,8 @@
         ]
     },
     "dependencies": {
-        "@tanstack/virtual": "^3.13.2",
         "fast-json-patch": "^3.1.1",
+        "koffi": "^2.10.0",
         "preact": "^8.5.3",
         "preact-compat": "^3.19.0",
         "react": "^19.2.0",

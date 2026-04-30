@@ -9,7 +9,7 @@ import LocalizationDropdown from './LocalizationDropdown.js';
 import localeManager from '../locale/localeManager.js';
 
 // Read version from version.txt (single source of truth)
-let APP_VERSION = '10.0.16.2';
+let APP_VERSION = '10.0.16.3';
 try {
     if (typeof require === 'undefined') throw new Error('no require');
     const _fs = require('fs'), _path = require('path');
@@ -37,6 +37,34 @@ const LORE_SNIPPETS = [
 
 // ── Changelog data ──
 const CHANGELOG = [
+    {
+        ver: "v10.0.16.3",
+        sections: [
+            {
+                heading: "Bug Fixes",
+                items: [
+                    "Fix backend crash on saved games containing non-ASCII currency or name characters (£, ¥, €, é, etc.) — non-US locales would silently exit on load",
+                    "Fix being unable to close or cover existing option positions (long calls, short calls, long puts, short puts) — the underlying-validity guard introduced in 10.0.16.2 was incorrectly tripping on close/cover",
+                    "Fix expiration announcements for commodity, crypto, interest-rate, stock-index, and GDP-rate alerts — previously only stock alerts announced when they expired",
+                    "Fix Notional value entry on the Interest-Rate Swaps screen reading the wrong text field",
+                    "Fix Government Bond holdings sometimes mislabeled as SHORT in the portfolio table",
+                ],
+            },
+            {
+                heading: "UI/UX Improvements",
+                items: [
+                    "Portfolio holdings now respect the active locale's currency symbol (£, ¥, €, etc.) instead of always showing $",
+                    "Player Financials \"Commodities\" cell now shows mark-to-market and physical commodity value combined into a single total",
+                ],
+            },
+            {
+                heading: "Performance & Infrastructure",
+                items: [
+                    "Wall Street Raider now reliably shuts down with the game window — no more orphan game processes that could block your next launch (kernel-enforced lifetime binding replaces the previous taskkill exit path)",
+                ],
+            },
+        ],
+    },
     {
         ver: "v10.0.16.2",
         sections: [
