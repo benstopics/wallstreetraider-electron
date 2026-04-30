@@ -43,9 +43,9 @@ const CHANGELOG = [
             {
                 heading: "Bug Fixes",
                 items: [
-                    "Fix backend crash on saved games containing non-ASCII currency or name characters (£, ¥, €, é, etc.) — non-US locales would silently exit on load",
-                    "Fix being unable to close or cover existing option positions (long calls, short calls, long puts, short puts) — the underlying-validity guard introduced in 10.0.16.2 was incorrectly tripping on close/cover",
-                    "Fix expiration announcements for commodity, crypto, interest-rate, stock-index, and GDP-rate alerts — previously only stock alerts announced when they expired",
+                    "Fix backend crash on saved games containing non-ASCII currency or name characters (£, ¥, €, é, etc.) that caused non-US locales to silently exit on load",
+                    "Fix being unable to close or cover existing option positions (long calls, short calls, long puts, short puts). The underlying-validity guard added in 10.0.16.2 was incorrectly tripping on close/cover actions",
+                    "Fix expiration announcements for commodity, crypto, interest-rate, stock-index, and GDP-rate alerts. Previously only stock alerts announced when they expired",
                     "Fix Notional value entry on the Interest-Rate Swaps screen reading the wrong text field",
                     "Fix Government Bond holdings sometimes mislabeled as SHORT in the portfolio table",
                 ],
@@ -60,7 +60,7 @@ const CHANGELOG = [
             {
                 heading: "Performance & Infrastructure",
                 items: [
-                    "Wall Street Raider now reliably shuts down with the game window — no more orphan game processes that could block your next launch (kernel-enforced lifetime binding replaces the previous taskkill exit path)",
+                    "Wall Street Raider now reliably shuts down with the game window. No more orphan game processes that could block your next launch (kernel-enforced lifetime binding replaces the previous taskkill exit path)",
                 ],
             },
         ],
